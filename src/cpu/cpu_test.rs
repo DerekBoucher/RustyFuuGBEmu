@@ -713,4 +713,65 @@ mod lr35902 {
             (tc.assert_fn)(cpu)
         }
     }
+
+    #[test]
+    fn ld_8_imm_to_reg() {
+        struct TestCase {
+            cpu: LR35902,
+            dest: RegisterID,
+            val: u8,
+            assert_fn: fn(LR35902),
+        }
+
+        let test_cases: Vec<TestCase> = vec![
+            TestCase {
+                cpu: LR35902::new(),
+                dest: RegisterID::A,
+                val: 0x10,
+                assert_fn: |cpu| assert_eq!(cpu.af.hi, 0x10, "loading immediate 8bit value into A"),
+            },
+            TestCase {
+                cpu: LR35902::new(),
+                dest: RegisterID::B,
+                val: 0x10,
+                assert_fn: |cpu| assert_eq!(cpu.bc.hi, 0x10, "loading immediate 8bit value into B"),
+            },
+            TestCase {
+                cpu: LR35902::new(),
+                dest: RegisterID::C,
+                val: 0x10,
+                assert_fn: |cpu| assert_eq!(cpu.bc.lo, 0x10, "loading immediate 8bit value into C"),
+            },
+            TestCase {
+                cpu: LR35902::new(),
+                dest: RegisterID::D,
+                val: 0x10,
+                assert_fn: |cpu| assert_eq!(cpu.de.hi, 0x10, "loading immediate 8bit value into D"),
+            },
+            TestCase {
+                cpu: LR35902::new(),
+                dest: RegisterID::E,
+                val: 0x10,
+                assert_fn: |cpu| assert_eq!(cpu.de.lo, 0x10, "loading immediate 8bit value into E"),
+            },
+            TestCase {
+                cpu: LR35902::new(),
+                dest: RegisterID::H,
+                val: 0x10,
+                assert_fn: |cpu| assert_eq!(cpu.hl.hi, 0x10, "loading immediate 8bit value into H"),
+            },
+            TestCase {
+                cpu: LR35902::new(),
+                dest: RegisterID::L,
+                val: 0x10,
+                assert_fn: |cpu| assert_eq!(cpu.hl.lo, 0x10, "loading immediate 8bit value into L"),
+            },
+        ];
+
+        for tc in test_cases {
+            let mut cpu = tc.cpu;
+            cpu.ld_8_imm_to_reg(tc.dest, tc.val);
+            (tc.assert_fn)(cpu)
+        }
+    }
 }

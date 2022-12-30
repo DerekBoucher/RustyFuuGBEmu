@@ -81,7 +81,6 @@ impl LR35902 {
 
         match src {
             RegisterID::A => src_value = self.af.hi,
-            RegisterID::F => src_value = self.af.lo,
             RegisterID::B => src_value = self.bc.hi,
             RegisterID::C => src_value = self.bc.lo,
             RegisterID::D => src_value = self.de.hi,
@@ -93,13 +92,26 @@ impl LR35902 {
 
         match dest {
             RegisterID::A => unsafe { write_byte_ptr(&mut self.af.hi, src_value) },
-            RegisterID::F => unsafe { write_byte_ptr(&mut self.af.lo, src_value) },
             RegisterID::B => unsafe { write_byte_ptr(&mut self.bc.hi, src_value) },
             RegisterID::C => unsafe { write_byte_ptr(&mut self.bc.lo, src_value) },
             RegisterID::D => unsafe { write_byte_ptr(&mut self.de.hi, src_value) },
             RegisterID::E => unsafe { write_byte_ptr(&mut self.de.lo, src_value) },
             RegisterID::H => unsafe { write_byte_ptr(&mut self.hl.hi, src_value) },
             RegisterID::L => unsafe { write_byte_ptr(&mut self.hl.lo, src_value) },
+            _ => return,
+        }
+    }
+
+    /// implements all of the immediate 8-bit load operations that the LR25902 supports
+    fn ld_8_imm_to_reg(&mut self, dest: RegisterID, val: u8) {
+        match dest {
+            RegisterID::A => self.af.hi = val,
+            RegisterID::B => self.bc.hi = val,
+            RegisterID::C => self.bc.lo = val,
+            RegisterID::D => self.de.hi = val,
+            RegisterID::E => self.de.lo = val,
+            RegisterID::H => self.hl.hi = val,
+            RegisterID::L => self.hl.lo = val,
             _ => return,
         }
     }
