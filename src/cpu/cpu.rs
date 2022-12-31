@@ -48,6 +48,11 @@ impl Register {
     }
 }
 
+struct Operation {
+    clock_cycles: u32,
+    exec_fn: fn(&mut LR35902),
+}
+
 /// Struct representing the Sharp LR35902 CPU found inside the original
 /// DMG Gameboy hardware
 pub struct LR35902 {
@@ -73,6 +78,9 @@ impl LR35902 {
             pc: (0x0000),
         };
     }
+
+    /// Executes the next instruction pointed to by the PC register
+    fn execute_next_op_code(&mut self) {}
 
     /// Implements all of the byte addressable, register to register, load operations that
     /// the Sharp LR25902 supports

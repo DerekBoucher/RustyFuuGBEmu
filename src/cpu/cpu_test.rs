@@ -1,3 +1,4 @@
+#[cfg(test)]
 mod register {
     use crate::cpu::cpu::Register;
 
@@ -12,6 +13,7 @@ mod register {
     }
 }
 
+#[cfg(test)]
 mod lr35902 {
     use crate::cpu::cpu::RegisterID;
     use crate::cpu::cpu::LR35902;
