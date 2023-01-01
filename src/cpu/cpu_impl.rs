@@ -99,6 +99,22 @@ impl LR35902 {
 
         Ok(self.memory.write(self.hl.word().into(), value))
     }
+
+    /// Load a byte pointed to by the HL word register into a destination register
+    fn ld_mem_hl_into_reg(&mut self, dest: RegisterID) -> Result<(), Error> {
+        match dest {
+            RegisterID::A => self.af.hi = self.memory.read(self.hl.word().into()),
+            RegisterID::B => self.bc.hi = self.memory.read(self.hl.word().into()),
+            RegisterID::C => self.bc.lo = self.memory.read(self.hl.word().into()),
+            RegisterID::D => self.de.hi = self.memory.read(self.hl.word().into()),
+            RegisterID::E => self.de.lo = self.memory.read(self.hl.word().into()),
+            RegisterID::H => self.hl.hi = self.memory.read(self.hl.word().into()),
+            RegisterID::L => self.hl.lo = self.memory.read(self.hl.word().into()),
+            _ => return Err(Error::InvalidLoadOperands),
+        }
+
+        Ok(())
+    }
 }
 
 /// Helper function to write a byte of data to a memory location.

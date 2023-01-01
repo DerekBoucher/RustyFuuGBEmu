@@ -18,7 +18,7 @@ impl Memory {
         self.rom[addr] = value;
     }
 
-    pub fn read(self, addr: usize) -> u8 {
+    pub fn read(&self, addr: usize) -> u8 {
         self.rom[addr]
     }
 }
