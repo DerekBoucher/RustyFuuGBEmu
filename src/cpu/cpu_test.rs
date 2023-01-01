@@ -914,4 +914,188 @@ mod lr35902 {
             }
         }
     }
+
+    #[test]
+    fn ld_reg_into_mem_hl() {
+        struct TestCase {
+            init_fn: fn() -> LR35902,
+            src: RegisterID,
+            assert_fn: fn(LR35902),
+            expected_err: Option<CpuError>,
+        }
+
+        let test_cases: Vec<TestCase> = vec![
+            TestCase {
+                init_fn: || -> LR35902 {
+                    let mut cpu = LR35902::new();
+                    cpu.hl.hi = 0xC0;
+                    cpu.hl.lo = 0x50;
+                    cpu.af.hi = 0x80;
+                    return cpu;
+                },
+                src: RegisterID::A,
+                assert_fn: |cpu| {
+                    assert_eq!(
+                        cpu.memory.read(cpu.hl.word().into()),
+                        cpu.af.hi,
+                        "load A into (HL)"
+                    )
+                },
+                expected_err: None,
+            },
+            TestCase {
+                init_fn: || -> LR35902 {
+                    let mut cpu = LR35902::new();
+                    cpu.hl.hi = 0xC0;
+                    cpu.hl.lo = 0x50;
+                    cpu.bc.hi = 0x80;
+                    return cpu;
+                },
+                src: RegisterID::B,
+                assert_fn: |cpu| {
+                    assert_eq!(
+                        cpu.memory.read(cpu.hl.word().into()),
+                        cpu.bc.hi,
+                        "load B into (HL)"
+                    )
+                },
+                expected_err: None,
+            },
+            TestCase {
+                init_fn: || -> LR35902 {
+                    let mut cpu = LR35902::new();
+                    cpu.hl.hi = 0xC0;
+                    cpu.hl.lo = 0x50;
+                    cpu.bc.lo = 0x80;
+                    return cpu;
+                },
+                src: RegisterID::C,
+                assert_fn: |cpu| {
+                    assert_eq!(
+                        cpu.memory.read(cpu.hl.word().into()),
+                        cpu.bc.lo,
+                        "load C into (HL)"
+                    )
+                },
+                expected_err: None,
+            },
+            TestCase {
+                init_fn: || -> LR35902 {
+                    let mut cpu = LR35902::new();
+                    cpu.hl.hi = 0xC0;
+                    cpu.hl.lo = 0x50;
+                    cpu.de.hi = 0x80;
+                    return cpu;
+                },
+                src: RegisterID::D,
+                assert_fn: |cpu| {
+                    assert_eq!(
+                        cpu.memory.read(cpu.hl.word().into()),
+                        cpu.de.hi,
+                        "load D into (HL)"
+                    )
+                },
+                expected_err: None,
+            },
+            TestCase {
+                init_fn: || -> LR35902 {
+                    let mut cpu = LR35902::new();
+                    cpu.hl.hi = 0xC0;
+                    cpu.hl.lo = 0x50;
+                    cpu.de.lo = 0x80;
+                    return cpu;
+                },
+                src: RegisterID::E,
+                assert_fn: |cpu| {
+                    assert_eq!(
+                        cpu.memory.read(cpu.hl.word().into()),
+                        cpu.de.lo,
+                        "load E into (HL)"
+                    )
+                },
+                expected_err: None,
+            },
+            TestCase {
+                init_fn: || -> LR35902 {
+                    let mut cpu = LR35902::new();
+                    cpu.hl.hi = 0xC0;
+                    cpu.hl.lo = 0x50;
+                    return cpu;
+                },
+                src: RegisterID::H,
+                assert_fn: |cpu| {
+                    assert_eq!(
+                        cpu.memory.read(cpu.hl.word().into()),
+                        cpu.hl.hi,
+                        "load H into (HL)"
+                    )
+                },
+                expected_err: None,
+            },
+            TestCase {
+                init_fn: || -> LR35902 {
+                    let mut cpu = LR35902::new();
+                    cpu.hl.hi = 0xC0;
+                    cpu.hl.lo = 0x50;
+                    return cpu;
+                },
+                src: RegisterID::L,
+                assert_fn: |cpu| {
+                    assert_eq!(
+                        cpu.memory.read(cpu.hl.word().into()),
+                        cpu.hl.lo,
+                        "load H into (HL)"
+                    )
+                },
+                expected_err: None,
+            },
+            TestCase {
+                init_fn: || -> LR35902 {
+                    let mut cpu = LR35902::new();
+                    cpu.hl.hi = 0xC0;
+                    cpu.hl.lo = 0x50;
+                    return cpu;
+                },
+                src: RegisterID::F,
+                assert_fn: |cpu| {},
+                expected_err: Some(CpuError::InvalidLoadOperands),
+            },
+            TestCase {
+                init_fn: || -> LR35902 {
+                    let mut cpu = LR35902::new();
+                    cpu.hl.hi = 0xC0;
+                    cpu.hl.lo = 0x50;
+                    return cpu;
+                },
+                src: RegisterID::SP,
+                assert_fn: |cpu| {},
+                expected_err: Some(CpuError::InvalidLoadOperands),
+            },
+            TestCase {
+                init_fn: || -> LR35902 {
+                    let mut cpu = LR35902::new();
+                    cpu.hl.hi = 0xC0;
+                    cpu.hl.lo = 0x50;
+                    return cpu;
+                },
+                src: RegisterID::PC,
+                assert_fn: |cpu| {},
+                expected_err: Some(CpuError::InvalidLoadOperands),
+            },
+        ];
+
+        for tc in test_cases {
+            let mut cpu = (tc.init_fn)();
+            match cpu.ld_reg_into_mem_hl(tc.src) {
+                Ok(()) => (tc.assert_fn)(cpu),
+                Err(why) => {
+                    assert_eq!(
+                        why,
+                        tc.expected_err.unwrap(),
+                        "returned error should match expected"
+                    )
+                }
+            }
+        }
+    }
 }

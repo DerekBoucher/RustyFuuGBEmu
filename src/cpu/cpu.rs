@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
+use crate::memory::memory::Memory;
+
 #[path = "cpu_test.rs"]
 #[cfg(test)]
 mod tests;
@@ -67,6 +69,8 @@ pub struct LR35902 {
     hl: Register,
     sp: u16,
     pc: u16,
+
+    memory: Memory,
 }
 
 /// Methods associated to the LR25902 emulated CPU
@@ -81,6 +85,7 @@ impl LR35902 {
             hl: Register { hi: 0x00, lo: 0x0 },
             sp: (0x0000),
             pc: (0x0000),
+            memory: Memory::new(),
         };
     }
 
@@ -131,6 +136,24 @@ impl LR35902 {
         }
 
         return Ok(());
+    }
+
+    /// Load a 8-bit register value into memory location pointed to by the HL word register
+    fn ld_reg_into_mem_hl(&mut self, src: RegisterID) -> Result<(), CpuError> {
+        let value: u8;
+
+        match src {
+            RegisterID::A => value = self.af.hi,
+            RegisterID::B => value = self.bc.hi,
+            RegisterID::C => value = self.bc.lo,
+            RegisterID::D => value = self.de.hi,
+            RegisterID::E => value = self.de.lo,
+            RegisterID::H => value = self.hl.hi,
+            RegisterID::L => value = self.hl.lo,
+            _ => return Err(CpuError::InvalidLoadOperands),
+        }
+
+        Ok(self.memory.write(self.hl.word().into(), value))
     }
 }
 
