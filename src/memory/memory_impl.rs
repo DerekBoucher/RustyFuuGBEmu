@@ -1,13 +1,11 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-#[path = "memory_test.rs"]
-#[cfg(test)]
-mod tests;
+use crate::memory::Memory;
 
-pub struct Memory {
-    rom: [u8; 0x10000],
-}
+#[path = "memory_impl_test.rs"]
+#[cfg(test)]
+mod memory_impl_test;
 
 impl Memory {
     pub fn new() -> Memory {

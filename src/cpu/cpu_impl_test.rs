@@ -1,23 +1,8 @@
 #[cfg(test)]
-mod register {
-    use crate::cpu::cpu::Register;
-
-    #[test]
-    fn word() {
-        let register = Register { hi: 0x79, lo: 0x89 };
-        assert_eq!(
-            register.word(),
-            0x7989,
-            "should match the concatenated 8bit registers"
-        )
-    }
-}
-
-#[cfg(test)]
 mod lr35902 {
-    use crate::cpu::cpu::CpuError;
-    use crate::cpu::cpu::RegisterID;
-    use crate::cpu::cpu::LR35902;
+    use crate::cpu::Error;
+    use crate::cpu::RegisterID;
+    use crate::cpu::LR35902;
 
     #[test]
     fn ld_8_reg_to_reg() {
@@ -26,7 +11,7 @@ mod lr35902 {
             dest: RegisterID,
             src: RegisterID,
             assert_fn: fn(LR35902),
-            expected_err: Option<CpuError>,
+            expected_err: Option<Error>,
         }
 
         let test_cases = vec![
@@ -762,42 +747,42 @@ mod lr35902 {
                 init_fn: || -> LR35902 { LR35902::new() },
                 dest: RegisterID::F,
                 src: RegisterID::A,
-                expected_err: Some(CpuError::InvalidLoadOperands),
+                expected_err: Some(Error::InvalidLoadOperands),
                 assert_fn: |cpu| {},
             },
             TestCase {
                 init_fn: || -> LR35902 { LR35902::new() },
                 dest: RegisterID::SP,
                 src: RegisterID::A,
-                expected_err: Some(CpuError::InvalidLoadOperands),
+                expected_err: Some(Error::InvalidLoadOperands),
                 assert_fn: |cpu| {},
             },
             TestCase {
                 init_fn: || -> LR35902 { LR35902::new() },
                 dest: RegisterID::PC,
                 src: RegisterID::A,
-                expected_err: Some(CpuError::InvalidLoadOperands),
+                expected_err: Some(Error::InvalidLoadOperands),
                 assert_fn: |cpu| {},
             },
             TestCase {
                 init_fn: || -> LR35902 { LR35902::new() },
                 dest: RegisterID::A,
                 src: RegisterID::F,
-                expected_err: Some(CpuError::InvalidLoadOperands),
+                expected_err: Some(Error::InvalidLoadOperands),
                 assert_fn: |cpu| {},
             },
             TestCase {
                 init_fn: || -> LR35902 { LR35902::new() },
                 dest: RegisterID::A,
                 src: RegisterID::SP,
-                expected_err: Some(CpuError::InvalidLoadOperands),
+                expected_err: Some(Error::InvalidLoadOperands),
                 assert_fn: |cpu| {},
             },
             TestCase {
                 init_fn: || -> LR35902 { LR35902::new() },
                 dest: RegisterID::A,
                 src: RegisterID::PC,
-                expected_err: Some(CpuError::InvalidLoadOperands),
+                expected_err: Some(Error::InvalidLoadOperands),
                 assert_fn: |cpu| {},
             },
         ];
@@ -824,7 +809,7 @@ mod lr35902 {
             dest: RegisterID,
             val: u8,
             assert_fn: fn(LR35902),
-            expected_err: Option<CpuError>,
+            expected_err: Option<Error>,
         }
 
         let test_cases: Vec<TestCase> = vec![
@@ -882,21 +867,21 @@ mod lr35902 {
                 dest: RegisterID::F,
                 val: 0x10,
                 assert_fn: |cpu| {},
-                expected_err: Some(CpuError::InvalidLoadOperands),
+                expected_err: Some(Error::InvalidLoadOperands),
             },
             TestCase {
                 cpu: LR35902::new(),
                 dest: RegisterID::SP,
                 val: 0x10,
                 assert_fn: |cpu| {},
-                expected_err: Some(CpuError::InvalidLoadOperands),
+                expected_err: Some(Error::InvalidLoadOperands),
             },
             TestCase {
                 cpu: LR35902::new(),
                 dest: RegisterID::PC,
                 val: 0x10,
                 assert_fn: |cpu| {},
-                expected_err: Some(CpuError::InvalidLoadOperands),
+                expected_err: Some(Error::InvalidLoadOperands),
             },
         ];
 
@@ -921,7 +906,7 @@ mod lr35902 {
             init_fn: fn() -> LR35902,
             src: RegisterID,
             assert_fn: fn(LR35902),
-            expected_err: Option<CpuError>,
+            expected_err: Option<Error>,
         }
 
         let test_cases: Vec<TestCase> = vec![
@@ -1058,7 +1043,7 @@ mod lr35902 {
                 },
                 src: RegisterID::F,
                 assert_fn: |cpu| {},
-                expected_err: Some(CpuError::InvalidLoadOperands),
+                expected_err: Some(Error::InvalidLoadOperands),
             },
             TestCase {
                 init_fn: || -> LR35902 {
@@ -1069,7 +1054,7 @@ mod lr35902 {
                 },
                 src: RegisterID::SP,
                 assert_fn: |cpu| {},
-                expected_err: Some(CpuError::InvalidLoadOperands),
+                expected_err: Some(Error::InvalidLoadOperands),
             },
             TestCase {
                 init_fn: || -> LR35902 {
@@ -1080,7 +1065,7 @@ mod lr35902 {
                 },
                 src: RegisterID::PC,
                 assert_fn: |cpu| {},
-                expected_err: Some(CpuError::InvalidLoadOperands),
+                expected_err: Some(Error::InvalidLoadOperands),
             },
         ];
 

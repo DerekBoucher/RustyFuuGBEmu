@@ -1,16 +1,12 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
+use crate::cpu::Error;
+use crate::cpu::Register;
+use crate::cpu::RegisterID;
+use crate::cpu::LR35902;
+use crate::memory::Memory;
 
-use crate::memory::memory::Memory;
-
-#[path = "cpu_test.rs"]
+#[path = "cpu_impl_test.rs"]
 #[cfg(test)]
 mod tests;
-
-#[derive(Debug, PartialEq)]
-pub enum CpuError {
-    InvalidLoadOperands,
-}
 
 /// Bit mask for the zero flag
 const ZERO_FLAG_MASK: u8 = 1 << 7;
@@ -23,55 +19,6 @@ const HALF_CARRY_FLAG_MASK: u8 = 1 << 5;
 
 /// Bit mask for the carry flag
 const CARRY_FLAG_MASK: u8 = 1 << 4;
-
-/// ID denoting a register inside the Sharp LR35902 CPU.
-/// If a register is byte-addressable, it will have a specific
-/// enum entry for that nibble (i.e. register AF will have 2 enums: A and F).
-pub enum RegisterID {
-    A,
-    F,
-    B,
-    C,
-    D,
-    E,
-    H,
-    L,
-    SP,
-    PC,
-}
-
-/// Represents a byte addressable word register found
-/// inside the Sharp LR35902
-struct Register {
-    hi: u8,
-    lo: u8,
-}
-
-impl Register {
-    fn word(&self) -> u16 {
-        let hi: u16 = self.hi.into();
-        let lo: u16 = self.lo.into();
-        return (hi << 8) | lo;
-    }
-}
-
-struct Operation {
-    clock_cycles: u32,
-    exec_fn: fn(&mut LR35902),
-}
-
-/// Struct representing the Sharp LR35902 CPU found inside the original
-/// DMG Gameboy hardware
-pub struct LR35902 {
-    af: Register,
-    bc: Register,
-    de: Register,
-    hl: Register,
-    sp: u16,
-    pc: u16,
-
-    memory: Memory,
-}
 
 /// Methods associated to the LR25902 emulated CPU
 impl LR35902 {
@@ -89,12 +36,9 @@ impl LR35902 {
         };
     }
 
-    /// Executes the next instruction pointed to by the PC register
-    fn execute_next_op_code(&mut self) {}
-
     /// Implements all of the byte addressable, register to register, load operations that
     /// the Sharp LR25902 supports
-    fn ld_8_reg_to_reg(&mut self, dest: RegisterID, src: RegisterID) -> Result<(), CpuError> {
+    fn ld_8_reg_to_reg(&mut self, dest: RegisterID, src: RegisterID) -> Result<(), Error> {
         let src_value: u8;
 
         match src {
@@ -105,7 +49,7 @@ impl LR35902 {
             RegisterID::E => src_value = self.de.lo,
             RegisterID::H => src_value = self.hl.hi,
             RegisterID::L => src_value = self.hl.lo,
-            _ => return Err(CpuError::InvalidLoadOperands),
+            _ => return Err(Error::InvalidLoadOperands),
         }
 
         match dest {
@@ -116,14 +60,14 @@ impl LR35902 {
             RegisterID::E => unsafe { write_byte_ptr(&mut self.de.lo, src_value) },
             RegisterID::H => unsafe { write_byte_ptr(&mut self.hl.hi, src_value) },
             RegisterID::L => unsafe { write_byte_ptr(&mut self.hl.lo, src_value) },
-            _ => return Err(CpuError::InvalidLoadOperands),
+            _ => return Err(Error::InvalidLoadOperands),
         }
 
         return Ok(());
     }
 
     /// implements all of the immediate 8-bit load operations that the LR25902 supports
-    fn ld_8_imm_to_reg(&mut self, dest: RegisterID, val: u8) -> Result<(), CpuError> {
+    fn ld_8_imm_to_reg(&mut self, dest: RegisterID, val: u8) -> Result<(), Error> {
         match dest {
             RegisterID::A => self.af.hi = val,
             RegisterID::B => self.bc.hi = val,
@@ -132,14 +76,14 @@ impl LR35902 {
             RegisterID::E => self.de.lo = val,
             RegisterID::H => self.hl.hi = val,
             RegisterID::L => self.hl.lo = val,
-            _ => return Err(CpuError::InvalidLoadOperands),
+            _ => return Err(Error::InvalidLoadOperands),
         }
 
         return Ok(());
     }
 
     /// Load a 8-bit register value into memory location pointed to by the HL word register
-    fn ld_reg_into_mem_hl(&mut self, src: RegisterID) -> Result<(), CpuError> {
+    fn ld_reg_into_mem_hl(&mut self, src: RegisterID) -> Result<(), Error> {
         let value: u8;
 
         match src {
@@ -150,7 +94,7 @@ impl LR35902 {
             RegisterID::E => value = self.de.lo,
             RegisterID::H => value = self.hl.hi,
             RegisterID::L => value = self.hl.lo,
-            _ => return Err(CpuError::InvalidLoadOperands),
+            _ => return Err(Error::InvalidLoadOperands),
         }
 
         Ok(self.memory.write(self.hl.word().into(), value))
