@@ -5,6 +5,11 @@
 #[cfg(test)]
 mod tests;
 
+#[derive(Debug, PartialEq)]
+pub enum CpuError {
+    InvalidLoadOperands,
+}
+
 /// Bit mask for the zero flag
 const ZERO_FLAG_MASK: u8 = 1 << 7;
 
@@ -84,7 +89,7 @@ impl LR35902 {
 
     /// Implements all of the byte addressable, register to register, load operations that
     /// the Sharp LR25902 supports
-    fn ld_8_reg_to_reg(&mut self, dest: RegisterID, src: RegisterID) {
+    fn ld_8_reg_to_reg(&mut self, dest: RegisterID, src: RegisterID) -> Result<(), CpuError> {
         let src_value: u8;
 
         match src {
@@ -95,7 +100,7 @@ impl LR35902 {
             RegisterID::E => src_value = self.de.lo,
             RegisterID::H => src_value = self.hl.hi,
             RegisterID::L => src_value = self.hl.lo,
-            _ => return,
+            _ => return Err(CpuError::InvalidLoadOperands),
         }
 
         match dest {
@@ -106,12 +111,14 @@ impl LR35902 {
             RegisterID::E => unsafe { write_byte_ptr(&mut self.de.lo, src_value) },
             RegisterID::H => unsafe { write_byte_ptr(&mut self.hl.hi, src_value) },
             RegisterID::L => unsafe { write_byte_ptr(&mut self.hl.lo, src_value) },
-            _ => return,
+            _ => return Err(CpuError::InvalidLoadOperands),
         }
+
+        return Ok(());
     }
 
     /// implements all of the immediate 8-bit load operations that the LR25902 supports
-    fn ld_8_imm_to_reg(&mut self, dest: RegisterID, val: u8) {
+    fn ld_8_imm_to_reg(&mut self, dest: RegisterID, val: u8) -> Result<(), CpuError> {
         match dest {
             RegisterID::A => self.af.hi = val,
             RegisterID::B => self.bc.hi = val,
@@ -120,8 +127,10 @@ impl LR35902 {
             RegisterID::E => self.de.lo = val,
             RegisterID::H => self.hl.hi = val,
             RegisterID::L => self.hl.lo = val,
-            _ => return,
+            _ => return Err(CpuError::InvalidLoadOperands),
         }
+
+        return Ok(());
     }
 }
 

@@ -15,6 +15,7 @@ mod register {
 
 #[cfg(test)]
 mod lr35902 {
+    use crate::cpu::cpu::CpuError;
     use crate::cpu::cpu::RegisterID;
     use crate::cpu::cpu::LR35902;
 
@@ -25,6 +26,7 @@ mod lr35902 {
             dest: RegisterID,
             src: RegisterID,
             assert_fn: fn(LR35902),
+            expected_err: Option<CpuError>,
         }
 
         let test_cases = vec![
@@ -36,6 +38,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::B,
                 src: RegisterID::B,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.bc.hi, cpu.bc.hi, "loading B into B");
                     assert_eq!(cpu.bc.word(), 0x0100, "loading B into B");
@@ -50,6 +53,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::B,
                 src: RegisterID::C,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.bc.hi, cpu.bc.lo, "loading C into B");
                     assert_eq!(cpu.bc.word(), 0x0707, "loading C into B");
@@ -64,6 +68,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::B,
                 src: RegisterID::D,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.bc.hi, cpu.de.hi, "loading D into B");
                     assert_eq!(cpu.bc.word(), 0x0700, "loading D into B");
@@ -78,6 +83,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::B,
                 src: RegisterID::E,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.bc.hi, cpu.de.lo, "loading E into B");
                     assert_eq!(cpu.bc.word(), 0x0700, "loading E into B");
@@ -92,6 +98,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::B,
                 src: RegisterID::H,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.bc.hi, cpu.hl.hi, "loading H into B");
                     assert_eq!(cpu.bc.word(), 0x0700, "loading H into B");
@@ -106,6 +113,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::B,
                 src: RegisterID::L,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.bc.hi, cpu.hl.lo, "loading L into B");
                     assert_eq!(cpu.bc.word(), 0x0700, "loading L into B");
@@ -120,6 +128,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::B,
                 src: RegisterID::A,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.bc.hi, cpu.af.hi, "loading A into B");
                     assert_eq!(cpu.bc.word(), 0x0700, "loading A into B");
@@ -134,6 +143,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::C,
                 src: RegisterID::B,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.bc.lo, cpu.bc.hi, "loading B into C");
                     assert_eq!(cpu.bc.word(), 0x0707, "loading B into C");
@@ -147,6 +157,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::C,
                 src: RegisterID::C,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.bc.lo, cpu.bc.lo, "loading C into C");
                     assert_eq!(cpu.bc.word(), 0x0001, "loading C into C");
@@ -161,6 +172,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::C,
                 src: RegisterID::D,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.bc.lo, cpu.de.hi, "loading D into C");
                     assert_eq!(cpu.bc.word(), 0x0007, "loading D into C");
@@ -175,6 +187,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::C,
                 src: RegisterID::E,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.bc.lo, cpu.de.lo, "loading E into C");
                     assert_eq!(cpu.bc.word(), 0x0007, "loading E into C");
@@ -189,6 +202,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::C,
                 src: RegisterID::H,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.bc.lo, cpu.hl.hi, "loading H into C");
                     assert_eq!(cpu.bc.word(), 0x0007, "loading H into C");
@@ -203,6 +217,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::C,
                 src: RegisterID::L,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.bc.lo, cpu.hl.lo, "loading L into C");
                     assert_eq!(cpu.bc.word(), 0x0007, "loading L into C");
@@ -217,6 +232,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::C,
                 src: RegisterID::A,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.bc.lo, cpu.af.hi, "loading A into C");
                     assert_eq!(cpu.bc.word(), 0x0007, "loading A into C");
@@ -231,6 +247,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::D,
                 src: RegisterID::B,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.de.hi, cpu.bc.hi, "loading B into D");
                     assert_eq!(cpu.de.word(), 0x0700, "loading B into D");
@@ -245,6 +262,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::D,
                 src: RegisterID::C,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.de.hi, cpu.bc.lo, "loading C into D");
                     assert_eq!(cpu.de.word(), 0x0700, "loading C into D");
@@ -258,6 +276,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::D,
                 src: RegisterID::D,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.de.hi, cpu.de.hi, "loading D into D");
                     assert_eq!(cpu.de.word(), 0x0100, "loading D into D");
@@ -272,6 +291,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::D,
                 src: RegisterID::E,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.de.hi, cpu.de.lo, "loading E into D");
                     assert_eq!(cpu.de.word(), 0x0707, "loading E into D");
@@ -286,6 +306,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::D,
                 src: RegisterID::H,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.de.hi, cpu.hl.hi, "loading H into D");
                     assert_eq!(cpu.de.word(), 0x0700, "loading H into D");
@@ -300,6 +321,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::D,
                 src: RegisterID::L,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.de.hi, cpu.hl.lo, "loading L into D");
                     assert_eq!(cpu.de.word(), 0x0700, "loading L into D");
@@ -314,6 +336,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::D,
                 src: RegisterID::A,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.de.hi, cpu.af.hi, "loading A into D");
                     assert_eq!(cpu.de.word(), 0x0700, "loading A into D");
@@ -328,6 +351,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::E,
                 src: RegisterID::B,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.de.lo, cpu.bc.hi, "loading B into E");
                     assert_eq!(cpu.de.word(), 0x0007, "loading B into E");
@@ -342,6 +366,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::E,
                 src: RegisterID::C,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.de.lo, cpu.bc.lo, "loading C into E");
                     assert_eq!(cpu.de.word(), 0x0007, "loading C into E");
@@ -356,6 +381,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::E,
                 src: RegisterID::D,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.de.lo, cpu.de.hi, "loading D into E");
                     assert_eq!(cpu.de.word(), 0x0707, "loading D into E");
@@ -369,6 +395,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::E,
                 src: RegisterID::E,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.de.lo, cpu.de.lo, "loading E into E");
                     assert_eq!(cpu.de.word(), 0x0001, "loading E into E");
@@ -383,6 +410,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::E,
                 src: RegisterID::H,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.de.lo, cpu.hl.hi, "loading H into E");
                     assert_eq!(cpu.de.word(), 0x0007, "loading H into E");
@@ -397,6 +425,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::E,
                 src: RegisterID::L,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.de.lo, cpu.hl.lo, "loading L into E");
                     assert_eq!(cpu.de.word(), 0x0007, "loading L into E");
@@ -411,6 +440,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::E,
                 src: RegisterID::A,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.de.lo, cpu.af.hi, "loading A into E");
                     assert_eq!(cpu.de.word(), 0x0007, "loading A into E");
@@ -425,6 +455,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::H,
                 src: RegisterID::B,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.hl.hi, cpu.bc.hi, "loading B into H");
                     assert_eq!(cpu.hl.word(), 0x0700, "loading B into H");
@@ -439,6 +470,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::H,
                 src: RegisterID::C,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.hl.hi, cpu.bc.lo, "loading C into H");
                     assert_eq!(cpu.hl.word(), 0x0700, "loading C into H");
@@ -453,6 +485,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::H,
                 src: RegisterID::D,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.hl.hi, cpu.de.hi, "loading D into H");
                     assert_eq!(cpu.hl.word(), 0x0700, "loading D into H");
@@ -467,6 +500,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::H,
                 src: RegisterID::E,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.hl.hi, cpu.de.lo, "loading E into H");
                     assert_eq!(cpu.hl.word(), 0x0700, "loading E into H");
@@ -480,6 +514,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::H,
                 src: RegisterID::H,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.hl.hi, cpu.hl.hi, "loading H into H");
                     assert_eq!(cpu.hl.word(), 0x0100, "loading H into H");
@@ -494,6 +529,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::H,
                 src: RegisterID::L,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.hl.hi, cpu.hl.lo, "loading L into H");
                     assert_eq!(cpu.hl.word(), 0x0707, "loading L into H");
@@ -508,6 +544,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::H,
                 src: RegisterID::A,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.hl.hi, cpu.af.hi, "loading A into H");
                     assert_eq!(cpu.hl.word(), 0x0700, "loading A into H");
@@ -522,6 +559,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::L,
                 src: RegisterID::B,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.hl.lo, cpu.bc.hi, "loading B into L");
                     assert_eq!(cpu.hl.word(), 0x0007, "loading B into L");
@@ -536,6 +574,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::L,
                 src: RegisterID::C,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.hl.lo, cpu.bc.lo, "loading C into L");
                     assert_eq!(cpu.hl.word(), 0x0007, "loading C into L");
@@ -550,6 +589,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::L,
                 src: RegisterID::D,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.hl.lo, cpu.de.hi, "loading D into L");
                     assert_eq!(cpu.hl.word(), 0x0007, "loading D into L");
@@ -564,6 +604,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::L,
                 src: RegisterID::E,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.hl.lo, cpu.de.lo, "loading E into L");
                     assert_eq!(cpu.hl.word(), 0x0007, "loading E into L");
@@ -578,6 +619,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::L,
                 src: RegisterID::H,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.hl.lo, cpu.hl.hi, "loading H into L");
                     assert_eq!(cpu.hl.word(), 0x0707, "loading H into L");
@@ -591,6 +633,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::L,
                 src: RegisterID::L,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.hl.lo, cpu.hl.lo, "loading L into L");
                     assert_eq!(cpu.hl.word(), 0x0001, "loading L into L");
@@ -605,6 +648,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::L,
                 src: RegisterID::A,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.hl.lo, cpu.af.hi, "loading A into L");
                     assert_eq!(cpu.hl.word(), 0x0007, "loading A into L");
@@ -619,6 +663,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::A,
                 src: RegisterID::B,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.af.hi, cpu.bc.hi, "loading B into A");
                     assert_eq!(cpu.af.word(), 0x0700, "loading B into A");
@@ -633,6 +678,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::A,
                 src: RegisterID::C,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.af.hi, cpu.bc.lo, "loading C into A");
                     assert_eq!(cpu.af.word(), 0x0700, "loading C into A");
@@ -647,6 +693,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::A,
                 src: RegisterID::D,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.af.hi, cpu.de.hi, "loading D into A");
                     assert_eq!(cpu.af.word(), 0x0700, "loading D into A");
@@ -661,6 +708,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::A,
                 src: RegisterID::E,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.af.hi, cpu.de.lo, "loading E into A");
                     assert_eq!(cpu.af.word(), 0x0700, "loading E into A");
@@ -675,6 +723,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::A,
                 src: RegisterID::H,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.af.hi, cpu.hl.hi, "loading H into A");
                     assert_eq!(cpu.af.word(), 0x0700, "loading H into A");
@@ -689,6 +738,7 @@ mod lr35902 {
                 },
                 dest: RegisterID::A,
                 src: RegisterID::L,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.af.hi, cpu.hl.lo, "loading L into A");
                     assert_eq!(cpu.af.word(), 0x0700, "loading L into A");
@@ -702,17 +752,68 @@ mod lr35902 {
                 },
                 dest: RegisterID::A,
                 src: RegisterID::A,
+                expected_err: None,
                 assert_fn: |cpu| {
                     assert_eq!(cpu.af.hi, cpu.af.hi, "loading A into A");
                     assert_eq!(cpu.af.word(), 0x0100, "loading A into A");
                 },
             },
+            TestCase {
+                init_fn: || -> LR35902 { LR35902::new() },
+                dest: RegisterID::F,
+                src: RegisterID::A,
+                expected_err: Some(CpuError::InvalidLoadOperands),
+                assert_fn: |cpu| {},
+            },
+            TestCase {
+                init_fn: || -> LR35902 { LR35902::new() },
+                dest: RegisterID::SP,
+                src: RegisterID::A,
+                expected_err: Some(CpuError::InvalidLoadOperands),
+                assert_fn: |cpu| {},
+            },
+            TestCase {
+                init_fn: || -> LR35902 { LR35902::new() },
+                dest: RegisterID::PC,
+                src: RegisterID::A,
+                expected_err: Some(CpuError::InvalidLoadOperands),
+                assert_fn: |cpu| {},
+            },
+            TestCase {
+                init_fn: || -> LR35902 { LR35902::new() },
+                dest: RegisterID::A,
+                src: RegisterID::F,
+                expected_err: Some(CpuError::InvalidLoadOperands),
+                assert_fn: |cpu| {},
+            },
+            TestCase {
+                init_fn: || -> LR35902 { LR35902::new() },
+                dest: RegisterID::A,
+                src: RegisterID::SP,
+                expected_err: Some(CpuError::InvalidLoadOperands),
+                assert_fn: |cpu| {},
+            },
+            TestCase {
+                init_fn: || -> LR35902 { LR35902::new() },
+                dest: RegisterID::A,
+                src: RegisterID::PC,
+                expected_err: Some(CpuError::InvalidLoadOperands),
+                assert_fn: |cpu| {},
+            },
         ];
 
         for tc in test_cases {
             let mut cpu = (tc.init_fn)();
-            cpu.ld_8_reg_to_reg(tc.dest, tc.src);
-            (tc.assert_fn)(cpu)
+            match cpu.ld_8_reg_to_reg(tc.dest, tc.src) {
+                Ok(()) => (tc.assert_fn)(cpu),
+                Err(why) => {
+                    assert_eq!(
+                        why,
+                        tc.expected_err.unwrap(),
+                        "returned error should match expected"
+                    )
+                }
+            }
         }
     }
 
@@ -723,6 +824,7 @@ mod lr35902 {
             dest: RegisterID,
             val: u8,
             assert_fn: fn(LR35902),
+            expected_err: Option<CpuError>,
         }
 
         let test_cases: Vec<TestCase> = vec![
@@ -731,49 +833,85 @@ mod lr35902 {
                 dest: RegisterID::A,
                 val: 0x10,
                 assert_fn: |cpu| assert_eq!(cpu.af.hi, 0x10, "loading immediate 8bit value into A"),
+                expected_err: None,
             },
             TestCase {
                 cpu: LR35902::new(),
                 dest: RegisterID::B,
                 val: 0x10,
                 assert_fn: |cpu| assert_eq!(cpu.bc.hi, 0x10, "loading immediate 8bit value into B"),
+                expected_err: None,
             },
             TestCase {
                 cpu: LR35902::new(),
                 dest: RegisterID::C,
                 val: 0x10,
                 assert_fn: |cpu| assert_eq!(cpu.bc.lo, 0x10, "loading immediate 8bit value into C"),
+                expected_err: None,
             },
             TestCase {
                 cpu: LR35902::new(),
                 dest: RegisterID::D,
                 val: 0x10,
                 assert_fn: |cpu| assert_eq!(cpu.de.hi, 0x10, "loading immediate 8bit value into D"),
+                expected_err: None,
             },
             TestCase {
                 cpu: LR35902::new(),
                 dest: RegisterID::E,
                 val: 0x10,
                 assert_fn: |cpu| assert_eq!(cpu.de.lo, 0x10, "loading immediate 8bit value into E"),
+                expected_err: None,
             },
             TestCase {
                 cpu: LR35902::new(),
                 dest: RegisterID::H,
                 val: 0x10,
                 assert_fn: |cpu| assert_eq!(cpu.hl.hi, 0x10, "loading immediate 8bit value into H"),
+                expected_err: None,
             },
             TestCase {
                 cpu: LR35902::new(),
                 dest: RegisterID::L,
                 val: 0x10,
                 assert_fn: |cpu| assert_eq!(cpu.hl.lo, 0x10, "loading immediate 8bit value into L"),
+                expected_err: None,
+            },
+            TestCase {
+                cpu: LR35902::new(),
+                dest: RegisterID::F,
+                val: 0x10,
+                assert_fn: |cpu| {},
+                expected_err: Some(CpuError::InvalidLoadOperands),
+            },
+            TestCase {
+                cpu: LR35902::new(),
+                dest: RegisterID::SP,
+                val: 0x10,
+                assert_fn: |cpu| {},
+                expected_err: Some(CpuError::InvalidLoadOperands),
+            },
+            TestCase {
+                cpu: LR35902::new(),
+                dest: RegisterID::PC,
+                val: 0x10,
+                assert_fn: |cpu| {},
+                expected_err: Some(CpuError::InvalidLoadOperands),
             },
         ];
 
         for tc in test_cases {
             let mut cpu = tc.cpu;
-            cpu.ld_8_imm_to_reg(tc.dest, tc.val);
-            (tc.assert_fn)(cpu)
+            match cpu.ld_8_imm_to_reg(tc.dest, tc.val) {
+                Ok(()) => (tc.assert_fn)(cpu),
+                Err(why) => {
+                    assert_eq!(
+                        why,
+                        tc.expected_err.unwrap(),
+                        "returned error should match expected"
+                    )
+                }
+            }
         }
     }
 }
