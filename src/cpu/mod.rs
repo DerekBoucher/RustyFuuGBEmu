@@ -6,10 +6,12 @@
 use crate::memory::Memory;
 
 mod cpu_impl;
+mod operation_impl;
 mod register_impl;
 
 /// Represents a byte addressable word register found
 /// inside the Sharp LR35902
+#[derive(Debug, PartialEq)]
 struct Register {
     hi: u8,
     lo: u8,
@@ -17,6 +19,7 @@ struct Register {
 
 /// Struct representing the Sharp LR35902 CPU found inside the original
 /// DMG Gameboy hardware
+#[derive(Debug, PartialEq)]
 pub struct LR35902 {
     af: Register,
     bc: Register,
@@ -28,9 +31,13 @@ pub struct LR35902 {
     memory: Memory,
 }
 
-struct Operation {
-    clock_cycles: u32,
-    exec_fn: fn(&mut LR35902),
+/// Operation trait to be implemented by all of the op codes.
+/// In a nutshell, the LR35902 struct is blind to each op code's
+/// modifications, and lets them perform the neccessary changes on the CPU's
+/// behalf
+trait Operation {
+    fn op_code() -> u8;
+    fn execute(cpu: &mut LR35902) -> u32;
 }
 
 /// ID denoting a register inside the Sharp LR35902 CPU.
