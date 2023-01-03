@@ -48,4 +48,12 @@ pub struct Memory {
     /// Master interrupt enable register.
     /// Occupies a single byte of memory at location 0xFFFF.
     interrupt_enable_register: u8,
+
+    /// Controls which rom bank is currently mapped
+    /// into memory location 0x4000 ~ 0x7FFF from the cartridge.
+    current_rom_bank: u32,
+
+    /// Controls which ram bank is currently mapped
+    /// into memory location 0xA000 ~ 0xBFFF.
+    current_ram_bank: u32,
 }

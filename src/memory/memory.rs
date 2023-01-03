@@ -4,6 +4,61 @@ mod tests;
 
 use crate::memory::Memory;
 
+/// Module containing important addresses in the cartridge
+/// header.
+mod cartridge_header {
+    /// Location in the cartridge header where the number of
+    /// ROM banks is declared.
+    const ROM_SIZE_ADDR: usize = 0x148;
+
+    /// Location in the cartridge header where the number of
+    /// RAM banks is declared.
+    const RAM_SIZE_ADDR: usize = 0x149;
+}
+
+/// Module containing important addresses for
+/// IO registers.
+mod io_registers {
+    const JOYPAD_ADDR: usize = 0xFF00;
+    const SERIAL_TRANSFER_DATA_ADDR: usize = 0xFF01;
+    const SERIAL_TRANSFER_CONTROL_ADDR: usize = 0xFF02;
+    const TIMER_DIV_ADDR: usize = 0xFF04;
+    const TIMER_COUNTER_ADDR: usize = 0xFF05;
+    const TIMER_MOD_ADDR: usize = 0xFF06;
+    const TIMER_CTRL_ADDR: usize = 0xFF07;
+    const AUDIO_CH1_SWEEP_ADDR: usize = 0xFF10;
+    const AUDIO_CH1_LENGTH_ADDR: usize = 0xFF11;
+    const AUDIO_CH1_VOLUME_ADDR: usize = 0xFF12;
+    const AUDIO_CH1_WAV_LO_ADDR: usize = 0xFF13;
+    const AUDIO_CH1_WAV_HI_ADDR: usize = 0xFF14;
+    const AUDIO_CH2_LENGTH_ADDR: usize = 0xFF16;
+    const AUDIO_CH2_VOLUME_ADDR: usize = 0xFF17;
+    const AUDIO_CH2_WAV_LO_ADDR: usize = 0xFF18;
+    const AUDIO_CH2_WAV_HI_ADDR: usize = 0xFF19;
+    const AUDIO_CH3_DAC_ENABLE_ADDR: usize = 0xFF1A;
+    const AUDIO_CH3_LENGTH_ADDR: usize = 0xFF1B;
+    const AUDIO_CH3_OUTPUT_LVL_ADDR: usize = 0xFF1C;
+    const AUDIO_CH3_WAV_LO_ADDR: usize = 0xFF1D;
+    const AUDIO_CH3_WAV_HI_ADDR: usize = 0xFF1E;
+    const AUDIO_CH4_LENGTH_ADDR: usize = 0xFF20;
+    const AUDIO_CH4_VOLUME_ADDR: usize = 0xFF21;
+    const AUDIO_CH4_FREQ_ADDR: usize = 0xFF22;
+    const AUDIO_CH4_CTRL_ADDR: usize = 0xFF23;
+    const AUDIO_WAV_PATTERN_RAM_START_ADDR: usize = 0xFF30;
+    const AUDIO_GLOBAL_CTRL_ADDR: usize = 0xFF26;
+    const AUDIO_GLOBAL_PANNING_ADDR: usize = 0xFF25;
+    const AUDIO_GLOBAL_VOLUME_ADDR: usize = 0xFF24;
+    const LCD_CONTROL_ADDR: usize = 0xFF40;
+    const LCD_STAT_ADDR: usize = 0xFF41;
+    const LCD_SCY_ADDR: usize = 0xFF42;
+    const LCD_SCX_ADDR: usize = 0xFF43;
+    const LCD_LY_ADDR: usize = 0xFF44;
+    const LCD_LYC_ADDR: usize = 0xFF45;
+    const LCD_WINY_ADDR: usize = 0xFF4A;
+    const LCD_WINX_ADDR: usize = 0xFF4B;
+    const BOOT_ROM_DISABLE_ADDR: usize = 0xFF50;
+}
+
 impl Memory {
     const boot_rom: [u8; 0x100] = [
         0x31, 0xFE, 0xFF, 0xAF, 0x21, 0xFF, 0x9F, 0x32, 0xCB, 0x7C, 0x20, 0xFB, 0x21, 0x26, 0xFF,
@@ -38,6 +93,8 @@ impl Memory {
             io_registers: [0x00; 0x80],
             hi_ram: [0x00; 0x7E],
             interrupt_enable_register: 0x00,
+            current_rom_bank: 0x1,
+            current_ram_bank: 0x1,
         }
     }
 
@@ -53,6 +110,8 @@ impl Memory {
             io_registers: [0x00; 0x80],
             hi_ram: [0x00; 0x7E],
             interrupt_enable_register: 0x00,
+            current_rom_bank: 0x1,
+            current_ram_bank: 0x1,
         }
     }
 
