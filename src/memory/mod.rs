@@ -1,7 +1,11 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
 //! Module containing all logic relevant to the emulation of the
 //! original Gameboy's random access and read only memory
+use std::any::Any;
 mod cartridge;
-pub mod memory;
+mod memory;
 
 /// Struct emulating the DMG Gameboy's memory behaviour.
 /// This struct controls the access behaviour whenever the CPU
@@ -52,7 +56,8 @@ pub struct Memory {
 /// Cartridge trait which serves as an interface to the various
 /// types of memory bank controllers that Gameboy cartridges
 /// can contain.
-pub trait Cartridge {
-    fn read(&self, addr: usize) -> u8;
+pub trait Cartridge: Any {
+    fn as_any(&self) -> &dyn Any;
+    fn read(&self, addr: usize) -> Option<&u8>;
     fn write(&mut self, addr: usize, val: u8);
 }

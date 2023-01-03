@@ -5,18 +5,6 @@ mod memory_test;
 use crate::memory::cartridge;
 use crate::memory::Memory;
 
-/// Module containing important addresses in the cartridge
-/// header.
-mod cartridge_header {
-    /// Location in the cartridge header where the number of
-    /// ROM banks is declared.
-    const ROM_SIZE_ADDR: usize = 0x148;
-
-    /// Location in the cartridge header where the number of
-    /// RAM banks is declared.
-    const RAM_SIZE_ADDR: usize = 0x149;
-}
-
 /// Module containing important addresses for
 /// IO registers.
 mod io_registers {
@@ -61,7 +49,7 @@ mod io_registers {
 }
 
 impl Memory {
-    const boot_rom: [u8; 0x100] = [
+    const BOOT_ROM: [u8; 0x100] = [
         0x31, 0xFE, 0xFF, 0xAF, 0x21, 0xFF, 0x9F, 0x32, 0xCB, 0x7C, 0x20, 0xFB, 0x21, 0x26, 0xFF,
         0x0E, 0x11, 0x3E, 0x80, 0x32, 0xE2, 0x0C, 0x3E, 0xF3, 0xE2, 0x32, 0x3E, 0x77, 0x77, 0x3E,
         0xFC, 0xE0, 0x47, 0x11, 0x04, 0x01, 0x21, 0x10, 0x80, 0x1A, 0xCD, 0x95, 0x00, 0xCD, 0x96,
@@ -84,7 +72,7 @@ impl Memory {
 
     pub fn new(cartridge_data: Vec<u8>) -> Memory {
         Memory {
-            cartridge: cartridge::new(vec![]),
+            cartridge: cartridge::new(cartridge_data),
             video_ram: [0x00; 0x2000],
             external_ram: [0x00; 0x2000],
             work_ram0: [0x00; 0x1000],
