@@ -1,7 +1,8 @@
 #[path = "memory_test.rs"]
 #[cfg(test)]
-mod tests;
+mod memory_test;
 
+use crate::memory::cartridge;
 use crate::memory::Memory;
 
 /// Module containing important addresses in the cartridge
@@ -83,7 +84,7 @@ impl Memory {
 
     pub fn new(cartridge_data: Vec<u8>) -> Memory {
         Memory {
-            cartridge: cartridge_data,
+            cartridge: cartridge::new(vec![]),
             video_ram: [0x00; 0x2000],
             external_ram: [0x00; 0x2000],
             work_ram0: [0x00; 0x1000],
@@ -93,14 +94,12 @@ impl Memory {
             io_registers: [0x00; 0x80],
             hi_ram: [0x00; 0x7E],
             interrupt_enable_register: 0x00,
-            current_rom_bank: 0x1,
-            current_ram_bank: 0x1,
         }
     }
 
     pub fn default() -> Memory {
         Memory {
-            cartridge: vec![],
+            cartridge: cartridge::new(vec![]),
             video_ram: [0x00; 0x2000],
             external_ram: [0x00; 0x2000],
             work_ram0: [0x00; 0x1000],
@@ -110,8 +109,6 @@ impl Memory {
             io_registers: [0x00; 0x80],
             hi_ram: [0x00; 0x7E],
             interrupt_enable_register: 0x00,
-            current_rom_bank: 0x1,
-            current_ram_bank: 0x1,
         }
     }
 

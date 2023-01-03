@@ -1,16 +1,15 @@
 //! Module containing all logic relevant to the emulation of the
 //! original Gameboy's random access and read only memory
+mod cartridge;
 pub mod memory;
 
 /// Struct emulating the DMG Gameboy's memory behaviour.
 /// This struct controls the access behaviour whenever the CPU
 /// makes reads or writes to the memory.
 pub struct Memory {
-    /// cartridge memory is mapped from address 0x0000 - 0x8000.
-    /// Furthermore, cartridge memory is segmented in 4KB banks,
-    /// where bank 0 is always mapped from 0x0000 - 0x3FFF, and
-    /// bank n is mapped from address 0x4000 - 0x7FFF.
-    cartridge: Vec<u8>,
+    /// Cartridge data.
+    /// Mapped into memory locations 0x0000 - 0x7FFF.
+    cartridge: Box<dyn Cartridge>,
 
     /// Video RAM where tile data is located.
     /// Occupies memory locations 0x8000 ~ 0x9FFF.
@@ -48,12 +47,12 @@ pub struct Memory {
     /// Master interrupt enable register.
     /// Occupies a single byte of memory at location 0xFFFF.
     interrupt_enable_register: u8,
+}
 
-    /// Controls which rom bank is currently mapped
-    /// into memory location 0x4000 ~ 0x7FFF from the cartridge.
-    current_rom_bank: u32,
-
-    /// Controls which ram bank is currently mapped
-    /// into memory location 0xA000 ~ 0xBFFF.
-    current_ram_bank: u32,
+/// Cartridge trait which serves as an interface to the various
+/// types of memory bank controllers that Gameboy cartridges
+/// can contain.
+pub trait Cartridge {
+    fn read(&self, addr: usize) -> u8;
+    fn write(&mut self, addr: usize, val: u8);
 }
