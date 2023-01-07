@@ -74,7 +74,6 @@ impl Memory {
         Memory {
             cartridge: cartridge::new(cartridge_data),
             video_ram: [0x00; 0x2000],
-            external_ram: [0x00; 0x2000],
             work_ram0: [0x00; 0x1000],
             work_ram1: [0x00; 0x1000],
             echo_ram: [0x00; 0x1E00],
@@ -89,7 +88,6 @@ impl Memory {
         Memory {
             cartridge: cartridge::new(vec![]),
             video_ram: [0x00; 0x2000],
-            external_ram: [0x00; 0x2000],
             work_ram0: [0x00; 0x1000],
             work_ram1: [0x00; 0x1000],
             echo_ram: [0x00; 0x1E00],

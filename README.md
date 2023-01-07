@@ -7,7 +7,7 @@ DMG Gameboy emulator fully written in rust 🦀
 - [ ] Implement Memory
     - [ ] Implement Cartridge
         - [x] ROM Only
-        - [ ] MBC1
+        - [X] MBC1
         - [ ] MBC2
         - [ ] MBC3
         - [ ] MBC4

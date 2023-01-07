@@ -19,10 +19,6 @@ pub struct Memory {
     /// Occupies memory locations 0x8000 ~ 0x9FFF.
     video_ram: [u8; 0x2000],
 
-    /// External RAM contained inside the cartridge.
-    /// Mapped to memory locations 0xA000 ~ 0xBFFF.
-    external_ram: [u8; 0x2000],
-
     /// General purpose RAM bank 0.
     /// Occupies memory locations 0xC000 ~ 0xCFFF.
     work_ram0: [u8; 0x1000],
