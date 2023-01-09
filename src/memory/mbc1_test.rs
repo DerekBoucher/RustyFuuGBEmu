@@ -1,61 +1,7 @@
 #[cfg(test)]
-mod rom_only {
-    use crate::memory;
-    use crate::memory::cartridge::*;
-
-    #[test]
-    fn new() {
-        let mut cart_data: Vec<u8> = vec![0x00; 0x8000];
-        let cart_data2 = cart_data.clone();
-        cart_data[header::TYPE_ADDR] = mbc_id::ROM_ONLY;
-        let rom_only = RomOnly {
-            data: cart_data,
-            ram_bank: [0x0; 0x2000],
-        };
-
-        let implementation = memory::cartridge::new(cart_data2);
-        match implementation.as_any().downcast_ref::<RomOnly>() {
-            Some(rom_only) => {}
-            None => panic!("returned cartridge implementation was not a RomOnly!"),
-        };
-    }
-
-    #[test]
-    fn read() {
-        let mut cart_data: Vec<u8> = vec![0x00; 0x8000];
-        cart_data[header::TYPE_ADDR] = mbc_id::ROM_ONLY;
-        cart_data[0x1000] = 0x7F;
-        cart_data[0x7FFF] = 0x6F;
-
-        let mut rom_only = RomOnly::new(cart_data);
-        rom_only.ram_bank[0x0] = 0x17;
-        let read1 = rom_only.read(0x1000);
-        let read2 = rom_only.read(0x7FFF);
-        let read3 = rom_only.read(0x10000);
-        let read4 = rom_only.read(0xA000);
-        assert_eq!(*read1.unwrap(), 0x7F,);
-        assert_eq!(*read2.unwrap(), 0x6F,);
-        assert!(read3.is_none());
-        assert_eq!(*read4.unwrap(), 0x17);
-    }
-
-    #[test]
-    fn write() {
-        let mut cart_data: Vec<u8> = vec![0x00; 0x8000];
-        cart_data[header::TYPE_ADDR] = mbc_id::ROM_ONLY;
-
-        let mut cartridge = RomOnly::new(cart_data);
-
-        cartridge.write(0x1000, 0x7F);
-        let read = cartridge.read(0x1000);
-        assert_eq!(*read.unwrap(), 0x00, "should not have resulted in a write")
-    }
-}
-
-#[cfg(test)]
 mod mbc1 {
     use crate::memory::cartridge;
-    use crate::memory::cartridge::MBC1;
+    use crate::memory::mbc1::MBC1;
     use crate::memory::Cartridge;
 
     #[test]
@@ -89,10 +35,10 @@ mod mbc1 {
         ];
 
         for tc in test_cases {
-            let mbc1 = cartridge::MBC1::new(vec![]);
+            let mbc1 = MBC1::new(vec![]);
 
             let implementation = cartridge::new((tc.init_fn)());
-            match implementation.as_any().downcast_ref::<cartridge::MBC1>() {
+            match implementation.as_any().downcast_ref::<MBC1>() {
                 Some(mbc1) => {}
                 None => panic!("returned cartridge implementation was not a MBC1!"),
             };
@@ -112,7 +58,7 @@ mod mbc1 {
                 run_fn: || {
                     let mut cart_data: Vec<u8> = vec![0x0; 0x4000];
                     cart_data[0x0] = 0x7F;
-                    let mbc1 = cartridge::MBC1::new(cart_data);
+                    let mbc1 = MBC1::new(cart_data);
                     let read_result = mbc1.read(0x0);
                     assert_eq!(
                         *read_result.unwrap(),
@@ -129,8 +75,8 @@ mod mbc1 {
                     cart_data[0x0] = 0x7F;
                     cart_data[cartridge::header::ROM_SIZE_ADDR] =
                         cartridge::rom_size_id::ONE_MEGABYTE;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
-                    mbc1.banking_mode = cartridge::MBC1::RAM_BANKING_MODE;
+                    let mut mbc1 = MBC1::new(cart_data);
+                    mbc1.banking_mode = MBC1::RAM_BANKING_MODE;
                     let read_result = mbc1.read(0x0);
                     assert_eq!(
                         *read_result.unwrap(),
@@ -147,8 +93,8 @@ mod mbc1 {
                     cart_data[0x20 * 0x4000] = 0x7F;
                     cart_data[cartridge::header::ROM_SIZE_ADDR] =
                         cartridge::rom_size_id::ONE_MEGABYTE;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
-                    mbc1.banking_mode = cartridge::MBC1::RAM_BANKING_MODE;
+                    let mut mbc1 = MBC1::new(cart_data);
+                    mbc1.banking_mode = MBC1::RAM_BANKING_MODE;
                     mbc1.ram_bank_select_register = 0x1;
                     let read_result = mbc1.read(0x0);
                     assert_eq!(
@@ -166,8 +112,8 @@ mod mbc1 {
                     cart_data[0x40 * 0x4000] = 0x7F;
                     cart_data[cartridge::header::ROM_SIZE_ADDR] =
                         cartridge::rom_size_id::ONE_MEGABYTE;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
-                    mbc1.banking_mode = cartridge::MBC1::RAM_BANKING_MODE;
+                    let mut mbc1 = MBC1::new(cart_data);
+                    mbc1.banking_mode = MBC1::RAM_BANKING_MODE;
                     mbc1.ram_bank_select_register = 0x2;
                     let read_result = mbc1.read(0x0);
                     assert_eq!(
@@ -185,8 +131,8 @@ mod mbc1 {
                     cart_data[0x60 * 0x4000] = 0x7F;
                     cart_data[cartridge::header::ROM_SIZE_ADDR] =
                         cartridge::rom_size_id::ONE_MEGABYTE;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
-                    mbc1.banking_mode = cartridge::MBC1::RAM_BANKING_MODE;
+                    let mut mbc1 = MBC1::new(cart_data);
+                    mbc1.banking_mode = MBC1::RAM_BANKING_MODE;
                     mbc1.ram_bank_select_register = 0x3;
                     let read_result = mbc1.read(0x0);
                     assert_eq!(
@@ -204,8 +150,8 @@ mod mbc1 {
                     cart_data[0x0000] = 0x7F;
                     cart_data[cartridge::header::ROM_SIZE_ADDR] =
                         cartridge::rom_size_id::ONE_MEGABYTE;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
-                    mbc1.banking_mode = cartridge::MBC1::RAM_BANKING_MODE;
+                    let mut mbc1 = MBC1::new(cart_data);
+                    mbc1.banking_mode = MBC1::RAM_BANKING_MODE;
                     mbc1.ram_bank_select_register = 0x4;
                     let read_result = mbc1.read(0x0);
                     assert_eq!(
@@ -221,7 +167,7 @@ mod mbc1 {
                 run_fn: || {
                     let mut cart_data: Vec<u8> = vec![0x0; 0x2 * 0x4000];
                     cart_data[0x4000] = 0x7F;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.rom_bank_select_register = 0x0;
                     let read_result = mbc1.read(0x4000);
                     assert_eq!(
@@ -237,7 +183,7 @@ mod mbc1 {
                 run_fn: || {
                     let mut cart_data: Vec<u8> = vec![0x0; 0x2 * 0x4000];
                     cart_data[0x4000] = 0x7F;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.rom_bank_select_register = 0x1;
                     let read_result = mbc1.read(0x4000);
                     assert_eq!(
@@ -253,7 +199,7 @@ mod mbc1 {
                 run_fn: || {
                     let mut cart_data: Vec<u8> = vec![0x0; 0x4 * 0x4000];
                     cart_data[0x4000 * 0x3] = 0x7F;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.rom_bank_select_register = 0x3;
                     let read_result = mbc1.read(0x4000);
                     assert_eq!(
@@ -269,10 +215,10 @@ mod mbc1 {
                 run_fn: || {
                     let mut cart_data: Vec<u8> = vec![0x0; 0x4 * 0x4000];
                     cart_data[0x4000 * 0x3] = 0x7F;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.rom_bank_select_register = 0x3;
                     mbc1.ram_bank_select_register = 0x1;
-                    mbc1.banking_mode = cartridge::MBC1::RAM_BANKING_MODE;
+                    mbc1.banking_mode = MBC1::RAM_BANKING_MODE;
                     let read_result = mbc1.read(0x4000);
                     assert_eq!(
                         *read_result.unwrap(),
@@ -289,10 +235,10 @@ mod mbc1 {
                     cart_data[cartridge::header::ROM_SIZE_ADDR] =
                         cartridge::rom_size_id::ONE_MEGABYTE;
                     cart_data[0x4000 * 0x23] = 0x7F;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.rom_bank_select_register = 0x3;
                     mbc1.ram_bank_select_register = 0x1;
-                    mbc1.banking_mode = cartridge::MBC1::RAM_BANKING_MODE;
+                    mbc1.banking_mode = MBC1::RAM_BANKING_MODE;
                     let read_result = mbc1.read(0x4000);
                     assert_eq!(
                         *read_result.unwrap(),
@@ -309,10 +255,10 @@ mod mbc1 {
                     cart_data[cartridge::header::ROM_SIZE_ADDR] =
                         cartridge::rom_size_id::ONE_MEGABYTE;
                     cart_data[0x4000 * 0x61] = 0x7F;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.rom_bank_select_register = 0x0;
                     mbc1.ram_bank_select_register = 0x3;
-                    mbc1.banking_mode = cartridge::MBC1::RAM_BANKING_MODE;
+                    mbc1.banking_mode = MBC1::RAM_BANKING_MODE;
                     let read_result = mbc1.read(0x4000);
                     assert_eq!(
                         *read_result.unwrap(),
@@ -328,7 +274,7 @@ mod mbc1 {
                     let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
                     cart_data[cartridge::header::RAM_SIZE_ADDR] =
                         cartridge::ram_size_id::NO_RAM;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_bank_select_register = 0x0;
                     mbc1.ram_banks[0][0] = 0x7F;
                     let read_result = mbc1.read(0xA000);
@@ -347,7 +293,7 @@ mod mbc1 {
                     cart_data[cartridge::header::RAM_SIZE_ADDR] =
                         cartridge::ram_size_id::ONE_BANK;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_bank_select_register = 0x0;
                     mbc1.ram_banks[0][0] = 0x7F;
                     let read_result = mbc1.read(0xA000);
@@ -366,7 +312,7 @@ mod mbc1 {
                     cart_data[cartridge::header::RAM_SIZE_ADDR] =
                         cartridge::ram_size_id::ONE_BANK;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_bank_select_register = 0x0;
                     mbc1.ram_banks[0][0] = 0x7F;
                     let read_result = mbc1.read(0xA000);
@@ -385,7 +331,7 @@ mod mbc1 {
                     cart_data[cartridge::header::RAM_SIZE_ADDR] =
                         cartridge::ram_size_id::ONE_BANK;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_bank_select_register = 0x0;
                     mbc1.ram_banks[0][0] = 0x7F;
                     mbc1.ram_enabled = true;
@@ -405,7 +351,7 @@ mod mbc1 {
                     cart_data[cartridge::header::RAM_SIZE_ADDR] =
                         cartridge::ram_size_id::FOUR_BANKS;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_bank_select_register = 0x1;
                     mbc1.ram_banks[1][0] = 0x7F;
                     mbc1.ram_enabled = true;
@@ -425,7 +371,7 @@ mod mbc1 {
                     cart_data[cartridge::header::RAM_SIZE_ADDR] =
                         cartridge::ram_size_id::FOUR_BANKS;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_bank_select_register = 0x4;
                     mbc1.ram_banks[0][0] = 0x7F;
                     mbc1.ram_enabled = true;
@@ -442,7 +388,7 @@ mod mbc1 {
                 ),
                 run_fn: || {
                     let cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
-                    let mbc1 = cartridge::MBC1::new(cart_data);
+                    let mbc1 = MBC1::new(cart_data);
                     let read_result = mbc1.read(0x8000);
                     assert!(read_result.is_none())
                 },
@@ -469,7 +415,7 @@ mod mbc1 {
                 ),
                 run_fn: || {
                     let cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_enabled = true;
                     mbc1.write(0x0000, 0x13);
                     assert!(!mbc1.ram_enabled);
@@ -481,7 +427,7 @@ mod mbc1 {
                 ),
                 run_fn: || {
                     let cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x0000, 0x5A);
                     assert!(mbc1.ram_enabled);
                 },
@@ -493,7 +439,7 @@ mod mbc1 {
                 run_fn: || {
                     let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
                     cart_data[cartridge::header::ROM_SIZE_ADDR] = 0x00;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x2000, 0xFF);
                     assert_eq!(mbc1.rom_bank_select_register, 0x01);
                 },
@@ -505,7 +451,7 @@ mod mbc1 {
                 run_fn: || {
                     let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
                     cart_data[cartridge::header::ROM_SIZE_ADDR] = 0x01;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x2000, 0xFF);
                     assert_eq!(mbc1.rom_bank_select_register, 0x03);
                 },
@@ -517,7 +463,7 @@ mod mbc1 {
                 run_fn: || {
                     let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
                     cart_data[cartridge::header::ROM_SIZE_ADDR] = 0x02;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x2000, 0xFF);
                     assert_eq!(mbc1.rom_bank_select_register, 0x07);
                 },
@@ -529,7 +475,7 @@ mod mbc1 {
                 run_fn: || {
                     let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
                     cart_data[cartridge::header::ROM_SIZE_ADDR] = 0x03;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x2000, 0xFF);
                     assert_eq!(mbc1.rom_bank_select_register, 0x0F);
                 },
@@ -541,7 +487,7 @@ mod mbc1 {
                 run_fn: || {
                     let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
                     cart_data[cartridge::header::ROM_SIZE_ADDR] = 0x04;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x2000, 0xFF);
                     assert_eq!(mbc1.rom_bank_select_register, 0x1F);
                 },
@@ -552,7 +498,7 @@ mod mbc1 {
                 ),
                 run_fn: || {
                     let cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x4000, 0x1);
                     assert_eq!(mbc1.ram_bank_select_register, 0x1);
                 },
@@ -563,7 +509,7 @@ mod mbc1 {
                 ),
                 run_fn: || {
                     let cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x4000, 0xFF);
                     assert_eq!(mbc1.ram_bank_select_register, 0x3);
                 },
@@ -574,7 +520,7 @@ mod mbc1 {
                 ),
                 run_fn: || {
                     let cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x6000, 0x1);
                     assert_eq!(mbc1.banking_mode, MBC1::RAM_BANKING_MODE);
                 },
@@ -585,7 +531,7 @@ mod mbc1 {
                 ),
                 run_fn: || {
                     let cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.banking_mode = MBC1::RAM_BANKING_MODE;
                     mbc1.write(0x6000, 0x10);
                     assert_eq!(mbc1.banking_mode, MBC1::SIMPLE_BANKING_MODE);
@@ -598,7 +544,7 @@ mod mbc1 {
                 run_fn: || {
                     let mut cart_data: Vec<u8> = vec![0x00; 0x4000];
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0xB000, 0x10);
                     assert_eq!(mbc1.ram_banks[0][0x1000], 0x00);
                 },
@@ -610,7 +556,7 @@ mod mbc1 {
                 run_fn: || {
                     let mut cart_data: Vec<u8> = vec![0x00; 0x4000];
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0xB000, 0x10);
                     assert_eq!(mbc1.ram_banks[0][0x1000], 0x00);
                 },
@@ -623,7 +569,7 @@ mod mbc1 {
                     let mut cart_data: Vec<u8> = vec![0x00; 0x4000];
                     cart_data[cartridge::header::RAM_SIZE_ADDR] = cartridge::ram_size_id::ONE_BANK;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_enabled = true;
                     mbc1.write(0xB000, 0x10);
                     assert_eq!(mbc1.ram_banks[0][0x1000], 0x10);
@@ -637,7 +583,7 @@ mod mbc1 {
                     let mut cart_data: Vec<u8> = vec![0x00; 0x4000];
                     cart_data[cartridge::header::RAM_SIZE_ADDR] = cartridge::ram_size_id::FOUR_BANKS;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_enabled = true;
                     mbc1.ram_bank_select_register = 0x01;
                     mbc1.write(0xB000, 0x10);
@@ -652,7 +598,7 @@ mod mbc1 {
                     let mut cart_data: Vec<u8> = vec![0x00; 0x4000];
                     cart_data[cartridge::header::RAM_SIZE_ADDR] = cartridge::ram_size_id::FOUR_BANKS;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_enabled = true;
                     mbc1.ram_bank_select_register = 0x02;
                     mbc1.write(0xB000, 0x10);
@@ -667,7 +613,7 @@ mod mbc1 {
                     let mut cart_data: Vec<u8> = vec![0x00; 0x4000];
                     cart_data[cartridge::header::RAM_SIZE_ADDR] = cartridge::ram_size_id::FOUR_BANKS;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_enabled = true;
                     mbc1.ram_bank_select_register = 0x03;
                     mbc1.write(0xB000, 0x10);
@@ -682,7 +628,7 @@ mod mbc1 {
                     let mut cart_data: Vec<u8> = vec![0x00; 0x4000];
                     cart_data[cartridge::header::RAM_SIZE_ADDR] = cartridge::ram_size_id::FOUR_BANKS;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
-                    let mut mbc1 = cartridge::MBC1::new(cart_data);
+                    let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_enabled = true;
                     mbc1.ram_bank_select_register = 0x04;
                     mbc1.write(0xB000, 0x10);

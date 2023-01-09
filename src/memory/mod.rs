@@ -3,9 +3,12 @@
 
 //! Module containing all logic relevant to the emulation of the
 //! original Gameboy's random access and read only memory
-use std::any::Any;
 mod cartridge;
+mod mbc1;
 mod memory;
+mod no_mbc;
+
+use std::any::Any;
 
 /// Struct emulating the DMG Gameboy's memory behaviour.
 /// This struct controls the access behaviour whenever the CPU
