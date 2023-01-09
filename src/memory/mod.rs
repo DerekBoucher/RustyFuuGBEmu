@@ -42,7 +42,7 @@ pub struct Memory {
 
     /// High RAM used by the CPU.
     /// Occupies memory locations 0xFF80 ~ 0xFFFE.
-    hi_ram: [u8; 0x7E],
+    hi_ram: [u8; 0x7F],
 
     /// Master interrupt enable register.
     /// Occupies a single byte of memory at location 0xFFFF.

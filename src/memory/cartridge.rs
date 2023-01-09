@@ -70,6 +70,7 @@ pub fn new(data: Vec<u8>) -> Box<dyn Cartridge> {
 /// controller. Simplest form of the gameboy cart.
 struct RomOnly {
     data: Vec<u8>,
+    ram_bank: [u8; 0x2000],
 }
 
 /// Cartridge implementation for the Rom Only type.
@@ -78,19 +79,33 @@ impl Cartridge for RomOnly {
         self
     }
 
-    /// Read simply returns the data at the specified address.
     fn read(&self, addr: usize) -> Option<&u8> {
-        return self.data.get(addr);
+        if addr < 0x8000 {
+            return self.data.get(addr);
+        }
+
+        // Ram bank
+        if addr >= 0xA000 && addr < 0xC000 {
+            return Some(&self.ram_bank[addr - 0xA000]);
+        }
+
+        None
     }
 
-    /// Write is a NOP for the RomOnly cartridge type
-    fn write(&mut self, _addr: usize, _val: u8) {}
+    fn write(&mut self, addr: usize, val: u8) {
+        if addr >= 0xA000 && addr < 0xC000 {
+            self.ram_bank[addr - 0xA000] = val;
+        }
+    }
 }
 
 /// Constructor for RomOnly
 impl RomOnly {
     fn new(data: Vec<u8>) -> Box<RomOnly> {
-        Box::new(RomOnly { data })
+        Box::new(RomOnly {
+            data,
+            ram_bank: [0x0; 0x2000],
+        })
     }
 }
 
@@ -111,7 +126,7 @@ impl MBC1 {
     pub const SIMPLE_BANKING_MODE: bool = false;
     pub const RAM_BANKING_MODE: bool = true;
 
-    fn new(data: Vec<u8>) -> Box<MBC1> {
+    fn new(data: Vec<u8>) -> Box<Self> {
         Box::new(MBC1 {
             rom: data,
             ram_enabled: false,

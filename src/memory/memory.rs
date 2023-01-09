@@ -45,7 +45,7 @@ mod io_registers {
     const LCD_LYC_ADDR: usize = 0xFF45;
     const LCD_WINY_ADDR: usize = 0xFF4A;
     const LCD_WINX_ADDR: usize = 0xFF4B;
-    const BOOT_ROM_DISABLE_ADDR: usize = 0xFF50;
+    pub const BOOT_ROM_DISABLE_ADDR: usize = 0xFF50;
 }
 
 impl Memory {
@@ -70,8 +70,8 @@ impl Memory {
         0x50,
     ];
 
-    pub fn new(cartridge_data: Vec<u8>) -> Memory {
-        Memory {
+    pub fn new(cartridge_data: Vec<u8>) -> Self {
+        Self {
             cartridge: cartridge::new(cartridge_data),
             video_ram: [0x00; 0x2000],
             work_ram0: [0x00; 0x1000],
@@ -79,13 +79,13 @@ impl Memory {
             echo_ram: [0x00; 0x1E00],
             sprite_attributes: [0x00; 0xA0],
             io_registers: [0x00; 0x80],
-            hi_ram: [0x00; 0x7E],
+            hi_ram: [0x00; 0x7F],
             interrupt_enable_register: 0x00,
         }
     }
 
-    pub fn default() -> Memory {
-        Memory {
+    pub fn default() -> Self {
+        Self {
             cartridge: cartridge::new(vec![]),
             video_ram: [0x00; 0x2000],
             work_ram0: [0x00; 0x1000],
@@ -93,14 +93,123 @@ impl Memory {
             echo_ram: [0x00; 0x1E00],
             sprite_attributes: [0x00; 0xA0],
             io_registers: [0x00; 0x80],
-            hi_ram: [0x00; 0x7E],
+            hi_ram: [0x00; 0x7F],
             interrupt_enable_register: 0x00,
         }
     }
 
-    pub fn write(&mut self, addr: usize, _value: u8) {}
+    pub fn read(&self, addr: usize) -> Option<&u8> {
+        // If boot rom is enabled, the data should come from it.
+        if addr < 0x100 && self.boot_rom_enabled() {
+            return Some(&Memory::BOOT_ROM[addr]);
+        }
 
-    pub fn read(self, addr: usize) -> u8 {
-        0x00
+        // Cartridge ROM
+        if addr < 0x8000 {
+            return self.cartridge.read(addr);
+        }
+
+        // Video RAM
+        if addr >= 0x8000 && addr < 0xA000 {
+            return Some(&self.video_ram[addr - 0x8000]);
+        }
+
+        // Cartridge RAM
+        if addr >= 0xA000 && addr < 0xC000 {
+            return self.cartridge.read(addr);
+        }
+
+        // Work RAM 0
+        if addr >= 0xC000 && addr < 0xD000 {
+            return Some(&self.work_ram0[addr - 0xC000]);
+        }
+
+        // Work RAM 1
+        if addr >= 0xD000 && addr < 0xE000 {
+            return Some(&self.work_ram1[addr - 0xD000]);
+        }
+
+        // Echo RAM
+        if addr >= 0xE000 && addr < 0xFE00 {
+            return self.read((addr - 0xE000) + 0xC000);
+        }
+
+        // OAM / Sprite attributes
+        if addr >= 0xFE00 && addr < 0xFF00 {
+            return Some(&self.sprite_attributes[addr - 0xFE00]);
+        }
+
+        // IO Registers
+        if addr >= 0xFF00 && addr < 0xFF80 {
+            return Some(&self.io_registers[addr - 0xFF00]);
+        }
+
+        // High RAM
+        if addr >= 0xFF80 && addr < 0xFFFF {
+            return Some(&self.hi_ram[addr - 0xFF80]);
+        }
+
+        // Interupt enable register
+        if addr == 0xFFFF {
+            return Some(&self.interrupt_enable_register);
+        }
+
+        None
+    }
+
+    pub fn write(&mut self, addr: usize, val: u8) {
+        // Cartridge ROM
+        if addr < 0x8000 {
+            self.cartridge.write(addr, val)
+        }
+
+        // Video RAM
+        if addr >= 0x8000 && addr < 0xA000 {
+            self.video_ram[addr - 0x8000] = val;
+        }
+
+        // Cartridge RAM
+        if addr >= 0xA000 && addr < 0xC000 {
+            self.cartridge.write(addr, val);
+        }
+
+        // Work RAM 0
+        if addr >= 0xC000 && addr < 0xD000 {
+            self.work_ram0[addr - 0xC000] = val;
+        }
+
+        // Work RAM 1
+        if addr >= 0xD000 && addr < 0xE000 {
+            self.work_ram1[addr - 0xD000] = val;
+        }
+
+        // Echo RAM
+        if addr >= 0xE000 && addr < 0xFE00 {
+            self.write((addr - 0xE000) + 0xC000, val);
+        }
+
+        // OAM / Sprite attributes
+        if addr >= 0xFE00 && addr < 0xFF00 {
+            self.sprite_attributes[addr - 0xFE00] = val;
+        }
+
+        // IO Registers
+        if addr >= 0xFF00 && addr < 0xFF80 {
+            self.io_registers[addr - 0xFF00] = val;
+        }
+
+        // High RAM
+        if addr >= 0xFF80 && addr < 0xFFFF {
+            self.hi_ram[addr - 0xFF80] = val;
+        }
+
+        // Interupt enable register
+        if addr == 0xFFFF {
+            self.interrupt_enable_register = val;
+        }
+    }
+
+    fn boot_rom_enabled(&self) -> bool {
+        return self.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] == 0x00;
     }
 }
