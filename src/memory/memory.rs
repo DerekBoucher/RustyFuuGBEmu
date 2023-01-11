@@ -1,6 +1,6 @@
 #[path = "memory_test.rs"]
 #[cfg(test)]
-mod memory_test;
+mod test;
 
 use crate::memory::cartridge;
 use crate::memory::Memory;

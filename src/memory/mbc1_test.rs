@@ -1,58 +1,56 @@
-#[cfg(test)]
-mod mbc1 {
-    use crate::memory::cartridge;
-    use crate::memory::mbc1::MBC1;
-    use crate::memory::Cartridge;
+use crate::memory::cartridge;
+use crate::memory::mbc1::MBC1;
+use crate::memory::Cartridge;
 
-    #[test]
-    fn new() {
-        struct TestCase {
-            init_fn: fn() -> Vec<u8>,
-        }
-
-        let test_cases: Vec<TestCase> = vec![
-            TestCase {
-                init_fn: || -> Vec<u8> {
-                    let mut cart_data: Vec<u8> = vec![0x00; 0x8000];
-                    cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1;
-                    return cart_data;
-                },
-            },
-            TestCase {
-                init_fn: || -> Vec<u8> {
-                    let mut cart_data: Vec<u8> = vec![0x00; 0x8000];
-                    cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
-                    return cart_data;
-                },
-            },
-            TestCase {
-                init_fn: || -> Vec<u8> {
-                    let mut cart_data: Vec<u8> = vec![0x00; 0x8000];
-                    cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM_BATTERY;
-                    return cart_data;
-                },
-            },
-        ];
-
-        for tc in test_cases {
-            let mbc1 = MBC1::new(vec![]);
-
-            let implementation = cartridge::new((tc.init_fn)());
-            match implementation.as_any().downcast_ref::<MBC1>() {
-                Some(mbc1) => {}
-                None => panic!("returned cartridge implementation was not a MBC1!"),
-            };
-        }
+#[test]
+fn new() {
+    struct TestCase {
+        init_fn: fn() -> Vec<u8>,
     }
 
-    #[test]
-    fn read() {
-        struct TestCase {
-            description: String,
-            run_fn: fn(),
-        }
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            init_fn: || -> Vec<u8> {
+                let mut cart_data: Vec<u8> = vec![0x00; 0x8000];
+                cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1;
+                return cart_data;
+            },
+        },
+        TestCase {
+            init_fn: || -> Vec<u8> {
+                let mut cart_data: Vec<u8> = vec![0x00; 0x8000];
+                cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
+                return cart_data;
+            },
+        },
+        TestCase {
+            init_fn: || -> Vec<u8> {
+                let mut cart_data: Vec<u8> = vec![0x00; 0x8000];
+                cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM_BATTERY;
+                return cart_data;
+            },
+        },
+    ];
 
-        let test_cases: Vec<TestCase> = vec![
+    for tc in test_cases {
+        let mbc1 = MBC1::new(vec![]);
+
+        let implementation = cartridge::new((tc.init_fn)());
+        match implementation.as_any().downcast_ref::<MBC1>() {
+            Some(mbc1) => {}
+            None => panic!("returned cartridge implementation was not a MBC1!"),
+        };
+    }
+}
+
+#[test]
+fn read() {
+    struct TestCase {
+        description: String,
+        run_fn: fn(),
+    }
+
+    let test_cases: Vec<TestCase> = vec![
             TestCase {
                 description: String::from("read from bank 0 w/ no bank switching"),
                 run_fn: || {
@@ -395,20 +393,20 @@ mod mbc1 {
             },
         ];
 
-        for tc in test_cases {
-            println!("{}", tc.description);
-            (tc.run_fn)();
-        }
+    for tc in test_cases {
+        println!("{}", tc.description);
+        (tc.run_fn)();
+    }
+}
+
+#[test]
+fn write() {
+    struct TestCase {
+        description: String,
+        run_fn: fn(),
     }
 
-    #[test]
-    fn write() {
-        struct TestCase {
-            description: String,
-            run_fn: fn(),
-        }
-
-        let test_cases: Vec<TestCase> = vec![
+    let test_cases: Vec<TestCase> = vec![
             TestCase {
                 description: String::from(
                     "writing to 0x0000 - 0x2000 -> non 0x-A value in the lower nibble -> disables ram",
@@ -637,9 +635,8 @@ mod mbc1 {
             },
         ];
 
-        for tc in test_cases {
-            println!("{}", tc.description);
-            (tc.run_fn)();
-        }
+    for tc in test_cases {
+        println!("{}", tc.description);
+        (tc.run_fn)();
     }
 }

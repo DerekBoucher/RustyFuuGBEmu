@@ -1,6 +1,6 @@
 #[path = "opcode_test.rs"]
 #[cfg(test)]
-mod opcode_test;
+mod test;
 
 use crate::cpu::LR35902;
 

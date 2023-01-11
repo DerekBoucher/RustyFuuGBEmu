@@ -1,6 +1,6 @@
 #[path = "register_test.rs"]
 #[cfg(test)]
-mod register_test;
+mod test;
 
 use crate::cpu::Register;
 
