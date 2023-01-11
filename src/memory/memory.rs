@@ -84,20 +84,6 @@ impl Memory {
         }
     }
 
-    pub fn default() -> Self {
-        Self {
-            cartridge: cartridge::new(vec![]),
-            video_ram: [0x00; 0x2000],
-            work_ram0: [0x00; 0x1000],
-            work_ram1: [0x00; 0x1000],
-            echo_ram: [0x00; 0x1E00],
-            sprite_attributes: [0x00; 0xA0],
-            io_registers: [0x00; 0x80],
-            hi_ram: [0x00; 0x7F],
-            interrupt_enable_register: 0x00,
-        }
-    }
-
     pub fn read(&self, addr: usize) -> Option<&u8> {
         // If boot rom is enabled, the data should come from it.
         if addr < 0x100 && self.boot_rom_enabled() {
