@@ -2,6 +2,7 @@
 #[cfg(test)]
 mod test;
 
+use crate::cpu::bit;
 use crate::cpu::LR35902;
 
 pub struct Nop;
@@ -20,21 +21,21 @@ impl LdImm16IntoBC {
     pub const OPCODE: u8 = 0x01;
 
     pub fn execute(cpu: &mut LR35902) -> u32 {
-        cpu.pc += 1;
+        cpu.pc = cpu.pc.wrapping_add(1);
 
         cpu.bc.lo = match cpu.memory.read(usize::from(cpu.pc)) {
             Some(byte) => *byte,
             None => panic!("opcode load imm 16 into BC failed to fetch lo byte"),
         };
 
-        cpu.pc += 1;
+        cpu.pc = cpu.pc.wrapping_add(1);
 
         cpu.bc.hi = match cpu.memory.read(usize::from(cpu.pc)) {
             Some(byte) => *byte,
             None => panic!("opcode load imm 16 into BC failed to fetch hi byte"),
         };
 
-        cpu.pc += 1;
+        cpu.pc = cpu.pc.wrapping_add(1);
 
         12
     }
@@ -46,7 +47,7 @@ impl LdAIntoMemoryBC {
 
     pub fn execute(cpu: &mut LR35902) -> u32 {
         cpu.memory.write(usize::from(cpu.bc.word()), cpu.af.hi);
-        cpu.pc += 1;
+        cpu.pc = cpu.pc.wrapping_add(1);
         8
     }
 }
@@ -56,8 +57,41 @@ impl IncBC {
     pub const OPCODE: u8 = 0x03;
 
     pub fn execute(cpu: &mut LR35902) -> u32 {
-        cpu.pc += 1;
-        cpu.bc.hi += 1;
+        cpu.pc = cpu.pc.wrapping_add(1);
+
+        let mut word = cpu.bc.word();
+        word = word.wrapping_add(1);
+
+        cpu.bc.hi = word.to_be_bytes()[0];
+        cpu.bc.lo = word.to_be_bytes()[1];
+
         8
+    }
+}
+
+pub struct IncB;
+impl IncB {
+    pub const OPCODE: u8 = 0x04;
+
+    pub fn execute(cpu: &mut LR35902) -> u32 {
+        cpu.pc = cpu.pc.wrapping_add(1);
+
+        if bit::is_half_carry(cpu.bc.hi, 0x01, false) {
+            cpu.set_half_carry_flag();
+        } else {
+            cpu.reset_half_carry_flag();
+        }
+
+        cpu.bc.hi = cpu.bc.hi.wrapping_add(1);
+
+        if cpu.bc.hi == 0x00 {
+            cpu.set_zero_flag();
+        } else {
+            cpu.reset_zero_flag();
+        }
+
+        cpu.reset_sub_flag();
+
+        4
     }
 }

@@ -1,7 +1,23 @@
+#[path = "lr35902_test.rs"]
+#[cfg(test)]
+mod test;
+
 use crate::cpu::opcode::*;
 use crate::cpu::MemoryDriver;
 use crate::cpu::Register;
 use crate::cpu::LR35902;
+
+/// Bit mask for the zero flag
+const ZERO_FLAG_MASK: u8 = 1 << 7;
+
+/// Bit mask for the sub flag
+const SUB_FLAG_MASK: u8 = 1 << 6;
+
+/// Bit mask for the half carry flag
+const HALF_CARRY_FLAG_MASK: u8 = 1 << 5;
+
+/// Bit mask for the carry flag
+const CARRY_FLAG_MASK: u8 = 1 << 4;
 
 impl PartialEq for LR35902 {
     fn eq(&self, other: &Self) -> bool {
@@ -41,7 +57,40 @@ impl LR35902 {
             LdImm16IntoBC::OPCODE => LdImm16IntoBC::execute(self),
             LdAIntoMemoryBC::OPCODE => LdAIntoMemoryBC::execute(self),
             IncBC::OPCODE => IncBC::execute(self),
+            IncB::OPCODE => IncB::execute(self),
             _ => 0,
         }
+    }
+
+    pub fn reset_half_carry_flag(&mut self) {
+        self.af.hi &= !HALF_CARRY_FLAG_MASK;
+    }
+
+    pub fn set_half_carry_flag(&mut self) {
+        self.af.hi |= HALF_CARRY_FLAG_MASK;
+    }
+
+    pub fn reset_zero_flag(&mut self) {
+        self.af.hi &= !ZERO_FLAG_MASK;
+    }
+
+    pub fn set_zero_flag(&mut self) {
+        self.af.hi |= ZERO_FLAG_MASK;
+    }
+
+    pub fn reset_carry_flag(&mut self) {
+        self.af.hi &= !CARRY_FLAG_MASK;
+    }
+
+    pub fn set_carry_flag(&mut self) {
+        self.af.hi |= CARRY_FLAG_MASK;
+    }
+
+    pub fn reset_sub_flag(&mut self) {
+        self.af.hi &= !SUB_FLAG_MASK;
+    }
+
+    pub fn set_sub_flag(&mut self) {
+        self.af.hi |= SUB_FLAG_MASK;
     }
 }

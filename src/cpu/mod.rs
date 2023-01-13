@@ -3,23 +3,12 @@
 
 //! Module containing all logic relevant to the emulation of the original
 //! Gameboy's CPU (Sharp LR35902)
+mod bit;
 mod lr35902;
 mod opcode;
 mod register;
 
 use std::fmt::Debug;
-
-/// Bit mask for the zero flag
-const ZERO_FLAG_MASK: u8 = 1 << 7;
-
-/// Bit mask for the sub flag
-const SUB_FLAG_MASK: u8 = 1 << 6;
-
-/// Bit mask for the half carry flag
-const HALF_CARRY_FLAG_MASK: u8 = 1 << 5;
-
-/// Bit mask for the carry flag
-const CARRY_FLAG_MASK: u8 = 1 << 4;
 
 /// Represents a byte addressable word register found
 /// inside the Sharp LR35902
