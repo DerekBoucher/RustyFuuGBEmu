@@ -59,6 +59,7 @@ impl LR35902 {
             IncBC::OPCODE => IncBC::execute(self),
             IncB::OPCODE => IncB::execute(self),
             DecB::OPCODE => DecB::execute(self),
+            LdImm8IntoB::OPCODE => LdImm8IntoB::execute(self),
             _ => 0,
         }
     }

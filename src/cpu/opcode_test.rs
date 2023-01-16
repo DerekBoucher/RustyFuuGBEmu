@@ -224,3 +224,30 @@ fn _0x05() {
         assert_eq!(cpu, (tc.expected_state)());
     }
 }
+
+#[test]
+fn _0x06() {
+    struct TestCase {
+        expected_state: fn() -> LR35902,
+        initial_state: fn() -> LR35902,
+    }
+
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> LR35902 {
+            let cpu = LR35902::new(mock::Memory::new(vec![0x06, 0xFF]));
+            return cpu;
+        },
+        expected_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![0x05, 0xFF]));
+            cpu.bc.hi = 0xFF;
+            cpu.pc = 0x0002;
+            return cpu;
+        },
+    }];
+
+    for tc in test_cases {
+        let mut cpu = (tc.initial_state)();
+        assert_eq!(cpu.execute_next_opcode(), 8);
+        assert_eq!(cpu, (tc.expected_state)());
+    }
+}
