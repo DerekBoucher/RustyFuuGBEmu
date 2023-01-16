@@ -10,7 +10,7 @@ impl Nop {
     pub const OPCODE: u8 = 0x00;
 
     pub fn execute(cpu: &mut LR35902) -> u32 {
-        cpu.pc += 0x01;
+        cpu.pc = cpu.pc.wrapping_add(1);
 
         4
     }
@@ -91,6 +91,33 @@ impl IncB {
         }
 
         cpu.reset_sub_flag();
+
+        4
+    }
+}
+
+pub struct DecB;
+impl DecB {
+    pub const OPCODE: u8 = 0x05;
+
+    pub fn execute(cpu: &mut LR35902) -> u32 {
+        cpu.pc = cpu.pc.wrapping_add(1);
+
+        if bit::is_half_borrow(cpu.bc.hi, 0x1, false) {
+            cpu.set_half_carry_flag();
+        } else {
+            cpu.reset_half_carry_flag();
+        }
+
+        cpu.bc.hi = cpu.bc.hi.wrapping_sub(1);
+
+        if cpu.bc.hi == 0x00 {
+            cpu.set_zero_flag();
+        } else {
+            cpu.reset_zero_flag();
+        }
+
+        cpu.set_sub_flag();
 
         4
     }

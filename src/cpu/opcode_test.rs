@@ -84,14 +84,14 @@ fn _0x04() {
             expected_state: || -> LR35902 {
                 let mut cpu = LR35902::new(mock::Memory::new(vec![0x04]));
                 cpu.bc.hi = 0x10;
-                cpu.af.hi |= 1 << 5;
+                cpu.af.lo |= 1 << 5;
                 cpu.pc = 1;
                 return cpu;
             },
             initial_state: || -> LR35902 {
                 let mut cpu = LR35902::new(mock::Memory::new(vec![0x04]));
                 cpu.bc.hi = 0x0F;
-                cpu.af.hi |= 1 << 6;
+                cpu.af.lo |= 1 << 6;
                 return cpu;
             },
         },
@@ -104,7 +104,7 @@ fn _0x04() {
             },
             initial_state: || -> LR35902 {
                 let mut cpu = LR35902::new(mock::Memory::new(vec![0x04]));
-                cpu.af.hi |= 1 << 5;
+                cpu.af.lo |= 1 << 5;
                 return cpu;
             },
         },
@@ -113,8 +113,8 @@ fn _0x04() {
                 let mut cpu = LR35902::new(mock::Memory::new(vec![0x04]));
                 cpu.pc = 1;
                 cpu.bc.hi = 0x00;
-                cpu.af.hi |= 1 << 7;
-                cpu.af.hi |= 1 << 5;
+                cpu.af.lo |= 1 << 7;
+                cpu.af.lo |= 1 << 5;
                 return cpu;
             },
             initial_state: || -> LR35902 {
@@ -132,7 +132,7 @@ fn _0x04() {
             },
             initial_state: || -> LR35902 {
                 let mut cpu = LR35902::new(mock::Memory::new(vec![0x04]));
-                cpu.af.hi |= 1 << 7;
+                cpu.af.lo |= 1 << 7;
                 return cpu;
             },
         },
@@ -145,5 +145,82 @@ fn _0x04() {
 
         assert_eq!(clock_cycles, 4);
         assert_eq!(cpu, expected_state);
+    }
+}
+
+#[test]
+fn _0x05() {
+    struct TestCase {
+        expected_state: fn() -> LR35902,
+        initial_state: fn() -> LR35902,
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            initial_state: || -> LR35902 {
+                let cpu = LR35902::new(mock::Memory::new(vec![0x05]));
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![0x05]));
+                cpu.pc = 0x0001;
+                cpu.af.lo |= 1 << 5;
+                cpu.af.lo |= 1 << 6;
+                cpu.bc.hi = 0xFF;
+                return cpu;
+            },
+        },
+        TestCase {
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![0x05]));
+                cpu.bc.hi = 0x01;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![0x05]));
+                cpu.pc = 0x0001;
+                cpu.af.lo |= 1 << 7;
+                cpu.af.lo |= 1 << 6;
+                cpu.bc.hi = 0x00;
+                return cpu;
+            },
+        },
+        TestCase {
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![0x05]));
+                cpu.bc.hi = 0x01;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![0x05]));
+                cpu.pc = 0x0001;
+                cpu.af.lo |= 1 << 7;
+                cpu.af.lo |= 1 << 6;
+                cpu.bc.hi = 0x00;
+                return cpu;
+            },
+        },
+        TestCase {
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![0x05]));
+                cpu.bc.hi = 0x14;
+                cpu.af.lo |= 1 << 5;
+                cpu.af.lo |= 1 << 7;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![0x05]));
+                cpu.pc = 0x0001;
+                cpu.af.lo |= 1 << 6;
+                cpu.bc.hi = 0x13;
+                return cpu;
+            },
+        },
+    ];
+
+    for tc in test_cases {
+        let mut cpu = (tc.initial_state)();
+        assert_eq!(cpu.execute_next_opcode(), 4);
+        assert_eq!(cpu, (tc.expected_state)());
     }
 }

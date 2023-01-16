@@ -58,39 +58,40 @@ impl LR35902 {
             LdAIntoMemoryBC::OPCODE => LdAIntoMemoryBC::execute(self),
             IncBC::OPCODE => IncBC::execute(self),
             IncB::OPCODE => IncB::execute(self),
+            DecB::OPCODE => DecB::execute(self),
             _ => 0,
         }
     }
 
     pub fn reset_half_carry_flag(&mut self) {
-        self.af.hi &= !HALF_CARRY_FLAG_MASK;
+        self.af.lo &= !HALF_CARRY_FLAG_MASK;
     }
 
     pub fn set_half_carry_flag(&mut self) {
-        self.af.hi |= HALF_CARRY_FLAG_MASK;
+        self.af.lo |= HALF_CARRY_FLAG_MASK;
     }
 
     pub fn reset_zero_flag(&mut self) {
-        self.af.hi &= !ZERO_FLAG_MASK;
+        self.af.lo &= !ZERO_FLAG_MASK;
     }
 
     pub fn set_zero_flag(&mut self) {
-        self.af.hi |= ZERO_FLAG_MASK;
+        self.af.lo |= ZERO_FLAG_MASK;
     }
 
     pub fn reset_carry_flag(&mut self) {
-        self.af.hi &= !CARRY_FLAG_MASK;
+        self.af.lo &= !CARRY_FLAG_MASK;
     }
 
     pub fn set_carry_flag(&mut self) {
-        self.af.hi |= CARRY_FLAG_MASK;
+        self.af.lo |= CARRY_FLAG_MASK;
     }
 
     pub fn reset_sub_flag(&mut self) {
-        self.af.hi &= !SUB_FLAG_MASK;
+        self.af.lo &= !SUB_FLAG_MASK;
     }
 
     pub fn set_sub_flag(&mut self) {
-        self.af.hi |= SUB_FLAG_MASK;
+        self.af.lo |= SUB_FLAG_MASK;
     }
 }
