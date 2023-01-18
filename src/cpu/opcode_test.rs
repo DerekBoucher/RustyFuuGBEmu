@@ -266,7 +266,8 @@ fn _0x07() {
                 cpu.af.hi = 0x01;
                 cpu.af.lo |= lr35902::HALF_CARRY_FLAG_MASK
                     | lr35902::SUB_FLAG_MASK
-                    | lr35902::ZERO_FLAG_MASK;
+                    | lr35902::ZERO_FLAG_MASK
+                    | lr35902::CARRY_FLAG_MASK;
                 return cpu;
             },
             expected_state: || -> LR35902 {
@@ -300,5 +301,37 @@ fn _0x07() {
         let mut cpu = (tc.initial_state)();
         assert_eq!(cpu.execute_next_opcode(), 4);
         assert_eq!(cpu, (tc.expected_state)());
+    }
+}
+
+#[test]
+fn _0x08() {
+    struct TestCase {
+        initial_state: fn() -> LR35902,
+        assert_fn: fn(&LR35902),
+    }
+
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> LR35902 {
+            let mut memory: Vec<u8> = vec![0x0; 0x10000];
+            memory[0x0] = 0x08;
+            memory[0x1] = 0xFF;
+            memory[0x2] = 0x1F;
+            let mut cpu = LR35902::new(mock::Memory::new(memory));
+            cpu.sp = 0x1F37;
+            return cpu;
+        },
+        assert_fn: |cpu| {
+            assert_eq!(cpu.pc, 0x03);
+            assert_eq!(cpu.sp, 0x1F37);
+            assert_eq!(*cpu.memory.read(0x1FFF).unwrap(), 0x37);
+            assert_eq!(*cpu.memory.read(0x2000).unwrap(), 0x1F);
+        },
+    }];
+
+    for tc in test_cases {
+        let mut cpu = (tc.initial_state)();
+        assert_eq!(cpu.execute_next_opcode(), 20);
+        (tc.assert_fn)(&cpu);
     }
 }

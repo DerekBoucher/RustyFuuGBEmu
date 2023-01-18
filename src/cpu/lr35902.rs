@@ -61,6 +61,7 @@ impl LR35902 {
             DecB::OPCODE => DecB::execute(self),
             LdImm8IntoB::OPCODE => LdImm8IntoB::execute(self),
             RotateLeftCarryIntoA::OPCODE => RotateLeftCarryIntoA::execute(self),
+            LdSpInto16ImmAddress::OPCODE => LdSpInto16ImmAddress::execute(self),
             _ => 0,
         }
     }

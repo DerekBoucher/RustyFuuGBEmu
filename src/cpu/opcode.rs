@@ -176,3 +176,40 @@ impl RotateLeftCarryIntoA {
         4
     }
 }
+
+pub struct LdSpInto16ImmAddress;
+impl LdSpInto16ImmAddress {
+    pub const OPCODE: u8 = 0x08;
+
+    pub fn execute(cpu: &mut LR35902) -> u32 {
+        cpu.pc = cpu.pc.wrapping_add(1);
+
+        let lo_address_byte = match cpu.memory.read(usize::from(cpu.pc)) {
+            Some(byte) => *byte,
+            None => panic!(
+                "opcode 0x08 failed to load lo address byte from memory. Dumping cpu state...\n{:?}",
+                cpu,
+            ),
+        };
+
+        cpu.pc = cpu.pc.wrapping_add(1);
+
+        let hi_address_byte = match cpu.memory.read(usize::from(cpu.pc)) {
+            Some(byte) => *byte,
+            None => panic!(
+                "opcode 0x08 failed to load hi address byte from memory. Dumping cpu state...\n{:?}",
+                cpu,
+            ),
+        };
+
+        cpu.pc = cpu.pc.wrapping_add(1);
+
+        let mut addr = usize::from(u16::from(hi_address_byte) << 8 | u16::from(lo_address_byte));
+
+        cpu.memory.write(addr, cpu.sp.to_be_bytes()[1]);
+        addr += 1;
+        cpu.memory.write(addr, cpu.sp.to_be_bytes()[0]);
+
+        20
+    }
+}
