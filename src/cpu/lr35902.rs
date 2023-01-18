@@ -8,16 +8,16 @@ use crate::cpu::Register;
 use crate::cpu::LR35902;
 
 /// Bit mask for the zero flag
-const ZERO_FLAG_MASK: u8 = 1 << 7;
+pub const ZERO_FLAG_MASK: u8 = 1 << 7;
 
 /// Bit mask for the sub flag
-const SUB_FLAG_MASK: u8 = 1 << 6;
+pub const SUB_FLAG_MASK: u8 = 1 << 6;
 
 /// Bit mask for the half carry flag
-const HALF_CARRY_FLAG_MASK: u8 = 1 << 5;
+pub const HALF_CARRY_FLAG_MASK: u8 = 1 << 5;
 
 /// Bit mask for the carry flag
-const CARRY_FLAG_MASK: u8 = 1 << 4;
+pub const CARRY_FLAG_MASK: u8 = 1 << 4;
 
 impl PartialEq for LR35902 {
     fn eq(&self, other: &Self) -> bool {
@@ -60,6 +60,7 @@ impl LR35902 {
             IncB::OPCODE => IncB::execute(self),
             DecB::OPCODE => DecB::execute(self),
             LdImm8IntoB::OPCODE => LdImm8IntoB::execute(self),
+            RotateLeftCarryIntoA::OPCODE => RotateLeftCarryIntoA::execute(self),
             _ => 0,
         }
     }

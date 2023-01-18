@@ -151,3 +151,28 @@ impl LdImm8IntoB {
         8
     }
 }
+
+pub struct RotateLeftCarryIntoA;
+impl RotateLeftCarryIntoA {
+    pub const OPCODE: u8 = 0x07;
+
+    pub fn execute(cpu: &mut LR35902) -> u32 {
+        cpu.pc = cpu.pc.wrapping_add(1);
+
+        let leftmost_bit_a: bool = (cpu.af.hi & (1 << 7)) > 0;
+
+        if leftmost_bit_a {
+            cpu.set_carry_flag();
+        } else {
+            cpu.reset_carry_flag();
+        }
+
+        cpu.af.hi = cpu.af.hi.rotate_left(1);
+
+        cpu.reset_half_carry_flag();
+        cpu.reset_sub_flag();
+        cpu.reset_zero_flag();
+
+        4
+    }
+}
