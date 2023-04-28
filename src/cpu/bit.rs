@@ -31,3 +31,18 @@ pub fn is_half_borrow(byte: u8, subtracted_byte: u8, carry: bool) -> bool {
 
     return false;
 }
+
+pub fn is_half_carry_word(word: u16, added_word: u16, mask: u16, carry: bool) -> bool {
+    let a = word & mask;
+    let b = added_word & mask;
+    let c = match carry {
+        true => 0x1,
+        false => 0x0,
+    };
+
+    if a + b + c > mask {
+        return true;
+    }
+
+    return false;
+}

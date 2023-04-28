@@ -7,6 +7,8 @@ use crate::cpu::MemoryDriver;
 use crate::cpu::Register;
 use crate::cpu::LR35902;
 
+use super::bit;
+
 /// Bit mask for the zero flag
 pub const ZERO_FLAG_MASK: u8 = 1 << 7;
 
@@ -62,7 +64,11 @@ impl LR35902 {
             LdImm8IntoB::OPCODE => LdImm8IntoB::execute(self),
             RotateLeftCarryIntoA::OPCODE => RotateLeftCarryIntoA::execute(self),
             LdSpInto16ImmAddress::OPCODE => LdSpInto16ImmAddress::execute(self),
-            _ => 0,
+            _ => panic!(
+                "invalid cpu op code {}. Dumping cpu state...\n
+                {:?}",
+                op, self
+            ),
         }
     }
 
@@ -96,5 +102,25 @@ impl LR35902 {
 
     pub fn set_sub_flag(&mut self) {
         self.af.lo |= SUB_FLAG_MASK;
+    }
+
+    pub fn add_16_bit_registers(&mut self, a: u16, b: u16) -> u16 {
+        self.reset_sub_flag();
+
+        if bit::is_half_carry_word(a, b, 0x0FFF, false) {
+            self.set_half_carry_flag();
+        } else {
+            self.reset_half_carry_flag();
+        }
+
+        if a > (0xFFFF - b) {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        // Update timers here TODO
+
+        return a.wrapping_add(b);
     }
 }
