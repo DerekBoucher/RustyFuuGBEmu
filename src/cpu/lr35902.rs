@@ -64,6 +64,7 @@ impl LR35902 {
             LdImm8IntoB::OPCODE => LdImm8IntoB::execute(self),
             RotateLeftCarryIntoA::OPCODE => RotateLeftCarryIntoA::execute(self),
             LdSpInto16ImmAddress::OPCODE => LdSpInto16ImmAddress::execute(self),
+            AddBCintoHL::OPCODE => AddBCintoHL::execute(self),
             _ => panic!(
                 "invalid cpu op code {}. Dumping cpu state...\n
                 {:?}",
@@ -102,6 +103,22 @@ impl LR35902 {
 
     pub fn set_sub_flag(&mut self) {
         self.af.lo |= SUB_FLAG_MASK;
+    }
+
+    pub fn test_half_carry_flag(&self) -> bool {
+        return self.af.lo & (HALF_CARRY_FLAG_MASK) > 0;
+    }
+
+    pub fn test_carry_flag(&self) -> bool {
+        return self.af.lo & (CARRY_FLAG_MASK) > 0;
+    }
+
+    pub fn test_sub_flag(&self) -> bool {
+        return self.af.lo & (SUB_FLAG_MASK) > 0;
+    }
+
+    pub fn test_zero_flag(&self) -> bool {
+        return self.af.lo & (ZERO_FLAG_MASK) > 0;
     }
 
     pub fn add_16_bit_registers(&mut self, a: u16, b: u16) -> u16 {

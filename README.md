@@ -23,6 +23,7 @@ DMG Gameboy emulator fully written in rust 🦀
     - [ ] I/O Registers
     - [ ] OAM RAM
 - [ ] Implement CPU
+    - [ ] Implement Timers
 - [ ] Implement PPU
 - [ ] Implement APU
 - [ ] Implement Main

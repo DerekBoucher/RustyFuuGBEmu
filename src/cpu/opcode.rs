@@ -213,3 +213,20 @@ impl LdSpInto16ImmAddress {
         20
     }
 }
+
+pub struct AddBCintoHL;
+impl AddBCintoHL {
+    pub const OPCODE: u8 = 0x09;
+
+    pub fn execute(cpu: &mut LR35902) -> u32 {
+        cpu.reset_sub_flag();
+
+        cpu.pc = cpu.pc.wrapping_add(1);
+
+        let new_hl = cpu.add_16_bit_registers(cpu.bc.word(), cpu.hl.word());
+
+        cpu.hl.set_word(new_hl);
+
+        8
+    }
+}
