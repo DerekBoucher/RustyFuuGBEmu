@@ -389,3 +389,34 @@ fn _0x09() {
         (tc.assert_fn)(&cpu);
     }
 }
+
+#[test]
+fn _0x0a() {
+    struct TestCase {
+        initial_state: fn() -> LR35902,
+        assert_fn: fn(&LR35902),
+    }
+
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![
+                opcode::LdMemoryBCIntoA::OPCODE,
+                0x1F,
+            ]));
+
+            cpu.bc.set_word(0x0001);
+
+            return cpu;
+        },
+        assert_fn: |cpu| {
+            assert_eq!(cpu.af.hi, 0x1F);
+            assert_eq!(cpu.pc, 0x0001);
+        },
+    }];
+
+    for tc in test_cases {
+        let mut cpu = (tc.initial_state)();
+        assert_eq!(cpu.execute_next_opcode(), 8);
+        (tc.assert_fn)(&cpu);
+    }
+}

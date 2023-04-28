@@ -230,3 +230,24 @@ impl AddBCintoHL {
         8
     }
 }
+
+pub struct LdMemoryBCIntoA;
+impl LdMemoryBCIntoA {
+    pub const OPCODE: u8 = 0x0A;
+
+    pub fn execute(cpu: &mut LR35902) -> u32 {
+        cpu.pc = cpu.pc.wrapping_add(1);
+
+        let value = match cpu.memory.read(usize::from(cpu.bc.word())) {
+            Some(byte) => *byte,
+            None => panic!(
+                "opcode 0x0A failed to load byte from memory pointed to by BC. Dumping cpu state...\n{:?}",
+                cpu,
+            ),
+        };
+
+        cpu.af.hi = value;
+
+        8
+    }
+}
