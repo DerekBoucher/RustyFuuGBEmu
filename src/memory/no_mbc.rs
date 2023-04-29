@@ -1,6 +1,6 @@
 #[path = "no_mbc_test.rs"]
 #[cfg(test)]
-mod no_mbc_test;
+mod test;
 
 use crate::memory::Cartridge;
 use std::any::Any;

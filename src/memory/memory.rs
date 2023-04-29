@@ -1,6 +1,6 @@
 #[path = "memory_test.rs"]
 #[cfg(test)]
-mod memory_test;
+mod test;
 
 use crate::memory::cartridge;
 use crate::memory::Memory;
@@ -73,20 +73,6 @@ impl Memory {
     pub fn new(cartridge_data: Vec<u8>) -> Self {
         Self {
             cartridge: cartridge::new(cartridge_data),
-            video_ram: [0x00; 0x2000],
-            work_ram0: [0x00; 0x1000],
-            work_ram1: [0x00; 0x1000],
-            echo_ram: [0x00; 0x1E00],
-            sprite_attributes: [0x00; 0xA0],
-            io_registers: [0x00; 0x80],
-            hi_ram: [0x00; 0x7F],
-            interrupt_enable_register: 0x00,
-        }
-    }
-
-    pub fn default() -> Self {
-        Self {
-            cartridge: cartridge::new(vec![]),
             video_ram: [0x00; 0x2000],
             work_ram0: [0x00; 0x1000],
             work_ram1: [0x00; 0x1000],

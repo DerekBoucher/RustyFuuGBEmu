@@ -1,17 +1,15 @@
-#[cfg(test)]
-mod memory {
-    use crate::memory::{memory::io_registers, *};
-    use std::vec;
+use crate::memory::{memory::io_registers, *};
+use std::vec;
 
-    #[test]
-    fn read() {
-        struct TestCase {
-            description: String,
-            init_fn: fn() -> Memory,
-            assert_fn: fn(Memory),
-        }
+#[test]
+fn read() {
+    struct TestCase {
+        description: String,
+        init_fn: fn() -> Memory,
+        assert_fn: fn(Memory),
+    }
 
-        let test_cases: Vec<TestCase> = vec![
+    let test_cases: Vec<TestCase> = vec![
             TestCase{
                 description: String::from("reading from memory region 0x0000 - 0x0100, boot-rom enabled -> should read from bootrom"),
                 init_fn: || -> Memory {
@@ -154,137 +152,136 @@ mod memory {
             },
         ];
 
-        for tc in test_cases {
-            println!("{}", tc.description);
-            let memory = (tc.init_fn)();
-            (tc.assert_fn)(memory);
-        }
+    for tc in test_cases {
+        println!("{}", tc.description);
+        let memory = (tc.init_fn)();
+        (tc.assert_fn)(memory);
+    }
+}
+
+#[test]
+fn write() {
+    struct TestCase {
+        description: String,
+        init_fn: fn() -> Memory,
+        assert_fn: fn(Memory),
     }
 
-    #[test]
-    fn write() {
-        struct TestCase {
-            description: String,
-            init_fn: fn() -> Memory,
-            assert_fn: fn(Memory),
-        }
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            description: String::from(
+                "writing to region 0x0000 - 0x8000 -> should write to cartridge",
+            ),
+            init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
+            assert_fn: |mut memory| {
+                memory.write(0x0000, 0x17);
+                assert_eq!(*memory.read(0x0000).unwrap(), 0x31); //boot rom
+            },
+        },
+        TestCase {
+            description: String::from(
+                "writing to region 0x8000 - 0xA000 -> should write to video ram",
+            ),
+            init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
+            assert_fn: |mut memory| {
+                memory.write(0x8000, 0x17);
+                assert_eq!(memory.video_ram[0x0000], 0x17);
+            },
+        },
+        TestCase {
+            description: String::from(
+                "writing to region 0xA000 - 0xC000 -> should write to cartridge ram",
+            ),
+            init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
+            assert_fn: |mut memory| {
+                memory.write(0xA000, 0x17);
+                assert_eq!(*memory.read(0xA000).unwrap(), 0x17);
+            },
+        },
+        TestCase {
+            description: String::from(
+                "writing to region 0xC000 - 0xD000 -> should write to work ram 0",
+            ),
+            init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
+            assert_fn: |mut memory| {
+                memory.write(0xC000, 0x17);
+                assert_eq!(memory.work_ram0[0x0000], 0x17);
+            },
+        },
+        TestCase {
+            description: String::from(
+                "writing to region 0xD000 - 0xE000 -> should write to work ram 1",
+            ),
+            init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
+            assert_fn: |mut memory| {
+                memory.write(0xD000, 0x17);
+                assert_eq!(memory.work_ram1[0x0000], 0x17);
+            },
+        },
+        TestCase {
+            description: String::from(
+                "writing to region 0xE000 - 0xFE00 -> should write to work ram 0 (echo ram)",
+            ),
+            init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
+            assert_fn: |mut memory| {
+                memory.write(0xE000, 0x17);
+                assert_eq!(memory.work_ram0[0x0000], 0x17);
+            },
+        },
+        TestCase {
+            description: String::from(
+                "writing to region 0xFE00 - 0xFF00 -> should write to sprites attributes",
+            ),
+            init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
+            assert_fn: |mut memory| {
+                memory.write(0xFE00, 0x17);
+                assert_eq!(memory.sprite_attributes[0x0000], 0x17);
+            },
+        },
+        TestCase {
+            description: String::from(
+                "writing to region 0xFF00 - 0xFF80 -> should write to io registers",
+            ),
+            init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
+            assert_fn: |mut memory| {
+                memory.write(0xFF00, 0x17);
+                assert_eq!(memory.io_registers[0x0000], 0x17);
+            },
+        },
+        TestCase {
+            description: String::from(
+                "writing to region 0xFF80 - 0xFFFF -> should write to high ram",
+            ),
+            init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
+            assert_fn: |mut memory| {
+                memory.write(0xFF80, 0x17);
+                assert_eq!(memory.hi_ram[0x0000], 0x17);
+            },
+        },
+        TestCase {
+            description: String::from(
+                "writing to region 0xFFFF -> should write to master interrupt enable register",
+            ),
+            init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
+            assert_fn: |mut memory| {
+                memory.write(0xFFFF, 0x17);
+                assert_eq!(memory.interrupt_enable_register, 0x17);
+            },
+        },
+    ];
 
-        let test_cases: Vec<TestCase> = vec![
-            TestCase {
-                description: String::from(
-                    "writing to region 0x0000 - 0x8000 -> should write to cartridge",
-                ),
-                init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
-                assert_fn: |mut memory| {
-                    memory.write(0x0000, 0x17);
-                    assert_eq!(*memory.read(0x0000).unwrap(), 0x31); //boot rom
-                },
-            },
-            TestCase {
-                description: String::from(
-                    "writing to region 0x8000 - 0xA000 -> should write to video ram",
-                ),
-                init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
-                assert_fn: |mut memory| {
-                    memory.write(0x8000, 0x17);
-                    assert_eq!(memory.video_ram[0x0000], 0x17);
-                },
-            },
-            TestCase {
-                description: String::from(
-                    "writing to region 0xA000 - 0xC000 -> should write to cartridge ram",
-                ),
-                init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
-                assert_fn: |mut memory| {
-                    memory.write(0xA000, 0x17);
-                    assert_eq!(*memory.read(0xA000).unwrap(), 0x17);
-                },
-            },
-            TestCase {
-                description: String::from(
-                    "writing to region 0xC000 - 0xD000 -> should write to work ram 0",
-                ),
-                init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
-                assert_fn: |mut memory| {
-                    memory.write(0xC000, 0x17);
-                    assert_eq!(memory.work_ram0[0x0000], 0x17);
-                },
-            },
-            TestCase {
-                description: String::from(
-                    "writing to region 0xD000 - 0xE000 -> should write to work ram 1",
-                ),
-                init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
-                assert_fn: |mut memory| {
-                    memory.write(0xD000, 0x17);
-                    assert_eq!(memory.work_ram1[0x0000], 0x17);
-                },
-            },
-            TestCase {
-                description: String::from(
-                    "writing to region 0xE000 - 0xFE00 -> should write to work ram 0 (echo ram)",
-                ),
-                init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
-                assert_fn: |mut memory| {
-                    memory.write(0xE000, 0x17);
-                    assert_eq!(memory.work_ram0[0x0000], 0x17);
-                },
-            },
-            TestCase {
-                description: String::from(
-                    "writing to region 0xFE00 - 0xFF00 -> should write to sprites attributes",
-                ),
-                init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
-                assert_fn: |mut memory| {
-                    memory.write(0xFE00, 0x17);
-                    assert_eq!(memory.sprite_attributes[0x0000], 0x17);
-                },
-            },
-            TestCase {
-                description: String::from(
-                    "writing to region 0xFF00 - 0xFF80 -> should write to io registers",
-                ),
-                init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
-                assert_fn: |mut memory| {
-                    memory.write(0xFF00, 0x17);
-                    assert_eq!(memory.io_registers[0x0000], 0x17);
-                },
-            },
-            TestCase {
-                description: String::from(
-                    "writing to region 0xFF80 - 0xFFFF -> should write to high ram",
-                ),
-                init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
-                assert_fn: |mut memory| {
-                    memory.write(0xFF80, 0x17);
-                    assert_eq!(memory.hi_ram[0x0000], 0x17);
-                },
-            },
-            TestCase {
-                description: String::from(
-                    "writing to region 0xFFFF -> should write to master interrupt enable register",
-                ),
-                init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
-                assert_fn: |mut memory| {
-                    memory.write(0xFFFF, 0x17);
-                    assert_eq!(memory.interrupt_enable_register, 0x17);
-                },
-            },
-        ];
-
-        for tc in test_cases {
-            println!("{}", tc.description);
-            let memory = (tc.init_fn)();
-            (tc.assert_fn)(memory);
-        }
+    for tc in test_cases {
+        println!("{}", tc.description);
+        let memory = (tc.init_fn)();
+        (tc.assert_fn)(memory);
     }
+}
 
-    #[test]
-    fn boot_rom_enabled() {
-        let mut mem = Memory::new(vec![0x0; 0x10000]);
-        mem.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] = 0x1;
-        assert!(!mem.boot_rom_enabled());
-        mem.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] = 0x0;
-        assert!(mem.boot_rom_enabled());
-    }
+#[test]
+fn boot_rom_enabled() {
+    let mut mem = Memory::new(vec![0x0; 0x10000]);
+    mem.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] = 0x1;
+    assert!(!mem.boot_rom_enabled());
+    mem.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] = 0x0;
+    assert!(mem.boot_rom_enabled());
 }
