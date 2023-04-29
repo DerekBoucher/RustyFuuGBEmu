@@ -5,6 +5,8 @@ mod test;
 use crate::cpu::bit;
 use crate::cpu::LR35902;
 
+use super::register;
+
 pub struct Nop;
 impl Nop {
     pub const OPCODE: u8 = 0x00;
@@ -219,13 +221,9 @@ impl AddBCintoHL {
     pub const OPCODE: u8 = 0x09;
 
     pub fn execute(cpu: &mut LR35902) -> u32 {
-        cpu.reset_sub_flag();
-
         cpu.pc = cpu.pc.wrapping_add(1);
 
-        let new_hl = cpu.add_16_bit_registers(cpu.bc.word(), cpu.hl.word());
-
-        cpu.hl.set_word(new_hl);
+        cpu.add_16_bit_registers(register::ID16::HL, register::ID16::BC);
 
         8
     }

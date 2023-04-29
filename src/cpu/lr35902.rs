@@ -8,6 +8,8 @@ use crate::cpu::Register;
 use crate::cpu::LR35902;
 
 use super::bit;
+use super::register;
+use super::register::*;
 
 /// Bit mask for the zero flag
 pub const ZERO_FLAG_MASK: u8 = 1 << 7;
@@ -123,23 +125,45 @@ impl LR35902 {
         return self.af.lo & (ZERO_FLAG_MASK) > 0;
     }
 
-    pub fn add_16_bit_registers(&mut self, a: u16, b: u16) -> u16 {
+    pub fn add_16_bit_registers(&mut self, target: register::ID16, src: register::ID16) {
+        let target_value = match target {
+            ID16::BC => self.bc.word(),
+            ID16::DE => self.de.word(),
+            ID16::HL => self.hl.word(),
+            ID16::SP => self.sp,
+            _ => panic!("invalid 16 bit add operation: targetID {:?}", target),
+        };
+
+        let src_value = match src {
+            ID16::BC => self.bc.word(),
+            ID16::DE => self.de.word(),
+            ID16::HL => self.hl.word(),
+            ID16::SP => self.sp,
+            _ => panic!("invalid 16 bit add operation: srcID {:?}", src),
+        };
+
         self.reset_sub_flag();
 
-        if bit::is_half_carry_word(a, b, 0x0FFF, false) {
+        if bit::is_half_carry_word(target_value, src_value, 0x0FFF, false) {
             self.set_half_carry_flag();
         } else {
             self.reset_half_carry_flag();
         }
 
-        if a > (0xFFFF - b) {
+        if target_value > (0xFFFF - src_value) {
             self.set_carry_flag();
         } else {
             self.reset_carry_flag();
         }
 
-        // Update timers here TODO
+        let new_word = target_value.wrapping_add(src_value);
 
-        return a.wrapping_add(b);
+        match target {
+            ID16::BC => self.bc.set_word(new_word),
+            ID16::DE => self.de.set_word(new_word),
+            ID16::HL => self.hl.set_word(new_word),
+            ID16::SP => self.sp = new_word,
+            _ => panic!("invalid 16 bit add operation: targetID {:?}", target),
+        }
     }
 }

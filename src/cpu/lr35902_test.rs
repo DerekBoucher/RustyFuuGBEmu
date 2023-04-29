@@ -2,8 +2,8 @@
 #[cfg(test)]
 mod mock;
 
-use crate::cpu::lr35902;
 use crate::cpu::lr35902::LR35902;
+use crate::cpu::{lr35902, register};
 
 #[test]
 fn reset_half_carry_flag() {
@@ -104,63 +104,64 @@ fn test_zero_flag() {
 #[test]
 fn add_16_bit_registers() {
     struct TestCase {
-        word: u16,
-        added_word: u16,
         initial_state: fn() -> LR35902,
-        assert_fn: fn(u16, &LR35902),
+        expected_state: fn() -> LR35902,
     }
 
     let test_cases: Vec<TestCase> = vec![
         TestCase {
-            word: 0x1000,
-            added_word: 0x000F,
             initial_state: || -> LR35902 {
-                let mut cpu = LR35902::new(mock::Memory::new(vec![0x07]));
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.bc.set_word(0x1000);
+                cpu.de.set_word(0x000F);
                 cpu.set_sub_flag();
                 return cpu;
             },
-            assert_fn: |result, cpu| {
-                assert_eq!(result, 0x100F);
-                assert_eq!(cpu.test_sub_flag(), false);
-                assert_eq!(cpu.test_half_carry_flag(), false);
-                assert_eq!(cpu.test_carry_flag(), false);
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.bc.set_word(0x100F);
+                cpu.de.set_word(0x000F);
+                return cpu;
             },
         },
         TestCase {
-            word: 0x0FFF,
-            added_word: 0x0001,
             initial_state: || -> LR35902 {
-                let mut cpu = LR35902::new(mock::Memory::new(vec![0x07]));
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.bc.set_word(0x0FFF);
+                cpu.de.set_word(0x0001);
                 cpu.set_sub_flag();
                 return cpu;
             },
-            assert_fn: |result, cpu| {
-                assert_eq!(result, 0x1000);
-                assert_eq!(cpu.test_sub_flag(), false);
-                assert_eq!(cpu.test_half_carry_flag(), true);
-                assert_eq!(cpu.test_carry_flag(), false);
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.bc.set_word(0x1000);
+                cpu.de.set_word(0x0001);
+                cpu.set_half_carry_flag();
+                return cpu;
             },
         },
         TestCase {
-            word: 0x0FFF,
-            added_word: 0xF001,
             initial_state: || -> LR35902 {
-                let mut cpu = LR35902::new(mock::Memory::new(vec![0x07]));
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.bc.set_word(0x0FFF);
+                cpu.de.set_word(0xF001);
                 cpu.set_sub_flag();
                 return cpu;
             },
-            assert_fn: |result, cpu| {
-                assert_eq!(result, 0x0);
-                assert_eq!(cpu.test_sub_flag(), false);
-                assert_eq!(cpu.test_half_carry_flag(), true);
-                assert_eq!(cpu.test_carry_flag(), true);
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.bc.set_word(0x0000);
+                cpu.de.set_word(0xF001);
+                cpu.set_half_carry_flag();
+                cpu.set_carry_flag();
+                return cpu;
             },
         },
     ];
 
     for tc in test_cases {
         let mut cpu = (tc.initial_state)();
-        let result = cpu.add_16_bit_registers(tc.word, tc.added_word);
-        (tc.assert_fn)(result, &cpu);
+        cpu.add_16_bit_registers(register::ID16::BC, register::ID16::DE);
+        assert_eq!(cpu, (tc.expected_state)());
     }
 }
