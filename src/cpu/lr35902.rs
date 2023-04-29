@@ -66,6 +66,7 @@ impl LR35902 {
             LdSpInto16ImmAddress::OPCODE => LdSpInto16ImmAddress::execute(self),
             AddBCintoHL::OPCODE => AddBCintoHL::execute(self),
             LdMemoryBCIntoA::OPCODE => LdMemoryBCIntoA::execute(self),
+            DecBC::OPCODE => DecBC::execute(self),
             _ => panic!(
                 "invalid cpu op code {}. Dumping cpu state...\n
                 {:?}",

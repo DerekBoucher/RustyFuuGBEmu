@@ -251,3 +251,18 @@ impl LdMemoryBCIntoA {
         8
     }
 }
+
+pub struct DecBC;
+impl DecBC {
+    pub const OPCODE: u8 = 0x0B;
+
+    pub fn execute(cpu: &mut LR35902) -> u32 {
+        cpu.pc = cpu.pc.wrapping_add(1);
+
+        let new_bc = cpu.bc.word().wrapping_sub(1);
+
+        cpu.bc.set_word(new_bc);
+
+        8
+    }
+}
