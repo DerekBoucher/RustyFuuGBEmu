@@ -165,3 +165,144 @@ fn add_16_bit_registers() {
         assert_eq!(cpu, (tc.expected_state)());
     }
 }
+
+#[test]
+fn increment_8_bit_register() {
+    struct TestCase {
+        description: String,
+        initial_state: fn() -> LR35902,
+        expected_state: fn() -> LR35902,
+        reg_id: register::ID,
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            description: String::from("increment A"),
+            initial_state: || -> LR35902 {
+                let cpu = LR35902::new(mock::Memory::new(vec![]));
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.af.hi = 0x01;
+                return cpu;
+            },
+            reg_id: register::ID::A,
+        },
+        TestCase {
+            description: String::from("increment B"),
+            initial_state: || -> LR35902 {
+                let cpu = LR35902::new(mock::Memory::new(vec![]));
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.bc.hi = 0x01;
+                return cpu;
+            },
+            reg_id: register::ID::B,
+        },
+        TestCase {
+            description: String::from("increment C"),
+            initial_state: || -> LR35902 {
+                let cpu = LR35902::new(mock::Memory::new(vec![]));
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.bc.lo = 0x01;
+                return cpu;
+            },
+            reg_id: register::ID::C,
+        },
+        TestCase {
+            description: String::from("increment D"),
+            initial_state: || -> LR35902 {
+                let cpu = LR35902::new(mock::Memory::new(vec![]));
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.de.hi = 0x01;
+                return cpu;
+            },
+            reg_id: register::ID::D,
+        },
+        TestCase {
+            description: String::from("increment E"),
+            initial_state: || -> LR35902 {
+                let cpu = LR35902::new(mock::Memory::new(vec![]));
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.de.lo = 0x01;
+                return cpu;
+            },
+            reg_id: register::ID::E,
+        },
+        TestCase {
+            description: String::from("increment H"),
+            initial_state: || -> LR35902 {
+                let cpu = LR35902::new(mock::Memory::new(vec![]));
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.hl.hi = 0x01;
+                return cpu;
+            },
+            reg_id: register::ID::H,
+        },
+        TestCase {
+            description: String::from("increment L"),
+            initial_state: || -> LR35902 {
+                let cpu = LR35902::new(mock::Memory::new(vec![]));
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.hl.lo = 0x01;
+                return cpu;
+            },
+            reg_id: register::ID::L,
+        },
+        TestCase {
+            description: String::from("resets the sub flag"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.hl.lo = 0x01;
+                return cpu;
+            },
+            reg_id: register::ID::L,
+        },
+        TestCase {
+            description: String::from("sets the zero flag and half carry"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.hl.lo = 0xFF;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.hl.lo = 0x00;
+                cpu.set_zero_flag();
+                cpu.set_half_carry_flag();
+                return cpu;
+            },
+            reg_id: register::ID::L,
+        },
+    ];
+
+    for tc in test_cases {
+        println!("{}", tc.description.as_str());
+        let mut cpu = (tc.initial_state)();
+        cpu.increment_8_bit_register(tc.reg_id);
+        assert_eq!(cpu, (tc.expected_state)());
+    }
+}

@@ -69,6 +69,7 @@ impl LR35902 {
             AddBCintoHL::OPCODE => AddBCintoHL::execute(self),
             LdMemoryBCIntoA::OPCODE => LdMemoryBCIntoA::execute(self),
             DecBC::OPCODE => DecBC::execute(self),
+            IncC::OPCODE => IncC::execute(self),
             _ => panic!(
                 "invalid cpu op code {}. Dumping cpu state...\n
                 {:?}",
@@ -123,6 +124,50 @@ impl LR35902 {
 
     pub fn test_zero_flag(&self) -> bool {
         return self.af.lo & (ZERO_FLAG_MASK) > 0;
+    }
+
+    pub fn increment_8_bit_register(&mut self, reg_id: register::ID) {
+        let current_reg_value = match reg_id {
+            ID::A => self.af.hi,
+            ID::B => self.bc.hi,
+            ID::C => self.bc.lo,
+            ID::D => self.de.hi,
+            ID::E => self.de.lo,
+            ID::H => self.hl.hi,
+            ID::L => self.hl.lo,
+            _ => panic!(
+                "unrecognized 8 bit register identifier for 8 bit increment: {:?}",
+                reg_id
+            ),
+        };
+
+        self.reset_sub_flag();
+
+        if current_reg_value.wrapping_add(1) == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        if bit::is_half_carry(current_reg_value, 1, false) {
+            self.set_half_carry_flag();
+        } else {
+            self.reset_half_carry_flag();
+        }
+
+        match reg_id {
+            ID::A => self.af.hi = self.af.hi.wrapping_add(1),
+            ID::B => self.bc.hi = self.bc.hi.wrapping_add(1),
+            ID::C => self.bc.lo = self.bc.lo.wrapping_add(1),
+            ID::D => self.de.hi = self.de.hi.wrapping_add(1),
+            ID::E => self.de.lo = self.de.lo.wrapping_add(1),
+            ID::H => self.hl.hi = self.hl.hi.wrapping_add(1),
+            ID::L => self.hl.lo = self.hl.lo.wrapping_add(1),
+            _ => panic!(
+                "unrecognized 8 bit register identifier for 8 bit increment: {:?}",
+                reg_id
+            ),
+        }
     }
 
     pub fn add_16_bit_registers(&mut self, target: register::ID16, src: register::ID16) {

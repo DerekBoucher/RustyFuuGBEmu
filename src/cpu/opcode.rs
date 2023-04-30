@@ -84,21 +84,7 @@ impl IncB {
     pub fn execute(cpu: &mut LR35902) -> u32 {
         cpu.pc = cpu.pc.wrapping_add(1);
 
-        if bit::is_half_carry(cpu.bc.hi, 0x01, false) {
-            cpu.set_half_carry_flag();
-        } else {
-            cpu.reset_half_carry_flag();
-        }
-
-        cpu.bc.hi = cpu.bc.hi.wrapping_add(1);
-
-        if cpu.bc.hi == 0x00 {
-            cpu.set_zero_flag();
-        } else {
-            cpu.reset_zero_flag();
-        }
-
-        cpu.reset_sub_flag();
+        cpu.increment_8_bit_register(register::ID::B);
 
         4
     }
@@ -262,5 +248,18 @@ impl DecBC {
         cpu.bc.set_word(new_bc);
 
         8
+    }
+}
+
+pub struct IncC;
+impl IncC {
+    pub const OPCODE: u8 = 0x0C;
+
+    pub fn execute(cpu: &mut LR35902) -> u32 {
+        cpu.pc = cpu.pc.wrapping_add(1);
+
+        cpu.increment_8_bit_register(register::ID::C);
+
+        4
     }
 }
