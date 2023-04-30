@@ -2,10 +2,8 @@
 #[cfg(test)]
 mod test;
 
-use crate::cpu::bit;
-use crate::cpu::LR35902;
-
 use super::register;
+use crate::cpu::LR35902;
 
 pub struct Nop;
 impl Nop {
@@ -97,21 +95,7 @@ impl DecB {
     pub fn execute(cpu: &mut LR35902) -> u32 {
         cpu.pc = cpu.pc.wrapping_add(1);
 
-        if bit::is_half_borrow(cpu.bc.hi, 0x1, false) {
-            cpu.set_half_carry_flag();
-        } else {
-            cpu.reset_half_carry_flag();
-        }
-
-        cpu.bc.hi = cpu.bc.hi.wrapping_sub(1);
-
-        if cpu.bc.hi == 0x00 {
-            cpu.set_zero_flag();
-        } else {
-            cpu.reset_zero_flag();
-        }
-
-        cpu.set_sub_flag();
+        cpu.decrement_8_bit_register(register::ID::B);
 
         4
     }
@@ -259,6 +243,19 @@ impl IncC {
         cpu.pc = cpu.pc.wrapping_add(1);
 
         cpu.increment_8_bit_register(register::ID::C);
+
+        4
+    }
+}
+
+pub struct DecC;
+impl DecC {
+    pub const OPCODE: u8 = 0x0D;
+
+    pub fn execute(cpu: &mut LR35902) -> u32 {
+        cpu.pc = cpu.pc.wrapping_add(1);
+
+        cpu.decrement_8_bit_register(register::ID::C);
 
         4
     }

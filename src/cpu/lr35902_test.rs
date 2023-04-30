@@ -297,12 +297,199 @@ fn increment_8_bit_register() {
             },
             reg_id: register::ID::L,
         },
+        TestCase {
+            description: String::from("only sets the half carry"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.hl.lo = 0x0F;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.hl.lo = 0x10;
+                cpu.set_half_carry_flag();
+                return cpu;
+            },
+            reg_id: register::ID::L,
+        },
     ];
 
     for tc in test_cases {
         println!("{}", tc.description.as_str());
         let mut cpu = (tc.initial_state)();
         cpu.increment_8_bit_register(tc.reg_id);
+        assert_eq!(cpu, (tc.expected_state)());
+    }
+}
+
+#[test]
+fn decrement_8_bit_register() {
+    struct TestCase {
+        description: String,
+        initial_state: fn() -> LR35902,
+        expected_state: fn() -> LR35902,
+        reg_id: register::ID,
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            description: String::from("decrement A"),
+            initial_state: || -> LR35902 {
+                let cpu = LR35902::new(mock::Memory::new(vec![]));
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.set_sub_flag();
+                cpu.set_half_carry_flag();
+                cpu.af.hi = 0xFF;
+                return cpu;
+            },
+            reg_id: register::ID::A,
+        },
+        TestCase {
+            description: String::from("decrement B"),
+            initial_state: || -> LR35902 {
+                let cpu = LR35902::new(mock::Memory::new(vec![]));
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.set_sub_flag();
+                cpu.set_half_carry_flag();
+                cpu.bc.hi = 0xFF;
+                return cpu;
+            },
+            reg_id: register::ID::B,
+        },
+        TestCase {
+            description: String::from("decrement C"),
+            initial_state: || -> LR35902 {
+                let cpu = LR35902::new(mock::Memory::new(vec![]));
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.set_sub_flag();
+                cpu.set_half_carry_flag();
+                cpu.bc.lo = 0xFF;
+                return cpu;
+            },
+            reg_id: register::ID::C,
+        },
+        TestCase {
+            description: String::from("decrement D"),
+            initial_state: || -> LR35902 {
+                let cpu = LR35902::new(mock::Memory::new(vec![]));
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                cpu.de.hi = 0xFF;
+                return cpu;
+            },
+            reg_id: register::ID::D,
+        },
+        TestCase {
+            description: String::from("decrement E"),
+            initial_state: || -> LR35902 {
+                let cpu = LR35902::new(mock::Memory::new(vec![]));
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                cpu.de.lo = 0xFF;
+                return cpu;
+            },
+            reg_id: register::ID::E,
+        },
+        TestCase {
+            description: String::from("decrement H"),
+            initial_state: || -> LR35902 {
+                let cpu = LR35902::new(mock::Memory::new(vec![]));
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                cpu.hl.hi = 0xFF;
+                return cpu;
+            },
+            reg_id: register::ID::H,
+        },
+        TestCase {
+            description: String::from("decrement L"),
+            initial_state: || -> LR35902 {
+                let cpu = LR35902::new(mock::Memory::new(vec![]));
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                cpu.hl.lo = 0xFF;
+                return cpu;
+            },
+            reg_id: register::ID::L,
+        },
+        TestCase {
+            description: String::from("sets the sub flag"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.hl.lo = 0x02;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.set_sub_flag();
+                cpu.hl.lo = 0x01;
+                return cpu;
+            },
+            reg_id: register::ID::L,
+        },
+        TestCase {
+            description: String::from("sets the zero flag"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.hl.lo = 0x01;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.hl.lo = 0x00;
+                cpu.set_zero_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            reg_id: register::ID::L,
+        },
+        TestCase {
+            description: String::from("sets the half carry"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.hl.lo = 0x10;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![]));
+                cpu.hl.lo = 0x0F;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            reg_id: register::ID::L,
+        },
+    ];
+
+    for tc in test_cases {
+        println!("{}", tc.description.as_str());
+        let mut cpu = (tc.initial_state)();
+        cpu.decrement_8_bit_register(tc.reg_id);
         assert_eq!(cpu, (tc.expected_state)());
     }
 }

@@ -70,6 +70,7 @@ impl LR35902 {
             LdMemoryBCIntoA::OPCODE => LdMemoryBCIntoA::execute(self),
             DecBC::OPCODE => DecBC::execute(self),
             IncC::OPCODE => IncC::execute(self),
+            DecC::OPCODE => DecC::execute(self),
             _ => panic!(
                 "invalid cpu op code {}. Dumping cpu state...\n
                 {:?}",
@@ -165,6 +166,50 @@ impl LR35902 {
             ID::L => self.hl.lo = self.hl.lo.wrapping_add(1),
             _ => panic!(
                 "unrecognized 8 bit register identifier for 8 bit increment: {:?}",
+                reg_id
+            ),
+        }
+    }
+
+    pub fn decrement_8_bit_register(&mut self, reg_id: register::ID) {
+        let current_reg_value = match reg_id {
+            ID::A => self.af.hi,
+            ID::B => self.bc.hi,
+            ID::C => self.bc.lo,
+            ID::D => self.de.hi,
+            ID::E => self.de.lo,
+            ID::H => self.hl.hi,
+            ID::L => self.hl.lo,
+            _ => panic!(
+                "unrecognized 8 bit register identifier for 8 bit decrement: {:?}",
+                reg_id
+            ),
+        };
+
+        self.set_sub_flag();
+
+        if current_reg_value.wrapping_sub(1) == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        if bit::is_half_borrow(current_reg_value, 1, false) {
+            self.set_half_carry_flag();
+        } else {
+            self.reset_half_carry_flag();
+        }
+
+        match reg_id {
+            ID::A => self.af.hi = self.af.hi.wrapping_sub(1),
+            ID::B => self.bc.hi = self.bc.hi.wrapping_sub(1),
+            ID::C => self.bc.lo = self.bc.lo.wrapping_sub(1),
+            ID::D => self.de.hi = self.de.hi.wrapping_sub(1),
+            ID::E => self.de.lo = self.de.lo.wrapping_sub(1),
+            ID::H => self.hl.hi = self.hl.hi.wrapping_sub(1),
+            ID::L => self.hl.lo = self.hl.lo.wrapping_sub(1),
+            _ => panic!(
+                "unrecognized 8 bit register identifier for 8 bit decrement: {:?}",
                 reg_id
             ),
         }
