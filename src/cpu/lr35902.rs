@@ -49,35 +49,14 @@ impl LR35902 {
 
     pub fn execute_next_opcode(&mut self) -> u32 {
         let op = match self.memory.read(usize::from(self.pc)) {
-            Some(x) => *x,
+            Some(x) => Opcode::from(*x),
             None => panic!(
                 "memory returned empty value when attempting to fetch op code. Dumping cpu state...\n
                 {:?}", self
             ),
         };
 
-        match op {
-            Nop::OPCODE => Nop::execute(self),
-            LdImm16IntoBC::OPCODE => LdImm16IntoBC::execute(self),
-            LdAIntoMemoryBC::OPCODE => LdAIntoMemoryBC::execute(self),
-            IncBC::OPCODE => IncBC::execute(self),
-            IncB::OPCODE => IncB::execute(self),
-            DecB::OPCODE => DecB::execute(self),
-            LdImm8IntoB::OPCODE => LdImm8IntoB::execute(self),
-            RotateLeftCarryIntoA::OPCODE => RotateLeftCarryIntoA::execute(self),
-            LdSpInto16ImmAddress::OPCODE => LdSpInto16ImmAddress::execute(self),
-            AddBCintoHL::OPCODE => AddBCintoHL::execute(self),
-            LdMemoryBCIntoA::OPCODE => LdMemoryBCIntoA::execute(self),
-            DecBC::OPCODE => DecBC::execute(self),
-            IncC::OPCODE => IncC::execute(self),
-            DecC::OPCODE => DecC::execute(self),
-            LdImm8IntoC::OPCODE => LdImm8IntoC::execute(self),
-            _ => panic!(
-                "invalid cpu op code {}. Dumping cpu state...\n
-                {:?}",
-                op, self
-            ),
-        }
+        return op.execute(self);
     }
 
     pub fn reset_half_carry_flag(&mut self) {
