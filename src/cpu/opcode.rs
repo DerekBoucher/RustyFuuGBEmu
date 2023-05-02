@@ -15,7 +15,7 @@ pub enum Opcode {
     IncB_0x04,
     DecB_0x05,
     LdImm8IntoB_0x06,
-    RotateLeftCarryIntoA_0x07,
+    RotateLeftIntoA_0x07,
     LdSpInto16ImmAddress_0x08,
     AddBCintoHL_0x09,
     LdMemoryBCIntoA_0x0A,
@@ -23,6 +23,7 @@ pub enum Opcode {
     IncC_0x0C,
     DecC_0x0D,
     LdImm8IntoC_0x0E,
+    RotateRightIntoA_0x0F,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -35,7 +36,7 @@ impl std::convert::From<u8> for Opcode {
             0x04 => Self::IncB_0x04,
             0x05 => Self::DecB_0x05,
             0x06 => Self::LdImm8IntoB_0x06,
-            0x07 => Self::RotateLeftCarryIntoA_0x07,
+            0x07 => Self::RotateLeftIntoA_0x07,
             0x08 => Self::LdSpInto16ImmAddress_0x08,
             0x09 => Self::AddBCintoHL_0x09,
             0x0A => Self::LdMemoryBCIntoA_0x0A,
@@ -43,6 +44,7 @@ impl std::convert::From<u8> for Opcode {
             0x0C => Self::IncC_0x0C,
             0x0D => Self::DecC_0x0D,
             0x0E => Self::LdImm8IntoC_0x0E,
+            0x0F => Self::RotateRightIntoA_0x0F,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -58,7 +60,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::IncB_0x04 => 0x04,
             Self::DecB_0x05 => 0x05,
             Self::LdImm8IntoB_0x06 => 0x06,
-            Self::RotateLeftCarryIntoA_0x07 => 0x07,
+            Self::RotateLeftIntoA_0x07 => 0x07,
             Self::LdSpInto16ImmAddress_0x08 => 0x08,
             Self::AddBCintoHL_0x09 => 0x09,
             Self::LdMemoryBCIntoA_0x0A => 0x0A,
@@ -66,6 +68,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::IncC_0x0C => 0x0C,
             Self::DecC_0x0D => 0x0D,
             Self::LdImm8IntoC_0x0E => 0x0E,
+            Self::RotateRightIntoA_0x0F => 0x0F,
         }
     }
 }
@@ -80,7 +83,7 @@ impl Opcode {
             Self::IncB_0x04 => execute_0x04(cpu),
             Self::DecB_0x05 => execute_0x05(cpu),
             Self::LdImm8IntoB_0x06 => execute_0x06(cpu),
-            Self::RotateLeftCarryIntoA_0x07 => execute_0x07(cpu),
+            Self::RotateLeftIntoA_0x07 => execute_0x07(cpu),
             Self::LdSpInto16ImmAddress_0x08 => execute_0x08(cpu),
             Self::AddBCintoHL_0x09 => execute_0x09(cpu),
             Self::LdMemoryBCIntoA_0x0A => execute_0x0a(cpu),
@@ -88,6 +91,7 @@ impl Opcode {
             Self::IncC_0x0C => execute_0x0c(cpu),
             Self::DecC_0x0D => execute_0x0d(cpu),
             Self::LdImm8IntoC_0x0E => execute_0x0e(cpu),
+            Self::RotateRightIntoA_0x0F => execute_0x0f(cpu),
         }
     }
 }
@@ -296,4 +300,24 @@ fn execute_0x0e(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     8
+}
+
+fn execute_0x0f(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let rightmost_bit_a: bool = (cpu.af.hi & 1) > 0;
+
+    if rightmost_bit_a {
+        cpu.set_carry_flag();
+    } else {
+        cpu.reset_carry_flag();
+    }
+
+    cpu.af.hi = cpu.af.hi.rotate_right(1);
+
+    cpu.reset_half_carry_flag();
+    cpu.reset_sub_flag();
+    cpu.reset_zero_flag();
+
+    4
 }
