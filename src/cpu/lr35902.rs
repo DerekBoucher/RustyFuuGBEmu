@@ -71,6 +71,7 @@ impl LR35902 {
             DecBC::OPCODE => DecBC::execute(self),
             IncC::OPCODE => IncC::execute(self),
             DecC::OPCODE => DecC::execute(self),
+            LdImm8IntoC::OPCODE => LdImm8IntoC::execute(self),
             _ => panic!(
                 "invalid cpu op code {}. Dumping cpu state...\n
                 {:?}",

@@ -260,3 +260,26 @@ impl DecC {
         4
     }
 }
+
+pub struct LdImm8IntoC;
+impl LdImm8IntoC {
+    pub const OPCODE: u8 = 0x0E;
+
+    pub fn execute(cpu: &mut LR35902) -> u32 {
+        cpu.pc = cpu.pc.wrapping_add(1);
+
+        let byte = match cpu.memory.read(usize::from(cpu.pc)) {
+            Some(byte) => *byte,
+            None => panic!(
+                "opcode load imm 8 into C failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+                cpu,
+            ),
+        };
+
+        cpu.bc.lo = byte;
+
+        cpu.pc = cpu.pc.wrapping_add(1);
+
+        8
+    }
+}
