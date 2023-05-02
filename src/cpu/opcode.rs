@@ -24,6 +24,7 @@ pub enum Opcode {
     DecC_0x0D,
     LdImm8IntoC_0x0E,
     RotateRightIntoA_0x0F,
+    Stop_0x10,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -45,6 +46,7 @@ impl std::convert::From<u8> for Opcode {
             0x0D => Self::DecC_0x0D,
             0x0E => Self::LdImm8IntoC_0x0E,
             0x0F => Self::RotateRightIntoA_0x0F,
+            0x10 => Self::Stop_0x10,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -69,6 +71,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::DecC_0x0D => 0x0D,
             Self::LdImm8IntoC_0x0E => 0x0E,
             Self::RotateRightIntoA_0x0F => 0x0F,
+            Self::Stop_0x10 => 0x10,
         }
     }
 }
@@ -92,6 +95,7 @@ impl Opcode {
             Self::DecC_0x0D => execute_0x0d(cpu),
             Self::LdImm8IntoC_0x0E => execute_0x0e(cpu),
             Self::RotateRightIntoA_0x0F => execute_0x0f(cpu),
+            Self::Stop_0x10 => execute_0x10(cpu),
         }
     }
 }
@@ -318,6 +322,14 @@ fn execute_0x0f(cpu: &mut LR35902) -> u32 {
     cpu.reset_half_carry_flag();
     cpu.reset_sub_flag();
     cpu.reset_zero_flag();
+
+    4
+}
+
+fn execute_0x10(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.paused = true;
 
     4
 }

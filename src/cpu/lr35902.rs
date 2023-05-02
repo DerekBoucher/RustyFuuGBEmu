@@ -44,6 +44,7 @@ impl LR35902 {
             sp: 0x0000,
             pc: 0x0000,
             memory: memory_driver,
+            paused: false,
         }
     }
 

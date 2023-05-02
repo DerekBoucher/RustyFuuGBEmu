@@ -601,3 +601,24 @@ fn _0x0f() {
         tc.run();
     }
 }
+
+#[test]
+fn _0x10() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> LR35902 {
+            let cpu = LR35902::new(mock::Memory::new(vec![Opcode::Stop_0x10.into()]));
+            return cpu;
+        },
+        expected_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![Opcode::Stop_0x10.into()]));
+            cpu.pc = 0x0001;
+            cpu.paused = true;
+            return cpu;
+        },
+        expected_cycles: 4,
+    }];
+
+    for tc in test_cases {
+        tc.run();
+    }
+}

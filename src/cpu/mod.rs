@@ -30,6 +30,8 @@ pub struct LR35902 {
     pc: u16,
 
     memory: Box<dyn MemoryDriver>,
+
+    paused: bool,
 }
 
 pub trait MemoryDriver: Debug {
