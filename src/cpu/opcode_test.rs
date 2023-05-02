@@ -622,3 +622,33 @@ fn _0x10() {
         tc.run();
     }
 }
+
+#[test]
+fn _0x11() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> LR35902 {
+            LR35902::new(mock::Memory::new(vec![
+                Opcode::LdImm16IntoDE_0x11.into(),
+                0x7F,
+                0x10,
+            ]))
+        },
+        expected_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![
+                Opcode::LdImm16IntoDE_0x11.into(),
+                0x7F,
+                0x10,
+            ]));
+            cpu.pc = 0x3;
+            cpu.de.lo = 0x7F;
+            cpu.de.hi = 0x10;
+
+            return cpu;
+        },
+        expected_cycles: 12,
+    }];
+
+    for tc in test_cases {
+        tc.run();
+    }
+}

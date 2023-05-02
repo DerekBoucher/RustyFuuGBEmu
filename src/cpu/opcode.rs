@@ -25,6 +25,7 @@ pub enum Opcode {
     LdImm8IntoC_0x0E,
     RotateRightIntoA_0x0F,
     Stop_0x10,
+    LdImm16IntoDE_0x11,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -47,6 +48,7 @@ impl std::convert::From<u8> for Opcode {
             0x0E => Self::LdImm8IntoC_0x0E,
             0x0F => Self::RotateRightIntoA_0x0F,
             0x10 => Self::Stop_0x10,
+            0x11 => Self::LdImm16IntoDE_0x11,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -72,6 +74,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdImm8IntoC_0x0E => 0x0E,
             Self::RotateRightIntoA_0x0F => 0x0F,
             Self::Stop_0x10 => 0x10,
+            Self::LdImm16IntoDE_0x11 => 0x11,
         }
     }
 }
@@ -96,6 +99,7 @@ impl Opcode {
             Self::LdImm8IntoC_0x0E => execute_0x0e(cpu),
             Self::RotateRightIntoA_0x0F => execute_0x0f(cpu),
             Self::Stop_0x10 => execute_0x10(cpu),
+            Self::LdImm16IntoDE_0x11 => execute_0x11(cpu),
         }
     }
 }
@@ -332,4 +336,30 @@ fn execute_0x10(cpu: &mut LR35902) -> u32 {
     cpu.paused = true;
 
     4
+}
+
+fn execute_0x11(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.lo = match cpu.memory.read(usize::from(cpu.pc)) {
+        Some(byte) => *byte,
+        None => panic!(
+            "opcode load imm 16 into DE failed to fetch lo byte. Dumping cpu state...\n{:?}",
+            cpu
+        ),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.hi = match cpu.memory.read(usize::from(cpu.pc)) {
+        Some(byte) => *byte,
+        None => panic!(
+            "opcode load imm 16 into DE failed to fetch hi byte. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    12
 }
