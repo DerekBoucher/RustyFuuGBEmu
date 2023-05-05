@@ -17,7 +17,7 @@ fn read() {
                 },
                 assert_fn: |memory| {
                     let read_result = memory.read(0x0);
-                    assert_eq!(*read_result.unwrap(), 0x31);
+                    assert_eq!(read_result.unwrap(), 0x31);
                 }
             },
             TestCase{
@@ -31,7 +31,7 @@ fn read() {
                 },
                 assert_fn: |memory| {
                     let read_result = memory.read(0x0);
-                    assert_eq!(*read_result.unwrap(), 0x17);
+                    assert_eq!(read_result.unwrap(), 0x17);
                 }
             },
             TestCase{
@@ -43,7 +43,7 @@ fn read() {
                 },
                 assert_fn: |memory| {
                     let read_result = memory.read(0x8100);
-                    assert_eq!(*read_result.unwrap(), 0x37);
+                    assert_eq!(read_result.unwrap(), 0x37);
                 }
             },
             TestCase{
@@ -53,7 +53,7 @@ fn read() {
                 },
                 assert_fn: |memory| {
                     let read_result = memory.read(0xA000);
-                    assert_eq!(*read_result.unwrap(), 0x00);
+                    assert_eq!(read_result.unwrap(), 0x00);
                 }
             },
             TestCase{
@@ -65,7 +65,7 @@ fn read() {
                 },
                 assert_fn: |memory| {
                     let read_result = memory.read(0xC100);
-                    assert_eq!(*read_result.unwrap(), 0x17);
+                    assert_eq!(read_result.unwrap(), 0x17);
                 }
             },
             TestCase{
@@ -77,7 +77,7 @@ fn read() {
                 },
                 assert_fn: |memory| {
                     let read_result = memory.read(0xD100);
-                    assert_eq!(*read_result.unwrap(), 0x17);
+                    assert_eq!(read_result.unwrap(), 0x17);
                 }
             },
             TestCase{
@@ -89,7 +89,7 @@ fn read() {
                 },
                 assert_fn: |memory| {
                     let read_result = memory.read(0xE100);
-                    assert_eq!(*read_result.unwrap(), 0x17);
+                    assert_eq!(read_result.unwrap(), 0x17);
                 }
             },
             TestCase{
@@ -101,7 +101,7 @@ fn read() {
                 },
                 assert_fn: |memory| {
                     let read_result = memory.read(0xFE00);
-                    assert_eq!(*read_result.unwrap(), 0x17);
+                    assert_eq!(read_result.unwrap(), 0x17);
                 }
             },
             TestCase{
@@ -113,7 +113,7 @@ fn read() {
                 },
                 assert_fn: |memory| {
                     let read_result = memory.read(0xFF00);
-                    assert_eq!(*read_result.unwrap(), 0x17);
+                    assert_eq!(read_result.unwrap(), 0x17);
                 }
             },
             TestCase{
@@ -125,7 +125,7 @@ fn read() {
                 },
                 assert_fn: |memory| {
                     let read_result = memory.read(0xFFFE);
-                    assert_eq!(*read_result.unwrap(), 0x17);
+                    assert_eq!(read_result.unwrap(), 0x17);
                 }
             },
             TestCase{
@@ -137,7 +137,7 @@ fn read() {
                 },
                 assert_fn: |memory| {
                     let read_result = memory.read(0xFFFF);
-                    assert_eq!(*read_result.unwrap(), 0x17);
+                    assert_eq!(read_result.unwrap(), 0x17);
                 }
             },
             TestCase{
@@ -175,7 +175,7 @@ fn write() {
             init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
             assert_fn: |mut memory| {
                 memory.write(0x0000, 0x17);
-                assert_eq!(*memory.read(0x0000).unwrap(), 0x31); //boot rom
+                assert_eq!(memory.read(0x0000).unwrap(), 0x31); //boot rom
             },
         },
         TestCase {
@@ -195,7 +195,7 @@ fn write() {
             init_fn: || -> Memory { Memory::new(vec![0x0; 0x10000]) },
             assert_fn: |mut memory| {
                 memory.write(0xA000, 0x17);
-                assert_eq!(*memory.read(0xA000).unwrap(), 0x17);
+                assert_eq!(memory.read(0xA000).unwrap(), 0x17);
             },
         },
         TestCase {

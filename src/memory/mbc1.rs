@@ -9,6 +9,7 @@ use std::any::Any;
 /// MBC1 type of cartridge has a memory bank controller
 /// which swaps out the exposed memory that the cpu sees
 /// in memory locations 0x4000 ~ 0x7FFF.
+#[derive(Debug)]
 pub struct MBC1 {
     rom: Vec<u8>,
     ram_enabled: bool,
@@ -49,7 +50,7 @@ impl Cartridge for MBC1 {
         self
     }
 
-    fn read(&self, addr: usize) -> Option<&u8> {
+    fn read(&self, addr: usize) -> Option<u8> {
         if addr < 0x4000 {
             // If the ROM size is greater than 1MiB, then the cartridge
             // might be using the RAM select register's 2-bits as an extension
@@ -61,10 +62,10 @@ impl Cartridge for MBC1 {
                 // TODO: MBC1M Multicart implementation: https://gbdev.io/pandocs/MBC1.html#00003fff--rom-bank-x0-read-only
                 let bank_number: usize = usize::from((self.ram_bank_select_register & 0x3) << 5);
                 let translated_addr: usize = (0x4000 * bank_number) + addr;
-                return Some(&self.rom[translated_addr]);
+                return Some(self.rom[translated_addr].clone());
             }
 
-            return Some(&self.rom[addr]);
+            return Some(self.rom[addr].clone());
         }
 
         // ROM Banks 0x01 - 0x7F. See https://gbdev.io/pandocs/MBC1.html#40007fff--rom-bank-01-7f-read-only for more details.
@@ -83,13 +84,13 @@ impl Cartridge for MBC1 {
             }
 
             translated_addr += usize::from(bank_number * 0x4000);
-            return Some(&self.rom[translated_addr]);
+            return Some(self.rom[translated_addr].clone());
         }
 
         // RAM banks
         if addr >= 0xA000 && addr < 0xC000 {
             if !self.supports_ram() || !self.ram_enabled {
-                return Some(&0xFF);
+                return Some(0xFF);
             }
 
             let translated_addr: usize = addr - 0xA000;
@@ -99,7 +100,7 @@ impl Cartridge for MBC1 {
                 bank_number = usize::from(self.ram_bank_select_register & 0b00000011);
             }
 
-            return Some(&self.ram_banks[bank_number][translated_addr]);
+            return Some(self.ram_banks[bank_number][translated_addr].clone());
         }
 
         None

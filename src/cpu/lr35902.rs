@@ -8,6 +8,8 @@ use crate::cpu::Register;
 use crate::cpu::LR35902;
 
 use super::bit;
+use super::register;
+use super::register::*;
 
 /// Bit mask for the zero flag
 pub const ZERO_FLAG_MASK: u8 = 1 << 7;
@@ -29,6 +31,8 @@ impl PartialEq for LR35902 {
             && self.bc.word() == other.bc.word()
             && self.de.word() == other.de.word()
             && self.hl.word() == other.hl.word()
+            && self.paused == other.paused
+            && self.memory.dump() == other.memory.dump()
     }
 }
 
@@ -42,36 +46,20 @@ impl LR35902 {
             sp: 0x0000,
             pc: 0x0000,
             memory: memory_driver,
+            paused: false,
         }
     }
 
     pub fn execute_next_opcode(&mut self) -> u32 {
         let op = match self.memory.read(usize::from(self.pc)) {
-            Some(x) => *x,
+            Some(x) => Opcode::from(x),
             None => panic!(
                 "memory returned empty value when attempting to fetch op code. Dumping cpu state...\n
                 {:?}", self
             ),
         };
 
-        match op {
-            Nop::OPCODE => Nop::execute(self),
-            LdImm16IntoBC::OPCODE => LdImm16IntoBC::execute(self),
-            LdAIntoMemoryBC::OPCODE => LdAIntoMemoryBC::execute(self),
-            IncBC::OPCODE => IncBC::execute(self),
-            IncB::OPCODE => IncB::execute(self),
-            DecB::OPCODE => DecB::execute(self),
-            LdImm8IntoB::OPCODE => LdImm8IntoB::execute(self),
-            RotateLeftCarryIntoA::OPCODE => RotateLeftCarryIntoA::execute(self),
-            LdSpInto16ImmAddress::OPCODE => LdSpInto16ImmAddress::execute(self),
-            AddBCintoHL::OPCODE => AddBCintoHL::execute(self),
-            LdMemoryBCIntoA::OPCODE => LdMemoryBCIntoA::execute(self),
-            _ => panic!(
-                "invalid cpu op code {}. Dumping cpu state...\n
-                {:?}",
-                op, self
-            ),
-        }
+        return op.execute(self);
     }
 
     pub fn reset_half_carry_flag(&mut self) {
@@ -122,23 +110,133 @@ impl LR35902 {
         return self.af.lo & (ZERO_FLAG_MASK) > 0;
     }
 
-    pub fn add_16_bit_registers(&mut self, a: u16, b: u16) -> u16 {
+    pub fn increment_8_bit_register(&mut self, reg_id: register::ID) {
+        let current_reg_value = match reg_id {
+            ID::A => self.af.hi,
+            ID::B => self.bc.hi,
+            ID::C => self.bc.lo,
+            ID::D => self.de.hi,
+            ID::E => self.de.lo,
+            ID::H => self.hl.hi,
+            ID::L => self.hl.lo,
+            _ => panic!(
+                "unrecognized 8 bit register identifier for 8 bit increment: {:?}",
+                reg_id
+            ),
+        };
+
         self.reset_sub_flag();
 
-        if bit::is_half_carry_word(a, b, 0x0FFF, false) {
+        if current_reg_value.wrapping_add(1) == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        if bit::is_half_carry(current_reg_value, 1, false) {
             self.set_half_carry_flag();
         } else {
             self.reset_half_carry_flag();
         }
 
-        if a > (0xFFFF - b) {
+        match reg_id {
+            ID::A => self.af.hi = self.af.hi.wrapping_add(1),
+            ID::B => self.bc.hi = self.bc.hi.wrapping_add(1),
+            ID::C => self.bc.lo = self.bc.lo.wrapping_add(1),
+            ID::D => self.de.hi = self.de.hi.wrapping_add(1),
+            ID::E => self.de.lo = self.de.lo.wrapping_add(1),
+            ID::H => self.hl.hi = self.hl.hi.wrapping_add(1),
+            ID::L => self.hl.lo = self.hl.lo.wrapping_add(1),
+            _ => panic!(
+                "unrecognized 8 bit register identifier for 8 bit increment: {:?}",
+                reg_id
+            ),
+        }
+    }
+
+    pub fn decrement_8_bit_register(&mut self, reg_id: register::ID) {
+        let current_reg_value = match reg_id {
+            ID::A => self.af.hi,
+            ID::B => self.bc.hi,
+            ID::C => self.bc.lo,
+            ID::D => self.de.hi,
+            ID::E => self.de.lo,
+            ID::H => self.hl.hi,
+            ID::L => self.hl.lo,
+            _ => panic!(
+                "unrecognized 8 bit register identifier for 8 bit decrement: {:?}",
+                reg_id
+            ),
+        };
+
+        self.set_sub_flag();
+
+        if current_reg_value.wrapping_sub(1) == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        if bit::is_half_borrow(current_reg_value, 1, false) {
+            self.set_half_carry_flag();
+        } else {
+            self.reset_half_carry_flag();
+        }
+
+        match reg_id {
+            ID::A => self.af.hi = self.af.hi.wrapping_sub(1),
+            ID::B => self.bc.hi = self.bc.hi.wrapping_sub(1),
+            ID::C => self.bc.lo = self.bc.lo.wrapping_sub(1),
+            ID::D => self.de.hi = self.de.hi.wrapping_sub(1),
+            ID::E => self.de.lo = self.de.lo.wrapping_sub(1),
+            ID::H => self.hl.hi = self.hl.hi.wrapping_sub(1),
+            ID::L => self.hl.lo = self.hl.lo.wrapping_sub(1),
+            _ => panic!(
+                "unrecognized 8 bit register identifier for 8 bit decrement: {:?}",
+                reg_id
+            ),
+        }
+    }
+
+    pub fn add_16_bit_registers(&mut self, target: register::ID16, src: register::ID16) {
+        let target_value = match target {
+            ID16::BC => self.bc.word(),
+            ID16::DE => self.de.word(),
+            ID16::HL => self.hl.word(),
+            ID16::SP => self.sp,
+            _ => panic!("invalid 16 bit add operation: targetID {:?}", target),
+        };
+
+        let src_value = match src {
+            ID16::BC => self.bc.word(),
+            ID16::DE => self.de.word(),
+            ID16::HL => self.hl.word(),
+            ID16::SP => self.sp,
+            _ => panic!("invalid 16 bit add operation: srcID {:?}", src),
+        };
+
+        self.reset_sub_flag();
+
+        if bit::is_half_carry_word(target_value, src_value, 0x0FFF, false) {
+            self.set_half_carry_flag();
+        } else {
+            self.reset_half_carry_flag();
+        }
+
+        if target_value > (0xFFFF - src_value) {
             self.set_carry_flag();
         } else {
             self.reset_carry_flag();
         }
 
-        // Update timers here TODO
+        let new_word = target_value.wrapping_add(src_value);
 
-        return a.wrapping_add(b);
+        match target {
+            ID16::BC => self.bc.set_word(new_word),
+            ID16::DE => self.de.set_word(new_word),
+            ID16::HL => self.hl.set_word(new_word),
+            ID16::SP => self.sp = new_word,
+            _ => panic!("invalid 16 bit add operation: targetID {:?}", target),
+        }
     }
 }
