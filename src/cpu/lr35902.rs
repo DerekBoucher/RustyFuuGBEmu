@@ -31,6 +31,8 @@ impl PartialEq for LR35902 {
             && self.bc.word() == other.bc.word()
             && self.de.word() == other.de.word()
             && self.hl.word() == other.hl.word()
+            && self.paused == other.paused
+            && self.memory.dump() == other.memory.dump()
     }
 }
 
