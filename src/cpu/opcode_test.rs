@@ -900,3 +900,101 @@ fn _0x16() {
         tc.run();
     }
 }
+
+#[test]
+fn _0x17() {
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![
+                    Opcode::RotateLeftWithCarryIntoA_0x17.into(),
+                ]));
+                cpu.af.hi = 0x80;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                cpu.set_zero_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![
+                    Opcode::RotateLeftWithCarryIntoA_0x17.into(),
+                ]));
+                cpu.pc = 0x0001;
+                cpu.set_carry_flag();
+                cpu.af.hi = 0x00;
+                return cpu;
+            },
+            expected_cycles: 4,
+        },
+        TestCase {
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![
+                    Opcode::RotateLeftWithCarryIntoA_0x17.into(),
+                ]));
+                cpu.af.hi = 0xC0;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                cpu.set_zero_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![
+                    Opcode::RotateLeftWithCarryIntoA_0x17.into(),
+                ]));
+                cpu.pc = 0x0001;
+                cpu.set_carry_flag();
+                cpu.af.hi = 0x80;
+                return cpu;
+            },
+            expected_cycles: 4,
+        },
+        TestCase {
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![
+                    Opcode::RotateLeftWithCarryIntoA_0x17.into(),
+                ]));
+                cpu.af.hi = 0xC0;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                cpu.set_zero_flag();
+                cpu.set_carry_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![
+                    Opcode::RotateLeftWithCarryIntoA_0x17.into(),
+                ]));
+                cpu.pc = 0x0001;
+                cpu.set_carry_flag();
+                cpu.af.hi = 0x81;
+                return cpu;
+            },
+            expected_cycles: 4,
+        },
+        TestCase {
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![
+                    Opcode::RotateLeftWithCarryIntoA_0x17.into(),
+                ]));
+                cpu.af.hi = 0x40;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                cpu.set_zero_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![
+                    Opcode::RotateLeftWithCarryIntoA_0x17.into(),
+                ]));
+                cpu.pc = 0x0001;
+                cpu.af.hi = 0x80;
+                return cpu;
+            },
+            expected_cycles: 4,
+        },
+    ];
+
+    for tc in test_cases {
+        tc.run();
+    }
+}

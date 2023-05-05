@@ -31,6 +31,7 @@ pub enum Opcode {
     IncD_0x14,
     DecD_0x15,
     LdImm8IntoD_0x16,
+    RotateLeftWithCarryIntoA_0x17,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -59,6 +60,7 @@ impl std::convert::From<u8> for Opcode {
             0x14 => Self::IncD_0x14,
             0x15 => Self::DecD_0x15,
             0x16 => Self::LdImm8IntoD_0x16,
+            0x17 => Self::RotateLeftWithCarryIntoA_0x17,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -90,6 +92,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::IncD_0x14 => 0x14,
             Self::DecD_0x15 => 0x15,
             Self::LdImm8IntoD_0x16 => 0x16,
+            Self::RotateLeftWithCarryIntoA_0x17 => 0x17,
         }
     }
 }
@@ -120,6 +123,7 @@ impl Opcode {
             Self::IncD_0x14 => execute_0x14(cpu),
             Self::DecD_0x15 => execute_0x15(cpu),
             Self::LdImm8IntoD_0x16 => execute_0x16(cpu),
+            Self::RotateLeftWithCarryIntoA_0x17 => execute_0x17(cpu),
         }
     }
 }
@@ -428,4 +432,29 @@ fn execute_0x16(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     8
+}
+
+fn execute_0x17(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let leftmost_bit_a: bool = (cpu.af.hi & (1 << 7)) > 0;
+    let current_carry_flag = cpu.test_carry_flag();
+
+    if leftmost_bit_a {
+        cpu.set_carry_flag();
+    } else {
+        cpu.reset_carry_flag();
+    }
+
+    cpu.af.hi = cpu.af.hi << 1;
+    cpu.af.hi |= match current_carry_flag {
+        true => 0x01,
+        false => 0x00,
+    };
+
+    cpu.reset_half_carry_flag();
+    cpu.reset_sub_flag();
+    cpu.reset_zero_flag();
+
+    4
 }
