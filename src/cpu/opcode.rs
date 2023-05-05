@@ -2,7 +2,7 @@
 #[cfg(test)]
 mod test;
 
-use super::register;
+use super::{bit, register};
 use crate::cpu::LR35902;
 
 #[allow(non_camel_case_types)]
@@ -32,6 +32,7 @@ pub enum Opcode {
     DecD_0x15,
     LdImm8IntoD_0x16,
     RotateLeftWithCarryIntoA_0x17,
+    RelativeJump8_0x18,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -61,6 +62,7 @@ impl std::convert::From<u8> for Opcode {
             0x15 => Self::DecD_0x15,
             0x16 => Self::LdImm8IntoD_0x16,
             0x17 => Self::RotateLeftWithCarryIntoA_0x17,
+            0x18 => Self::RelativeJump8_0x18,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -93,6 +95,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::DecD_0x15 => 0x15,
             Self::LdImm8IntoD_0x16 => 0x16,
             Self::RotateLeftWithCarryIntoA_0x17 => 0x17,
+            Self::RelativeJump8_0x18 => 0x18,
         }
     }
 }
@@ -124,6 +127,7 @@ impl Opcode {
             Self::DecD_0x15 => execute_0x15(cpu),
             Self::LdImm8IntoD_0x16 => execute_0x16(cpu),
             Self::RotateLeftWithCarryIntoA_0x17 => execute_0x17(cpu),
+            Self::RelativeJump8_0x18 => execute_0x18(cpu),
         }
     }
 }
@@ -138,7 +142,7 @@ fn execute_0x01(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.lo = match cpu.memory.read(usize::from(cpu.pc)) {
-        Some(byte) => *byte,
+        Some(byte) => byte,
         None => panic!(
             "opcode load imm 16 into BC failed to fetch lo byte. Dumping cpu state...\n{:?}",
             cpu
@@ -148,7 +152,7 @@ fn execute_0x01(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.hi = match cpu.memory.read(usize::from(cpu.pc)) {
-        Some(byte) => *byte,
+        Some(byte) => byte,
         None => panic!(
             "opcode load imm 16 into BC failed to fetch hi byte. Dumping cpu state...\n{:?}",
             cpu,
@@ -196,7 +200,7 @@ fn execute_0x06(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match cpu.memory.read(usize::from(cpu.pc)) {
-        Some(byte) => *byte,
+        Some(byte) => byte,
         None => panic!(
             "opcode load imm 8 into B failed to fetch byte in memory. Dumping cpu state...\n{:?}",
             cpu,
@@ -234,7 +238,7 @@ fn execute_0x08(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let lo_address_byte = match cpu.memory.read(usize::from(cpu.pc)) {
-        Some(byte) => *byte,
+        Some(byte) => byte,
         None => panic!(
             "opcode 0x08 failed to load lo address byte from memory. Dumping cpu state...\n{:?}",
             cpu,
@@ -244,7 +248,7 @@ fn execute_0x08(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let hi_address_byte = match cpu.memory.read(usize::from(cpu.pc)) {
-        Some(byte) => *byte,
+        Some(byte) => byte,
         None => panic!(
             "opcode 0x08 failed to load hi address byte from memory. Dumping cpu state...\n{:?}",
             cpu,
@@ -274,7 +278,7 @@ fn execute_0x0a(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let value = match cpu.memory.read(usize::from(cpu.bc.word())) {
-        Some(byte) => *byte,
+        Some(byte) => byte,
         None => panic!(
             "opcode 0x0A failed to load byte from memory pointed to by BC. Dumping cpu state...\n{:?}",
             cpu,
@@ -316,7 +320,7 @@ fn execute_0x0e(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match cpu.memory.read(usize::from(cpu.pc)) {
-        Some(byte) => *byte,
+        Some(byte) => byte,
         None => panic!(
             "opcode load imm 8 into C failed to fetch byte in memory. Dumping cpu state...\n{:?}",
             cpu,
@@ -362,7 +366,7 @@ fn execute_0x11(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.lo = match cpu.memory.read(usize::from(cpu.pc)) {
-        Some(byte) => *byte,
+        Some(byte) => byte,
         None => panic!(
             "opcode load imm 16 into DE failed to fetch lo byte. Dumping cpu state...\n{:?}",
             cpu
@@ -372,7 +376,7 @@ fn execute_0x11(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.hi = match cpu.memory.read(usize::from(cpu.pc)) {
-        Some(byte) => *byte,
+        Some(byte) => byte,
         None => panic!(
             "opcode load imm 16 into DE failed to fetch hi byte. Dumping cpu state...\n{:?}",
             cpu,
@@ -420,7 +424,7 @@ fn execute_0x16(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match cpu.memory.read(usize::from(cpu.pc)) {
-        Some(byte) => *byte,
+        Some(byte) => byte,
         None => panic!(
             "opcode load imm 8 into B failed to fetch byte in memory. Dumping cpu state...\n{:?}",
             cpu,
@@ -457,4 +461,26 @@ fn execute_0x17(cpu: &mut LR35902) -> u32 {
     cpu.reset_zero_flag();
 
     4
+}
+
+fn execute_0x18(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let relative_addr = match cpu.memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode relative 8bit jump failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    if bit::test_most_significant_bit(relative_addr) {
+        cpu.pc = cpu
+            .pc
+            .wrapping_sub(bit::two_compliment_byte(relative_addr).into());
+    } else {
+        cpu.pc = cpu.pc.wrapping_add(relative_addr.into());
+    }
+
+    12
 }

@@ -7,6 +7,7 @@ use std::any::Any;
 
 /// Rom only type of cartridge has no memory bank
 /// controller. Simplest form of the gameboy cart.
+#[derive(Debug)]
 pub struct NoMBC {
     data: Vec<u8>,
     ram_bank: [u8; 0x2000],
@@ -18,14 +19,18 @@ impl Cartridge for NoMBC {
         self
     }
 
-    fn read(&self, addr: usize) -> Option<&u8> {
+    fn read(&self, addr: usize) -> Option<u8> {
         if addr < 0x8000 {
-            return self.data.get(addr);
+            let byte = match self.data.get(addr) {
+                Some(byte) => *byte,
+                None => panic!("tried to access cartridge data out of bounds"),
+            };
+            return Some(byte.clone());
         }
 
         // Ram bank
         if addr >= 0xA000 && addr < 0xC000 {
-            return Some(&self.ram_bank[addr - 0xA000]);
+            return Some(self.ram_bank[addr - 0xA000].clone());
         }
 
         None

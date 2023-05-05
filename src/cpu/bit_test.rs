@@ -1,3 +1,5 @@
+use std::vec;
+
 use crate::cpu::bit;
 
 #[test]
@@ -141,5 +143,55 @@ fn is_half_carry_word() {
     for tc in test_cases {
         let result = bit::is_half_carry_word(tc.word, tc.added_word, 0x0FFF, tc.carry);
         assert_eq!(tc.expected_half_carry, result)
+    }
+}
+
+#[test]
+fn two_compliment_byte() {
+    struct TestCase {
+        input_byte: u8,
+        expected_byte: u8,
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            input_byte: 0xFF,
+            expected_byte: 0x01,
+        },
+        TestCase {
+            input_byte: 0x01,
+            expected_byte: 0xFF,
+        },
+    ];
+
+    for tc in test_cases {
+        let result = bit::two_compliment_byte(tc.input_byte);
+        assert_eq!(result, tc.expected_byte);
+    }
+}
+
+#[test]
+fn test_most_significant_bit() {
+    struct TestCase {
+        input_byte: u8,
+        expected_result: bool,
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            input_byte: 0x80,
+            expected_result: true,
+        },
+        TestCase {
+            input_byte: 0x40,
+            expected_result: false,
+        },
+    ];
+
+    for tc in test_cases {
+        assert_eq!(
+            bit::test_most_significant_bit(tc.input_byte),
+            tc.expected_result,
+        );
     }
 }

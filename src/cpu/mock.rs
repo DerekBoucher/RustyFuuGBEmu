@@ -12,8 +12,8 @@ impl Memory {
 }
 
 impl MemoryDriver for Memory {
-    fn read(&self, addr: usize) -> Option<&u8> {
-        Some(&self.memory[addr])
+    fn read(&self, addr: usize) -> Option<u8> {
+        Some(self.memory[addr].clone())
     }
 
     fn write(&mut self, addr: usize, val: u8) {

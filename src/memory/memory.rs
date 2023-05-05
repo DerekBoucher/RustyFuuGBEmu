@@ -2,6 +2,7 @@
 #[cfg(test)]
 mod test;
 
+use crate::cpu::MemoryDriver;
 use crate::memory::cartridge;
 use crate::memory::Memory;
 
@@ -84,10 +85,14 @@ impl Memory {
         }
     }
 
-    pub fn read(&self, addr: usize) -> Option<&u8> {
+    fn boot_rom_enabled(&self) -> bool {
+        return self.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] == 0x00;
+    }
+
+    pub fn read(&self, addr: usize) -> Option<u8> {
         // If boot rom is enabled, the data should come from it.
         if addr < 0x100 && self.boot_rom_enabled() {
-            return Some(&Memory::BOOT_ROM[addr]);
+            return Some(Memory::BOOT_ROM[addr].clone());
         }
 
         // Cartridge ROM
@@ -97,7 +102,7 @@ impl Memory {
 
         // Video RAM
         if addr >= 0x8000 && addr < 0xA000 {
-            return Some(&self.video_ram[addr - 0x8000]);
+            return Some(self.video_ram[addr - 0x8000].clone());
         }
 
         // Cartridge RAM
@@ -107,12 +112,12 @@ impl Memory {
 
         // Work RAM 0
         if addr >= 0xC000 && addr < 0xD000 {
-            return Some(&self.work_ram0[addr - 0xC000]);
+            return Some(self.work_ram0[addr - 0xC000].clone());
         }
 
         // Work RAM 1
         if addr >= 0xD000 && addr < 0xE000 {
-            return Some(&self.work_ram1[addr - 0xD000]);
+            return Some(self.work_ram1[addr - 0xD000].clone());
         }
 
         // Echo RAM
@@ -122,22 +127,22 @@ impl Memory {
 
         // OAM / Sprite attributes
         if addr >= 0xFE00 && addr < 0xFF00 {
-            return Some(&self.sprite_attributes[addr - 0xFE00]);
+            return Some(self.sprite_attributes[addr - 0xFE00].clone());
         }
 
         // IO Registers
         if addr >= 0xFF00 && addr < 0xFF80 {
-            return Some(&self.io_registers[addr - 0xFF00]);
+            return Some(self.io_registers[addr - 0xFF00].clone());
         }
 
         // High RAM
         if addr >= 0xFF80 && addr < 0xFFFF {
-            return Some(&self.hi_ram[addr - 0xFF80]);
+            return Some(self.hi_ram[addr - 0xFF80].clone());
         }
 
         // Interupt enable register
         if addr == 0xFFFF {
-            return Some(&self.interrupt_enable_register);
+            return Some(self.interrupt_enable_register.clone());
         }
 
         None
@@ -194,8 +199,18 @@ impl Memory {
             self.interrupt_enable_register = val;
         }
     }
+}
 
-    fn boot_rom_enabled(&self) -> bool {
-        return self.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] == 0x00;
+impl MemoryDriver for Memory {
+    fn read(&self, addr: usize) -> Option<u8> {
+        return self.read(addr);
+    }
+
+    fn write(&mut self, addr: usize, val: u8) {
+        return self.write(addr, val);
+    }
+
+    fn dump(&self) -> Vec<u8> {
+        return vec![]; // TODO
     }
 }

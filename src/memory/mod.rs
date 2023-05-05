@@ -8,11 +8,12 @@ mod mbc1;
 mod memory;
 mod no_mbc;
 
-use std::any::Any;
+use std::{any::Any, fmt::Debug};
 
 /// Struct emulating the DMG Gameboy's memory behaviour.
 /// This struct controls the access behaviour whenever the CPU
 /// makes reads or writes to the memory.
+#[derive(Debug)]
 pub struct Memory {
     /// Cartridge data.
     /// Mapped into memory locations 0x0000 - 0x7FFF.
@@ -55,8 +56,8 @@ pub struct Memory {
 /// Cartridge trait which serves as an interface to the various
 /// types of memory bank controllers that Gameboy cartridges
 /// can contain.
-pub trait Cartridge: Any {
+pub trait Cartridge: Any + Debug {
     fn as_any(&self) -> &dyn Any;
-    fn read(&self, addr: usize) -> Option<&u8>;
+    fn read(&self, addr: usize) -> Option<u8>;
     fn write(&mut self, addr: usize, val: u8);
 }

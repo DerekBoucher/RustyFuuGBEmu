@@ -52,7 +52,7 @@ impl LR35902 {
 
     pub fn execute_next_opcode(&mut self) -> u32 {
         let op = match self.memory.read(usize::from(self.pc)) {
-            Some(x) => Opcode::from(*x),
+            Some(x) => Opcode::from(x),
             None => panic!(
                 "memory returned empty value when attempting to fetch op code. Dumping cpu state...\n
                 {:?}", self

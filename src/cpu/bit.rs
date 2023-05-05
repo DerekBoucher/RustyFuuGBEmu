@@ -46,3 +46,11 @@ pub fn is_half_carry_word(word: u16, added_word: u16, mask: u16, carry: bool) ->
 
     return false;
 }
+
+pub fn two_compliment_byte(byte: u8) -> u8 {
+    return (!byte) + 0x01;
+}
+
+pub fn test_most_significant_bit(byte: u8) -> bool {
+    return byte & (1 << 7) > 0;
+}

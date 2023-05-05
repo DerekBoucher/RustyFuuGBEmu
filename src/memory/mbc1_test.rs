@@ -59,7 +59,7 @@ fn read() {
                     let mbc1 = MBC1::new(cart_data);
                     let read_result = mbc1.read(0x0);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0x7F,
                     )
                 },
@@ -77,7 +77,7 @@ fn read() {
                     mbc1.banking_mode = MBC1::RAM_BANKING_MODE;
                     let read_result = mbc1.read(0x0);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0x7F,
                     )
                 },
@@ -96,7 +96,7 @@ fn read() {
                     mbc1.ram_bank_select_register = 0x1;
                     let read_result = mbc1.read(0x0);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0x7F,
                     )
                 },
@@ -115,7 +115,7 @@ fn read() {
                     mbc1.ram_bank_select_register = 0x2;
                     let read_result = mbc1.read(0x0);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0x7F,
                     )
                 },
@@ -134,7 +134,7 @@ fn read() {
                     mbc1.ram_bank_select_register = 0x3;
                     let read_result = mbc1.read(0x0);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0x7F,
                     )
                 },
@@ -153,7 +153,7 @@ fn read() {
                     mbc1.ram_bank_select_register = 0x4;
                     let read_result = mbc1.read(0x0);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0x7F,
                     )
                 },
@@ -169,7 +169,7 @@ fn read() {
                     mbc1.rom_bank_select_register = 0x0;
                     let read_result = mbc1.read(0x4000);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0x7F,
                     )
                 },
@@ -185,7 +185,7 @@ fn read() {
                     mbc1.rom_bank_select_register = 0x1;
                     let read_result = mbc1.read(0x4000);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0x7F,
                     )
                 },
@@ -201,7 +201,7 @@ fn read() {
                     mbc1.rom_bank_select_register = 0x3;
                     let read_result = mbc1.read(0x4000);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0x7F,
                     )
                 },
@@ -219,7 +219,7 @@ fn read() {
                     mbc1.banking_mode = MBC1::RAM_BANKING_MODE;
                     let read_result = mbc1.read(0x4000);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0x7F,
                     )
                 },
@@ -239,7 +239,7 @@ fn read() {
                     mbc1.banking_mode = MBC1::RAM_BANKING_MODE;
                     let read_result = mbc1.read(0x4000);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0x7F,
                     )
                 },
@@ -259,7 +259,7 @@ fn read() {
                     mbc1.banking_mode = MBC1::RAM_BANKING_MODE;
                     let read_result = mbc1.read(0x4000);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0x7F,
                     )
                 },
@@ -277,7 +277,7 @@ fn read() {
                     mbc1.ram_banks[0][0] = 0x7F;
                     let read_result = mbc1.read(0xA000);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0xFF,
                     )
                 },
@@ -296,7 +296,7 @@ fn read() {
                     mbc1.ram_banks[0][0] = 0x7F;
                     let read_result = mbc1.read(0xA000);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0xFF,
                     )
                 },
@@ -315,7 +315,7 @@ fn read() {
                     mbc1.ram_banks[0][0] = 0x7F;
                     let read_result = mbc1.read(0xA000);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0xFF,
                     )
                 },
@@ -335,7 +335,7 @@ fn read() {
                     mbc1.ram_enabled = true;
                     let read_result = mbc1.read(0xA000);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0x7F,
                     )
                 },
@@ -355,7 +355,7 @@ fn read() {
                     mbc1.ram_enabled = true;
                     let read_result = mbc1.read(0xA000);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0x7F,
                     )
                 },
@@ -375,7 +375,7 @@ fn read() {
                     mbc1.ram_enabled = true;
                     let read_result = mbc1.read(0xA000);
                     assert_eq!(
-                        *read_result.unwrap(),
+                        read_result.unwrap(),
                         0x7F,
                     )
                 },
