@@ -27,6 +27,7 @@ pub enum Opcode {
     Stop_0x10,
     LdImm16IntoDE_0x11,
     LdAIntoMemoryDE_0x12,
+    IncDE_0x13,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -51,6 +52,7 @@ impl std::convert::From<u8> for Opcode {
             0x10 => Self::Stop_0x10,
             0x11 => Self::LdImm16IntoDE_0x11,
             0x12 => Self::LdAIntoMemoryDE_0x12,
+            0x13 => Self::IncDE_0x13,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -78,6 +80,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::Stop_0x10 => 0x10,
             Self::LdImm16IntoDE_0x11 => 0x11,
             Self::LdAIntoMemoryDE_0x12 => 0x12,
+            Self::IncDE_0x13 => 0x13,
         }
     }
 }
@@ -104,6 +107,7 @@ impl Opcode {
             Self::Stop_0x10 => execute_0x10(cpu),
             Self::LdImm16IntoDE_0x11 => execute_0x11(cpu),
             Self::LdAIntoMemoryDE_0x12 => execute_0x12(cpu),
+            Self::IncDE_0x13 => execute_0x13(cpu),
         }
     }
 }
@@ -151,11 +155,7 @@ fn execute_0x02(cpu: &mut LR35902) -> u32 {
 fn execute_0x03(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    let mut word = cpu.bc.word();
-    word = word.wrapping_add(1);
-
-    cpu.bc.hi = word.to_be_bytes()[0];
-    cpu.bc.lo = word.to_be_bytes()[1];
+    cpu.bc.set_word(cpu.bc.word().wrapping_add(1));
 
     8
 }
@@ -372,6 +372,14 @@ fn execute_0x12(cpu: &mut LR35902) -> u32 {
     cpu.memory.write(usize::from(cpu.de.word()), cpu.af.hi);
 
     cpu.pc = cpu.pc.wrapping_add(1);
+
+    8
+}
+
+fn execute_0x13(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.set_word(cpu.de.word().wrapping_add(1));
 
     8
 }

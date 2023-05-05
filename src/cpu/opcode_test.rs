@@ -687,3 +687,45 @@ fn _0x12() {
         tc.run();
     }
 }
+
+#[test]
+fn _0x13() {
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![Opcode::IncDE_0x13.into()]));
+                cpu.de.hi = 0x00;
+                cpu.de.lo = 0xFF;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![Opcode::IncDE_0x13.into()]));
+                cpu.pc = 0x01;
+                cpu.de.hi = 0x01;
+                cpu.de.lo = 0x00;
+                return cpu;
+            },
+            expected_cycles: 8,
+        },
+        TestCase {
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![Opcode::IncDE_0x13.into()]));
+                cpu.de.hi = 0xFF;
+                cpu.de.lo = 0xFF;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![Opcode::IncDE_0x13.into()]));
+                cpu.pc = 0x01;
+                cpu.de.hi = 0x00;
+                cpu.de.lo = 0x00;
+                return cpu;
+            },
+            expected_cycles: 8,
+        },
+    ];
+
+    for tc in test_cases {
+        tc.run();
+    }
+}
