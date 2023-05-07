@@ -42,6 +42,7 @@ pub enum Opcode {
     RotateRightWithCarryIntoA_0x1F,
     RelativeJumpNotZero8_0x20,
     LdImm16IntoHL_0x21,
+    LdAIntoMemoryHLPostInc_0x22,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -81,6 +82,7 @@ impl std::convert::From<u8> for Opcode {
             0x1F => Self::RotateRightWithCarryIntoA_0x1F,
             0x20 => Self::RelativeJumpNotZero8_0x20,
             0x21 => Self::LdImm16IntoHL_0x21,
+            0x22 => Self::LdAIntoMemoryHLPostInc_0x22,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -123,6 +125,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::RotateRightWithCarryIntoA_0x1F => 0x1F,
             Self::RelativeJumpNotZero8_0x20 => 0x20,
             Self::LdImm16IntoHL_0x21 => 0x21,
+            Self::LdAIntoMemoryHLPostInc_0x22 => 0x22,
         }
     }
 }
@@ -164,6 +167,7 @@ impl Opcode {
             Self::RotateRightWithCarryIntoA_0x1F => execute_0x1f(cpu),
             Self::RelativeJumpNotZero8_0x20 => execute_0x20(cpu),
             Self::LdImm16IntoHL_0x21 => execute_0x21(cpu),
+            Self::LdAIntoMemoryHLPostInc_0x22 => execute_0x22(cpu),
         }
     }
 }
@@ -669,4 +673,14 @@ fn execute_0x21(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     12
+}
+
+fn execute_0x22(cpu: &mut LR35902) -> u32 {
+    cpu.memory.write(usize::from(cpu.hl.word()), cpu.af.hi);
+
+    cpu.hl.set_word(cpu.hl.word().wrapping_add(1));
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    8
 }
