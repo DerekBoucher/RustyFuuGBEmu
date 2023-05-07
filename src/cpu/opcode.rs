@@ -43,6 +43,7 @@ pub enum Opcode {
     RelativeJumpNotZero8_0x20,
     LdImm16IntoHL_0x21,
     LdAIntoMemoryHLPostInc_0x22,
+    IncHL_0x23,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -83,6 +84,7 @@ impl std::convert::From<u8> for Opcode {
             0x20 => Self::RelativeJumpNotZero8_0x20,
             0x21 => Self::LdImm16IntoHL_0x21,
             0x22 => Self::LdAIntoMemoryHLPostInc_0x22,
+            0x23 => Self::IncHL_0x23,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -126,6 +128,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::RelativeJumpNotZero8_0x20 => 0x20,
             Self::LdImm16IntoHL_0x21 => 0x21,
             Self::LdAIntoMemoryHLPostInc_0x22 => 0x22,
+            Self::IncHL_0x23 => 0x23,
         }
     }
 }
@@ -168,6 +171,7 @@ impl Opcode {
             Self::RelativeJumpNotZero8_0x20 => execute_0x20(cpu),
             Self::LdImm16IntoHL_0x21 => execute_0x21(cpu),
             Self::LdAIntoMemoryHLPostInc_0x22 => execute_0x22(cpu),
+            Self::IncHL_0x23 => execute_0x23(cpu),
         }
     }
 }
@@ -681,6 +685,14 @@ fn execute_0x22(cpu: &mut LR35902) -> u32 {
     cpu.hl.set_word(cpu.hl.word().wrapping_add(1));
 
     cpu.pc = cpu.pc.wrapping_add(1);
+
+    8
+}
+
+fn execute_0x23(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.set_word(cpu.hl.word().wrapping_add(1));
 
     8
 }
