@@ -34,3 +34,11 @@ DMG Gameboy emulator fully written in rust 🦀
 
 Some specific OPCODES check and set the half carry flag using bits 3-> 4 while some others use 11 -> 12.
 See https://stackoverflow.com/questions/57958631/game-boy-half-carry-flag-and-16-bit-instructions-especially-opcode-0xe8 for more details
+
+## Ubuntu Dependencies
+
+
+FontConfig (For Glium)
+```
+sudo apt install libfontconfig1-dev
+```
