@@ -37,6 +37,7 @@ pub enum Opcode {
     LdMemoryDEIntoA_0x1A,
     DecDE_0x1B,
     IncE_0x1C,
+    DecE_0x1D,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -71,6 +72,7 @@ impl std::convert::From<u8> for Opcode {
             0x1A => Self::LdMemoryDEIntoA_0x1A,
             0x1B => Self::DecDE_0x1B,
             0x1C => Self::IncE_0x1C,
+            0x1D => Self::DecE_0x1D,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -108,6 +110,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdMemoryDEIntoA_0x1A => 0x1A,
             Self::DecDE_0x1B => 0x1B,
             Self::IncE_0x1C => 0x1C,
+            Self::DecE_0x1D => 0x1D,
         }
     }
 }
@@ -144,6 +147,7 @@ impl Opcode {
             Self::LdMemoryDEIntoA_0x1A => execute_0x1a(cpu),
             Self::DecDE_0x1B => execute_0x1b(cpu),
             Self::IncE_0x1C => execute_0x1c(cpu),
+            Self::DecE_0x1D => execute_0x1d(cpu),
         }
     }
 }
@@ -539,6 +543,14 @@ fn execute_0x1c(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.increment_8_bit_register(register::ID::E);
+
+    4
+}
+
+fn execute_0x1d(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.decrement_8_bit_register(register::ID::E);
 
     4
 }
