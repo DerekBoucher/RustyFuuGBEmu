@@ -33,6 +33,13 @@ pub enum Opcode {
     LdImm8IntoD_0x16,
     RotateLeftWithCarryIntoA_0x17,
     RelativeJump8_0x18,
+    AddDEintoHL_0x19,
+    LdMemoryDEIntoA_0x1A,
+    DecDE_0x1B,
+    IncE_0x1C,
+    DecE_0x1D,
+    LdImm8IntoE_0x1E,
+    RotateRightWithCarryIntoA_0x1F,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -63,6 +70,13 @@ impl std::convert::From<u8> for Opcode {
             0x16 => Self::LdImm8IntoD_0x16,
             0x17 => Self::RotateLeftWithCarryIntoA_0x17,
             0x18 => Self::RelativeJump8_0x18,
+            0x19 => Self::AddDEintoHL_0x19,
+            0x1A => Self::LdMemoryDEIntoA_0x1A,
+            0x1B => Self::DecDE_0x1B,
+            0x1C => Self::IncE_0x1C,
+            0x1D => Self::DecE_0x1D,
+            0x1E => Self::LdImm8IntoE_0x1E,
+            0x1F => Self::RotateRightWithCarryIntoA_0x1F,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -96,6 +110,13 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdImm8IntoD_0x16 => 0x16,
             Self::RotateLeftWithCarryIntoA_0x17 => 0x17,
             Self::RelativeJump8_0x18 => 0x18,
+            Self::AddDEintoHL_0x19 => 0x19,
+            Self::LdMemoryDEIntoA_0x1A => 0x1A,
+            Self::DecDE_0x1B => 0x1B,
+            Self::IncE_0x1C => 0x1C,
+            Self::DecE_0x1D => 0x1D,
+            Self::LdImm8IntoE_0x1E => 0x1E,
+            Self::RotateRightWithCarryIntoA_0x1F => 0x1F,
         }
     }
 }
@@ -128,6 +149,13 @@ impl Opcode {
             Self::LdImm8IntoD_0x16 => execute_0x16(cpu),
             Self::RotateLeftWithCarryIntoA_0x17 => execute_0x17(cpu),
             Self::RelativeJump8_0x18 => execute_0x18(cpu),
+            Self::AddDEintoHL_0x19 => execute_0x19(cpu),
+            Self::LdMemoryDEIntoA_0x1A => execute_0x1a(cpu),
+            Self::DecDE_0x1B => execute_0x1b(cpu),
+            Self::IncE_0x1C => execute_0x1c(cpu),
+            Self::DecE_0x1D => execute_0x1d(cpu),
+            Self::LdImm8IntoE_0x1E => execute_0x1e(cpu),
+            Self::RotateRightWithCarryIntoA_0x1F => execute_0x1f(cpu),
         }
     }
 }
@@ -483,4 +511,97 @@ fn execute_0x18(cpu: &mut LR35902) -> u32 {
     }
 
     12
+}
+
+fn execute_0x19(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.add_16_bit_registers(register::ID16::HL, register::ID16::DE);
+
+    8
+}
+
+fn execute_0x1a(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let value = match cpu.memory.read(usize::from(cpu.de.word())) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode 0x0A failed to load byte from memory pointed to by DE. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.af.hi = value;
+
+    8
+}
+
+fn execute_0x1b(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let new_de = cpu.de.word().wrapping_sub(1);
+
+    cpu.de.set_word(new_de);
+
+    8
+}
+
+fn execute_0x1c(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.increment_8_bit_register(register::ID::E);
+
+    4
+}
+
+fn execute_0x1d(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.decrement_8_bit_register(register::ID::E);
+
+    4
+}
+
+fn execute_0x1e(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let byte = match cpu.memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode load imm 8 into C failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.de.lo = byte;
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    8
+}
+
+fn execute_0x1f(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let rightmost_bit_a: bool = (cpu.af.hi & 1) > 0;
+    let current_carry_flag = cpu.test_carry_flag();
+
+    if rightmost_bit_a {
+        cpu.set_carry_flag();
+    } else {
+        cpu.reset_carry_flag();
+    }
+
+    cpu.af.hi = cpu.af.hi >> 1;
+    cpu.af.hi |= match current_carry_flag {
+        true => 0x80,
+        false => 0x00,
+    };
+
+    cpu.reset_half_carry_flag();
+    cpu.reset_sub_flag();
+    cpu.reset_zero_flag();
+
+    4
 }
