@@ -1128,3 +1128,24 @@ fn _0x1b() {
         tc.run();
     }
 }
+
+#[test]
+fn _0x1c() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> LR35902 {
+            let cpu = LR35902::new(mock::Memory::new(vec![Opcode::IncE_0x1C.into()]));
+            return cpu;
+        },
+        expected_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![Opcode::IncE_0x1C.into()]));
+            cpu.pc = 0x0001;
+            cpu.de.lo = 0x01;
+            return cpu;
+        },
+        expected_cycles: 4,
+    }];
+
+    for tc in test_cases {
+        tc.run();
+    }
+}
