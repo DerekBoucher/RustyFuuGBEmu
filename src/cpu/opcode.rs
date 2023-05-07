@@ -34,6 +34,7 @@ pub enum Opcode {
     RotateLeftWithCarryIntoA_0x17,
     RelativeJump8_0x18,
     AddDEintoHL_0x19,
+    LdMemoryDEIntoA_0x1A,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -65,6 +66,7 @@ impl std::convert::From<u8> for Opcode {
             0x17 => Self::RotateLeftWithCarryIntoA_0x17,
             0x18 => Self::RelativeJump8_0x18,
             0x19 => Self::AddDEintoHL_0x19,
+            0x1A => Self::LdMemoryDEIntoA_0x1A,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -99,6 +101,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::RotateLeftWithCarryIntoA_0x17 => 0x17,
             Self::RelativeJump8_0x18 => 0x18,
             Self::AddDEintoHL_0x19 => 0x19,
+            Self::LdMemoryDEIntoA_0x1A => 0x1A,
         }
     }
 }
@@ -132,6 +135,7 @@ impl Opcode {
             Self::RotateLeftWithCarryIntoA_0x17 => execute_0x17(cpu),
             Self::RelativeJump8_0x18 => execute_0x18(cpu),
             Self::AddDEintoHL_0x19 => execute_0x19(cpu),
+            Self::LdMemoryDEIntoA_0x1A => execute_0x1a(cpu),
         }
     }
 }
@@ -493,6 +497,22 @@ fn execute_0x19(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_16_bit_registers(register::ID16::HL, register::ID16::DE);
+
+    8
+}
+
+fn execute_0x1a(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let value = match cpu.memory.read(usize::from(cpu.de.word())) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode 0x0A failed to load byte from memory pointed to by DE. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.af.hi = value;
 
     8
 }

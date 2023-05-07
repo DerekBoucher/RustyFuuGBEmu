@@ -1074,3 +1074,36 @@ fn _0x19() {
         tc.run();
     }
 }
+
+#[test]
+fn _0x1a() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![
+                Opcode::LdMemoryDEIntoA_0x1A.into(),
+                0x1F,
+            ]));
+
+            cpu.de.set_word(0x0001);
+
+            return cpu;
+        },
+        expected_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![
+                Opcode::LdMemoryDEIntoA_0x1A.into(),
+                0x1F,
+            ]));
+
+            cpu.de.set_word(0x0001);
+            cpu.af.hi = 0x1F;
+            cpu.pc = 0x0001;
+
+            return cpu;
+        },
+        expected_cycles: 8,
+    }];
+
+    for tc in test_cases {
+        tc.run();
+    }
+}
