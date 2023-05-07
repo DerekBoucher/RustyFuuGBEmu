@@ -35,6 +35,7 @@ pub enum Opcode {
     RelativeJump8_0x18,
     AddDEintoHL_0x19,
     LdMemoryDEIntoA_0x1A,
+    DecDE_0x1B,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -67,6 +68,7 @@ impl std::convert::From<u8> for Opcode {
             0x18 => Self::RelativeJump8_0x18,
             0x19 => Self::AddDEintoHL_0x19,
             0x1A => Self::LdMemoryDEIntoA_0x1A,
+            0x1B => Self::DecDE_0x1B,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -102,6 +104,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::RelativeJump8_0x18 => 0x18,
             Self::AddDEintoHL_0x19 => 0x19,
             Self::LdMemoryDEIntoA_0x1A => 0x1A,
+            Self::DecDE_0x1B => 0x1B,
         }
     }
 }
@@ -136,6 +139,7 @@ impl Opcode {
             Self::RelativeJump8_0x18 => execute_0x18(cpu),
             Self::AddDEintoHL_0x19 => execute_0x19(cpu),
             Self::LdMemoryDEIntoA_0x1A => execute_0x1a(cpu),
+            Self::DecDE_0x1B => execute_0x1b(cpu),
         }
     }
 }
@@ -513,6 +517,16 @@ fn execute_0x1a(cpu: &mut LR35902) -> u32 {
     };
 
     cpu.af.hi = value;
+
+    8
+}
+
+fn execute_0x1b(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let new_de = cpu.de.word().wrapping_sub(1);
+
+    cpu.de.set_word(new_de);
 
     8
 }
