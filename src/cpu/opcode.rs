@@ -40,6 +40,7 @@ pub enum Opcode {
     DecE_0x1D,
     LdImm8IntoE_0x1E,
     RotateRightWithCarryIntoA_0x1F,
+    RelativeJumpNotZero8_0x20,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -77,6 +78,7 @@ impl std::convert::From<u8> for Opcode {
             0x1D => Self::DecE_0x1D,
             0x1E => Self::LdImm8IntoE_0x1E,
             0x1F => Self::RotateRightWithCarryIntoA_0x1F,
+            0x20 => Self::RelativeJumpNotZero8_0x20,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -117,6 +119,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::DecE_0x1D => 0x1D,
             Self::LdImm8IntoE_0x1E => 0x1E,
             Self::RotateRightWithCarryIntoA_0x1F => 0x1F,
+            Self::RelativeJumpNotZero8_0x20 => 0x20,
         }
     }
 }
@@ -156,6 +159,7 @@ impl Opcode {
             Self::DecE_0x1D => execute_0x1d(cpu),
             Self::LdImm8IntoE_0x1E => execute_0x1e(cpu),
             Self::RotateRightWithCarryIntoA_0x1F => execute_0x1f(cpu),
+            Self::RelativeJumpNotZero8_0x20 => execute_0x20(cpu),
         }
     }
 }
@@ -502,6 +506,8 @@ fn execute_0x18(cpu: &mut LR35902) -> u32 {
         ),
     };
 
+    cpu.pc = cpu.pc.wrapping_add(1);
+
     if bit::test_most_significant_bit(relative_addr) {
         cpu.pc = cpu
             .pc
@@ -604,4 +610,33 @@ fn execute_0x1f(cpu: &mut LR35902) -> u32 {
     cpu.reset_zero_flag();
 
     4
+}
+
+fn execute_0x20(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    if cpu.test_zero_flag() {
+        cpu.pc = cpu.pc.wrapping_add(1);
+        return 8;
+    }
+
+    let relative_addr = match cpu.memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode relative 8bit jump failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    if bit::test_most_significant_bit(relative_addr) {
+        cpu.pc = cpu
+            .pc
+            .wrapping_sub(bit::two_compliment_byte(relative_addr).into());
+    } else {
+        cpu.pc = cpu.pc.wrapping_add(relative_addr.into());
+    }
+
+    12
 }
