@@ -47,6 +47,7 @@ pub enum Opcode {
     IncH_0x24,
     DecH_0x25,
     LdImm8IntoH_0x26,
+    DAA_0x27,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -91,6 +92,7 @@ impl std::convert::From<u8> for Opcode {
             0x24 => Self::IncH_0x24,
             0x25 => Self::DecH_0x25,
             0x26 => Self::LdImm8IntoH_0x26,
+            0x27 => Self::DAA_0x27,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -138,6 +140,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::IncH_0x24 => 0x24,
             Self::DecH_0x25 => 0x25,
             Self::LdImm8IntoH_0x26 => 0x26,
+            Self::DAA_0x27 => 0x27,
         }
     }
 }
@@ -184,6 +187,7 @@ impl Opcode {
             Self::IncH_0x24 => execute_0x24(cpu),
             Self::DecH_0x25 => execute_0x25(cpu),
             Self::LdImm8IntoH_0x26 => execute_0x26(cpu),
+            Self::DAA_0x27 => execute_0x27(cpu),
         }
     }
 }
@@ -741,4 +745,41 @@ fn execute_0x26(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     8
+}
+
+fn execute_0x27(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let mut a = cpu.af.hi.clone();
+
+    if !cpu.test_sub_flag() {
+        if cpu.test_carry_flag() || a > 0x99 {
+            a = a.wrapping_add(0x60);
+            cpu.set_carry_flag();
+        }
+
+        if cpu.test_half_carry_flag() || ((a & 0x0F) > 0x09) {
+            a = a.wrapping_add(0x06);
+        }
+    } else {
+        if cpu.test_carry_flag() {
+            a = a.wrapping_sub(0x60);
+        }
+
+        if cpu.test_half_carry_flag() {
+            a = a.wrapping_sub(0x06);
+        }
+    }
+
+    if a == 0x00 {
+        cpu.set_zero_flag();
+    } else {
+        cpu.reset_zero_flag();
+    }
+
+    cpu.reset_half_carry_flag();
+
+    cpu.af.hi = a;
+
+    4
 }
