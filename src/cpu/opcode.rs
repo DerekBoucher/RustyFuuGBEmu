@@ -44,6 +44,7 @@ pub enum Opcode {
     LdImm16IntoHL_0x21,
     LdAIntoMemoryHLPostInc_0x22,
     IncHL_0x23,
+    IncH_0x24,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -85,6 +86,7 @@ impl std::convert::From<u8> for Opcode {
             0x21 => Self::LdImm16IntoHL_0x21,
             0x22 => Self::LdAIntoMemoryHLPostInc_0x22,
             0x23 => Self::IncHL_0x23,
+            0x24 => Self::IncH_0x24,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -129,6 +131,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdImm16IntoHL_0x21 => 0x21,
             Self::LdAIntoMemoryHLPostInc_0x22 => 0x22,
             Self::IncHL_0x23 => 0x23,
+            Self::IncH_0x24 => 0x24,
         }
     }
 }
@@ -172,6 +175,7 @@ impl Opcode {
             Self::LdImm16IntoHL_0x21 => execute_0x21(cpu),
             Self::LdAIntoMemoryHLPostInc_0x22 => execute_0x22(cpu),
             Self::IncHL_0x23 => execute_0x23(cpu),
+            Self::IncH_0x24 => execute_0x24(cpu),
         }
     }
 }
@@ -695,4 +699,12 @@ fn execute_0x23(cpu: &mut LR35902) -> u32 {
     cpu.hl.set_word(cpu.hl.word().wrapping_add(1));
 
     8
+}
+
+fn execute_0x24(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.increment_8_bit_register(register::ID::H);
+
+    4
 }
