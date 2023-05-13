@@ -54,6 +54,7 @@ pub enum Opcode {
     DecHL_0x2B,
     IncL_0x2C,
     DecL_0x2D,
+    LdImm8IntoL_0x2E,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -105,6 +106,7 @@ impl std::convert::From<u8> for Opcode {
             0x2B => Self::DecHL_0x2B,
             0x2C => Self::IncL_0x2C,
             0x2D => Self::DecL_0x2D,
+            0x2E => Self::LdImm8IntoL_0x2E,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -159,6 +161,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::DecHL_0x2B => 0x2B,
             Self::IncL_0x2C => 0x2C,
             Self::DecL_0x2D => 0x2D,
+            Self::LdImm8IntoL_0x2E => 0x2E,
         }
     }
 }
@@ -212,6 +215,7 @@ impl Opcode {
             Self::DecHL_0x2B => execute_0x2b(cpu),
             Self::IncL_0x2C => execute_0x2c(cpu),
             Self::DecL_0x2D => execute_0x2d(cpu),
+            Self::LdImm8IntoL_0x2E => execute_0x2e(cpu),
         }
     }
 }
@@ -887,4 +891,22 @@ fn execute_0x2d(cpu: &mut LR35902) -> u32 {
     cpu.decrement_8_bit_register(register::ID::L);
 
     4
+}
+
+fn execute_0x2e(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let byte = match cpu.memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode load imm 8 into L failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.hl.lo = byte;
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    8
 }
