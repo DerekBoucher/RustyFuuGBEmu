@@ -49,6 +49,7 @@ pub enum Opcode {
     LdImm8IntoH_0x26,
     DAA_0x27,
     RelativeJumpZero8_0x28,
+    AddHLintoHL_0x29,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -95,6 +96,7 @@ impl std::convert::From<u8> for Opcode {
             0x26 => Self::LdImm8IntoH_0x26,
             0x27 => Self::DAA_0x27,
             0x28 => Self::RelativeJumpZero8_0x28,
+            0x29 => Self::AddHLintoHL_0x29,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -144,6 +146,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdImm8IntoH_0x26 => 0x26,
             Self::DAA_0x27 => 0x27,
             Self::RelativeJumpZero8_0x28 => 0x28,
+            Self::AddHLintoHL_0x29 => 0x29,
         }
     }
 }
@@ -192,6 +195,7 @@ impl Opcode {
             Self::LdImm8IntoH_0x26 => execute_0x26(cpu),
             Self::DAA_0x27 => execute_0x27(cpu),
             Self::RelativeJumpZero8_0x28 => execute_0x28(cpu),
+            Self::AddHLintoHL_0x29 => execute_0x29(cpu),
         }
     }
 }
@@ -815,4 +819,12 @@ fn execute_0x28(cpu: &mut LR35902) -> u32 {
     }
 
     12
+}
+
+fn execute_0x29(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.add_16_bit_registers(register::ID16::HL, register::ID16::HL);
+
+    8
 }

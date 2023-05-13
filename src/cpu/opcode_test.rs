@@ -1877,3 +1877,28 @@ fn _0x28() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0x29() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![Opcode::AddHLintoHL_0x29.into()]));
+            cpu.hl.set_word(0x0FFF);
+            cpu.set_sub_flag();
+            return cpu;
+        },
+        expected_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![Opcode::AddHLintoHL_0x29.into()]));
+            cpu.hl.set_word(0x1FFE);
+            cpu.reset_sub_flag();
+            cpu.set_half_carry_flag();
+            cpu.pc = 0x0001;
+            return cpu;
+        },
+        expected_cycles: 8,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
