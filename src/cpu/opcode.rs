@@ -55,6 +55,7 @@ pub enum Opcode {
     IncL_0x2C,
     DecL_0x2D,
     LdImm8IntoL_0x2E,
+    ComplimentA_0x2F,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -107,6 +108,7 @@ impl std::convert::From<u8> for Opcode {
             0x2C => Self::IncL_0x2C,
             0x2D => Self::DecL_0x2D,
             0x2E => Self::LdImm8IntoL_0x2E,
+            0x2F => Self::ComplimentA_0x2F,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -162,6 +164,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::IncL_0x2C => 0x2C,
             Self::DecL_0x2D => 0x2D,
             Self::LdImm8IntoL_0x2E => 0x2E,
+            Self::ComplimentA_0x2F => 0x2F,
         }
     }
 }
@@ -216,6 +219,7 @@ impl Opcode {
             Self::IncL_0x2C => execute_0x2c(cpu),
             Self::DecL_0x2D => execute_0x2d(cpu),
             Self::LdImm8IntoL_0x2E => execute_0x2e(cpu),
+            Self::ComplimentA_0x2F => execute_0x2f(cpu),
         }
     }
 }
@@ -909,4 +913,15 @@ fn execute_0x2e(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     8
+}
+
+fn execute_0x2f(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.af.hi = cpu.af.hi ^ 0xFF;
+
+    cpu.set_sub_flag();
+    cpu.set_half_carry_flag();
+
+    4
 }
