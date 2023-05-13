@@ -50,6 +50,7 @@ pub enum Opcode {
     DAA_0x27,
     RelativeJumpZero8_0x28,
     AddHLintoHL_0x29,
+    LdMemoryHLIntoAPostInc_0x2A,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -97,6 +98,7 @@ impl std::convert::From<u8> for Opcode {
             0x27 => Self::DAA_0x27,
             0x28 => Self::RelativeJumpZero8_0x28,
             0x29 => Self::AddHLintoHL_0x29,
+            0x2A => Self::LdMemoryHLIntoAPostInc_0x2A,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -147,6 +149,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::DAA_0x27 => 0x27,
             Self::RelativeJumpZero8_0x28 => 0x28,
             Self::AddHLintoHL_0x29 => 0x29,
+            Self::LdMemoryHLIntoAPostInc_0x2A => 0x2A,
         }
     }
 }
@@ -196,6 +199,7 @@ impl Opcode {
             Self::DAA_0x27 => execute_0x27(cpu),
             Self::RelativeJumpZero8_0x28 => execute_0x28(cpu),
             Self::AddHLintoHL_0x29 => execute_0x29(cpu),
+            Self::LdMemoryHLIntoAPostInc_0x2A => execute_0x2a(cpu),
         }
     }
 }
@@ -569,7 +573,7 @@ fn execute_0x1a(cpu: &mut LR35902) -> u32 {
     let value = match cpu.memory.read(usize::from(cpu.de.word())) {
         Some(byte) => byte,
         None => panic!(
-            "opcode 0x0A failed to load byte from memory pointed to by DE. Dumping cpu state...\n{:?}",
+            "opcode 0x1A failed to load byte from memory pointed to by DE. Dumping cpu state...\n{:?}",
             cpu,
         ),
     };
@@ -825,6 +829,24 @@ fn execute_0x29(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_16_bit_registers(register::ID16::HL, register::ID16::HL);
+
+    8
+}
+
+fn execute_0x2a(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let value = match cpu.memory.read(usize::from(cpu.hl.word())) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode 0x2A failed to load byte from memory pointed to by HL. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.af.hi = value;
+
+    cpu.hl.set_word(cpu.hl.word().wrapping_add(1));
 
     8
 }
