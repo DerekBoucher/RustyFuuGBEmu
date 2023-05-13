@@ -62,6 +62,7 @@ pub enum Opcode {
     IncSP_0x33,
     IncMemoryHL_0x34,
     DecMemoryHL_0x35,
+    LdImm8IntoMemoryHL_0x36,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -121,6 +122,7 @@ impl std::convert::From<u8> for Opcode {
             0x33 => Self::IncSP_0x33,
             0x34 => Self::IncMemoryHL_0x34,
             0x35 => Self::DecMemoryHL_0x35,
+            0x36 => Self::LdImm8IntoMemoryHL_0x36,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -183,6 +185,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::IncSP_0x33 => 0x33,
             Self::IncMemoryHL_0x34 => 0x34,
             Self::DecMemoryHL_0x35 => 0x35,
+            Self::LdImm8IntoMemoryHL_0x36 => 0x36,
         }
     }
 }
@@ -244,6 +247,7 @@ impl Opcode {
             Self::IncSP_0x33 => execute_0x33(cpu),
             Self::IncMemoryHL_0x34 => execute_0x34(cpu),
             Self::DecMemoryHL_0x35 => execute_0x35(cpu),
+            Self::LdImm8IntoMemoryHL_0x36 => execute_0x36(cpu),
         }
     }
 }
@@ -1083,6 +1087,24 @@ fn execute_0x35(cpu: &mut LR35902) -> u32 {
     }
 
     byte = byte.wrapping_sub(1);
+
+    cpu.memory.write(usize::from(cpu.hl.word()), byte);
+
+    12
+}
+
+fn execute_0x36(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let byte = match cpu.memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode load imm 8 into Memoryy pointed to by HL failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.memory.write(usize::from(cpu.hl.word()), byte);
 
