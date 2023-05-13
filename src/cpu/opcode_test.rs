@@ -2,11 +2,9 @@
 #[cfg(test)]
 mod mock;
 
-use std::vec;
-
-use crate::cpu::*;
-
 use super::Opcode;
+use crate::cpu::*;
+use std::vec;
 
 struct TestCase {
     initial_state: fn() -> LR35902,
@@ -20,9 +18,13 @@ impl TestCase {
         println!("---------------------");
         let mut initial_state = (self.initial_state)();
         let expected_state = (self.expected_state)();
-        assert_eq!(initial_state.execute_next_opcode(), self.expected_cycles);
-        assert_eq!(initial_state, expected_state);
-        assert_ne!(initial_state.pc, 0x0000);
+        let actual_cycles = initial_state.execute_next_opcode();
+        assert_eq!(actual_cycles, self.expected_cycles,);
+        assert_eq!(initial_state, expected_state,);
+        assert_ne!(
+            initial_state.pc, 0x0000,
+            "pc should never be 0 after an opcode"
+        );
     }
 }
 
@@ -1774,6 +1776,100 @@ fn _0x27() {
                 return cpu;
             },
             expected_cycles: 4,
+        },
+    ];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
+
+#[test]
+fn _0x28() {
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![
+                    0x00,
+                    Opcode::RelativeJumpZero8_0x28.into(),
+                    0xFF,
+                ]));
+                cpu.pc = 0x0001;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![
+                    0x00,
+                    Opcode::RelativeJumpZero8_0x28.into(),
+                    0xFF,
+                ]));
+                cpu.pc = 0x0003;
+                return cpu;
+            },
+            expected_cycles: 8,
+        },
+        TestCase {
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![
+                    Opcode::RelativeJumpZero8_0x28.into(),
+                    0x02,
+                ]));
+                cpu.set_zero_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![
+                    Opcode::RelativeJumpZero8_0x28.into(),
+                    0x02,
+                ]));
+                cpu.set_zero_flag();
+                cpu.pc = 0x0004;
+                return cpu;
+            },
+            expected_cycles: 12,
+        },
+        TestCase {
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![
+                    0x00,
+                    Opcode::RelativeJumpZero8_0x28.into(),
+                    0xFF,
+                ]));
+                cpu.set_zero_flag();
+                cpu.pc = 0x0001;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![
+                    0x00,
+                    Opcode::RelativeJumpZero8_0x28.into(),
+                    0xFF,
+                ]));
+                cpu.pc = 0x0002;
+                cpu.set_zero_flag();
+                return cpu;
+            },
+            expected_cycles: 12,
+        },
+        TestCase {
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![
+                    Opcode::RelativeJumpZero8_0x28.into(),
+                    0x01,
+                ]));
+                cpu.set_zero_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new(mock::Memory::new(vec![
+                    Opcode::RelativeJumpZero8_0x28.into(),
+                    0x01,
+                ]));
+                cpu.set_zero_flag();
+                cpu.pc = 0x0003;
+                return cpu;
+            },
+            expected_cycles: 12,
         },
     ];
 

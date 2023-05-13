@@ -48,6 +48,7 @@ pub enum Opcode {
     DecH_0x25,
     LdImm8IntoH_0x26,
     DAA_0x27,
+    RelativeJumpZero8_0x28,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -93,6 +94,7 @@ impl std::convert::From<u8> for Opcode {
             0x25 => Self::DecH_0x25,
             0x26 => Self::LdImm8IntoH_0x26,
             0x27 => Self::DAA_0x27,
+            0x28 => Self::RelativeJumpZero8_0x28,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -141,6 +143,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::DecH_0x25 => 0x25,
             Self::LdImm8IntoH_0x26 => 0x26,
             Self::DAA_0x27 => 0x27,
+            Self::RelativeJumpZero8_0x28 => 0x28,
         }
     }
 }
@@ -188,6 +191,7 @@ impl Opcode {
             Self::DecH_0x25 => execute_0x25(cpu),
             Self::LdImm8IntoH_0x26 => execute_0x26(cpu),
             Self::DAA_0x27 => execute_0x27(cpu),
+            Self::RelativeJumpZero8_0x28 => execute_0x28(cpu),
         }
     }
 }
@@ -782,4 +786,33 @@ fn execute_0x27(cpu: &mut LR35902) -> u32 {
     cpu.af.hi = a;
 
     4
+}
+
+fn execute_0x28(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    if !cpu.test_zero_flag() {
+        cpu.pc = cpu.pc.wrapping_add(1);
+        return 8;
+    }
+
+    let relative_addr = match cpu.memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode relative 8bit jump failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    if bit::test_most_significant_bit(relative_addr) {
+        cpu.pc = cpu
+            .pc
+            .wrapping_sub(bit::two_compliment_byte(relative_addr).into());
+    } else {
+        cpu.pc = cpu.pc.wrapping_add(relative_addr.into());
+    }
+
+    12
 }
