@@ -2170,3 +2170,33 @@ fn _0x31() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0x32() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![
+                Opcode::LdAIntoMemoryHLPostDec_0x32.into(),
+                0x00,
+            ]));
+            cpu.af.hi = 0xFF;
+            cpu.hl.lo = 0x01;
+            return cpu;
+        },
+        expected_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![
+                Opcode::LdAIntoMemoryHLPostDec_0x32.into(),
+                0xFF,
+            ]));
+            cpu.af.hi = 0xFF;
+            cpu.hl.lo = 0x00;
+            cpu.pc = 0x0001;
+            return cpu;
+        },
+        expected_cycles: 8,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
