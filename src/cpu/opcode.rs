@@ -61,6 +61,7 @@ pub enum Opcode {
     LdAIntoMemoryHLPostDec_0x32,
     IncSP_0x33,
     IncMemoryHL_0x34,
+    DecMemoryHL_0x35,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -119,6 +120,7 @@ impl std::convert::From<u8> for Opcode {
             0x32 => Self::LdAIntoMemoryHLPostDec_0x32,
             0x33 => Self::IncSP_0x33,
             0x34 => Self::IncMemoryHL_0x34,
+            0x35 => Self::DecMemoryHL_0x35,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -180,6 +182,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdAIntoMemoryHLPostDec_0x32 => 0x32,
             Self::IncSP_0x33 => 0x33,
             Self::IncMemoryHL_0x34 => 0x34,
+            Self::DecMemoryHL_0x35 => 0x35,
         }
     }
 }
@@ -240,6 +243,7 @@ impl Opcode {
             Self::LdAIntoMemoryHLPostDec_0x32 => execute_0x32(cpu),
             Self::IncSP_0x33 => execute_0x33(cpu),
             Self::IncMemoryHL_0x34 => execute_0x34(cpu),
+            Self::DecMemoryHL_0x35 => execute_0x35(cpu),
         }
     }
 }
@@ -1047,6 +1051,38 @@ fn execute_0x34(cpu: &mut LR35902) -> u32 {
     }
 
     byte = byte.wrapping_add(1);
+
+    cpu.memory.write(usize::from(cpu.hl.word()), byte);
+
+    12
+}
+
+fn execute_0x35(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let mut byte = match cpu.memory.read(usize::from(cpu.hl.word())) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode increment byte at memory pointed to by HL failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.set_sub_flag();
+
+    if byte.wrapping_sub(1) == 0x00 {
+        cpu.set_zero_flag();
+    } else {
+        cpu.reset_zero_flag();
+    }
+
+    if bit::is_half_borrow(byte, 1, false) {
+        cpu.set_half_carry_flag();
+    } else {
+        cpu.reset_half_carry_flag();
+    }
+
+    byte = byte.wrapping_sub(1);
 
     cpu.memory.write(usize::from(cpu.hl.word()), byte);
 
