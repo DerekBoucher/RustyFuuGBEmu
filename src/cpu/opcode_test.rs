@@ -16,7 +16,9 @@ impl TestCase {
     pub fn run(&self, i: usize) {
         println!("subtest #{} results:", i);
         println!("---------------------");
+
         let mut initial_state = (self.initial_state)();
+        let initial_pc = initial_state.pc;
         let expected_state = (self.expected_state)();
         let actual_cycles = initial_state.execute_next_opcode();
         assert_eq!(actual_cycles, self.expected_cycles,);
@@ -24,6 +26,10 @@ impl TestCase {
         assert_ne!(
             initial_state.pc, 0x0000,
             "pc should never be 0 after an opcode"
+        );
+        assert_ne!(
+            initial_pc, initial_state.pc,
+            "pc should have changed value after executing an op code"
         );
     }
 }
