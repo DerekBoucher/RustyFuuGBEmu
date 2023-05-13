@@ -1935,3 +1935,24 @@ fn _0x2a() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0x2b() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> LR35902 {
+            let cpu = LR35902::new(mock::Memory::new(vec![Opcode::DecHL_0x2B.into()]));
+            return cpu;
+        },
+        expected_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![Opcode::DecHL_0x2B.into()]));
+            cpu.hl.set_word(0xFFFF);
+            cpu.pc = 0x0001;
+            return cpu;
+        },
+        expected_cycles: 8,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
