@@ -57,6 +57,7 @@ pub enum Opcode {
     LdImm8IntoL_0x2E,
     ComplimentA_0x2F,
     RelativeJumpNotCarry8_0x30,
+    LdImm16IntoSP_0x31,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -111,6 +112,7 @@ impl std::convert::From<u8> for Opcode {
             0x2E => Self::LdImm8IntoL_0x2E,
             0x2F => Self::ComplimentA_0x2F,
             0x30 => Self::RelativeJumpNotCarry8_0x30,
+            0x31 => Self::LdImm16IntoSP_0x31,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -168,6 +170,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdImm8IntoL_0x2E => 0x2E,
             Self::ComplimentA_0x2F => 0x2F,
             Self::RelativeJumpNotCarry8_0x30 => 0x30,
+            Self::LdImm16IntoSP_0x31 => 0x31,
         }
     }
 }
@@ -224,6 +227,7 @@ impl Opcode {
             Self::LdImm8IntoL_0x2E => execute_0x2e(cpu),
             Self::ComplimentA_0x2F => execute_0x2f(cpu),
             Self::RelativeJumpNotCarry8_0x30 => execute_0x30(cpu),
+            Self::LdImm16IntoSP_0x31 => execute_0x31(cpu),
         }
     }
 }
@@ -955,6 +959,34 @@ fn execute_0x30(cpu: &mut LR35902) -> u32 {
     } else {
         cpu.pc = cpu.pc.wrapping_add(relative_addr.into());
     }
+
+    12
+}
+
+fn execute_0x31(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let lo_byte = match cpu.memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode load imm 16 into SP failed to fetch lo byte. Dumping cpu state...\n{:?}",
+            cpu
+        ),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let hi_byte = match cpu.memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode load imm 16 into SP failed to fetch hi byte. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sp = u16::from(hi_byte) << 8 | u16::from(lo_byte);
 
     12
 }
