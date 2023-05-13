@@ -56,6 +56,7 @@ pub enum Opcode {
     DecL_0x2D,
     LdImm8IntoL_0x2E,
     ComplimentA_0x2F,
+    RelativeJumpNotCarry8_0x30,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -109,6 +110,7 @@ impl std::convert::From<u8> for Opcode {
             0x2D => Self::DecL_0x2D,
             0x2E => Self::LdImm8IntoL_0x2E,
             0x2F => Self::ComplimentA_0x2F,
+            0x30 => Self::RelativeJumpNotCarry8_0x30,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -165,6 +167,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::DecL_0x2D => 0x2D,
             Self::LdImm8IntoL_0x2E => 0x2E,
             Self::ComplimentA_0x2F => 0x2F,
+            Self::RelativeJumpNotCarry8_0x30 => 0x30,
         }
     }
 }
@@ -220,6 +223,7 @@ impl Opcode {
             Self::DecL_0x2D => execute_0x2d(cpu),
             Self::LdImm8IntoL_0x2E => execute_0x2e(cpu),
             Self::ComplimentA_0x2F => execute_0x2f(cpu),
+            Self::RelativeJumpNotCarry8_0x30 => execute_0x30(cpu),
         }
     }
 }
@@ -924,4 +928,33 @@ fn execute_0x2f(cpu: &mut LR35902) -> u32 {
     cpu.set_half_carry_flag();
 
     4
+}
+
+fn execute_0x30(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    if cpu.test_carry_flag() {
+        cpu.pc = cpu.pc.wrapping_add(1);
+        return 8;
+    }
+
+    let relative_addr = match cpu.memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode relative 8bit jump failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    if bit::test_most_significant_bit(relative_addr) {
+        cpu.pc = cpu
+            .pc
+            .wrapping_sub(bit::two_compliment_byte(relative_addr).into());
+    } else {
+        cpu.pc = cpu.pc.wrapping_add(relative_addr.into());
+    }
+
+    12
 }
