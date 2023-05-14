@@ -64,6 +64,7 @@ pub enum Opcode {
     DecMemoryHL_0x35,
     LdImm8IntoMemoryHL_0x36,
     SetCarryFlag_0x37,
+    RelativeJumpCarry8_0x38,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -125,6 +126,7 @@ impl std::convert::From<u8> for Opcode {
             0x35 => Self::DecMemoryHL_0x35,
             0x36 => Self::LdImm8IntoMemoryHL_0x36,
             0x37 => Self::SetCarryFlag_0x37,
+            0x38 => Self::RelativeJumpCarry8_0x38,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -189,6 +191,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::DecMemoryHL_0x35 => 0x35,
             Self::LdImm8IntoMemoryHL_0x36 => 0x36,
             Self::SetCarryFlag_0x37 => 0x37,
+            Self::RelativeJumpCarry8_0x38 => 0x38,
         }
     }
 }
@@ -252,6 +255,7 @@ impl Opcode {
             Self::DecMemoryHL_0x35 => execute_0x35(cpu),
             Self::LdImm8IntoMemoryHL_0x36 => execute_0x36(cpu),
             Self::SetCarryFlag_0x37 => execute_0x37(cpu),
+            Self::RelativeJumpCarry8_0x38 => execute_0x38(cpu),
         }
     }
 }
@@ -1123,4 +1127,33 @@ fn execute_0x37(cpu: &mut LR35902) -> u32 {
     cpu.set_carry_flag();
 
     4
+}
+
+fn execute_0x38(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    if !cpu.test_carry_flag() {
+        cpu.pc = cpu.pc.wrapping_add(1);
+        return 8;
+    }
+
+    let relative_addr = match cpu.memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode relative 8bit jump failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    if bit::test_most_significant_bit(relative_addr) {
+        cpu.pc = cpu
+            .pc
+            .wrapping_sub(bit::two_compliment_byte(relative_addr).into());
+    } else {
+        cpu.pc = cpu.pc.wrapping_add(relative_addr.into());
+    }
+
+    12
 }
