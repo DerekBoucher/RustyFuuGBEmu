@@ -68,6 +68,7 @@ pub enum Opcode {
     AddSPintoHL_0x39,
     LdMemoryHLIntoAPostDec_0x3A,
     DecSP_0x3B,
+    IncA_0x3C,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -133,6 +134,7 @@ impl std::convert::From<u8> for Opcode {
             0x39 => Self::AddSPintoHL_0x39,
             0x3A => Self::LdMemoryHLIntoAPostDec_0x3A,
             0x3B => Self::DecSP_0x3B,
+            0x3C => Self::IncA_0x3C,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -201,6 +203,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::AddSPintoHL_0x39 => 0x39,
             Self::LdMemoryHLIntoAPostDec_0x3A => 0x3A,
             Self::DecSP_0x3B => 0x3B,
+            Self::IncA_0x3C => 0x3C,
         }
     }
 }
@@ -268,6 +271,7 @@ impl Opcode {
             Self::AddSPintoHL_0x39 => execute_0x39(cpu),
             Self::LdMemoryHLIntoAPostDec_0x3A => execute_0x3a(cpu),
             Self::DecSP_0x3B => execute_0x3b(cpu),
+            Self::IncA_0x3C => execute_0x3c(cpu),
         }
     }
 }
@@ -1202,4 +1206,12 @@ fn execute_0x3b(cpu: &mut LR35902) -> u32 {
     cpu.sp = cpu.sp.wrapping_sub(1);
 
     8
+}
+
+fn execute_0x3c(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.increment_8_bit_register(register::ID::A);
+
+    4
 }
