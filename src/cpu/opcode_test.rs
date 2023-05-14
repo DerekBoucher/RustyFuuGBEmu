@@ -2426,3 +2426,26 @@ fn _0x36() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0x37() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![Opcode::SetCarryFlag_0x37.into()]));
+            cpu.set_sub_flag();
+            cpu.set_half_carry_flag();
+            return cpu;
+        },
+        expected_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![Opcode::SetCarryFlag_0x37.into()]));
+            cpu.set_carry_flag();
+            cpu.pc = 0x0001;
+            return cpu;
+        },
+        expected_cycles: 4,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}

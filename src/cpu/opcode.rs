@@ -63,6 +63,7 @@ pub enum Opcode {
     IncMemoryHL_0x34,
     DecMemoryHL_0x35,
     LdImm8IntoMemoryHL_0x36,
+    SetCarryFlag_0x37,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -123,6 +124,7 @@ impl std::convert::From<u8> for Opcode {
             0x34 => Self::IncMemoryHL_0x34,
             0x35 => Self::DecMemoryHL_0x35,
             0x36 => Self::LdImm8IntoMemoryHL_0x36,
+            0x37 => Self::SetCarryFlag_0x37,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -186,6 +188,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::IncMemoryHL_0x34 => 0x34,
             Self::DecMemoryHL_0x35 => 0x35,
             Self::LdImm8IntoMemoryHL_0x36 => 0x36,
+            Self::SetCarryFlag_0x37 => 0x37,
         }
     }
 }
@@ -248,6 +251,7 @@ impl Opcode {
             Self::IncMemoryHL_0x34 => execute_0x34(cpu),
             Self::DecMemoryHL_0x35 => execute_0x35(cpu),
             Self::LdImm8IntoMemoryHL_0x36 => execute_0x36(cpu),
+            Self::SetCarryFlag_0x37 => execute_0x37(cpu),
         }
     }
 }
@@ -1109,4 +1113,14 @@ fn execute_0x36(cpu: &mut LR35902) -> u32 {
     cpu.memory.write(usize::from(cpu.hl.word()), byte);
 
     12
+}
+
+fn execute_0x37(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.reset_sub_flag();
+    cpu.reset_half_carry_flag();
+    cpu.set_carry_flag();
+
+    4
 }
