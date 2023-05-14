@@ -66,6 +66,7 @@ pub enum Opcode {
     SetCarryFlag_0x37,
     RelativeJumpCarry8_0x38,
     AddSPintoHL_0x39,
+    LdMemoryHLIntoAPostDec_0x3A,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -129,6 +130,7 @@ impl std::convert::From<u8> for Opcode {
             0x37 => Self::SetCarryFlag_0x37,
             0x38 => Self::RelativeJumpCarry8_0x38,
             0x39 => Self::AddSPintoHL_0x39,
+            0x3A => Self::LdMemoryHLIntoAPostDec_0x3A,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -195,6 +197,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::SetCarryFlag_0x37 => 0x37,
             Self::RelativeJumpCarry8_0x38 => 0x38,
             Self::AddSPintoHL_0x39 => 0x39,
+            Self::LdMemoryHLIntoAPostDec_0x3A => 0x3A,
         }
     }
 }
@@ -260,6 +263,7 @@ impl Opcode {
             Self::SetCarryFlag_0x37 => execute_0x37(cpu),
             Self::RelativeJumpCarry8_0x38 => execute_0x38(cpu),
             Self::AddSPintoHL_0x39 => execute_0x39(cpu),
+            Self::LdMemoryHLIntoAPostDec_0x3A => execute_0x3a(cpu),
         }
     }
 }
@@ -1166,6 +1170,24 @@ fn execute_0x39(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_16_bit_registers(register::ID16::HL, register::ID16::SP);
+
+    8
+}
+
+fn execute_0x3a(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let value = match cpu.memory.read(usize::from(cpu.hl.word())) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode 0x3A failed to load byte from memory pointed to by HL. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.af.hi = value;
+
+    cpu.hl.set_word(cpu.hl.word().wrapping_sub(1));
 
     8
 }
