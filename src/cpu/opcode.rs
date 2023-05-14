@@ -69,13 +69,14 @@ pub enum Opcode {
     LdMemoryHLIntoAPostDec_0x3A,
     DecSP_0x3B,
     IncA_0x3C,
+    DecA_0x3D,
 }
 
 impl std::convert::From<u8> for Opcode {
     fn from(value: u8) -> Self {
         match value {
-            0x00 => Opcode::Nop_0x00,
-            0x01 => Opcode::LdImm16IntoBC_0x01,
+            0x00 => Self::Nop_0x00,
+            0x01 => Self::LdImm16IntoBC_0x01,
             0x02 => Self::LdAIntoMemoryBC_0x02,
             0x03 => Self::IncBC_0x03,
             0x04 => Self::IncB_0x04,
@@ -135,6 +136,7 @@ impl std::convert::From<u8> for Opcode {
             0x3A => Self::LdMemoryHLIntoAPostDec_0x3A,
             0x3B => Self::DecSP_0x3B,
             0x3C => Self::IncA_0x3C,
+            0x3D => Self::DecA_0x3D,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -204,6 +206,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdMemoryHLIntoAPostDec_0x3A => 0x3A,
             Self::DecSP_0x3B => 0x3B,
             Self::IncA_0x3C => 0x3C,
+            Self::DecA_0x3D => 0x3D,
         }
     }
 }
@@ -272,6 +275,7 @@ impl Opcode {
             Self::LdMemoryHLIntoAPostDec_0x3A => execute_0x3a(cpu),
             Self::DecSP_0x3B => execute_0x3b(cpu),
             Self::IncA_0x3C => execute_0x3c(cpu),
+            Self::DecA_0x3D => execute_0x3d(cpu),
         }
     }
 }
@@ -1212,6 +1216,14 @@ fn execute_0x3c(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.increment_8_bit_register(register::ID::A);
+
+    4
+}
+
+fn execute_0x3d(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.decrement_8_bit_register(register::ID::A);
 
     4
 }
