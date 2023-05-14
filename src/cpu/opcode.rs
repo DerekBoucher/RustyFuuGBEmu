@@ -65,6 +65,7 @@ pub enum Opcode {
     LdImm8IntoMemoryHL_0x36,
     SetCarryFlag_0x37,
     RelativeJumpCarry8_0x38,
+    AddSPintoHL_0x39,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -127,6 +128,7 @@ impl std::convert::From<u8> for Opcode {
             0x36 => Self::LdImm8IntoMemoryHL_0x36,
             0x37 => Self::SetCarryFlag_0x37,
             0x38 => Self::RelativeJumpCarry8_0x38,
+            0x39 => Self::AddSPintoHL_0x39,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -192,6 +194,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdImm8IntoMemoryHL_0x36 => 0x36,
             Self::SetCarryFlag_0x37 => 0x37,
             Self::RelativeJumpCarry8_0x38 => 0x38,
+            Self::AddSPintoHL_0x39 => 0x39,
         }
     }
 }
@@ -256,6 +259,7 @@ impl Opcode {
             Self::LdImm8IntoMemoryHL_0x36 => execute_0x36(cpu),
             Self::SetCarryFlag_0x37 => execute_0x37(cpu),
             Self::RelativeJumpCarry8_0x38 => execute_0x38(cpu),
+            Self::AddSPintoHL_0x39 => execute_0x39(cpu),
         }
     }
 }
@@ -1156,4 +1160,12 @@ fn execute_0x38(cpu: &mut LR35902) -> u32 {
     }
 
     12
+}
+
+fn execute_0x39(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.add_16_bit_registers(register::ID16::HL, register::ID16::SP);
+
+    8
 }
