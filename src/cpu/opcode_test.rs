@@ -2931,3 +2931,26 @@ fn _0x47() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0x48() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![Opcode::LdBIntoC_0x48.into()]));
+            cpu.bc.hi = 0x40;
+            return cpu;
+        },
+        expected_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![Opcode::LdBIntoC_0x48.into()]));
+            cpu.bc.hi = 0x40;
+            cpu.bc.lo = 0x40;
+            cpu.pc = 0x0001;
+            return cpu;
+        },
+        expected_cycles: 4,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
