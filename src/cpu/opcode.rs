@@ -71,6 +71,7 @@ pub enum Opcode {
     IncA_0x3C,
     DecA_0x3D,
     LdImm8IntoA_0x3E,
+    ComplimentCarryFlag_0x3F,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -139,6 +140,7 @@ impl std::convert::From<u8> for Opcode {
             0x3C => Self::IncA_0x3C,
             0x3D => Self::DecA_0x3D,
             0x3E => Self::LdImm8IntoA_0x3E,
+            0x3F => Self::ComplimentCarryFlag_0x3F,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -210,6 +212,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::IncA_0x3C => 0x3C,
             Self::DecA_0x3D => 0x3D,
             Self::LdImm8IntoA_0x3E => 0x3E,
+            Self::ComplimentCarryFlag_0x3F => 0x3F,
         }
     }
 }
@@ -280,6 +283,7 @@ impl Opcode {
             Self::IncA_0x3C => execute_0x3c(cpu),
             Self::DecA_0x3D => execute_0x3d(cpu),
             Self::LdImm8IntoA_0x3E => execute_0x3e(cpu),
+            Self::ComplimentCarryFlag_0x3F => execute_0x3f(cpu),
         }
     }
 }
@@ -1248,4 +1252,19 @@ fn execute_0x3e(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     8
+}
+
+fn execute_0x3f(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    if cpu.test_carry_flag() {
+        cpu.reset_carry_flag();
+    } else {
+        cpu.set_carry_flag();
+    }
+
+    cpu.reset_sub_flag();
+    cpu.reset_half_carry_flag();
+
+    4
 }
