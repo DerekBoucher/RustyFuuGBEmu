@@ -2667,3 +2667,30 @@ fn _0x3d() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0x3e() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> LR35902 {
+            let cpu = LR35902::new(mock::Memory::new(vec![
+                Opcode::LdImm8IntoA_0x3E.into(),
+                0xFF,
+            ]));
+            return cpu;
+        },
+        expected_state: || -> LR35902 {
+            let mut cpu = LR35902::new(mock::Memory::new(vec![
+                Opcode::LdImm8IntoA_0x3E.into(),
+                0xFF,
+            ]));
+            cpu.pc = 0x0002;
+            cpu.af.hi = 0xFF;
+            return cpu;
+        },
+        expected_cycles: 8,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
