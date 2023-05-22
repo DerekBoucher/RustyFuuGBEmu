@@ -94,6 +94,7 @@ pub enum Opcode {
     LdEIntoD_0x53,
     LdHIntoD_0x54,
     LdLIntoD_0x55,
+    LdMemoryHLIntoD_0x56,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -185,6 +186,7 @@ impl std::convert::From<u8> for Opcode {
             0x53 => Self::LdEIntoD_0x53,
             0x54 => Self::LdHIntoD_0x54,
             0x55 => Self::LdLIntoD_0x55,
+            0x56 => Self::LdMemoryHLIntoD_0x56,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -279,6 +281,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdEIntoD_0x53 => 0x53,
             Self::LdHIntoD_0x54 => 0x54,
             Self::LdLIntoD_0x55 => 0x55,
+            Self::LdMemoryHLIntoD_0x56 => 0x56,
         }
     }
 }
@@ -372,6 +375,7 @@ impl Opcode {
             Self::LdEIntoD_0x53 => execute_0x53(cpu),
             Self::LdHIntoD_0x54 => execute_0x54(cpu),
             Self::LdLIntoD_0x55 => execute_0x55(cpu),
+            Self::LdMemoryHLIntoD_0x56 => execute_0x56(cpu),
         }
     }
 }
@@ -1547,4 +1551,20 @@ fn execute_0x55(cpu: &mut LR35902) -> u32 {
     cpu.de.hi = cpu.hl.lo;
 
     4
+}
+
+fn execute_0x56(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let byte = match cpu.memory.read(usize::from(cpu.hl.word())) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode load memory pointed by HL into D failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.de.hi = byte;
+
+    8
 }
