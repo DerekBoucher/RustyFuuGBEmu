@@ -88,6 +88,22 @@ pub enum Opcode {
     LdLIntoC_0x4D,
     LdMemoryHLIntoC_0x4E,
     LdAIntoC_0x4F,
+    LdBIntoD_0x50,
+    LdCIntoD_0x51,
+    LdDIntoD_0x52,
+    LdEIntoD_0x53,
+    LdHIntoD_0x54,
+    LdLIntoD_0x55,
+    LdMemoryHLIntoD_0x56,
+    LdAIntoD_0x57,
+    LdBIntoE_0x58,
+    LdCIntoE_0x59,
+    LdDIntoE_0x5A,
+    LdEIntoE_0x5B,
+    LdHIntoE_0x5C,
+    LdLIntoE_0x5D,
+    LdMemoryHLIntoE_0x5E,
+    LdAIntoE_0x5F,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -173,6 +189,22 @@ impl std::convert::From<u8> for Opcode {
             0x4D => Self::LdLIntoC_0x4D,
             0x4E => Self::LdMemoryHLIntoC_0x4E,
             0x4F => Self::LdAIntoC_0x4F,
+            0x50 => Self::LdBIntoD_0x50,
+            0x51 => Self::LdCIntoD_0x51,
+            0x52 => Self::LdDIntoD_0x52,
+            0x53 => Self::LdEIntoD_0x53,
+            0x54 => Self::LdHIntoD_0x54,
+            0x55 => Self::LdLIntoD_0x55,
+            0x56 => Self::LdMemoryHLIntoD_0x56,
+            0x57 => Self::LdAIntoD_0x57,
+            0x58 => Self::LdBIntoE_0x58,
+            0x59 => Self::LdCIntoE_0x59,
+            0x5A => Self::LdDIntoE_0x5A,
+            0x5B => Self::LdEIntoE_0x5B,
+            0x5C => Self::LdHIntoE_0x5C,
+            0x5D => Self::LdLIntoE_0x5D,
+            0x5E => Self::LdMemoryHLIntoE_0x5E,
+            0x5F => Self::LdAIntoE_0x5F,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -261,6 +293,22 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdLIntoC_0x4D => 0x4D,
             Self::LdMemoryHLIntoC_0x4E => 0x4E,
             Self::LdAIntoC_0x4F => 0x4F,
+            Self::LdBIntoD_0x50 => 0x50,
+            Self::LdCIntoD_0x51 => 0x51,
+            Self::LdDIntoD_0x52 => 0x52,
+            Self::LdEIntoD_0x53 => 0x53,
+            Self::LdHIntoD_0x54 => 0x54,
+            Self::LdLIntoD_0x55 => 0x55,
+            Self::LdMemoryHLIntoD_0x56 => 0x56,
+            Self::LdAIntoD_0x57 => 0x57,
+            Self::LdBIntoE_0x58 => 0x58,
+            Self::LdCIntoE_0x59 => 0x59,
+            Self::LdDIntoE_0x5A => 0x5A,
+            Self::LdEIntoE_0x5B => 0x5B,
+            Self::LdHIntoE_0x5C => 0x5C,
+            Self::LdLIntoE_0x5D => 0x5D,
+            Self::LdMemoryHLIntoE_0x5E => 0x5E,
+            Self::LdAIntoE_0x5F => 0x5F,
         }
     }
 }
@@ -348,6 +396,22 @@ impl Opcode {
             Self::LdLIntoC_0x4D => execute_0x4d(cpu),
             Self::LdMemoryHLIntoC_0x4E => execute_0x4e(cpu),
             Self::LdAIntoC_0x4F => execute_0x4f(cpu),
+            Self::LdBIntoD_0x50 => execute_0x50(cpu),
+            Self::LdCIntoD_0x51 => execute_0x51(cpu),
+            Self::LdDIntoD_0x52 => execute_0x52(cpu),
+            Self::LdEIntoD_0x53 => execute_0x53(cpu),
+            Self::LdHIntoD_0x54 => execute_0x54(cpu),
+            Self::LdLIntoD_0x55 => execute_0x55(cpu),
+            Self::LdMemoryHLIntoD_0x56 => execute_0x56(cpu),
+            Self::LdAIntoD_0x57 => execute_0x57(cpu),
+            Self::LdBIntoE_0x58 => execute_0x58(cpu),
+            Self::LdCIntoE_0x59 => execute_0x59(cpu),
+            Self::LdDIntoE_0x5A => execute_0x5a(cpu),
+            Self::LdEIntoE_0x5B => execute_0x5b(cpu),
+            Self::LdHIntoE_0x5C => execute_0x5c(cpu),
+            Self::LdLIntoE_0x5D => execute_0x5d(cpu),
+            Self::LdMemoryHLIntoE_0x5E => execute_0x5e(cpu),
+            Self::LdAIntoE_0x5F => execute_0x5f(cpu),
         }
     }
 }
@@ -1457,7 +1521,7 @@ fn execute_0x4e(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match cpu.memory.read(usize::from(cpu.hl.word())) {
-        Some(byte) => byte,
+        Some(byte) => byte, 
         None => panic!(
             "opcode load memory pointed by HL into C failed to fetch byte in memory. Dumping cpu state...\n{:?}",
             cpu,
@@ -1473,6 +1537,150 @@ fn execute_0x4f(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.lo = cpu.af.hi;
+
+    4
+}
+
+fn execute_0x50(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.hi = cpu.bc.hi;
+
+    4
+}
+
+fn execute_0x51(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.hi = cpu.bc.lo;
+
+    4
+}
+
+fn execute_0x52(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.hi = cpu.de.hi;
+
+    4
+}
+
+fn execute_0x53(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.hi = cpu.de.lo;
+
+    4
+}
+
+fn execute_0x54(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.hi = cpu.hl.hi;
+
+    4
+}
+
+fn execute_0x55(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.hi = cpu.hl.lo;
+
+    4
+}
+
+fn execute_0x56(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let byte = match cpu.memory.read(usize::from(cpu.hl.word())) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode load memory pointed by HL into D failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.de.hi = byte;
+
+    8
+}
+
+fn execute_0x57(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.hi = cpu.af.hi;
+
+    4
+}
+
+fn execute_0x58(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.lo = cpu.bc.hi;
+
+    4
+}
+
+fn execute_0x59(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.lo = cpu.bc.lo;
+
+    4
+}
+
+fn execute_0x5a(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.lo = cpu.de.hi;
+
+    4
+}
+
+fn execute_0x5b(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.lo = cpu.de.lo;
+
+    4
+}
+
+fn execute_0x5c(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.lo = cpu.hl.hi;
+
+    4
+}
+
+fn execute_0x5d(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.lo = cpu.hl.lo;
+
+    4
+}
+
+fn execute_0x5e(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let byte = match cpu.memory.read(usize::from(cpu.hl.word())) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode load memory pointed by HL into E failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.de.lo = byte;
+
+    8
+}
+
+fn execute_0x5f(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.de.lo = cpu.af.hi;
 
     4
 }
