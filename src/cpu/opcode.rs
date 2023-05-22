@@ -102,6 +102,7 @@ pub enum Opcode {
     LdEIntoE_0x5B,
     LdHIntoE_0x5C,
     LdLIntoE_0x5D,
+    LdMemoryHLIntoE_0x5E,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -201,6 +202,7 @@ impl std::convert::From<u8> for Opcode {
             0x5B => Self::LdEIntoE_0x5B,
             0x5C => Self::LdHIntoE_0x5C,
             0x5D => Self::LdLIntoE_0x5D,
+            0x5E => Self::LdMemoryHLIntoE_0x5E,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -303,6 +305,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdEIntoE_0x5B => 0x5B,
             Self::LdHIntoE_0x5C => 0x5C,
             Self::LdLIntoE_0x5D => 0x5D,
+            Self::LdMemoryHLIntoE_0x5E => 0x5E,
         }
     }
 }
@@ -404,6 +407,7 @@ impl Opcode {
             Self::LdEIntoE_0x5B => execute_0x5b(cpu),
             Self::LdHIntoE_0x5C => execute_0x5c(cpu),
             Self::LdLIntoE_0x5D => execute_0x5d(cpu),
+            Self::LdMemoryHLIntoE_0x5E => execute_0x5e(cpu),
         }
     }
 }
@@ -1651,4 +1655,20 @@ fn execute_0x5d(cpu: &mut LR35902) -> u32 {
     cpu.de.lo = cpu.hl.lo;
 
     4
+}
+
+fn execute_0x5e(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let byte = match cpu.memory.read(usize::from(cpu.hl.word())) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode load memory pointed by HL into E failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.de.lo = byte;
+
+    8
 }
