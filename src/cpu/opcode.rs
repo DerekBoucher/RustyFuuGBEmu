@@ -111,6 +111,7 @@ pub enum Opcode {
     LdHIntoH_0x64,
     LdLIntoH_0x65,
     LdMemoryHLIntoH_0x66,
+    LdAIntoH_0x67,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -219,6 +220,7 @@ impl std::convert::From<u8> for Opcode {
             0x64 => Self::LdHIntoH_0x64,
             0x65 => Self::LdLIntoH_0x65,
             0x66 => Self::LdMemoryHLIntoH_0x66,
+            0x67 => Self::LdAIntoH_0x67,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -330,6 +332,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdHIntoH_0x64 => 0x64,
             Self::LdLIntoH_0x65 => 0x65,
             Self::LdMemoryHLIntoH_0x66 => 0x66,
+            Self::LdAIntoH_0x67 => 0x67,
         }
     }
 }
@@ -440,6 +443,7 @@ impl Opcode {
             Self::LdHIntoH_0x64 => execute_0x64(cpu),
             Self::LdLIntoH_0x65 => execute_0x65(cpu),
             Self::LdMemoryHLIntoH_0x66 => execute_0x66(cpu),
+            Self::LdAIntoH_0x67 => execute_0x67(cpu),
         }
     }
 }
@@ -1775,4 +1779,12 @@ fn execute_0x66(cpu: &mut LR35902) -> u32 {
     cpu.hl.hi = byte;
 
     8
+}
+
+fn execute_0x67(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.hi = cpu.af.hi;
+
+    4
 }
