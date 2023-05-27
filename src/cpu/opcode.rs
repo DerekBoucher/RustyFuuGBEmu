@@ -112,6 +112,14 @@ pub enum Opcode {
     LdLIntoH_0x65,
     LdMemoryHLIntoH_0x66,
     LdAIntoH_0x67,
+    LdCIntoL_0x69,
+    LdBIntoL_0x68,
+    LdDIntoL_0x6A,
+    LdEIntoL_0x6B,
+    LdHIntoL_0x6C,
+    LdLIntoL_0x6D,
+    LdMemoryHLIntoL_0x6E,
+    LdAIntoL_0x6F,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -221,6 +229,14 @@ impl std::convert::From<u8> for Opcode {
             0x65 => Self::LdLIntoH_0x65,
             0x66 => Self::LdMemoryHLIntoH_0x66,
             0x67 => Self::LdAIntoH_0x67,
+            0x68 => Self::LdBIntoL_0x68,
+            0x69 => Self::LdCIntoL_0x69,
+            0x6A => Self::LdDIntoL_0x6A,
+            0x6B => Self::LdEIntoL_0x6B,
+            0x6C => Self::LdHIntoL_0x6C,
+            0x6D => Self::LdLIntoL_0x6D,
+            0x6E => Self::LdMemoryHLIntoL_0x6E,
+            0x6F => Self::LdAIntoL_0x6F,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -333,6 +349,14 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdLIntoH_0x65 => 0x65,
             Self::LdMemoryHLIntoH_0x66 => 0x66,
             Self::LdAIntoH_0x67 => 0x67,
+            Self::LdBIntoL_0x68 => 0x68,
+            Self::LdCIntoL_0x69 => 0x69,
+            Self::LdDIntoL_0x6A => 0x6A,
+            Self::LdEIntoL_0x6B => 0x6B,
+            Self::LdHIntoL_0x6C => 0x6C,
+            Self::LdLIntoL_0x6D => 0x6D,
+            Self::LdMemoryHLIntoL_0x6E => 0x6E,
+            Self::LdAIntoL_0x6F => 0x6F,
         }
     }
 }
@@ -444,6 +468,14 @@ impl Opcode {
             Self::LdLIntoH_0x65 => execute_0x65(cpu),
             Self::LdMemoryHLIntoH_0x66 => execute_0x66(cpu),
             Self::LdAIntoH_0x67 => execute_0x67(cpu),
+            Self::LdBIntoL_0x68 => execute_0x68(cpu),
+            Self::LdCIntoL_0x69 => execute_0x69(cpu),
+            Self::LdDIntoL_0x6A => execute_0x6a(cpu),
+            Self::LdEIntoL_0x6B => execute_0x6b(cpu),
+            Self::LdHIntoL_0x6C => execute_0x6c(cpu),
+            Self::LdLIntoL_0x6D => execute_0x6d(cpu),
+            Self::LdMemoryHLIntoL_0x6E => execute_0x6e(cpu),
+            Self::LdAIntoL_0x6F => execute_0x6f(cpu),
         }
     }
 }
@@ -1785,6 +1817,78 @@ fn execute_0x67(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.hi = cpu.af.hi;
+
+    4
+}
+
+fn execute_0x68(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.lo = cpu.bc.hi;
+
+    4
+}
+
+fn execute_0x69(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.lo = cpu.bc.lo;
+
+    4
+}
+
+fn execute_0x6a(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.lo = cpu.de.hi;
+
+    4
+}
+
+fn execute_0x6b(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.lo = cpu.de.lo;
+
+    4
+}
+
+fn execute_0x6c(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.lo = cpu.hl.hi;
+
+    4
+}
+
+fn execute_0x6d(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.lo = cpu.hl.lo;
+
+    4
+}
+
+fn execute_0x6e(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let byte = match cpu.memory.read(usize::from(cpu.hl.word())) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode load memory pointed by HL into E failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.hl.lo = byte;
+
+    8
+}
+
+fn execute_0x6f(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.lo = cpu.af.hi;
 
     4
 }
