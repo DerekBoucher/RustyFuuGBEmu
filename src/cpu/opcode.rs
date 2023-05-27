@@ -104,6 +104,22 @@ pub enum Opcode {
     LdLIntoE_0x5D,
     LdMemoryHLIntoE_0x5E,
     LdAIntoE_0x5F,
+    LdBIntoH_0x60,
+    LdCIntoH_0x61,
+    LdDIntoH_0x62,
+    LdEIntoH_0x63,
+    LdHIntoH_0x64,
+    LdLIntoH_0x65,
+    LdMemoryHLIntoH_0x66,
+    LdAIntoH_0x67,
+    LdCIntoL_0x69,
+    LdBIntoL_0x68,
+    LdDIntoL_0x6A,
+    LdEIntoL_0x6B,
+    LdHIntoL_0x6C,
+    LdLIntoL_0x6D,
+    LdMemoryHLIntoL_0x6E,
+    LdAIntoL_0x6F,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -205,6 +221,22 @@ impl std::convert::From<u8> for Opcode {
             0x5D => Self::LdLIntoE_0x5D,
             0x5E => Self::LdMemoryHLIntoE_0x5E,
             0x5F => Self::LdAIntoE_0x5F,
+            0x60 => Self::LdBIntoH_0x60,
+            0x61 => Self::LdCIntoH_0x61,
+            0x62 => Self::LdDIntoH_0x62,
+            0x63 => Self::LdEIntoH_0x63,
+            0x64 => Self::LdHIntoH_0x64,
+            0x65 => Self::LdLIntoH_0x65,
+            0x66 => Self::LdMemoryHLIntoH_0x66,
+            0x67 => Self::LdAIntoH_0x67,
+            0x68 => Self::LdBIntoL_0x68,
+            0x69 => Self::LdCIntoL_0x69,
+            0x6A => Self::LdDIntoL_0x6A,
+            0x6B => Self::LdEIntoL_0x6B,
+            0x6C => Self::LdHIntoL_0x6C,
+            0x6D => Self::LdLIntoL_0x6D,
+            0x6E => Self::LdMemoryHLIntoL_0x6E,
+            0x6F => Self::LdAIntoL_0x6F,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -309,6 +341,22 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdLIntoE_0x5D => 0x5D,
             Self::LdMemoryHLIntoE_0x5E => 0x5E,
             Self::LdAIntoE_0x5F => 0x5F,
+            Self::LdBIntoH_0x60 => 0x60,
+            Self::LdCIntoH_0x61 => 0x61,
+            Self::LdDIntoH_0x62 => 0x62,
+            Self::LdEIntoH_0x63 => 0x63,
+            Self::LdHIntoH_0x64 => 0x64,
+            Self::LdLIntoH_0x65 => 0x65,
+            Self::LdMemoryHLIntoH_0x66 => 0x66,
+            Self::LdAIntoH_0x67 => 0x67,
+            Self::LdBIntoL_0x68 => 0x68,
+            Self::LdCIntoL_0x69 => 0x69,
+            Self::LdDIntoL_0x6A => 0x6A,
+            Self::LdEIntoL_0x6B => 0x6B,
+            Self::LdHIntoL_0x6C => 0x6C,
+            Self::LdLIntoL_0x6D => 0x6D,
+            Self::LdMemoryHLIntoL_0x6E => 0x6E,
+            Self::LdAIntoL_0x6F => 0x6F,
         }
     }
 }
@@ -412,6 +460,22 @@ impl Opcode {
             Self::LdLIntoE_0x5D => execute_0x5d(cpu),
             Self::LdMemoryHLIntoE_0x5E => execute_0x5e(cpu),
             Self::LdAIntoE_0x5F => execute_0x5f(cpu),
+            Self::LdBIntoH_0x60 => execute_0x60(cpu),
+            Self::LdCIntoH_0x61 => execute_0x61(cpu),
+            Self::LdDIntoH_0x62 => execute_0x62(cpu),
+            Self::LdEIntoH_0x63 => execute_0x63(cpu),
+            Self::LdHIntoH_0x64 => execute_0x64(cpu),
+            Self::LdLIntoH_0x65 => execute_0x65(cpu),
+            Self::LdMemoryHLIntoH_0x66 => execute_0x66(cpu),
+            Self::LdAIntoH_0x67 => execute_0x67(cpu),
+            Self::LdBIntoL_0x68 => execute_0x68(cpu),
+            Self::LdCIntoL_0x69 => execute_0x69(cpu),
+            Self::LdDIntoL_0x6A => execute_0x6a(cpu),
+            Self::LdEIntoL_0x6B => execute_0x6b(cpu),
+            Self::LdHIntoL_0x6C => execute_0x6c(cpu),
+            Self::LdLIntoL_0x6D => execute_0x6d(cpu),
+            Self::LdMemoryHLIntoL_0x6E => execute_0x6e(cpu),
+            Self::LdAIntoL_0x6F => execute_0x6f(cpu),
         }
     }
 }
@@ -1681,6 +1745,150 @@ fn execute_0x5f(cpu: &mut LR35902) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.lo = cpu.af.hi;
+
+    4
+}
+
+fn execute_0x60(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.hi = cpu.bc.hi;
+
+    4
+}
+
+fn execute_0x61(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.hi = cpu.bc.lo;
+
+    4
+}
+
+fn execute_0x62(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.hi = cpu.de.hi;
+
+    4
+}
+
+fn execute_0x63(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.hi = cpu.de.lo;
+
+    4
+}
+
+fn execute_0x64(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.hi = cpu.hl.hi;
+
+    4
+}
+
+fn execute_0x65(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.hi = cpu.hl.lo;
+
+    4
+}
+
+fn execute_0x66(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let byte = match cpu.memory.read(usize::from(cpu.hl.word())) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode load memory pointed by HL into H failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.hl.hi = byte;
+
+    8
+}
+
+fn execute_0x67(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.hi = cpu.af.hi;
+
+    4
+}
+
+fn execute_0x68(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.lo = cpu.bc.hi;
+
+    4
+}
+
+fn execute_0x69(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.lo = cpu.bc.lo;
+
+    4
+}
+
+fn execute_0x6a(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.lo = cpu.de.hi;
+
+    4
+}
+
+fn execute_0x6b(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.lo = cpu.de.lo;
+
+    4
+}
+
+fn execute_0x6c(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.lo = cpu.hl.hi;
+
+    4
+}
+
+fn execute_0x6d(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.lo = cpu.hl.lo;
+
+    4
+}
+
+fn execute_0x6e(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let byte = match cpu.memory.read(usize::from(cpu.hl.word())) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode load memory pointed by HL into E failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.hl.lo = byte;
+
+    8
+}
+
+fn execute_0x6f(cpu: &mut LR35902) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.hl.lo = cpu.af.hi;
 
     4
 }
