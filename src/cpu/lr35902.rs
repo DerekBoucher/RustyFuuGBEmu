@@ -32,12 +32,11 @@ impl PartialEq for LR35902 {
             && self.de.word() == other.de.word()
             && self.hl.word() == other.hl.word()
             && self.paused == other.paused
-            && self.memory.dump() == other.memory.dump()
     }
 }
 
 impl LR35902 {
-    pub fn new(memory_driver: Box<dyn MemoryDriver>) -> Self {
+    pub fn new() -> Self {
         Self {
             af: Register::new(),
             bc: Register::new(),
@@ -45,13 +44,12 @@ impl LR35902 {
             hl: Register::new(),
             sp: 0x0000,
             pc: 0x0000,
-            memory: memory_driver,
             paused: false,
         }
     }
 
-    pub fn execute_next_opcode(&mut self) -> u32 {
-        let op = match self.memory.read(usize::from(self.pc)) {
+    pub fn execute_next_opcode(&mut self, memory: &mut impl MemoryDriver) -> u32 {
+        let op = match memory.read(usize::from(self.pc)) {
             Some(x) => Opcode::from(x),
             None => panic!(
                 "memory returned empty value when attempting to fetch op code. Dumping cpu state...\n
@@ -59,7 +57,7 @@ impl LR35902 {
             ),
         };
 
-        return op.execute(self);
+        return op.execute(self, memory);
     }
 
     pub fn reset_half_carry_flag(&mut self) {
