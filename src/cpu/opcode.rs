@@ -120,6 +120,12 @@ pub enum Opcode {
     LdLIntoL_0x6D,
     LdMemoryHLIntoL_0x6E,
     LdAIntoL_0x6F,
+    LdBIntoMemoryHL_0x70,
+    LdCIntoMemoryHL_0x71,
+    LdDIntoMemoryHL_0x72,
+    LdEIntoMemoryHL_0x73,
+    LdHIntoMemoryHL_0x74,
+    LdLIntoMemoryHL_0x75,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -237,6 +243,12 @@ impl std::convert::From<u8> for Opcode {
             0x6D => Self::LdLIntoL_0x6D,
             0x6E => Self::LdMemoryHLIntoL_0x6E,
             0x6F => Self::LdAIntoL_0x6F,
+            0x70 => Self::LdBIntoMemoryHL_0x70,
+            0x71 => Self::LdCIntoMemoryHL_0x71,
+            0x72 => Self::LdDIntoMemoryHL_0x72,
+            0x73 => Self::LdEIntoMemoryHL_0x73,
+            0x74 => Self::LdHIntoMemoryHL_0x74,
+            0x75 => Self::LdLIntoMemoryHL_0x75,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -357,6 +369,12 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdLIntoL_0x6D => 0x6D,
             Self::LdMemoryHLIntoL_0x6E => 0x6E,
             Self::LdAIntoL_0x6F => 0x6F,
+            Self::LdBIntoMemoryHL_0x70 => 0x70,
+            Self::LdCIntoMemoryHL_0x71 => 0x71,
+            Self::LdDIntoMemoryHL_0x72 => 0x72,
+            Self::LdEIntoMemoryHL_0x73 => 0x73,
+            Self::LdHIntoMemoryHL_0x74 => 0x74,
+            Self::LdLIntoMemoryHL_0x75 => 0x75,
         }
     }
 }
@@ -476,6 +494,13 @@ impl Opcode {
             Self::LdLIntoL_0x6D => execute_0x6d(cpu, memory),
             Self::LdMemoryHLIntoL_0x6E => execute_0x6e(cpu, memory),
             Self::LdAIntoL_0x6F => execute_0x6f(cpu, memory),
+            Self::LdBIntoMemoryHL_0x70 => execute_0x70(cpu, memory),
+            Self::LdCIntoMemoryHL_0x71 => execute_0x71(cpu, memory),
+            Self::LdDIntoMemoryHL_0x72 => execute_0x72(cpu, memory),
+            Self::LdEIntoMemoryHL_0x73 => execute_0x73(cpu, memory),
+            Self::LdHIntoMemoryHL_0x74 => execute_0x74(cpu, memory),
+            Self::LdLIntoMemoryHL_0x75 => execute_0x75(cpu, memory),
+
         }
     }
 }
@@ -1891,4 +1916,52 @@ fn execute_0x6f(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
     cpu.hl.lo = cpu.af.hi;
 
     4
+}
+
+fn execute_0x70(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    memory.write(usize::from(cpu.hl.word()), cpu.bc.hi);
+
+    8
+}
+
+fn execute_0x71(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    memory.write(usize::from(cpu.hl.word()), cpu.bc.lo);
+
+    8
+}
+
+fn execute_0x72(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    memory.write(usize::from(cpu.hl.word()), cpu.de.hi);
+
+    8
+}
+
+fn execute_0x73(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    memory.write(usize::from(cpu.hl.word()), cpu.de.lo);
+
+    8
+}
+
+fn execute_0x74(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    memory.write(usize::from(cpu.hl.word()), cpu.hl.hi);
+
+    8
+}
+
+fn execute_0x75(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    memory.write(usize::from(cpu.hl.word()), cpu.hl.lo);
+
+    8
 }
