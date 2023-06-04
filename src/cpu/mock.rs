@@ -6,8 +6,14 @@ pub struct Memory {
 }
 
 impl Memory {
-    pub fn new(vec: Vec<u8>) -> Box<Self> {
-        Box::new(Memory { memory: vec })
+    pub fn new(vec: Vec<u8>) -> Self {
+        Memory { memory: vec }
+    }
+}
+
+impl PartialEq for Memory {
+    fn eq(&self, other: &Self) -> bool {
+        self.dump() == other.dump()
     }
 }
 

@@ -28,9 +28,6 @@ pub struct LR35902 {
     hl: Register,
     sp: u16,
     pc: u16,
-
-    memory: Box<dyn MemoryDriver>,
-
     paused: bool,
 }
 
