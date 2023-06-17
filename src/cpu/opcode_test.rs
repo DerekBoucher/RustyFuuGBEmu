@@ -4140,3 +4140,28 @@ fn _0x78() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0x79() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::LdCIntoA_0x79.into()]);
+            cpu.bc.lo = 0xFF;
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::LdCIntoA_0x79.into()]);
+            cpu.af.hi = 0xFF;
+            cpu.bc.lo = 0xFF;
+            cpu.pc = 0x0001;
+            return (cpu, memory);
+        },
+        expected_cycles: 4,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
