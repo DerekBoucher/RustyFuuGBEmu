@@ -2,8 +2,8 @@
 #[cfg(test)]
 mod test;
 
-use super::{bit, register, MemoryDriver};
-use crate::cpu::LR35902;
+use super::{bit, register, MemoryDriver, lr35902};
+use crate::{cpu::LR35902};
 
 #[allow(non_camel_case_types)]
 #[repr(u8)]
@@ -126,6 +126,7 @@ pub enum Opcode {
     LdEIntoMemoryHL_0x73,
     LdHIntoMemoryHL_0x74,
     LdLIntoMemoryHL_0x75,
+    Halt_0x76,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -249,6 +250,7 @@ impl std::convert::From<u8> for Opcode {
             0x73 => Self::LdEIntoMemoryHL_0x73,
             0x74 => Self::LdHIntoMemoryHL_0x74,
             0x75 => Self::LdLIntoMemoryHL_0x75,
+            0x76 => Self::Halt_0x76,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -375,6 +377,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdEIntoMemoryHL_0x73 => 0x73,
             Self::LdHIntoMemoryHL_0x74 => 0x74,
             Self::LdLIntoMemoryHL_0x75 => 0x75,
+            Self::Halt_0x76 => 0x76,
         }
     }
 }
@@ -500,7 +503,7 @@ impl Opcode {
             Self::LdEIntoMemoryHL_0x73 => execute_0x73(cpu, memory),
             Self::LdHIntoMemoryHL_0x74 => execute_0x74(cpu, memory),
             Self::LdLIntoMemoryHL_0x75 => execute_0x75(cpu, memory),
-
+            Self::Halt_0x76 => execute_0x76(cpu, memory),
         }
     }
 }
@@ -1964,4 +1967,26 @@ fn execute_0x75(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
     memory.write(usize::from(cpu.hl.word()), cpu.hl.lo);
 
     8
+}
+
+fn execute_0x76(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let clock_cycles = 4;
+
+    if cpu.interrupt_master_enable {
+        cpu.halted = true;
+        return clock_cycles
+    }
+
+    let interrupt_enable_register = memory.read(lr35902::INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
+    let interrupt_flag_register = memory.read(lr35902::INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
+
+    if (interrupt_enable_register & interrupt_flag_register & 0x1F) == 0x00 {
+        cpu.halted = true;
+    }
+
+    cpu.bugged_halt = true;
+
+    clock_cycles
 }

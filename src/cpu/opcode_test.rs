@@ -4011,3 +4011,81 @@ fn _0x75() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0x76() {
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            initial_state: || -> (LR35902, Memory) {
+                let mut cpu = LR35902::new();
+                cpu.interrupt_master_enable = true;
+                let mut memory_buffer = vec![0x00; 0x10000];
+                memory_buffer[0x0000] = Opcode::Halt_0x76.into();
+                let memory = mock::Memory::new(memory_buffer);
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, Memory) {
+                let mut cpu = LR35902::new();
+                cpu.interrupt_master_enable = true;
+                cpu.halted = true;
+                cpu.pc = 0x0001;
+                let mut memory_buffer = vec![0x00; 0x10000];
+                memory_buffer[0x0000] = Opcode::Halt_0x76.into();
+                let memory = mock::Memory::new(memory_buffer);
+                return (cpu, memory);
+            },
+            expected_cycles: 4,
+        },
+        TestCase {
+            initial_state: || -> (LR35902, Memory) {
+                let cpu = LR35902::new();
+                let mut memory_buffer = vec![0x00; 0x10000];
+                memory_buffer[0x0000] = Opcode::Halt_0x76.into();
+                memory_buffer[lr35902::INTERRUPT_ENABLE_REGISTER_ADDR] = 0x0F;
+                memory_buffer[lr35902::INTERRUPT_FLAG_REGISTER_ADDR] = 0x0F;
+                let memory = mock::Memory::new(memory_buffer);
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, Memory) {
+                let mut cpu = LR35902::new();
+                let mut memory_buffer = vec![0x00; 0x10000];
+                memory_buffer[0x0000] = Opcode::Halt_0x76.into();
+                memory_buffer[lr35902::INTERRUPT_ENABLE_REGISTER_ADDR] = 0x0F;
+                memory_buffer[lr35902::INTERRUPT_FLAG_REGISTER_ADDR] = 0x0F;
+                cpu.bugged_halt = true;
+                cpu.pc = 0x0001;
+                let memory = mock::Memory::new(memory_buffer);
+                return (cpu, memory);
+            },
+            expected_cycles: 4,
+        },
+        TestCase {
+            initial_state: || -> (LR35902, Memory) {
+                let cpu = LR35902::new();
+                let mut memory_buffer = vec![0x00; 0x10000];
+                memory_buffer[0x0000] = Opcode::Halt_0x76.into();
+                memory_buffer[lr35902::INTERRUPT_ENABLE_REGISTER_ADDR] = 0x00;
+                memory_buffer[lr35902::INTERRUPT_FLAG_REGISTER_ADDR] = 0x00;
+                let memory = mock::Memory::new(memory_buffer);
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, Memory) {
+                let mut cpu = LR35902::new();
+                let mut memory_buffer = vec![0x00; 0x10000];
+                memory_buffer[0x0000] = Opcode::Halt_0x76.into();
+                memory_buffer[lr35902::INTERRUPT_ENABLE_REGISTER_ADDR] = 0x00;
+                memory_buffer[lr35902::INTERRUPT_FLAG_REGISTER_ADDR] = 0x00;
+                cpu.bugged_halt = true;
+                cpu.halted = true;
+                cpu.pc = 0x0001;
+                let memory = mock::Memory::new(memory_buffer);
+                return (cpu, memory);
+            },
+            expected_cycles: 4,
+        },
+    ];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
