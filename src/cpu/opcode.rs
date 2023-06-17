@@ -132,6 +132,8 @@ pub enum Opcode {
     LdCIntoA_0x79,
     LdDIntoA_0x7A,
     LdEIntoA_0x7B,
+    LdHIntoA_0x7C,
+    LdLIntoA_0x7D,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -261,6 +263,8 @@ impl std::convert::From<u8> for Opcode {
             0x79 => Self::LdCIntoA_0x79,
             0x7A => Self::LdDIntoA_0x7A,
             0x7B => Self::LdEIntoA_0x7B,
+            0x7C => Self::LdHIntoA_0x7C,
+            0x7D => Self::LdLIntoA_0x7D,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -393,6 +397,8 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdCIntoA_0x79 => 0x79,
             Self::LdDIntoA_0x7A => 0x7A,
             Self::LdEIntoA_0x7B => 0x7B,
+            Self::LdHIntoA_0x7C => 0x7C,
+            Self::LdLIntoA_0x7D => 0x7D,
         }
     }
 }
@@ -524,6 +530,8 @@ impl Opcode {
             Self::LdCIntoA_0x79 => execute_0x79(cpu, memory),
             Self::LdDIntoA_0x7A => execute_0x7a(cpu, memory),
             Self::LdEIntoA_0x7B => execute_0x7b(cpu, memory),
+            Self::LdHIntoA_0x7C => execute_0x7c(cpu, memory),
+            Self::LdLIntoA_0x7D => execute_0x7d(cpu, memory),
         }
     }
 }
@@ -2047,6 +2055,22 @@ fn execute_0x7b(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.af.hi = cpu.de.lo;
+
+    4
+}
+
+fn execute_0x7c(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.af.hi = cpu.hl.hi;
+
+    4
+}
+
+fn execute_0x7d(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.af.hi = cpu.hl.lo;
 
     4
 }
