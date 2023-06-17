@@ -127,6 +127,7 @@ pub enum Opcode {
     LdHIntoMemoryHL_0x74,
     LdLIntoMemoryHL_0x75,
     Halt_0x76,
+    LdAIntoMemoryHL_0x77,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -251,6 +252,7 @@ impl std::convert::From<u8> for Opcode {
             0x74 => Self::LdHIntoMemoryHL_0x74,
             0x75 => Self::LdLIntoMemoryHL_0x75,
             0x76 => Self::Halt_0x76,
+            0x77 => Self::LdAIntoMemoryHL_0x77,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -378,6 +380,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdHIntoMemoryHL_0x74 => 0x74,
             Self::LdLIntoMemoryHL_0x75 => 0x75,
             Self::Halt_0x76 => 0x76,
+            Self::LdAIntoMemoryHL_0x77 => 0x77,
         }
     }
 }
@@ -504,6 +507,7 @@ impl Opcode {
             Self::LdHIntoMemoryHL_0x74 => execute_0x74(cpu, memory),
             Self::LdLIntoMemoryHL_0x75 => execute_0x75(cpu, memory),
             Self::Halt_0x76 => execute_0x76(cpu, memory),
+            Self::LdAIntoMemoryHL_0x77 => execute_0x77(cpu, memory),
         }
     }
 }
@@ -1989,4 +1993,12 @@ fn execute_0x76(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
     cpu.bugged_halt = true;
 
     clock_cycles
+}
+
+fn execute_0x77(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    memory.write(usize::from(cpu.hl.word()), cpu.af.hi);
+
+    8
 }
