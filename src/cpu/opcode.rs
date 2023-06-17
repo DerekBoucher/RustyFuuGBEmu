@@ -134,6 +134,8 @@ pub enum Opcode {
     LdEIntoA_0x7B,
     LdHIntoA_0x7C,
     LdLIntoA_0x7D,
+    LdMemoryHLIntoA_0x7E,
+    LdAIntoA_0x7F,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -265,6 +267,8 @@ impl std::convert::From<u8> for Opcode {
             0x7B => Self::LdEIntoA_0x7B,
             0x7C => Self::LdHIntoA_0x7C,
             0x7D => Self::LdLIntoA_0x7D,
+            0x7E => Self::LdMemoryHLIntoA_0x7E,
+            0x7F => Self::LdAIntoA_0x7F,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -399,6 +403,8 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdEIntoA_0x7B => 0x7B,
             Self::LdHIntoA_0x7C => 0x7C,
             Self::LdLIntoA_0x7D => 0x7D,
+            Self::LdMemoryHLIntoA_0x7E => 0x7E,
+            Self::LdAIntoA_0x7F => 0x7F,
         }
     }
 }
@@ -532,6 +538,8 @@ impl Opcode {
             Self::LdEIntoA_0x7B => execute_0x7b(cpu, memory),
             Self::LdHIntoA_0x7C => execute_0x7c(cpu, memory),
             Self::LdLIntoA_0x7D => execute_0x7d(cpu, memory),
+            Self::LdMemoryHLIntoA_0x7E => execute_0x7e(cpu, memory),
+            Self::LdAIntoA_0x7F => execute_0x7f(cpu, memory),
         }
     }
 }
@@ -2071,6 +2079,30 @@ fn execute_0x7d(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.af.hi = cpu.hl.lo;
+
+    4
+}
+
+fn execute_0x7e(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let byte = match memory.read(usize::from(cpu.hl.word())) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode load memory pointed by HL into A failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.af.hi = byte;
+
+    8
+}
+
+fn execute_0x7f(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.af.hi = cpu.af.hi;
 
     4
 }
