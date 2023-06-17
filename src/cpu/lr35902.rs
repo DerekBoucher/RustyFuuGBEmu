@@ -11,6 +11,9 @@ use super::bit;
 use super::register;
 use super::register::*;
 
+pub const INTERRUPT_ENABLE_REGISTER_ADDR: usize = 0xFFFF;
+pub const INTERRUPT_FLAG_REGISTER_ADDR: usize = 0xFF0F;
+
 /// Bit mask for the zero flag
 pub const ZERO_FLAG_MASK: u8 = 1 << 7;
 
@@ -32,6 +35,9 @@ impl PartialEq for LR35902 {
             && self.de.word() == other.de.word()
             && self.hl.word() == other.hl.word()
             && self.paused == other.paused
+            && self.interrupt_master_enable == other.interrupt_master_enable
+            && self.halted == other.halted
+            && self.bugged_halt == other.bugged_halt
     }
 }
 
@@ -45,6 +51,9 @@ impl LR35902 {
             sp: 0x0000,
             pc: 0x0000,
             paused: false,
+            interrupt_master_enable: false,
+            halted: false,
+            bugged_halt: false,
         }
     }
 

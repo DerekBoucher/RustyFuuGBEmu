@@ -2,8 +2,8 @@
 #[cfg(test)]
 mod test;
 
-use super::{bit, register, MemoryDriver};
-use crate::cpu::LR35902;
+use super::{bit, register, MemoryDriver, lr35902};
+use crate::{cpu::LR35902};
 
 #[allow(non_camel_case_types)]
 #[repr(u8)]
@@ -120,6 +120,22 @@ pub enum Opcode {
     LdLIntoL_0x6D,
     LdMemoryHLIntoL_0x6E,
     LdAIntoL_0x6F,
+    LdBIntoMemoryHL_0x70,
+    LdCIntoMemoryHL_0x71,
+    LdDIntoMemoryHL_0x72,
+    LdEIntoMemoryHL_0x73,
+    LdHIntoMemoryHL_0x74,
+    LdLIntoMemoryHL_0x75,
+    Halt_0x76,
+    LdAIntoMemoryHL_0x77,
+    LdBIntoA_0x78,
+    LdCIntoA_0x79,
+    LdDIntoA_0x7A,
+    LdEIntoA_0x7B,
+    LdHIntoA_0x7C,
+    LdLIntoA_0x7D,
+    LdMemoryHLIntoA_0x7E,
+    LdAIntoA_0x7F,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -237,6 +253,22 @@ impl std::convert::From<u8> for Opcode {
             0x6D => Self::LdLIntoL_0x6D,
             0x6E => Self::LdMemoryHLIntoL_0x6E,
             0x6F => Self::LdAIntoL_0x6F,
+            0x70 => Self::LdBIntoMemoryHL_0x70,
+            0x71 => Self::LdCIntoMemoryHL_0x71,
+            0x72 => Self::LdDIntoMemoryHL_0x72,
+            0x73 => Self::LdEIntoMemoryHL_0x73,
+            0x74 => Self::LdHIntoMemoryHL_0x74,
+            0x75 => Self::LdLIntoMemoryHL_0x75,
+            0x76 => Self::Halt_0x76,
+            0x77 => Self::LdAIntoMemoryHL_0x77,
+            0x78 => Self::LdBIntoA_0x78,
+            0x79 => Self::LdCIntoA_0x79,
+            0x7A => Self::LdDIntoA_0x7A,
+            0x7B => Self::LdEIntoA_0x7B,
+            0x7C => Self::LdHIntoA_0x7C,
+            0x7D => Self::LdLIntoA_0x7D,
+            0x7E => Self::LdMemoryHLIntoA_0x7E,
+            0x7F => Self::LdAIntoA_0x7F,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -357,6 +389,22 @@ impl std::convert::Into<u8> for Opcode {
             Self::LdLIntoL_0x6D => 0x6D,
             Self::LdMemoryHLIntoL_0x6E => 0x6E,
             Self::LdAIntoL_0x6F => 0x6F,
+            Self::LdBIntoMemoryHL_0x70 => 0x70,
+            Self::LdCIntoMemoryHL_0x71 => 0x71,
+            Self::LdDIntoMemoryHL_0x72 => 0x72,
+            Self::LdEIntoMemoryHL_0x73 => 0x73,
+            Self::LdHIntoMemoryHL_0x74 => 0x74,
+            Self::LdLIntoMemoryHL_0x75 => 0x75,
+            Self::Halt_0x76 => 0x76,
+            Self::LdAIntoMemoryHL_0x77 => 0x77,
+            Self::LdBIntoA_0x78 => 0x78,
+            Self::LdCIntoA_0x79 => 0x79,
+            Self::LdDIntoA_0x7A => 0x7A,
+            Self::LdEIntoA_0x7B => 0x7B,
+            Self::LdHIntoA_0x7C => 0x7C,
+            Self::LdLIntoA_0x7D => 0x7D,
+            Self::LdMemoryHLIntoA_0x7E => 0x7E,
+            Self::LdAIntoA_0x7F => 0x7F,
         }
     }
 }
@@ -476,6 +524,22 @@ impl Opcode {
             Self::LdLIntoL_0x6D => execute_0x6d(cpu, memory),
             Self::LdMemoryHLIntoL_0x6E => execute_0x6e(cpu, memory),
             Self::LdAIntoL_0x6F => execute_0x6f(cpu, memory),
+            Self::LdBIntoMemoryHL_0x70 => execute_0x70(cpu, memory),
+            Self::LdCIntoMemoryHL_0x71 => execute_0x71(cpu, memory),
+            Self::LdDIntoMemoryHL_0x72 => execute_0x72(cpu, memory),
+            Self::LdEIntoMemoryHL_0x73 => execute_0x73(cpu, memory),
+            Self::LdHIntoMemoryHL_0x74 => execute_0x74(cpu, memory),
+            Self::LdLIntoMemoryHL_0x75 => execute_0x75(cpu, memory),
+            Self::Halt_0x76 => execute_0x76(cpu, memory),
+            Self::LdAIntoMemoryHL_0x77 => execute_0x77(cpu, memory),
+            Self::LdBIntoA_0x78 => execute_0x78(cpu, memory),
+            Self::LdCIntoA_0x79 => execute_0x79(cpu, memory),
+            Self::LdDIntoA_0x7A => execute_0x7a(cpu, memory),
+            Self::LdEIntoA_0x7B => execute_0x7b(cpu, memory),
+            Self::LdHIntoA_0x7C => execute_0x7c(cpu, memory),
+            Self::LdLIntoA_0x7D => execute_0x7d(cpu, memory),
+            Self::LdMemoryHLIntoA_0x7E => execute_0x7e(cpu, memory),
+            Self::LdAIntoA_0x7F => execute_0x7f(cpu, memory),
         }
     }
 }
@@ -1889,6 +1953,156 @@ fn execute_0x6f(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.lo = cpu.af.hi;
+
+    4
+}
+
+fn execute_0x70(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    memory.write(usize::from(cpu.hl.word()), cpu.bc.hi);
+
+    8
+}
+
+fn execute_0x71(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    memory.write(usize::from(cpu.hl.word()), cpu.bc.lo);
+
+    8
+}
+
+fn execute_0x72(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    memory.write(usize::from(cpu.hl.word()), cpu.de.hi);
+
+    8
+}
+
+fn execute_0x73(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    memory.write(usize::from(cpu.hl.word()), cpu.de.lo);
+
+    8
+}
+
+fn execute_0x74(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    memory.write(usize::from(cpu.hl.word()), cpu.hl.hi);
+
+    8
+}
+
+fn execute_0x75(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    memory.write(usize::from(cpu.hl.word()), cpu.hl.lo);
+
+    8
+}
+
+fn execute_0x76(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let clock_cycles = 4;
+
+    if cpu.interrupt_master_enable {
+        cpu.halted = true;
+        return clock_cycles
+    }
+
+    let interrupt_enable_register = memory.read(lr35902::INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
+    let interrupt_flag_register = memory.read(lr35902::INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
+
+    if (interrupt_enable_register & interrupt_flag_register & 0x1F) == 0x00 {
+        cpu.halted = true;
+    }
+
+    cpu.bugged_halt = true;
+
+    clock_cycles
+}
+
+fn execute_0x77(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    memory.write(usize::from(cpu.hl.word()), cpu.af.hi);
+
+    8
+}
+
+fn execute_0x78(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.af.hi = cpu.bc.hi;
+
+    4
+}
+
+fn execute_0x79(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.af.hi = cpu.bc.lo;
+
+    4
+}
+
+fn execute_0x7a(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.af.hi = cpu.de.hi;
+
+    4
+}
+
+fn execute_0x7b(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.af.hi = cpu.de.lo;
+
+    4
+}
+
+fn execute_0x7c(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.af.hi = cpu.hl.hi;
+
+    4
+}
+
+fn execute_0x7d(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.af.hi = cpu.hl.lo;
+
+    4
+}
+
+fn execute_0x7e(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let byte = match memory.read(usize::from(cpu.hl.word())) {
+        Some(byte) => byte,
+        None => panic!(
+            "opcode load memory pointed by HL into A failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            cpu,
+        ),
+    };
+
+    cpu.af.hi = byte;
+
+    8
+}
+
+fn execute_0x7f(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.af.hi = cpu.af.hi;
 
     4
 }

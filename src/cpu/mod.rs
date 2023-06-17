@@ -29,6 +29,9 @@ pub struct LR35902 {
     sp: u16,
     pc: u16,
     paused: bool,
+    interrupt_master_enable: bool,
+    halted: bool,
+    bugged_halt: bool,
 }
 
 pub trait MemoryDriver: Debug {
