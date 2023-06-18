@@ -493,3 +493,94 @@ fn decrement_8_bit_register() {
         assert_eq!(cpu, (tc.expected_state)());
     }
 }
+
+#[test]
+fn add_8_bit_registers() {
+    struct TestCase {
+        description: String,
+        initial_state: fn() -> LR35902,
+        expected_state: fn() -> LR35902,
+        src_reg: register::ID,
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            description: String::from("when half carry occurs"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x0F;
+                cpu.bc.hi = 0x01;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x10;
+                cpu.set_half_carry_flag();
+                cpu.bc.hi = 0x01;
+                return cpu;
+            },
+            src_reg: register::ID::B,
+        },
+        TestCase {
+            description: String::from("when carry occurs"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                cpu.bc.hi = 0x02;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x01;
+                cpu.set_carry_flag();
+                cpu.set_half_carry_flag();
+                cpu.bc.hi = 0x02;
+                return cpu;
+            },
+            src_reg: register::ID::B,
+        },
+        TestCase {
+            description: String::from("when carry occurs, resulting in a zero overflow"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                cpu.bc.hi = 0x01;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                cpu.set_carry_flag();
+                cpu.set_half_carry_flag();
+                cpu.set_zero_flag();
+                cpu.bc.hi = 0x01;
+                return cpu;
+            },
+            src_reg: register::ID::B,
+        },
+        TestCase {
+            description: String::from("when sub flag is set -> gets reset"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.set_zero_flag();
+                return cpu;
+            },
+            src_reg: register::ID::B,
+        },
+    ];
+
+    for tc in test_cases {
+        println!("{}", tc.description);
+        let mut initial_state = (tc.initial_state)();
+        let expected_state = (tc.expected_state)();
+
+        initial_state.add_8_bit_registers(register::ID::A, tc.src_reg);
+
+        assert_eq!(initial_state, expected_state)
+    }
+}

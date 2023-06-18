@@ -4314,3 +4314,32 @@ fn _0x7f() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0x80() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::AddBIntoA_0x80.into()]);
+            cpu.af.hi = 0xFF;
+            cpu.bc.hi = 0x01;
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::AddBIntoA_0x80.into()]);
+            cpu.af.hi = 0x00;
+            cpu.bc.hi = 0x01;
+            cpu.pc = 0x0001;
+            cpu.set_carry_flag();
+            cpu.set_half_carry_flag();
+            cpu.set_zero_flag();
+            return (cpu, memory);
+        },
+        expected_cycles: 4,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
