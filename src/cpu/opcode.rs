@@ -139,6 +139,7 @@ pub enum Opcode {
     AddBIntoA_0x80,
     AddCIntoA_0x81,
     AddDIntoA_0x82,
+    AddEIntoA_0x83,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -275,6 +276,7 @@ impl std::convert::From<u8> for Opcode {
             0x80 => Self::AddBIntoA_0x80,
             0x81 => Self::AddCIntoA_0x81,
             0x82 => Self::AddDIntoA_0x82,
+            0x83 => Self::AddEIntoA_0x83,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -414,6 +416,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::AddBIntoA_0x80 => 0x80,
             Self::AddCIntoA_0x81 => 0x81,
             Self::AddDIntoA_0x82 => 0x82,
+            Self::AddEIntoA_0x83 => 0x83,
         }
     }
 }
@@ -552,6 +555,7 @@ impl Opcode {
             Self::AddBIntoA_0x80 => execute_0x80(cpu, memory),
             Self::AddCIntoA_0x81 => execute_0x81(cpu, memory),
             Self::AddDIntoA_0x82 => execute_0x82(cpu, memory),
+            Self::AddEIntoA_0x83 => execute_0x83(cpu, memory),
         }
     }
 }
@@ -2139,6 +2143,14 @@ fn execute_0x82(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_registers(register::ID::A, register::ID::D);
+
+    4
+}
+
+fn execute_0x83(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.add_8_bit_registers(register::ID::A, register::ID::E);
 
     4
 }
