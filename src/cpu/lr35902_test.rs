@@ -2,6 +2,7 @@
 #[cfg(test)]
 mod mock;
 
+use crate::cpu::lr35902::test::mock::Memory;
 use crate::cpu::lr35902::LR35902;
 use crate::cpu::{lr35902, register};
 
@@ -580,6 +581,96 @@ fn add_8_bit_registers() {
         let expected_state = (tc.expected_state)();
 
         initial_state.add_8_bit_registers(register::ID::A, tc.src_reg);
+
+        assert_eq!(initial_state, expected_state)
+    }
+}
+
+#[test]
+fn add_8_bit_memory() {
+    struct TestCase {
+        description: String,
+        initial_state: fn() -> LR35902,
+        expected_state: fn() -> LR35902,
+        memory: Memory,
+        addr: usize,
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            description: String::from("when half carry occurs"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x0F;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x10;
+                cpu.set_half_carry_flag();
+                return cpu;
+            },
+            memory: Memory::new(vec![0x01]),
+            addr: 0x0000,
+        },
+        TestCase {
+            description: String::from("when carry occurs"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x01;
+                cpu.set_carry_flag();
+                cpu.set_half_carry_flag();
+                return cpu;
+            },
+            memory: Memory::new(vec![0x02]),
+            addr: 0x0000,
+        },
+        TestCase {
+            description: String::from("when carry occurs and results in a 0 value"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                cpu.set_carry_flag();
+                cpu.set_zero_flag();
+                cpu.set_half_carry_flag();
+                return cpu;
+            },
+            memory: Memory::new(vec![0x01]),
+            addr: 0x0000,
+        },
+        TestCase {
+            description: String::from("when sub flag is set -> gets reset"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x01;
+                return cpu;
+            },
+            memory: Memory::new(vec![0x01]),
+            addr: 0x0000,
+        },
+    ];
+
+    for tc in test_cases {
+        println!("{}", tc.description);
+        let mut initial_state = (tc.initial_state)();
+        let expected_state = (tc.expected_state)();
+
+        initial_state.add_8_bit_memory(register::ID::A, &tc.memory, tc.addr);
 
         assert_eq!(initial_state, expected_state)
     }

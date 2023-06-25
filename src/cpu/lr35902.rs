@@ -288,12 +288,50 @@ impl LR35902 {
 
         match target {
             ID::A => self.af.hi = new_target_value,
-            ID::B => self.bc.hi = new_target_value,
-            ID::C => self.bc.lo = new_target_value,
-            ID::D => self.de.hi = new_target_value,
-            ID::E => self.de.lo = new_target_value,
-            ID::H => self.hl.hi = new_target_value,
-            ID::L => self.hl.lo = new_target_value,
+            _ => panic!("invalid 8 bit add operation: targetID {:?}", target),
+        };
+    }
+
+    pub fn add_8_bit_memory(
+        &mut self,
+        target: register::ID,
+        memory: &impl MemoryDriver,
+        addr: usize,
+    ) {
+        let target_value = match target {
+            ID::A => self.af.hi,
+            _ => panic!("invalid 8 bit add operation: targetID {:?}", target),
+        };
+
+        let byte = match memory.read(addr) {
+            Some(byte) => byte,
+            None => panic!("invalid memory address read in add_8_bit_memory (addr: {}), dumping cpu state...\n{:?}", addr, self),
+        };
+
+        if bit::is_half_carry(target_value, byte, false) {
+            self.set_half_carry_flag();
+        } else {
+            self.reset_half_carry_flag();
+        }
+
+        if target_value > (0xFF - byte) {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        let new_target_value = target_value.wrapping_add(byte);
+
+        if new_target_value == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.reset_sub_flag();
+
+        match target {
+            ID::A => self.af.hi = new_target_value,
             _ => panic!("invalid 8 bit add operation: targetID {:?}", target),
         };
     }
