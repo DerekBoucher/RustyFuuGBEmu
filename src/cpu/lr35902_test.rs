@@ -502,6 +502,7 @@ fn add_8_bit_registers() {
         initial_state: fn() -> LR35902,
         expected_state: fn() -> LR35902,
         src_reg: register::ID,
+        with_carry_flag: bool,
     }
 
     let test_cases: Vec<TestCase> = vec![
@@ -521,6 +522,7 @@ fn add_8_bit_registers() {
                 return cpu;
             },
             src_reg: register::ID::B,
+            with_carry_flag: false,
         },
         TestCase {
             description: String::from("when carry occurs"),
@@ -539,6 +541,7 @@ fn add_8_bit_registers() {
                 return cpu;
             },
             src_reg: register::ID::B,
+            with_carry_flag: false,
         },
         TestCase {
             description: String::from("when carry occurs, resulting in a zero overflow"),
@@ -558,6 +561,7 @@ fn add_8_bit_registers() {
                 return cpu;
             },
             src_reg: register::ID::B,
+            with_carry_flag: false,
         },
         TestCase {
             description: String::from("when sub flag is set -> gets reset"),
@@ -572,6 +576,28 @@ fn add_8_bit_registers() {
                 return cpu;
             },
             src_reg: register::ID::B,
+            with_carry_flag: false,
+        },
+        TestCase {
+            description: String::from("with carry flag, causes a carry"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.set_carry_flag();
+                cpu.bc.hi = 0xFE;
+                cpu.af.hi = 0x01;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.bc.hi = 0xFE;
+                cpu.af.hi = 0x00;
+                cpu.set_zero_flag();
+                cpu.set_half_carry_flag();
+                cpu.set_carry_flag();
+                return cpu;
+            },
+            src_reg: register::ID::B,
+            with_carry_flag: true,
         },
     ];
 
@@ -580,7 +606,7 @@ fn add_8_bit_registers() {
         let mut initial_state = (tc.initial_state)();
         let expected_state = (tc.expected_state)();
 
-        initial_state.add_8_bit_registers(register::ID::A, tc.src_reg);
+        initial_state.add_8_bit_registers(register::ID::A, tc.src_reg, tc.with_carry_flag);
 
         assert_eq!(initial_state, expected_state)
     }

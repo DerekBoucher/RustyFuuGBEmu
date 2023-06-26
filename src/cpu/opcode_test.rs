@@ -4543,3 +4543,53 @@ fn _0x87() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0x88() {
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            initial_state: || -> (LR35902, Memory) {
+                let mut cpu = LR35902::new();
+                let memory = mock::Memory::new(vec![Opcode::AddBIntoAWithCarry_0x88.into()]);
+                cpu.af.hi = 0xF0;
+                cpu.bc.hi = 0x0F;
+                cpu.set_carry_flag();
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, Memory) {
+                let mut cpu = LR35902::new();
+                let memory = mock::Memory::new(vec![Opcode::AddBIntoAWithCarry_0x88.into()]);
+                cpu.af.hi = 0x00;
+                cpu.bc.hi = 0x0F;
+                cpu.pc = 0x0001;
+                cpu.set_carry_flag();
+                cpu.set_zero_flag();
+                cpu.set_half_carry_flag();
+                return (cpu, memory);
+            },
+            expected_cycles: 4,
+        },
+        TestCase {
+            initial_state: || -> (LR35902, Memory) {
+                let mut cpu = LR35902::new();
+                let memory = mock::Memory::new(vec![Opcode::AddBIntoAWithCarry_0x88.into()]);
+                cpu.af.hi = 0xF0;
+                cpu.bc.hi = 0x0F;
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, Memory) {
+                let mut cpu = LR35902::new();
+                let memory = mock::Memory::new(vec![Opcode::AddBIntoAWithCarry_0x88.into()]);
+                cpu.af.hi = 0xFF;
+                cpu.bc.hi = 0x0F;
+                cpu.pc = 0x0001;
+                return (cpu, memory);
+            },
+            expected_cycles: 4,
+        },
+    ];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}

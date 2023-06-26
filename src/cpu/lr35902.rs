@@ -247,10 +247,20 @@ impl LR35902 {
         }
     }
 
-    pub fn add_8_bit_registers(&mut self, target: register::ID, src: register::ID) {
+    pub fn add_8_bit_registers(
+        &mut self,
+        target: register::ID,
+        src: register::ID,
+        with_carry_flag: bool,
+    ) {
         let target_value = match target {
             ID::A => self.af.hi,
             _ => panic!("invalid 8 bit add operation: targetID {:?}", target),
+        };
+
+        let carry: u8 = match self.test_carry_flag() && with_carry_flag {
+            true => 0x01,
+            false => 0x00,
         };
 
         let src_value = match src {
@@ -264,19 +274,19 @@ impl LR35902 {
             _ => panic!("invalid 8 bit add operation: srcID {:?}", src),
         };
 
-        if bit::is_half_carry(target_value, src_value, false) {
+        if bit::is_half_carry(target_value, src_value, carry > 0x00) {
             self.set_half_carry_flag();
         } else {
             self.reset_half_carry_flag();
         }
 
-        if target_value > (0xFF - src_value) {
+        if bit::is_carry(target_value, src_value, carry > 0x00) {
             self.set_carry_flag();
         } else {
             self.reset_carry_flag();
         }
 
-        let new_target_value = target_value.wrapping_add(src_value);
+        let new_target_value = target_value.wrapping_add(src_value).wrapping_add(carry);
 
         if new_target_value == 0x00 {
             self.set_zero_flag();
