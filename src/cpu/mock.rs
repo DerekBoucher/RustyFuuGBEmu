@@ -1,4 +1,4 @@
-use crate::cpu::MemoryDriver;
+use crate::cpu::IMemory;
 
 #[derive(Debug)]
 pub struct Memory {
@@ -17,7 +17,7 @@ impl PartialEq for Memory {
     }
 }
 
-impl MemoryDriver for Memory {
+impl IMemory for Memory {
     fn read(&self, addr: usize) -> Option<u8> {
         Some(self.memory[addr].clone())
     }

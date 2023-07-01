@@ -620,6 +620,7 @@ fn add_8_bit_memory() {
         expected_state: fn() -> LR35902,
         memory: Memory,
         addr: usize,
+        with_carry_flag: bool,
     }
 
     let test_cases: Vec<TestCase> = vec![
@@ -638,6 +639,7 @@ fn add_8_bit_memory() {
             },
             memory: Memory::new(vec![0x01]),
             addr: 0x0000,
+            with_carry_flag: false,
         },
         TestCase {
             description: String::from("when carry occurs"),
@@ -655,6 +657,7 @@ fn add_8_bit_memory() {
             },
             memory: Memory::new(vec![0x02]),
             addr: 0x0000,
+            with_carry_flag: false,
         },
         TestCase {
             description: String::from("when carry occurs and results in a 0 value"),
@@ -673,6 +676,7 @@ fn add_8_bit_memory() {
             },
             memory: Memory::new(vec![0x01]),
             addr: 0x0000,
+            with_carry_flag: false,
         },
         TestCase {
             description: String::from("when sub flag is set -> gets reset"),
@@ -688,6 +692,45 @@ fn add_8_bit_memory() {
             },
             memory: Memory::new(vec![0x01]),
             addr: 0x0000,
+            with_carry_flag: false,
+        },
+        TestCase {
+            description: String::from("with carry flag, causes a carry"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.set_carry_flag();
+                cpu.af.hi = 0xFF;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                cpu.set_zero_flag();
+                cpu.set_half_carry_flag();
+                cpu.set_carry_flag();
+                return cpu;
+            },
+            memory: Memory::new(vec![0x00]),
+            addr: 0x0000,
+            with_carry_flag: true,
+        },
+        TestCase {
+            description: String::from(
+                "with carry flag, but carry flag is 0, should not result in a carry",
+            ),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                return cpu;
+            },
+            memory: Memory::new(vec![0x00]),
+            addr: 0x0000,
+            with_carry_flag: true,
         },
     ];
 
@@ -696,7 +739,7 @@ fn add_8_bit_memory() {
         let mut initial_state = (tc.initial_state)();
         let expected_state = (tc.expected_state)();
 
-        initial_state.add_8_bit_memory(register::ID::A, &tc.memory, tc.addr);
+        initial_state.add_8_bit_memory(register::ID::A, &tc.memory, tc.addr, tc.with_carry_flag);
 
         assert_eq!(initial_state, expected_state)
     }
