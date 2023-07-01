@@ -145,6 +145,11 @@ pub enum Opcode {
     AddMemoryHLIntoA_0x86,
     AddAIntoA_0x87,
     AddBIntoAWithCarry_0x88,
+    AddCIntoAWithCarry_0x89,
+    AddDIntoAWithCarry_0x8A,
+    AddEIntoAWithCarry_0x8B,
+    AddHIntoAWithCarry_0x8C,
+    AddLIntoAWithCarry_0x8D,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -287,6 +292,11 @@ impl std::convert::From<u8> for Opcode {
             0x86 => Self::AddMemoryHLIntoA_0x86,
             0x87 => Self::AddAIntoA_0x87,
             0x88 => Self::AddBIntoAWithCarry_0x88,
+            0x89 => Self::AddCIntoAWithCarry_0x89,
+            0x8A => Self::AddDIntoAWithCarry_0x8A,
+            0x8B => Self::AddEIntoAWithCarry_0x8B,
+            0x8C => Self::AddHIntoAWithCarry_0x8C,
+            0x8D => Self::AddLIntoAWithCarry_0x8D,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -432,6 +442,11 @@ impl std::convert::Into<u8> for Opcode {
             Self::AddMemoryHLIntoA_0x86 => 0x86,
             Self::AddAIntoA_0x87 => 0x87,
             Self::AddBIntoAWithCarry_0x88 => 0x88,
+            Self::AddCIntoAWithCarry_0x89 => 0x89,
+            Self::AddDIntoAWithCarry_0x8A => 0x8A,
+            Self::AddEIntoAWithCarry_0x8B => 0x8B,
+            Self::AddHIntoAWithCarry_0x8C => 0x8C,
+            Self::AddLIntoAWithCarry_0x8D => 0x8D,
         }
     }
 }
@@ -576,6 +591,11 @@ impl Opcode {
             Self::AddMemoryHLIntoA_0x86 => execute_0x86(cpu, memory),
             Self::AddAIntoA_0x87 => execute_0x87(cpu, memory),
             Self::AddBIntoAWithCarry_0x88 => execute_0x88(cpu, memory),
+            Self::AddCIntoAWithCarry_0x89 => execute_0x89(cpu, memory),
+            Self::AddDIntoAWithCarry_0x8A => execute_0x8a(cpu, memory),
+            Self::AddEIntoAWithCarry_0x8B => execute_0x8b(cpu, memory),
+            Self::AddHIntoAWithCarry_0x8C => execute_0x8c(cpu, memory),
+            Self::AddLIntoAWithCarry_0x8D => execute_0x8d(cpu, memory),
         }
     }
 }
@@ -2211,6 +2231,46 @@ fn execute_0x88(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_registers(register::ID::A, register::ID::B, true);
+
+    4
+}
+
+fn execute_0x89(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.add_8_bit_registers(register::ID::A, register::ID::C, true);
+
+    4
+}
+
+fn execute_0x8a(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.add_8_bit_registers(register::ID::A, register::ID::D, true);
+
+    4
+}
+
+fn execute_0x8b(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.add_8_bit_registers(register::ID::A, register::ID::E, true);
+
+    4
+}
+
+fn execute_0x8c(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.add_8_bit_registers(register::ID::A, register::ID::H, true);
+
+    4
+}
+
+fn execute_0x8d(cpu: &mut LR35902, memory: &mut impl MemoryDriver) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.add_8_bit_registers(register::ID::A, register::ID::L, true);
 
     4
 }
