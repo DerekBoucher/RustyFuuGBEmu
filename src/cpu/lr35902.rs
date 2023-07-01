@@ -3,7 +3,7 @@
 mod test;
 
 use crate::cpu::opcode::*;
-use crate::cpu::MemoryDriver;
+use crate::cpu::IMemory;
 use crate::cpu::Register;
 use crate::cpu::LR35902;
 
@@ -57,7 +57,7 @@ impl LR35902 {
         }
     }
 
-    pub fn execute_next_opcode(&mut self, memory: &mut impl MemoryDriver) -> u32 {
+    pub fn execute_next_opcode(&mut self, memory: &mut impl IMemory) -> u32 {
         let op = match memory.read(usize::from(self.pc)) {
             Some(x) => Opcode::from(x),
             None => panic!(
@@ -245,5 +245,110 @@ impl LR35902 {
             ID16::SP => self.sp = new_word,
             _ => panic!("invalid 16 bit add operation: targetID {:?}", target),
         }
+    }
+
+    pub fn add_8_bit_registers(
+        &mut self,
+        target: register::ID,
+        src: register::ID,
+        with_carry_flag: bool,
+    ) {
+        let target_value = match target {
+            ID::A => self.af.hi,
+            _ => panic!("invalid 8 bit add operation: targetID {:?}", target),
+        };
+
+        let carry: u8 = match self.test_carry_flag() && with_carry_flag {
+            true => 0x01,
+            false => 0x00,
+        };
+
+        let src_value = match src {
+            ID::A => self.af.hi,
+            ID::B => self.bc.hi,
+            ID::C => self.bc.lo,
+            ID::D => self.de.hi,
+            ID::E => self.de.lo,
+            ID::H => self.hl.hi,
+            ID::L => self.hl.lo,
+            _ => panic!("invalid 8 bit add operation: srcID {:?}", src),
+        };
+
+        if bit::is_half_carry(target_value, src_value, carry > 0x00) {
+            self.set_half_carry_flag();
+        } else {
+            self.reset_half_carry_flag();
+        }
+
+        if bit::is_carry(target_value, src_value, carry > 0x00) {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        let new_target_value = target_value.wrapping_add(src_value).wrapping_add(carry);
+
+        if new_target_value == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.reset_sub_flag();
+
+        match target {
+            ID::A => self.af.hi = new_target_value,
+            _ => panic!("invalid 8 bit add operation: targetID {:?}", target),
+        };
+    }
+
+    pub fn add_8_bit_memory(
+        &mut self,
+        target: register::ID,
+        memory: &impl IMemory,
+        addr: usize,
+        with_carry_flag: bool,
+    ) {
+        let target_value = match target {
+            ID::A => self.af.hi,
+            _ => panic!("invalid 8 bit add operation: targetID {:?}", target),
+        };
+
+        let carry: u8 = match self.test_carry_flag() && with_carry_flag {
+            true => 0x01,
+            false => 0x00,
+        };
+
+        let byte = match memory.read(addr) {
+            Some(byte) => byte,
+            None => panic!("invalid memory address read in add_8_bit_memory (addr: {}), dumping cpu state...\n{:?}", addr, self),
+        };
+
+        if bit::is_half_carry(target_value, byte, carry > 0x00) {
+            self.set_half_carry_flag();
+        } else {
+            self.reset_half_carry_flag();
+        }
+
+        if bit::is_carry(target_value, byte, carry > 0x00) {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        let new_target_value = target_value.wrapping_add(byte).wrapping_add(carry);
+
+        if new_target_value == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.reset_sub_flag();
+
+        match target {
+            ID::A => self.af.hi = new_target_value,
+            _ => panic!("invalid 8 bit add operation: targetID {:?}", target),
+        };
     }
 }

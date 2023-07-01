@@ -2,7 +2,7 @@
 #[cfg(test)]
 mod test;
 
-use crate::cpu::MemoryDriver;
+use crate::cpu::IMemory;
 use crate::memory::cartridge;
 use crate::memory::Memory;
 
@@ -201,7 +201,7 @@ impl Memory {
     }
 }
 
-impl MemoryDriver for Memory {
+impl IMemory for Memory {
     fn read(&self, addr: usize) -> Option<u8> {
         return self.read(addr);
     }
