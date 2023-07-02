@@ -169,6 +169,7 @@ pub enum Opcode {
     SubEFromAWithCarry_0x9B,
     SubHFromAWithCarry_0x9C,
     SubLFromAWithCarry_0x9D,
+    SubMemoryHLFromAWithCarry_0x9E,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -332,6 +333,7 @@ impl std::convert::From<u8> for Opcode {
             0x9B => Self::SubEFromAWithCarry_0x9B,
             0x9C => Self::SubHFromAWithCarry_0x9C,
             0x9D => Self::SubLFromAWithCarry_0x9D,
+            0x9E => Self::SubMemoryHLFromAWithCarry_0x9E,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -498,6 +500,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::SubEFromAWithCarry_0x9B => 0x9B,
             Self::SubHFromAWithCarry_0x9C => 0x9C,
             Self::SubLFromAWithCarry_0x9D => 0x9D,
+            Self::SubMemoryHLFromAWithCarry_0x9E => 0x9E,
         }
     }
 }
@@ -663,6 +666,7 @@ impl Opcode {
             Self::SubEFromAWithCarry_0x9B => execute_0x9b(cpu, memory),
             Self::SubHFromAWithCarry_0x9C => execute_0x9c(cpu, memory),
             Self::SubLFromAWithCarry_0x9D => execute_0x9d(cpu, memory),
+            Self::SubMemoryHLFromAWithCarry_0x9E => execute_0x9e(cpu, memory),
         }
     }
 }
@@ -2469,4 +2473,12 @@ fn execute_0x9d(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.sub_8_bit_registers(register::ID::A, register::ID::L, true);
 
     4
+}
+
+fn execute_0x9e(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), true);
+
+    8
 }

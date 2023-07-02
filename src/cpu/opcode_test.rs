@@ -5619,3 +5619,60 @@ fn _0x9d() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0x9e() {
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            initial_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                let memory =
+                    mock::Memory::new(vec![Opcode::SubMemoryHLFromAWithCarry_0x9E.into(), 0x01]);
+                cpu.af.hi = 0x00;
+                cpu.hl.lo = 0x01;
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                let memory =
+                    mock::Memory::new(vec![Opcode::SubMemoryHLFromAWithCarry_0x9E.into(), 0x01]);
+                cpu.af.hi = 0xFF;
+                cpu.hl.lo = 0x01;
+                cpu.pc = 0x0001;
+                cpu.set_sub_flag();
+                cpu.set_carry_flag();
+                cpu.set_half_carry_flag();
+                return (cpu, memory);
+            },
+            expected_cycles: 8,
+        },
+        TestCase {
+            initial_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                let memory =
+                    mock::Memory::new(vec![Opcode::SubMemoryHLFromAWithCarry_0x9E.into(), 0x00]);
+                cpu.af.hi = 0x00;
+                cpu.hl.lo = 0x01;
+                cpu.set_carry_flag();
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                let memory =
+                    mock::Memory::new(vec![Opcode::SubMemoryHLFromAWithCarry_0x9E.into(), 0x00]);
+                cpu.af.hi = 0xFF;
+                cpu.hl.lo = 0x01;
+                cpu.pc = 0x0001;
+                cpu.set_sub_flag();
+                cpu.set_carry_flag();
+                cpu.set_half_carry_flag();
+                return (cpu, memory);
+            },
+            expected_cycles: 8,
+        },
+    ];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
