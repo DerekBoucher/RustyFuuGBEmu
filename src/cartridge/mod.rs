@@ -1,6 +1,16 @@
-use crate::memory::mbc1::MBC1;
-use crate::memory::no_mbc::NoMBC;
-use crate::memory::Cartridge;
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
+mod mbc1;
+mod no_mbc;
+
+pub mod mock;
+
+use crate::cartridge::mbc1::MBC1;
+use crate::cartridge::no_mbc::NoMBC;
+
+use std::any::Any;
+use std::fmt::Debug;
 
 /// Module containing important addresses in the cartridge
 /// header.
@@ -38,7 +48,7 @@ pub mod rom_size_id {
     }
 }
 
-pub mod ram_size_id {
+mod ram_size_id {
     pub const NO_RAM: u8 = 0x00;
     pub const ONE_BANK: u8 = 0x02;
     pub const FOUR_BANKS: u8 = 0x03;
@@ -46,16 +56,26 @@ pub mod ram_size_id {
     pub const OCTA_BANKS: u8 = 0x05;
 }
 
-pub mod mbc_id {
+mod mbc_id {
     pub const ROM_ONLY: u8 = 0x00;
     pub const MBC1: u8 = 0x01;
     pub const MBC1_RAM: u8 = 0x02;
     pub const MBC1_RAM_BATTERY: u8 = 0x03;
 }
 
+/// Cartridge trait which serves as an interface to the various
+/// types of memory bank controllers that Gameboy cartridges
+/// can contain.
+pub trait Interface: Any + Debug {
+    fn as_any(&self) -> &dyn Any;
+    fn read(&self, addr: usize) -> Option<u8>;
+    fn write(&mut self, addr: usize, val: u8);
+}
+
 /// Cartridge constructor which returns the appropriate
-/// cartridge implementor at runtime.
-pub fn new(data: Vec<u8>) -> Box<dyn Cartridge> {
+/// cartridge implementation at runtime, depending on the value of the
+/// ROM at memory location 0x147.
+pub fn new(data: Vec<u8>) -> Box<dyn Interface> {
     match data[header::TYPE_ADDR] {
         mbc_id::ROM_ONLY => return NoMBC::new(data),
         mbc_id::MBC1 | mbc_id::MBC1_RAM | mbc_id::MBC1_RAM_BATTERY => return MBC1::new(data),

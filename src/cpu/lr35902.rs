@@ -2,14 +2,13 @@
 #[cfg(test)]
 mod test;
 
+use crate::cpu::bit;
 use crate::cpu::opcode::*;
-use crate::cpu::IMemory;
+use crate::cpu::register;
+use crate::cpu::register::*;
 use crate::cpu::Register;
 use crate::cpu::LR35902;
-
-use super::bit;
-use super::register;
-use super::register::*;
+use crate::memory;
 
 pub const INTERRUPT_ENABLE_REGISTER_ADDR: usize = 0xFFFF;
 pub const INTERRUPT_FLAG_REGISTER_ADDR: usize = 0xFF0F;
@@ -57,7 +56,7 @@ impl LR35902 {
         }
     }
 
-    pub fn execute_next_opcode(&mut self, memory: &mut impl IMemory) -> u32 {
+    pub fn execute_next_opcode(&mut self, memory: &mut impl memory::Interface) -> u32 {
         let op = match memory.read(usize::from(self.pc)) {
             Some(x) => Opcode::from(x),
             None => panic!(
@@ -305,7 +304,7 @@ impl LR35902 {
     pub fn add_8_bit_memory(
         &mut self,
         target: register::ID,
-        memory: &impl IMemory,
+        memory: &impl memory::Interface,
         addr: usize,
         with_carry_flag: bool,
     ) {

@@ -1,6 +1,6 @@
-use crate::memory::cartridge;
-use crate::memory::no_mbc::NoMBC;
-use crate::memory::Cartridge;
+use crate::cartridge;
+use crate::cartridge::Interface;
+use crate::cartridge::NoMBC;
 
 #[test]
 fn new() {

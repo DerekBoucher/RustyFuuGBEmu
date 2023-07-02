@@ -1,10 +1,7 @@
-#[path = "mock.rs"]
-#[cfg(test)]
-mod mock;
-
-use crate::cpu::lr35902::test::mock::Memory;
+use crate::cpu::lr35902;
 use crate::cpu::lr35902::LR35902;
-use crate::cpu::{lr35902, register};
+use crate::cpu::register;
+use crate::memory::mock;
 
 #[test]
 fn reset_half_carry_flag() {
@@ -618,7 +615,7 @@ fn add_8_bit_memory() {
         description: String,
         initial_state: fn() -> LR35902,
         expected_state: fn() -> LR35902,
-        memory: Memory,
+        memory: mock::Memory,
         addr: usize,
         with_carry_flag: bool,
     }
@@ -637,7 +634,7 @@ fn add_8_bit_memory() {
                 cpu.set_half_carry_flag();
                 return cpu;
             },
-            memory: Memory::new(vec![0x01]),
+            memory: mock::Memory::new(vec![0x01]),
             addr: 0x0000,
             with_carry_flag: false,
         },
@@ -655,7 +652,7 @@ fn add_8_bit_memory() {
                 cpu.set_half_carry_flag();
                 return cpu;
             },
-            memory: Memory::new(vec![0x02]),
+            memory: mock::Memory::new(vec![0x02]),
             addr: 0x0000,
             with_carry_flag: false,
         },
@@ -674,7 +671,7 @@ fn add_8_bit_memory() {
                 cpu.set_half_carry_flag();
                 return cpu;
             },
-            memory: Memory::new(vec![0x01]),
+            memory: mock::Memory::new(vec![0x01]),
             addr: 0x0000,
             with_carry_flag: false,
         },
@@ -690,7 +687,7 @@ fn add_8_bit_memory() {
                 cpu.af.hi = 0x01;
                 return cpu;
             },
-            memory: Memory::new(vec![0x01]),
+            memory: mock::Memory::new(vec![0x01]),
             addr: 0x0000,
             with_carry_flag: false,
         },
@@ -710,7 +707,7 @@ fn add_8_bit_memory() {
                 cpu.set_carry_flag();
                 return cpu;
             },
-            memory: Memory::new(vec![0x00]),
+            memory: mock::Memory::new(vec![0x00]),
             addr: 0x0000,
             with_carry_flag: true,
         },
@@ -728,7 +725,7 @@ fn add_8_bit_memory() {
                 cpu.af.hi = 0xFF;
                 return cpu;
             },
-            memory: Memory::new(vec![0x00]),
+            memory: mock::Memory::new(vec![0x00]),
             addr: 0x0000,
             with_carry_flag: true,
         },
