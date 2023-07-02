@@ -163,6 +163,12 @@ pub enum Opcode {
     SubLFromA_0x95,
     SubMemoryHLFromA_0x96,
     SubAFromA_0x97,
+    SubBFromAWithCarry_0x98,
+    SubCFromAWithCarry_0x99,
+    SubDFromAWithCarry_0x9A,
+    SubEFromAWithCarry_0x9B,
+    SubHFromAWithCarry_0x9C,
+    SubLFromAWithCarry_0x9D,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -320,6 +326,12 @@ impl std::convert::From<u8> for Opcode {
             0x95 => Self::SubLFromA_0x95,
             0x96 => Self::SubMemoryHLFromA_0x96,
             0x97 => Self::SubAFromA_0x97,
+            0x98 => Self::SubBFromAWithCarry_0x98,
+            0x99 => Self::SubCFromAWithCarry_0x99,
+            0x9A => Self::SubDFromAWithCarry_0x9A,
+            0x9B => Self::SubEFromAWithCarry_0x9B,
+            0x9C => Self::SubHFromAWithCarry_0x9C,
+            0x9D => Self::SubLFromAWithCarry_0x9D,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -480,6 +492,12 @@ impl std::convert::Into<u8> for Opcode {
             Self::SubLFromA_0x95 => 0x95,
             Self::SubMemoryHLFromA_0x96 => 0x96,
             Self::SubAFromA_0x97 => 0x97,
+            Self::SubBFromAWithCarry_0x98 => 0x98,
+            Self::SubCFromAWithCarry_0x99 => 0x99,
+            Self::SubDFromAWithCarry_0x9A => 0x9A,
+            Self::SubEFromAWithCarry_0x9B => 0x9B,
+            Self::SubHFromAWithCarry_0x9C => 0x9C,
+            Self::SubLFromAWithCarry_0x9D => 0x9D,
         }
     }
 }
@@ -639,6 +657,12 @@ impl Opcode {
             Self::SubLFromA_0x95 => execute_0x95(cpu, memory),
             Self::SubMemoryHLFromA_0x96 => execute_0x96(cpu, memory),
             Self::SubAFromA_0x97 => execute_0x97(cpu, memory),
+            Self::SubBFromAWithCarry_0x98 => execute_0x98(cpu, memory),
+            Self::SubCFromAWithCarry_0x99 => execute_0x99(cpu, memory),
+            Self::SubDFromAWithCarry_0x9A => execute_0x9a(cpu, memory),
+            Self::SubEFromAWithCarry_0x9B => execute_0x9b(cpu, memory),
+            Self::SubHFromAWithCarry_0x9C => execute_0x9c(cpu, memory),
+            Self::SubLFromAWithCarry_0x9D => execute_0x9d(cpu, memory),
         }
     }
 }
@@ -2395,6 +2419,54 @@ fn execute_0x97(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.sub_8_bit_registers(register::ID::A, register::ID::A, false);
+
+    4
+}
+
+fn execute_0x98(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::B, true);
+
+    4
+}
+
+fn execute_0x99(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::C, true);
+
+    4
+}
+
+fn execute_0x9a(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::D, true);
+
+    4
+}
+
+fn execute_0x9b(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::E, true);
+
+    4
+}
+
+fn execute_0x9c(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::H, true);
+
+    4
+}
+
+fn execute_0x9d(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::L, true);
 
     4
 }
