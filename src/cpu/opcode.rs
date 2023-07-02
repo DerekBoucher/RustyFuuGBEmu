@@ -161,6 +161,7 @@ pub enum Opcode {
     SubEFromA_0x93,
     SubHFromA_0x94,
     SubLFromA_0x95,
+    SubMemoryHLFromA_0x96,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -316,6 +317,7 @@ impl std::convert::From<u8> for Opcode {
             0x93 => Self::SubEFromA_0x93,
             0x94 => Self::SubHFromA_0x94,
             0x95 => Self::SubLFromA_0x95,
+            0x96 => Self::SubMemoryHLFromA_0x96,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -474,6 +476,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::SubEFromA_0x93 => 0x93,
             Self::SubHFromA_0x94 => 0x94,
             Self::SubLFromA_0x95 => 0x95,
+            Self::SubMemoryHLFromA_0x96 => 0x96,
         }
     }
 }
@@ -631,6 +634,7 @@ impl Opcode {
             Self::SubEFromA_0x93 => execute_0x93(cpu, memory),
             Self::SubHFromA_0x94 => execute_0x94(cpu, memory),
             Self::SubLFromA_0x95 => execute_0x95(cpu, memory),
+            Self::SubMemoryHLFromA_0x96 => execute_0x96(cpu, memory),
         }
     }
 }
@@ -2374,3 +2378,12 @@ fn execute_0x95(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
     4
 }
+
+fn execute_0x96(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), false);
+
+    8
+}
+

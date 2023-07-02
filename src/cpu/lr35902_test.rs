@@ -842,3 +842,122 @@ fn sub_8_bit_registers() {
         assert_eq!(initial_state, expected_state)
     }
 }
+
+#[test]
+fn sub_8_bit_memory() {
+    struct TestCase {
+        description: String,
+        initial_state: fn() -> LR35902,
+        expected_state: fn() -> LR35902,
+        memory: mock::Memory,
+        addr: usize,
+        with_carry_flag: bool,
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            description: String::from("when half borrow occurs"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x10;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x01;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            memory: mock::Memory::new(vec![0x0F]),
+            addr: 0x0000,
+            with_carry_flag: false,
+        },
+        TestCase {
+            description: String::from("when borrow occurs"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xF0;
+                cpu.set_carry_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            memory: mock::Memory::new(vec![0x10]),
+            addr: 0x0000,
+            with_carry_flag: false,
+        },
+        TestCase {
+            description: String::from("when results in a zero value"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x10;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                cpu.set_zero_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            memory: mock::Memory::new(vec![0x10]),
+            addr: 0x0000,
+            with_carry_flag: false,
+        },
+        TestCase {
+            description: String::from("with carry flag, causes a borrow"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.set_carry_flag();
+                cpu.af.hi = 0x00;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                cpu.set_half_carry_flag();
+                cpu.set_carry_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            memory: mock::Memory::new(vec![0x00]),
+            addr: 0x0000,
+            with_carry_flag: true,
+        },
+        TestCase {
+            description: String::from(
+                "with carry flag, but carry flag is 0, should not result in a carry",
+            ),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                cpu.set_sub_flag();
+                cpu.set_zero_flag();
+                return cpu;
+            },
+            memory: mock::Memory::new(vec![0x00]),
+            addr: 0x0000,
+            with_carry_flag: true,
+        },
+    ];
+
+    for tc in test_cases {
+        println!("{}", tc.description);
+        let mut initial_state = (tc.initial_state)();
+        let expected_state = (tc.expected_state)();
+
+        initial_state.sub_8_bit_memory(register::ID::A, &tc.memory, tc.addr, tc.with_carry_flag);
+
+        assert_eq!(initial_state, expected_state)
+    }
+}
