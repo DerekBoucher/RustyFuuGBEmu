@@ -351,4 +351,59 @@ impl LR35902 {
             _ => panic!("invalid 8 bit add operation: targetID {:?}", target),
         };
     }
+
+    pub fn sub_8_bit_registers(
+        &mut self,
+        target: register::ID,
+        src: register::ID,
+        with_carry_flag: bool,
+    ) {
+        let target_value = match target {
+            ID::A => self.af.hi,
+            _ => panic!("invalid 8 bit sub operation: targetID {:?}", target),
+        };
+
+        let carry: u8 = match self.test_carry_flag() && with_carry_flag {
+            true => 0x01,
+            false => 0x00,
+        };
+
+        let src_value = match src {
+            ID::A => self.af.hi,
+            ID::B => self.bc.hi,
+            ID::C => self.bc.lo,
+            ID::D => self.de.hi,
+            ID::E => self.de.lo,
+            ID::H => self.hl.hi,
+            ID::L => self.hl.lo,
+            _ => panic!("invalid 8 bit sub operation: srcID {:?}", src),
+        };
+
+        if bit::is_half_borrow(target_value, src_value, carry > 0x00) {
+            self.set_half_carry_flag();
+        } else {
+            self.reset_half_carry_flag();
+        }
+
+        if bit::is_borrow(target_value, src_value, carry > 0x00) {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        let new_target_value = target_value.wrapping_sub(src_value).wrapping_sub(carry);
+
+        if new_target_value == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.set_sub_flag();
+
+        match target {
+            ID::A => self.af.hi = new_target_value,
+            _ => panic!("invalid 8 bit sub operation: targetID {:?}", target),
+        };
+    }
 }
