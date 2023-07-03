@@ -172,6 +172,11 @@ pub enum Opcode {
     SubMemoryHLFromAWithCarry_0x9E,
     SubAFromAWithCarry_0x9F,
     AndBIntoA_0xA0,
+    AndCIntoA_0xA1,
+    AndDIntoA_0xA2,
+    AndEIntoA_0xA3,
+    AndHIntoA_0xA4,
+    AndLIntoA_0xA5,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -338,6 +343,11 @@ impl std::convert::From<u8> for Opcode {
             0x9E => Self::SubMemoryHLFromAWithCarry_0x9E,
             0x9F => Self::SubAFromAWithCarry_0x9F,
             0xA0 => Self::AndBIntoA_0xA0,
+            0xA1 => Self::AndCIntoA_0xA1,
+            0xA2 => Self::AndDIntoA_0xA2,
+            0xA3 => Self::AndEIntoA_0xA3,
+            0xA4 => Self::AndHIntoA_0xA4,
+            0xA5 => Self::AndLIntoA_0xA5,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -507,6 +517,11 @@ impl std::convert::Into<u8> for Opcode {
             Self::SubMemoryHLFromAWithCarry_0x9E => 0x9E,
             Self::SubAFromAWithCarry_0x9F => 0x9F,
             Self::AndBIntoA_0xA0 => 0xA0,
+            Self::AndCIntoA_0xA1 => 0xA1,
+            Self::AndDIntoA_0xA2 => 0xA2,
+            Self::AndEIntoA_0xA3 => 0xA3,
+            Self::AndHIntoA_0xA4 => 0xA4,
+            Self::AndLIntoA_0xA5 => 0xA5,
         }
     }
 }
@@ -675,6 +690,11 @@ impl Opcode {
             Self::SubMemoryHLFromAWithCarry_0x9E => execute_0x9e(cpu, memory),
             Self::SubAFromAWithCarry_0x9F => execute_0x9f(cpu, memory),
             Self::AndBIntoA_0xA0 => execute_0xa0(cpu, memory),
+            Self::AndCIntoA_0xA1 => execute_0xa1(cpu, memory),
+            Self::AndDIntoA_0xA2 => execute_0xa2(cpu, memory),
+            Self::AndEIntoA_0xA3 => execute_0xa3(cpu, memory),
+            Self::AndHIntoA_0xA4 => execute_0xa4(cpu, memory),
+            Self::AndLIntoA_0xA5 => execute_0xa5(cpu, memory),
         }
     }
 }
@@ -2503,6 +2523,46 @@ fn execute_0xa0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.and_8_bit_registers(register::ID::A, register::ID::B);
+
+    4
+}
+
+fn execute_0xa1(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.and_8_bit_registers(register::ID::A, register::ID::C);
+
+    4
+}
+
+fn execute_0xa2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.and_8_bit_registers(register::ID::A, register::ID::D);
+
+    4
+}
+
+fn execute_0xa3(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.and_8_bit_registers(register::ID::A, register::ID::E);
+
+    4
+}
+
+fn execute_0xa4(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.and_8_bit_registers(register::ID::A, register::ID::H);
+
+    4
+}
+
+fn execute_0xa5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.and_8_bit_registers(register::ID::A, register::ID::L);
 
     4
 }

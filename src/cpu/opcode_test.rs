@@ -5751,3 +5751,138 @@ fn _0xa0() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0xa1() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::AndCIntoA_0xA1.into()]);
+            cpu.af.hi = 0xFF;
+            cpu.bc.lo = 0xF0;
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::AndCIntoA_0xA1.into()]);
+            cpu.af.hi = 0xF0;
+            cpu.bc.lo = 0xF0;
+            cpu.pc = 0x0001;
+            cpu.set_half_carry_flag();
+            return (cpu, memory);
+        },
+        expected_cycles: 4,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
+
+#[test]
+fn _0xa2() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::AndDIntoA_0xA2.into()]);
+            cpu.af.hi = 0xFF;
+            cpu.de.hi = 0xF0;
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::AndDIntoA_0xA2.into()]);
+            cpu.af.hi = 0xF0;
+            cpu.de.hi = 0xF0;
+            cpu.pc = 0x0001;
+            cpu.set_half_carry_flag();
+            return (cpu, memory);
+        },
+        expected_cycles: 4,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
+
+#[test]
+fn _0xa3() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::AndEIntoA_0xA3.into()]);
+            cpu.af.hi = 0xFF;
+            cpu.de.lo = 0xF0;
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::AndEIntoA_0xA3.into()]);
+            cpu.af.hi = 0xF0;
+            cpu.de.lo = 0xF0;
+            cpu.pc = 0x0001;
+            cpu.set_half_carry_flag();
+            return (cpu, memory);
+        },
+        expected_cycles: 4,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
+
+#[test]
+fn _0xa4() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::AndHIntoA_0xA4.into()]);
+            cpu.af.hi = 0xFF;
+            cpu.hl.hi = 0xF0;
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::AndHIntoA_0xA4.into()]);
+            cpu.af.hi = 0xF0;
+            cpu.hl.hi = 0xF0;
+            cpu.pc = 0x0001;
+            cpu.set_half_carry_flag();
+            return (cpu, memory);
+        },
+        expected_cycles: 4,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
+
+#[test]
+fn _0xa5() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::AndLIntoA_0xA5.into()]);
+            cpu.af.hi = 0xFF;
+            cpu.hl.lo = 0xF0;
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::AndLIntoA_0xA5.into()]);
+            cpu.af.hi = 0xF0;
+            cpu.hl.lo = 0xF0;
+            cpu.pc = 0x0001;
+            cpu.set_half_carry_flag();
+            return (cpu, memory);
+        },
+        expected_cycles: 4,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
