@@ -961,3 +961,62 @@ fn sub_8_bit_memory() {
         assert_eq!(initial_state, expected_state)
     }
 }
+
+#[test]
+fn and_8_bit_registers() {
+    struct TestCase<'a> {
+        description: &'a str,
+        initial_state: fn() -> LR35902,
+        expected_state: fn() -> LR35902,
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            description: "ensure that hardcoded flag states are correct",
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xF0;
+                cpu.bc.hi = 0x0F;
+                cpu.set_carry_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                cpu.bc.hi = 0x0F;
+                cpu.set_half_carry_flag();
+                cpu.set_zero_flag();
+                return cpu;
+            },
+        },
+        TestCase {
+            description: "checking the and function works",
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                cpu.bc.hi = 0xF0;
+                cpu.set_carry_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xF0;
+                cpu.bc.hi = 0xF0;
+                cpu.set_half_carry_flag();
+                return cpu;
+            },
+        },
+    ];
+
+    for tc in test_cases {
+        println!("{}", tc.description);
+        let mut initial_state = (tc.initial_state)();
+        let expected_state = (tc.expected_state)();
+
+        initial_state.and_8_bit_registers(register::ID::A, register::ID::B);
+
+        assert_eq!(initial_state, expected_state)
+    }
+}

@@ -5724,3 +5724,30 @@ fn _0x9f() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0xa0() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::AndBIntoA_0xA0.into()]);
+            cpu.af.hi = 0xFF;
+            cpu.bc.hi = 0xF0;
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::AndBIntoA_0xA0.into()]);
+            cpu.af.hi = 0xF0;
+            cpu.bc.hi = 0xF0;
+            cpu.pc = 0x0001;
+            cpu.set_half_carry_flag();
+            return (cpu, memory);
+        },
+        expected_cycles: 4,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
