@@ -2,8 +2,7 @@
 #[cfg(test)]
 mod test;
 
-use crate::memory::cartridge;
-use crate::memory::Cartridge;
+use crate::cartridge;
 use std::any::Any;
 
 /// MBC1 type of cartridge has a memory bank controller
@@ -45,7 +44,7 @@ impl MBC1 {
     }
 }
 
-impl Cartridge for MBC1 {
+impl cartridge::Interface for MBC1 {
     fn as_any(&self) -> &dyn Any {
         self
     }

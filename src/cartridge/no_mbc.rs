@@ -2,7 +2,7 @@
 #[cfg(test)]
 mod test;
 
-use crate::memory::Cartridge;
+use crate::cartridge;
 use std::any::Any;
 
 /// Rom only type of cartridge has no memory bank
@@ -14,7 +14,7 @@ pub struct NoMBC {
 }
 
 /// Cartridge implementation for the Rom Only type.
-impl Cartridge for NoMBC {
+impl cartridge::Interface for NoMBC {
     fn as_any(&self) -> &dyn Any {
         self
     }

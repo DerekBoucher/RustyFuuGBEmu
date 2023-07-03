@@ -1,10 +1,7 @@
-#[path = "mock.rs"]
-#[cfg(test)]
-mod mock;
-
-use crate::cpu::lr35902::test::mock::Memory;
+use crate::cpu::lr35902;
 use crate::cpu::lr35902::LR35902;
-use crate::cpu::{lr35902, register};
+use crate::cpu::register;
+use crate::memory::mock;
 
 #[test]
 fn reset_half_carry_flag() {
@@ -618,7 +615,7 @@ fn add_8_bit_memory() {
         description: String,
         initial_state: fn() -> LR35902,
         expected_state: fn() -> LR35902,
-        memory: Memory,
+        memory: mock::Memory,
         addr: usize,
         with_carry_flag: bool,
     }
@@ -637,7 +634,7 @@ fn add_8_bit_memory() {
                 cpu.set_half_carry_flag();
                 return cpu;
             },
-            memory: Memory::new(vec![0x01]),
+            memory: mock::Memory::new(vec![0x01]),
             addr: 0x0000,
             with_carry_flag: false,
         },
@@ -655,7 +652,7 @@ fn add_8_bit_memory() {
                 cpu.set_half_carry_flag();
                 return cpu;
             },
-            memory: Memory::new(vec![0x02]),
+            memory: mock::Memory::new(vec![0x02]),
             addr: 0x0000,
             with_carry_flag: false,
         },
@@ -674,7 +671,7 @@ fn add_8_bit_memory() {
                 cpu.set_half_carry_flag();
                 return cpu;
             },
-            memory: Memory::new(vec![0x01]),
+            memory: mock::Memory::new(vec![0x01]),
             addr: 0x0000,
             with_carry_flag: false,
         },
@@ -690,7 +687,7 @@ fn add_8_bit_memory() {
                 cpu.af.hi = 0x01;
                 return cpu;
             },
-            memory: Memory::new(vec![0x01]),
+            memory: mock::Memory::new(vec![0x01]),
             addr: 0x0000,
             with_carry_flag: false,
         },
@@ -710,7 +707,7 @@ fn add_8_bit_memory() {
                 cpu.set_carry_flag();
                 return cpu;
             },
-            memory: Memory::new(vec![0x00]),
+            memory: mock::Memory::new(vec![0x00]),
             addr: 0x0000,
             with_carry_flag: true,
         },
@@ -728,7 +725,7 @@ fn add_8_bit_memory() {
                 cpu.af.hi = 0xFF;
                 return cpu;
             },
-            memory: Memory::new(vec![0x00]),
+            memory: mock::Memory::new(vec![0x00]),
             addr: 0x0000,
             with_carry_flag: true,
         },
@@ -740,6 +737,226 @@ fn add_8_bit_memory() {
         let expected_state = (tc.expected_state)();
 
         initial_state.add_8_bit_memory(register::ID::A, &tc.memory, tc.addr, tc.with_carry_flag);
+
+        assert_eq!(initial_state, expected_state)
+    }
+}
+
+#[test]
+fn sub_8_bit_registers() {
+    struct TestCase {
+        description: String,
+        initial_state: fn() -> LR35902,
+        expected_state: fn() -> LR35902,
+        src_reg: register::ID,
+        with_carry_flag: bool,
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            description: String::from("when half borrow occurs"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x10;
+                cpu.bc.hi = 0x02;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x0E;
+                cpu.bc.hi = 0x02;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            src_reg: register::ID::B,
+            with_carry_flag: false,
+        },
+        TestCase {
+            description: String::from("when borrow occurs"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                cpu.bc.hi = 0x01;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                cpu.bc.hi = 0x01;
+                cpu.set_carry_flag();
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            src_reg: register::ID::B,
+            with_carry_flag: false,
+        },
+        TestCase {
+            description: String::from("results in a zero"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                cpu.bc.hi = 0xFF;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                cpu.bc.hi = 0xFF;
+                cpu.set_zero_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            src_reg: register::ID::B,
+            with_carry_flag: false,
+        },
+        TestCase {
+            description: String::from("with carry flag is set, causes a borrow"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.set_carry_flag();
+                cpu.af.hi = 0x00;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                cpu.set_half_carry_flag();
+                cpu.set_carry_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            src_reg: register::ID::B,
+            with_carry_flag: true,
+        },
+    ];
+
+    for tc in test_cases {
+        println!("{}", tc.description);
+        let mut initial_state = (tc.initial_state)();
+        let expected_state = (tc.expected_state)();
+
+        initial_state.sub_8_bit_registers(register::ID::A, tc.src_reg, tc.with_carry_flag);
+
+        assert_eq!(initial_state, expected_state)
+    }
+}
+
+#[test]
+fn sub_8_bit_memory() {
+    struct TestCase {
+        description: String,
+        initial_state: fn() -> LR35902,
+        expected_state: fn() -> LR35902,
+        memory: mock::Memory,
+        addr: usize,
+        with_carry_flag: bool,
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            description: String::from("when half borrow occurs"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x10;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x01;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            memory: mock::Memory::new(vec![0x0F]),
+            addr: 0x0000,
+            with_carry_flag: false,
+        },
+        TestCase {
+            description: String::from("when borrow occurs"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xF0;
+                cpu.set_carry_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            memory: mock::Memory::new(vec![0x10]),
+            addr: 0x0000,
+            with_carry_flag: false,
+        },
+        TestCase {
+            description: String::from("when results in a zero value"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x10;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                cpu.set_zero_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            memory: mock::Memory::new(vec![0x10]),
+            addr: 0x0000,
+            with_carry_flag: false,
+        },
+        TestCase {
+            description: String::from("with carry flag, causes a borrow"),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.set_carry_flag();
+                cpu.af.hi = 0x00;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                cpu.set_half_carry_flag();
+                cpu.set_carry_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            memory: mock::Memory::new(vec![0x00]),
+            addr: 0x0000,
+            with_carry_flag: true,
+        },
+        TestCase {
+            description: String::from(
+                "with carry flag, but carry flag is 0, should not result in a carry",
+            ),
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                cpu.set_sub_flag();
+                cpu.set_zero_flag();
+                return cpu;
+            },
+            memory: mock::Memory::new(vec![0x00]),
+            addr: 0x0000,
+            with_carry_flag: true,
+        },
+    ];
+
+    for tc in test_cases {
+        println!("{}", tc.description);
+        let mut initial_state = (tc.initial_state)();
+        let expected_state = (tc.expected_state)();
+
+        initial_state.sub_8_bit_memory(register::ID::A, &tc.memory, tc.addr, tc.with_carry_flag);
 
         assert_eq!(initial_state, expected_state)
     }

@@ -237,3 +237,39 @@ fn test_most_significant_bit() {
         );
     }
 }
+
+#[test]
+fn is_borrow() {
+    struct TestCase {
+        byte: u8,
+        subtracted_byte: u8,
+        carry: bool,
+        expected_borrow: bool,
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            byte: 0x00,
+            subtracted_byte: 0x01,
+            carry: false,
+            expected_borrow: true,
+        },
+        TestCase {
+            byte: 0x00,
+            subtracted_byte: 0x00,
+            carry: true,
+            expected_borrow: true,
+        },
+        TestCase {
+            byte: 0x00,
+            subtracted_byte: 0x00,
+            carry: false,
+            expected_borrow: false,
+        },
+    ];
+
+    for tc in test_cases {
+        let result = bit::is_borrow(tc.byte, tc.subtracted_byte, tc.carry);
+        assert_eq!(tc.expected_borrow, result);
+    }
+}

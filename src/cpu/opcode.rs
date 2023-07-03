@@ -2,8 +2,11 @@
 #[cfg(test)]
 mod test;
 
-use super::{bit, register, IMemory, lr35902};
-use crate::{cpu::LR35902};
+use crate::cpu::bit;
+use crate::cpu::register;
+use crate::cpu::lr35902;
+use crate::memory;
+use crate::cpu::LR35902;
 
 #[allow(non_camel_case_types)]
 #[repr(u8)]
@@ -152,6 +155,22 @@ pub enum Opcode {
     AddLIntoAWithCarry_0x8D,
     AddMemoryHLIntoAWithCarry_0x8E,
     AddAIntoAWithCarry_0x8F,
+    SubBFromA_0x90,
+    SubCFromA_0x91,
+    SubDFromA_0x92,
+    SubEFromA_0x93,
+    SubHFromA_0x94,
+    SubLFromA_0x95,
+    SubMemoryHLFromA_0x96,
+    SubAFromA_0x97,
+    SubBFromAWithCarry_0x98,
+    SubCFromAWithCarry_0x99,
+    SubDFromAWithCarry_0x9A,
+    SubEFromAWithCarry_0x9B,
+    SubHFromAWithCarry_0x9C,
+    SubLFromAWithCarry_0x9D,
+    SubMemoryHLFromAWithCarry_0x9E,
+    SubAFromAWithCarry_0x9F,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -301,6 +320,22 @@ impl std::convert::From<u8> for Opcode {
             0x8D => Self::AddLIntoAWithCarry_0x8D,
             0x8E => Self::AddMemoryHLIntoAWithCarry_0x8E,
             0x8F => Self::AddAIntoAWithCarry_0x8F,
+            0x90 => Self::SubBFromA_0x90,
+            0x91 => Self::SubCFromA_0x91,
+            0x92 => Self::SubDFromA_0x92,
+            0x93 => Self::SubEFromA_0x93,
+            0x94 => Self::SubHFromA_0x94,
+            0x95 => Self::SubLFromA_0x95,
+            0x96 => Self::SubMemoryHLFromA_0x96,
+            0x97 => Self::SubAFromA_0x97,
+            0x98 => Self::SubBFromAWithCarry_0x98,
+            0x99 => Self::SubCFromAWithCarry_0x99,
+            0x9A => Self::SubDFromAWithCarry_0x9A,
+            0x9B => Self::SubEFromAWithCarry_0x9B,
+            0x9C => Self::SubHFromAWithCarry_0x9C,
+            0x9D => Self::SubLFromAWithCarry_0x9D,
+            0x9E => Self::SubMemoryHLFromAWithCarry_0x9E,
+            0x9F => Self::SubAFromAWithCarry_0x9F,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -453,12 +488,28 @@ impl std::convert::Into<u8> for Opcode {
             Self::AddLIntoAWithCarry_0x8D => 0x8D,
             Self::AddMemoryHLIntoAWithCarry_0x8E => 0x8E,
             Self::AddAIntoAWithCarry_0x8F => 0x8F,
+            Self::SubBFromA_0x90 => 0x90,
+            Self::SubCFromA_0x91 => 0x91,
+            Self::SubDFromA_0x92 => 0x92,
+            Self::SubEFromA_0x93 => 0x93,
+            Self::SubHFromA_0x94 => 0x94,
+            Self::SubLFromA_0x95 => 0x95,
+            Self::SubMemoryHLFromA_0x96 => 0x96,
+            Self::SubAFromA_0x97 => 0x97,
+            Self::SubBFromAWithCarry_0x98 => 0x98,
+            Self::SubCFromAWithCarry_0x99 => 0x99,
+            Self::SubDFromAWithCarry_0x9A => 0x9A,
+            Self::SubEFromAWithCarry_0x9B => 0x9B,
+            Self::SubHFromAWithCarry_0x9C => 0x9C,
+            Self::SubLFromAWithCarry_0x9D => 0x9D,
+            Self::SubMemoryHLFromAWithCarry_0x9E => 0x9E,
+            Self::SubAFromAWithCarry_0x9F => 0x9F,
         }
     }
 }
 
 impl Opcode {
-    pub fn execute(&self, cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+    pub fn execute(&self, cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
         match self {
             Self::Nop_0x00 => execute_0x00(cpu, memory),
             Self::LdImm16IntoBC_0x01 => execute_0x01(cpu, memory),
@@ -604,17 +655,33 @@ impl Opcode {
             Self::AddLIntoAWithCarry_0x8D => execute_0x8d(cpu, memory),
             Self::AddMemoryHLIntoAWithCarry_0x8E => execute_0x8e(cpu, memory),
             Self::AddAIntoAWithCarry_0x8F => execute_0x8f(cpu, memory),
+            Self::SubBFromA_0x90 => execute_0x90(cpu, memory),
+            Self::SubCFromA_0x91 => execute_0x91(cpu, memory),
+            Self::SubDFromA_0x92 => execute_0x92(cpu, memory),
+            Self::SubEFromA_0x93 => execute_0x93(cpu, memory),
+            Self::SubHFromA_0x94 => execute_0x94(cpu, memory),
+            Self::SubLFromA_0x95 => execute_0x95(cpu, memory),
+            Self::SubMemoryHLFromA_0x96 => execute_0x96(cpu, memory),
+            Self::SubAFromA_0x97 => execute_0x97(cpu, memory),
+            Self::SubBFromAWithCarry_0x98 => execute_0x98(cpu, memory),
+            Self::SubCFromAWithCarry_0x99 => execute_0x99(cpu, memory),
+            Self::SubDFromAWithCarry_0x9A => execute_0x9a(cpu, memory),
+            Self::SubEFromAWithCarry_0x9B => execute_0x9b(cpu, memory),
+            Self::SubHFromAWithCarry_0x9C => execute_0x9c(cpu, memory),
+            Self::SubLFromAWithCarry_0x9D => execute_0x9d(cpu, memory),
+            Self::SubMemoryHLFromAWithCarry_0x9E => execute_0x9e(cpu, memory),
+            Self::SubAFromAWithCarry_0x9F => execute_0x9f(cpu, memory),
         }
     }
 }
 
-fn execute_0x00(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x00(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     4
 }
 
-fn execute_0x01(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x01(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.lo = match memory.read(usize::from(cpu.pc)) {
@@ -641,7 +708,7 @@ fn execute_0x01(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     12
 }
 
-fn execute_0x02(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x02(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     memory.write(usize::from(cpu.bc.word()), cpu.af.hi);
 
     cpu.pc = cpu.pc.wrapping_add(1);
@@ -649,7 +716,7 @@ fn execute_0x02(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x03(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x03(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.set_word(cpu.bc.word().wrapping_add(1));
@@ -657,7 +724,7 @@ fn execute_0x03(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x04(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x04(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.increment_8_bit_register(register::ID::B);
@@ -665,7 +732,7 @@ fn execute_0x04(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x05(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x05(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.decrement_8_bit_register(register::ID::B);
@@ -673,7 +740,7 @@ fn execute_0x05(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x06(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x06(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match memory.read(usize::from(cpu.pc)) {
@@ -691,7 +758,7 @@ fn execute_0x06(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x07(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x07(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let leftmost_bit_a: bool = (cpu.af.hi & (1 << 7)) > 0;
@@ -711,7 +778,7 @@ fn execute_0x07(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x08(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x08(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let lo_address_byte = match memory.read(usize::from(cpu.pc)) {
@@ -743,7 +810,7 @@ fn execute_0x08(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     20
 }
 
-pub fn execute_0x09(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+pub fn execute_0x09(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_16_bit_registers(register::ID16::HL, register::ID16::BC);
@@ -751,7 +818,7 @@ pub fn execute_0x09(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x0a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x0a(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let value = match memory.read(usize::from(cpu.bc.word())) {
@@ -767,7 +834,7 @@ fn execute_0x0a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x0b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x0b(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let new_bc = cpu.bc.word().wrapping_sub(1);
@@ -777,7 +844,7 @@ fn execute_0x0b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x0c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x0c(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.increment_8_bit_register(register::ID::C);
@@ -785,7 +852,7 @@ fn execute_0x0c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x0d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x0d(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.decrement_8_bit_register(register::ID::C);
@@ -793,7 +860,7 @@ fn execute_0x0d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x0e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x0e(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match memory.read(usize::from(cpu.pc)) {
@@ -811,7 +878,7 @@ fn execute_0x0e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x0f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x0f(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let rightmost_bit_a: bool = (cpu.af.hi & 1) > 0;
@@ -831,7 +898,7 @@ fn execute_0x0f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x10(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x10(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.paused = true;
@@ -839,7 +906,7 @@ fn execute_0x10(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x11(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x11(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.lo = match memory.read(usize::from(cpu.pc)) {
@@ -865,7 +932,7 @@ fn execute_0x11(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     12
 }
 
-fn execute_0x12(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x12(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     memory.write(usize::from(cpu.de.word()), cpu.af.hi);
 
     cpu.pc = cpu.pc.wrapping_add(1);
@@ -873,7 +940,7 @@ fn execute_0x12(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x13(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x13(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.set_word(cpu.de.word().wrapping_add(1));
@@ -881,7 +948,7 @@ fn execute_0x13(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x14(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x14(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.increment_8_bit_register(register::ID::D);
@@ -889,7 +956,7 @@ fn execute_0x14(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x15(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x15(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.decrement_8_bit_register(register::ID::D);
@@ -897,7 +964,7 @@ fn execute_0x15(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x16(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x16(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match memory.read(usize::from(cpu.pc)) {
@@ -915,7 +982,7 @@ fn execute_0x16(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x17(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x17(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let leftmost_bit_a: bool = (cpu.af.hi & (1 << 7)) > 0;
@@ -940,7 +1007,7 @@ fn execute_0x17(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x18(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x18(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let relative_addr = match memory.read(usize::from(cpu.pc)) {
@@ -964,7 +1031,7 @@ fn execute_0x18(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     12
 }
 
-fn execute_0x19(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x19(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_16_bit_registers(register::ID16::HL, register::ID16::DE);
@@ -972,7 +1039,7 @@ fn execute_0x19(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x1a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x1a(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let value = match memory.read(usize::from(cpu.de.word())) {
@@ -988,7 +1055,7 @@ fn execute_0x1a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x1b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x1b(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let new_de = cpu.de.word().wrapping_sub(1);
@@ -998,7 +1065,7 @@ fn execute_0x1b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x1c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x1c(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.increment_8_bit_register(register::ID::E);
@@ -1006,7 +1073,7 @@ fn execute_0x1c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x1d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x1d(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.decrement_8_bit_register(register::ID::E);
@@ -1014,7 +1081,7 @@ fn execute_0x1d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x1e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x1e(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match memory.read(usize::from(cpu.pc)) {
@@ -1032,7 +1099,7 @@ fn execute_0x1e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x1f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x1f(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let rightmost_bit_a: bool = (cpu.af.hi & 1) > 0;
@@ -1057,7 +1124,7 @@ fn execute_0x1f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x20(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x20(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     if cpu.test_zero_flag() {
@@ -1086,7 +1153,7 @@ fn execute_0x20(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     12
 }
 
-fn execute_0x21(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x21(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.lo = match memory.read(usize::from(cpu.pc)) {
@@ -1112,7 +1179,7 @@ fn execute_0x21(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     12
 }
 
-fn execute_0x22(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x22(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     memory.write(usize::from(cpu.hl.word()), cpu.af.hi);
 
     cpu.hl.set_word(cpu.hl.word().wrapping_add(1));
@@ -1122,7 +1189,7 @@ fn execute_0x22(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x23(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x23(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.set_word(cpu.hl.word().wrapping_add(1));
@@ -1130,7 +1197,7 @@ fn execute_0x23(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x24(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x24(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.increment_8_bit_register(register::ID::H);
@@ -1138,7 +1205,7 @@ fn execute_0x24(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x25(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x25(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.decrement_8_bit_register(register::ID::H);
@@ -1146,7 +1213,7 @@ fn execute_0x25(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x26(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x26(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match memory.read(usize::from(cpu.pc)) {
@@ -1164,7 +1231,7 @@ fn execute_0x26(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x27(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x27(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let mut a = cpu.af.hi.clone();
@@ -1201,7 +1268,7 @@ fn execute_0x27(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x28(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x28(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     if !cpu.test_zero_flag() {
@@ -1230,7 +1297,7 @@ fn execute_0x28(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     12
 }
 
-fn execute_0x29(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x29(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_16_bit_registers(register::ID16::HL, register::ID16::HL);
@@ -1238,7 +1305,7 @@ fn execute_0x29(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x2a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x2a(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let value = match memory.read(usize::from(cpu.hl.word())) {
@@ -1256,7 +1323,7 @@ fn execute_0x2a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x2b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x2b(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let new_hl = cpu.hl.word().wrapping_sub(1);
@@ -1266,7 +1333,7 @@ fn execute_0x2b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x2c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x2c(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.increment_8_bit_register(register::ID::L);
@@ -1274,7 +1341,7 @@ fn execute_0x2c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x2d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x2d(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.decrement_8_bit_register(register::ID::L);
@@ -1282,7 +1349,7 @@ fn execute_0x2d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x2e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x2e(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match memory.read(usize::from(cpu.pc)) {
@@ -1300,7 +1367,7 @@ fn execute_0x2e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x2f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x2f(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.af.hi = cpu.af.hi ^ 0xFF;
@@ -1311,7 +1378,7 @@ fn execute_0x2f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x30(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x30(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     if cpu.test_carry_flag() {
@@ -1340,7 +1407,7 @@ fn execute_0x30(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     12
 }
 
-fn execute_0x31(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x31(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let lo_byte = match memory.read(usize::from(cpu.pc)) {
@@ -1368,7 +1435,7 @@ fn execute_0x31(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     12
 }
 
-fn execute_0x32(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x32(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     memory.write(usize::from(cpu.hl.word()), cpu.af.hi);
 
     cpu.hl.set_word(cpu.hl.word().wrapping_sub(1));
@@ -1378,7 +1445,7 @@ fn execute_0x32(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x33(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x33(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.sp = cpu.sp.wrapping_add(1);
@@ -1386,7 +1453,7 @@ fn execute_0x33(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x34(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x34(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let mut byte = match memory.read(usize::from(cpu.hl.word())) {
@@ -1418,7 +1485,7 @@ fn execute_0x34(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     12
 }
 
-fn execute_0x35(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x35(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let mut byte = match memory.read(usize::from(cpu.hl.word())) {
@@ -1450,7 +1517,7 @@ fn execute_0x35(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     12
 }
 
-fn execute_0x36(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x36(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match memory.read(usize::from(cpu.pc)) {
@@ -1468,7 +1535,7 @@ fn execute_0x36(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     12
 }
 
-fn execute_0x37(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x37(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.reset_sub_flag();
@@ -1478,7 +1545,7 @@ fn execute_0x37(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x38(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x38(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     if !cpu.test_carry_flag() {
@@ -1507,7 +1574,7 @@ fn execute_0x38(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     12
 }
 
-fn execute_0x39(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x39(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_16_bit_registers(register::ID16::HL, register::ID16::SP);
@@ -1515,7 +1582,7 @@ fn execute_0x39(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x3a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x3a(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let value = match memory.read(usize::from(cpu.hl.word())) {
@@ -1533,7 +1600,7 @@ fn execute_0x3a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x3b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x3b(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.sp = cpu.sp.wrapping_sub(1);
@@ -1541,7 +1608,7 @@ fn execute_0x3b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x3c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x3c(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.increment_8_bit_register(register::ID::A);
@@ -1549,7 +1616,7 @@ fn execute_0x3c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x3d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x3d(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.decrement_8_bit_register(register::ID::A);
@@ -1557,7 +1624,7 @@ fn execute_0x3d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x3e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x3e(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match memory.read(usize::from(cpu.pc)) {
@@ -1575,7 +1642,7 @@ fn execute_0x3e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x3f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x3f(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     if cpu.test_carry_flag() {
@@ -1590,7 +1657,7 @@ fn execute_0x3f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x40(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x40(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.hi = cpu.bc.hi;
@@ -1598,7 +1665,7 @@ fn execute_0x40(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x41(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x41(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.hi = cpu.bc.lo;
@@ -1606,7 +1673,7 @@ fn execute_0x41(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x42(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x42(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.hi = cpu.de.hi;
@@ -1614,7 +1681,7 @@ fn execute_0x42(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x43(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x43(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.hi = cpu.de.lo;
@@ -1622,7 +1689,7 @@ fn execute_0x43(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x44(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x44(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.hi = cpu.hl.hi;
@@ -1630,7 +1697,7 @@ fn execute_0x44(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x45(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x45(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.hi = cpu.hl.lo;
@@ -1638,7 +1705,7 @@ fn execute_0x45(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x46(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x46(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match memory.read(usize::from(cpu.hl.word())) {
@@ -1654,7 +1721,7 @@ fn execute_0x46(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x47(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x47(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.hi = cpu.af.hi;
@@ -1662,7 +1729,7 @@ fn execute_0x47(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x48(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x48(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.lo = cpu.bc.hi;
@@ -1670,7 +1737,7 @@ fn execute_0x48(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x49(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x49(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.lo = cpu.bc.lo;
@@ -1678,7 +1745,7 @@ fn execute_0x49(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x4a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x4a(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.lo = cpu.de.hi;
@@ -1686,7 +1753,7 @@ fn execute_0x4a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x4b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x4b(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.lo = cpu.de.lo;
@@ -1694,7 +1761,7 @@ fn execute_0x4b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x4c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x4c(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.lo = cpu.hl.hi;
@@ -1702,7 +1769,7 @@ fn execute_0x4c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x4d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x4d(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.lo = cpu.hl.lo;
@@ -1710,7 +1777,7 @@ fn execute_0x4d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x4e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x4e(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match memory.read(usize::from(cpu.hl.word())) {
@@ -1726,7 +1793,7 @@ fn execute_0x4e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x4f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x4f(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.lo = cpu.af.hi;
@@ -1734,7 +1801,7 @@ fn execute_0x4f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x50(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x50(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.hi = cpu.bc.hi;
@@ -1742,7 +1809,7 @@ fn execute_0x50(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x51(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x51(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.hi = cpu.bc.lo;
@@ -1750,7 +1817,7 @@ fn execute_0x51(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x52(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x52(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.hi = cpu.de.hi;
@@ -1758,7 +1825,7 @@ fn execute_0x52(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x53(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x53(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.hi = cpu.de.lo;
@@ -1766,7 +1833,7 @@ fn execute_0x53(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x54(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x54(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.hi = cpu.hl.hi;
@@ -1774,7 +1841,7 @@ fn execute_0x54(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x55(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x55(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.hi = cpu.hl.lo;
@@ -1782,7 +1849,7 @@ fn execute_0x55(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x56(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x56(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match memory.read(usize::from(cpu.hl.word())) {
@@ -1798,7 +1865,7 @@ fn execute_0x56(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x57(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x57(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.hi = cpu.af.hi;
@@ -1806,7 +1873,7 @@ fn execute_0x57(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x58(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x58(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.lo = cpu.bc.hi;
@@ -1814,7 +1881,7 @@ fn execute_0x58(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x59(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x59(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.lo = cpu.bc.lo;
@@ -1822,7 +1889,7 @@ fn execute_0x59(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x5a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x5a(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.lo = cpu.de.hi;
@@ -1830,7 +1897,7 @@ fn execute_0x5a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x5b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x5b(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.lo = cpu.de.lo;
@@ -1838,7 +1905,7 @@ fn execute_0x5b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x5c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x5c(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.lo = cpu.hl.hi;
@@ -1846,7 +1913,7 @@ fn execute_0x5c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x5d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x5d(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.lo = cpu.hl.lo;
@@ -1854,7 +1921,7 @@ fn execute_0x5d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x5e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x5e(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match memory.read(usize::from(cpu.hl.word())) {
@@ -1870,7 +1937,7 @@ fn execute_0x5e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x5f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x5f(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.de.lo = cpu.af.hi;
@@ -1878,7 +1945,7 @@ fn execute_0x5f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x60(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x60(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.hi = cpu.bc.hi;
@@ -1886,7 +1953,7 @@ fn execute_0x60(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x61(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x61(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.hi = cpu.bc.lo;
@@ -1894,7 +1961,7 @@ fn execute_0x61(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x62(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x62(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.hi = cpu.de.hi;
@@ -1902,7 +1969,7 @@ fn execute_0x62(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x63(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x63(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.hi = cpu.de.lo;
@@ -1910,7 +1977,7 @@ fn execute_0x63(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x64(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x64(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.hi = cpu.hl.hi;
@@ -1918,7 +1985,7 @@ fn execute_0x64(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x65(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x65(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.hi = cpu.hl.lo;
@@ -1926,7 +1993,7 @@ fn execute_0x65(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x66(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x66(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match memory.read(usize::from(cpu.hl.word())) {
@@ -1942,7 +2009,7 @@ fn execute_0x66(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x67(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x67(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.hi = cpu.af.hi;
@@ -1950,7 +2017,7 @@ fn execute_0x67(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x68(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x68(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.lo = cpu.bc.hi;
@@ -1958,7 +2025,7 @@ fn execute_0x68(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x69(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x69(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.lo = cpu.bc.lo;
@@ -1966,7 +2033,7 @@ fn execute_0x69(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x6a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x6a(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.lo = cpu.de.hi;
@@ -1974,7 +2041,7 @@ fn execute_0x6a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x6b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x6b(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.lo = cpu.de.lo;
@@ -1982,7 +2049,7 @@ fn execute_0x6b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x6c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x6c(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.lo = cpu.hl.hi;
@@ -1990,7 +2057,7 @@ fn execute_0x6c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x6d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x6d(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.lo = cpu.hl.lo;
@@ -1998,7 +2065,7 @@ fn execute_0x6d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x6e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x6e(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match memory.read(usize::from(cpu.hl.word())) {
@@ -2014,7 +2081,7 @@ fn execute_0x6e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x6f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x6f(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.hl.lo = cpu.af.hi;
@@ -2022,7 +2089,7 @@ fn execute_0x6f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x70(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x70(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     memory.write(usize::from(cpu.hl.word()), cpu.bc.hi);
@@ -2030,7 +2097,7 @@ fn execute_0x70(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x71(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x71(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     memory.write(usize::from(cpu.hl.word()), cpu.bc.lo);
@@ -2038,7 +2105,7 @@ fn execute_0x71(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x72(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x72(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     memory.write(usize::from(cpu.hl.word()), cpu.de.hi);
@@ -2046,7 +2113,7 @@ fn execute_0x72(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x73(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x73(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     memory.write(usize::from(cpu.hl.word()), cpu.de.lo);
@@ -2054,7 +2121,7 @@ fn execute_0x73(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x74(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x74(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     memory.write(usize::from(cpu.hl.word()), cpu.hl.hi);
@@ -2062,7 +2129,7 @@ fn execute_0x74(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x75(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x75(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     memory.write(usize::from(cpu.hl.word()), cpu.hl.lo);
@@ -2070,7 +2137,7 @@ fn execute_0x75(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x76(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x76(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let clock_cycles = 4;
@@ -2092,7 +2159,7 @@ fn execute_0x76(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     clock_cycles
 }
 
-fn execute_0x77(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x77(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     memory.write(usize::from(cpu.hl.word()), cpu.af.hi);
@@ -2100,7 +2167,7 @@ fn execute_0x77(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x78(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x78(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.af.hi = cpu.bc.hi;
@@ -2108,7 +2175,7 @@ fn execute_0x78(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x79(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x79(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.af.hi = cpu.bc.lo;
@@ -2116,7 +2183,7 @@ fn execute_0x79(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x7a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x7a(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.af.hi = cpu.de.hi;
@@ -2124,7 +2191,7 @@ fn execute_0x7a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x7b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x7b(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.af.hi = cpu.de.lo;
@@ -2132,7 +2199,7 @@ fn execute_0x7b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x7c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x7c(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.af.hi = cpu.hl.hi;
@@ -2140,7 +2207,7 @@ fn execute_0x7c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x7d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x7d(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.af.hi = cpu.hl.lo;
@@ -2148,7 +2215,7 @@ fn execute_0x7d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x7e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x7e(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let byte = match memory.read(usize::from(cpu.hl.word())) {
@@ -2164,7 +2231,7 @@ fn execute_0x7e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x7f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x7f(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.af.hi = cpu.af.hi;
@@ -2172,7 +2239,7 @@ fn execute_0x7f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x80(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x80(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_registers(register::ID::A, register::ID::B, false);
@@ -2180,7 +2247,7 @@ fn execute_0x80(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x81(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x81(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_registers(register::ID::A, register::ID::C, false);
@@ -2188,7 +2255,7 @@ fn execute_0x81(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x82(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x82(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_registers(register::ID::A, register::ID::D, false);
@@ -2196,7 +2263,7 @@ fn execute_0x82(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x83(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x83(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_registers(register::ID::A, register::ID::E, false);
@@ -2204,7 +2271,7 @@ fn execute_0x83(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x84(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x84(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_registers(register::ID::A, register::ID::H, false);
@@ -2212,7 +2279,7 @@ fn execute_0x84(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x85(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x85(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_registers(register::ID::A, register::ID::L, false);
@@ -2220,7 +2287,7 @@ fn execute_0x85(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x86(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x86(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), false);
@@ -2228,7 +2295,7 @@ fn execute_0x86(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x87(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x87(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_registers(register::ID::A, register::ID::A, false);
@@ -2236,7 +2303,7 @@ fn execute_0x87(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x88(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x88(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_registers(register::ID::A, register::ID::B, true);
@@ -2244,7 +2311,7 @@ fn execute_0x88(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x89(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x89(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_registers(register::ID::A, register::ID::C, true);
@@ -2252,7 +2319,7 @@ fn execute_0x89(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x8a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x8a(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_registers(register::ID::A, register::ID::D, true);
@@ -2260,7 +2327,7 @@ fn execute_0x8a(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x8b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x8b(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_registers(register::ID::A, register::ID::E, true);
@@ -2268,7 +2335,7 @@ fn execute_0x8b(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x8c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x8c(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_registers(register::ID::A, register::ID::H, true);
@@ -2276,7 +2343,7 @@ fn execute_0x8c(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x8d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x8d(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_registers(register::ID::A, register::ID::L, true);
@@ -2284,7 +2351,7 @@ fn execute_0x8d(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     4
 }
 
-fn execute_0x8e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x8e(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), true);
@@ -2292,10 +2359,138 @@ fn execute_0x8e(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
     8
 }
 
-fn execute_0x8f(cpu: &mut LR35902, memory: &mut impl IMemory) -> u32 {
+fn execute_0x8f(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.add_8_bit_registers(register::ID::A, register::ID::A, true);
+
+    4
+}
+
+fn execute_0x90(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::B, false);
+
+    4
+}
+
+fn execute_0x91(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::C, false);
+
+    4
+}
+
+fn execute_0x92(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::D, false);
+
+    4
+}
+
+fn execute_0x93(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::E, false);
+
+    4
+}
+
+fn execute_0x94(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::H, false);
+
+    4
+}
+
+fn execute_0x95(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::L, false);
+
+    4
+}
+
+fn execute_0x96(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), false);
+
+    8
+}
+
+fn execute_0x97(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::A, false);
+
+    4
+}
+
+fn execute_0x98(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::B, true);
+
+    4
+}
+
+fn execute_0x99(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::C, true);
+
+    4
+}
+
+fn execute_0x9a(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::D, true);
+
+    4
+}
+
+fn execute_0x9b(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::E, true);
+
+    4
+}
+
+fn execute_0x9c(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::H, true);
+
+    4
+}
+
+fn execute_0x9d(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::L, true);
+
+    4
+}
+
+fn execute_0x9e(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), true);
+
+    8
+}
+
+fn execute_0x9f(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.sub_8_bit_registers(register::ID::A, register::ID::A, true);
 
     4
 }
