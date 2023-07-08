@@ -1,3 +1,5 @@
+use std::vec;
+
 use crate::cpu::lr35902;
 use crate::cpu::lr35902::LR35902;
 use crate::cpu::register;
@@ -957,6 +959,272 @@ fn sub_8_bit_memory() {
         let expected_state = (tc.expected_state)();
 
         initial_state.sub_8_bit_memory(register::ID::A, &tc.memory, tc.addr, tc.with_carry_flag);
+
+        assert_eq!(initial_state, expected_state)
+    }
+}
+
+#[test]
+fn and_8_bit_registers() {
+    struct TestCase<'a> {
+        description: &'a str,
+        initial_state: fn() -> LR35902,
+        expected_state: fn() -> LR35902,
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            description: "ensure that hardcoded flag states are correct",
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xF0;
+                cpu.bc.hi = 0x0F;
+                cpu.set_carry_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                cpu.bc.hi = 0x0F;
+                cpu.set_half_carry_flag();
+                cpu.set_zero_flag();
+                return cpu;
+            },
+        },
+        TestCase {
+            description: "checking the and function works",
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                cpu.bc.hi = 0xF0;
+                cpu.set_carry_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xF0;
+                cpu.bc.hi = 0xF0;
+                cpu.set_half_carry_flag();
+                return cpu;
+            },
+        },
+    ];
+
+    for tc in test_cases {
+        println!("{}", tc.description);
+        let mut initial_state = (tc.initial_state)();
+        let expected_state = (tc.expected_state)();
+
+        initial_state.and_8_bit_registers(register::ID::A, register::ID::B);
+
+        assert_eq!(initial_state, expected_state)
+    }
+}
+
+#[test]
+fn and_8_bit_memory() {
+    struct TestCase<'a> {
+        description: &'a str,
+        initial_state: fn() -> LR35902,
+        expected_state: fn() -> LR35902,
+        memory: mock::Memory,
+        addr: usize,
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            description: "ensure that hardcoded flag states are correct",
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xF0;
+                cpu.set_carry_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                cpu.set_half_carry_flag();
+                cpu.set_zero_flag();
+                return cpu;
+            },
+            memory: mock::Memory::new(vec![0x0F]),
+            addr: 0x0000,
+        },
+        TestCase {
+            description: "checking the and function works",
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                cpu.set_carry_flag();
+                cpu.set_sub_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xF0;
+                cpu.set_half_carry_flag();
+                return cpu;
+            },
+            memory: mock::Memory::new(vec![0xF0]),
+            addr: 0x0000,
+        },
+    ];
+
+    for tc in test_cases {
+        println!("{}", tc.description);
+        let mut initial_state = (tc.initial_state)();
+        let expected_state = (tc.expected_state)();
+
+        initial_state.and_8_bit_memory(register::ID::A, &tc.memory, tc.addr);
+
+        assert_eq!(initial_state, expected_state)
+    }
+}
+
+#[test]
+fn xor_8_bit_registers() {
+    struct TestCase<'a> {
+        description: &'a str,
+        initial_state: fn() -> LR35902,
+        expected_state: fn() -> LR35902,
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            description: "ensure that hardcoded flag states are correct",
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xF0;
+                cpu.bc.hi = 0x0F;
+                cpu.set_carry_flag();
+                cpu.set_sub_flag();
+                cpu.set_half_carry_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                cpu.bc.hi = 0x0F;
+                return cpu;
+            },
+        },
+        TestCase {
+            description: "checking the and function works",
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                cpu.bc.hi = 0xF0;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x0F;
+                cpu.bc.hi = 0xF0;
+                return cpu;
+            },
+        },
+        TestCase {
+            description: "zero flag case",
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                cpu.bc.hi = 0xFF;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                cpu.bc.hi = 0xFF;
+                cpu.set_zero_flag();
+                return cpu;
+            },
+        },
+    ];
+
+    for tc in test_cases {
+        println!("{}", tc.description);
+        let mut initial_state = (tc.initial_state)();
+        let expected_state = (tc.expected_state)();
+
+        initial_state.xor_8_bit_registers(register::ID::A, register::ID::B);
+
+        assert_eq!(initial_state, expected_state)
+    }
+}
+
+#[test]
+fn xor_8_bit_memory() {
+    struct TestCase<'a> {
+        description: &'a str,
+        initial_state: fn() -> LR35902,
+        expected_state: fn() -> LR35902,
+        memory: mock::Memory,
+        addr: usize,
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            description: "ensure that hardcoded flag states are correct",
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xF0;
+                cpu.set_carry_flag();
+                cpu.set_sub_flag();
+                cpu.set_half_carry_flag();
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                return cpu;
+            },
+            memory: mock::Memory::new(vec![0x0F]),
+            addr: 0x0000,
+        },
+        TestCase {
+            description: "checking the and function works",
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x0F;
+                return cpu;
+            },
+            memory: mock::Memory::new(vec![0xF0]),
+            addr: 0x0000,
+        },
+        TestCase {
+            description: "zero flag case",
+            initial_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0xFF;
+                cpu.bc.hi = 0xFF;
+                return cpu;
+            },
+            expected_state: || -> LR35902 {
+                let mut cpu = LR35902::new();
+                cpu.af.hi = 0x00;
+                cpu.bc.hi = 0xFF;
+                cpu.set_zero_flag();
+                return cpu;
+            },
+            memory: mock::Memory::new(vec![0xFF]),
+            addr: 0x0000,
+        },
+    ];
+
+    for tc in test_cases {
+        println!("{}", tc.description);
+        let mut initial_state = (tc.initial_state)();
+        let expected_state = (tc.expected_state)();
+
+        initial_state.xor_8_bit_memory(register::ID::A, &tc.memory, tc.addr);
 
         assert_eq!(initial_state, expected_state)
     }
