@@ -179,6 +179,7 @@ pub enum Opcode {
     AndLIntoA_0xA5,
     AndMemoryHLIntoA_0xA6,
     AndAIntoA_0xA7,
+    XorBIntoA_0xA8,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -352,6 +353,7 @@ impl std::convert::From<u8> for Opcode {
             0xA5 => Self::AndLIntoA_0xA5,
             0xA6 => Self::AndMemoryHLIntoA_0xA6,
             0xA7 => Self::AndAIntoA_0xA7,
+            0xA8 => Self::XorBIntoA_0xA8,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -528,6 +530,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::AndLIntoA_0xA5 => 0xA5,
             Self::AndMemoryHLIntoA_0xA6 => 0xA6,
             Self::AndAIntoA_0xA7 => 0xA7,
+            Self::XorBIntoA_0xA8 => 0xA8,
         }
     }
 }
@@ -703,6 +706,7 @@ impl Opcode {
             Self::AndLIntoA_0xA5 => execute_0xa5(cpu, memory),
             Self::AndMemoryHLIntoA_0xA6 => execute_0xa6(cpu, memory),
             Self::AndAIntoA_0xA7 => execute_0xa7(cpu, memory),
+            Self::XorBIntoA_0xA8 => execute_0xa8(cpu, memory),
         }
     }
 }
@@ -2587,6 +2591,14 @@ fn execute_0xa7(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.and_8_bit_registers(register::ID::A, register::ID::A);
+
+    4
+}
+
+fn execute_0xa8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.xor_8_bit_registers(register::ID::A, register::ID::B);
 
     4
 }
