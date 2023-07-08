@@ -599,4 +599,76 @@ impl LR35902 {
             _ => panic!("invalid 8 bit xor operation: targetID {:?}", target),
         };
     }
+
+    pub fn or_8_bit_registers(&mut self, target: register::ID, src: register::ID) {
+        let target_value = match target {
+            ID::A => self.af.hi,
+            _ => panic!("invalid 8 bit or operation: targetID {:?}", target),
+        };
+
+        let src_value = match src {
+            ID::A => self.af.hi,
+            ID::B => self.bc.hi,
+            ID::C => self.bc.lo,
+            ID::D => self.de.hi,
+            ID::E => self.de.lo,
+            ID::H => self.hl.hi,
+            ID::L => self.hl.lo,
+            _ => panic!("invalid 8 bit or operation: srcID {:?}", src),
+        };
+
+        self.reset_sub_flag();
+        self.reset_carry_flag();
+        self.reset_half_carry_flag();
+
+        let new_target_value = target_value | src_value;
+
+        if new_target_value == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        match target {
+            ID::A => self.af.hi = new_target_value,
+            _ => panic!("invalid 8 bit or operation: targetID {:?}", target),
+        };
+    }
+
+    pub fn or_8_bit_memory(
+        &mut self,
+        target: register::ID,
+        memory: &impl memory::Interface,
+        addr: usize,
+    ) {
+        let target_value = match target {
+            ID::A => self.af.hi,
+            _ => panic!("invalid 8 bit or operation: targetID {:?}", target),
+        };
+
+        let byte = match memory.read(addr) {
+            Some(byte) => byte,
+            None => panic!(
+                "invalid 8 bit or operation: couldn't access byte at addr {:?}",
+                addr
+            ),
+        };
+
+        self.reset_sub_flag();
+        self.reset_carry_flag();
+        self.reset_half_carry_flag();
+
+        let new_target_value = target_value | byte;
+
+        if new_target_value == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        match target {
+            ID::A => self.af.hi = new_target_value,
+            _ => panic!("invalid 8 bit or operation: targetID {:?}", target),
+        };
+    }
 }
