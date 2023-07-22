@@ -196,6 +196,13 @@ pub enum Opcode {
     OrMemoryHLIntoA_0xB6,
     OrAIntoA_0xB7,
     CompareBIntoA_0xB8,
+    CompareCIntoA_0xB9,
+    CompareDIntoA_0xBA,
+    CompareEIntoA_0xBB,
+    CompareHIntoA_0xBC,
+    CompareLIntoA_0xBD,
+    CompareMemoryHLIntoA_0xBE,
+    CompareAIntoA_0xBF,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -386,6 +393,13 @@ impl std::convert::From<u8> for Opcode {
             0xB6 => Self::OrMemoryHLIntoA_0xB6,
             0xB7 => Self::OrAIntoA_0xB7,
             0xB8 => Self::CompareBIntoA_0xB8,
+            0xB9 => Self::CompareCIntoA_0xB9,
+            0xBA => Self::CompareDIntoA_0xBA,
+            0xBB => Self::CompareEIntoA_0xBB,
+            0xBC => Self::CompareHIntoA_0xBC,
+            0xBD => Self::CompareLIntoA_0xBD,
+            0xBE => Self::CompareMemoryHLIntoA_0xBE,
+            0xBF => Self::CompareAIntoA_0xBF,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -579,6 +593,13 @@ impl std::convert::Into<u8> for Opcode {
             Self::OrMemoryHLIntoA_0xB6 => 0xB6,
             Self::OrAIntoA_0xB7 => 0xB7,
             Self::CompareBIntoA_0xB8 => 0xB8,
+            Self::CompareCIntoA_0xB9 => 0xB9,
+            Self::CompareDIntoA_0xBA => 0xBA,
+            Self::CompareEIntoA_0xBB => 0xBB,
+            Self::CompareHIntoA_0xBC => 0xBC,
+            Self::CompareLIntoA_0xBD => 0xBD,
+            Self::CompareMemoryHLIntoA_0xBE => 0xBE,
+            Self::CompareAIntoA_0xBF => 0xBF,
         }
     }
 }
@@ -771,6 +792,13 @@ impl Opcode {
             Self::OrMemoryHLIntoA_0xB6 => execute_0xb6(cpu, memory),
             Self::OrAIntoA_0xB7 => execute_0xb7(cpu, memory),
             Self::CompareBIntoA_0xB8 => execute_0xb8(cpu, memory),
+            Self::CompareCIntoA_0xB9 => execute_0xb9(cpu, memory),
+            Self::CompareDIntoA_0xBA => execute_0xba(cpu, memory),
+            Self::CompareEIntoA_0xBB => execute_0xbb(cpu, memory),
+            Self::CompareHIntoA_0xBC => execute_0xbc(cpu, memory),
+            Self::CompareLIntoA_0xBD => execute_0xbd(cpu, memory),
+            Self::CompareMemoryHLIntoA_0xBE => execute_0xbe(cpu, memory),
+            Self::CompareAIntoA_0xBF => execute_0xbf(cpu, memory),
         }
     }
 }
@@ -2791,6 +2819,62 @@ fn execute_0xb8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.compare_8_bit_registers(register::ID::A, register::ID::B);
+
+    4
+}
+
+fn execute_0xb9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.compare_8_bit_registers(register::ID::A, register::ID::C);
+
+    4
+}
+
+fn execute_0xba(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.compare_8_bit_registers(register::ID::A, register::ID::D);
+
+    4
+}
+
+fn execute_0xbb(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.compare_8_bit_registers(register::ID::A, register::ID::E);
+
+    4
+}
+
+fn execute_0xbc(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.compare_8_bit_registers(register::ID::A, register::ID::H);
+
+    4
+}
+
+fn execute_0xbd(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.compare_8_bit_registers(register::ID::A, register::ID::L);
+
+    4
+}
+
+fn execute_0xbe(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.compare_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()));
+
+    8
+}
+
+fn execute_0xbf(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.compare_8_bit_registers(register::ID::A, register::ID::A);
 
     4
 }
