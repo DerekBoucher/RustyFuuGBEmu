@@ -6358,3 +6358,56 @@ fn _0xb7() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0xb8() {
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            initial_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                let memory = mock::Memory::new(vec![Opcode::CompareBIntoA_0xB8.into()]);
+                cpu.af.hi = 0xF0;
+                cpu.bc.hi = 0xFF;
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                let memory = mock::Memory::new(vec![Opcode::CompareBIntoA_0xB8.into()]);
+                cpu.af.hi = 0xF0;
+                cpu.bc.hi = 0xFF;
+                cpu.pc = 0x0001;
+
+                cpu.set_carry_flag();
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                return (cpu, memory);
+            },
+            expected_cycles: 4,
+        },
+        TestCase {
+            initial_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                let memory = mock::Memory::new(vec![Opcode::CompareBIntoA_0xB8.into()]);
+                cpu.af.hi = 0xFF;
+                cpu.bc.hi = 0xFF;
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                let memory = mock::Memory::new(vec![Opcode::CompareBIntoA_0xB8.into()]);
+                cpu.af.hi = 0xFF;
+                cpu.bc.hi = 0xFF;
+                cpu.pc = 0x0001;
+
+                cpu.set_sub_flag();
+                cpu.set_zero_flag();
+                return (cpu, memory);
+            },
+            expected_cycles: 4,
+        },
+    ];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
