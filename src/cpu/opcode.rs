@@ -187,6 +187,22 @@ pub enum Opcode {
     XorLIntoA_0xAD,
     XorMemoryHLIntoA_0xAE,
     XorAIntoA_0xAF,
+    OrBIntoA_0xB0,
+    OrCIntoA_0xB1,
+    OrDIntoA_0xB2,
+    OrEIntoA_0xB3,
+    OrHIntoA_0xB4,
+    OrLIntoA_0xB5,
+    OrMemoryHLIntoA_0xB6,
+    OrAIntoA_0xB7,
+    CompareBIntoA_0xB8,
+    CompareCIntoA_0xB9,
+    CompareDIntoA_0xBA,
+    CompareEIntoA_0xBB,
+    CompareHIntoA_0xBC,
+    CompareLIntoA_0xBD,
+    CompareMemoryHLIntoA_0xBE,
+    CompareAIntoA_0xBF,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -368,6 +384,22 @@ impl std::convert::From<u8> for Opcode {
             0xAD => Self::XorLIntoA_0xAD,
             0xAE => Self::XorMemoryHLIntoA_0xAE,
             0xAF => Self::XorAIntoA_0xAF,
+            0xB0 => Self::OrBIntoA_0xB0,
+            0xB1 => Self::OrCIntoA_0xB1,
+            0xB2 => Self::OrDIntoA_0xB2,
+            0xB3 => Self::OrEIntoA_0xB3,
+            0xB4 => Self::OrHIntoA_0xB4,
+            0xB5 => Self::OrLIntoA_0xB5,
+            0xB6 => Self::OrMemoryHLIntoA_0xB6,
+            0xB7 => Self::OrAIntoA_0xB7,
+            0xB8 => Self::CompareBIntoA_0xB8,
+            0xB9 => Self::CompareCIntoA_0xB9,
+            0xBA => Self::CompareDIntoA_0xBA,
+            0xBB => Self::CompareEIntoA_0xBB,
+            0xBC => Self::CompareHIntoA_0xBC,
+            0xBD => Self::CompareLIntoA_0xBD,
+            0xBE => Self::CompareMemoryHLIntoA_0xBE,
+            0xBF => Self::CompareAIntoA_0xBF,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -552,6 +584,22 @@ impl std::convert::Into<u8> for Opcode {
             Self::XorLIntoA_0xAD => 0xAD,
             Self::XorMemoryHLIntoA_0xAE => 0xAE,
             Self::XorAIntoA_0xAF => 0xAF,
+            Self::OrBIntoA_0xB0 => 0xB0,
+            Self::OrCIntoA_0xB1 => 0xB1,
+            Self::OrDIntoA_0xB2 => 0xB2,
+            Self::OrEIntoA_0xB3 => 0xB3,
+            Self::OrHIntoA_0xB4 => 0xB4,
+            Self::OrLIntoA_0xB5 => 0xB5,
+            Self::OrMemoryHLIntoA_0xB6 => 0xB6,
+            Self::OrAIntoA_0xB7 => 0xB7,
+            Self::CompareBIntoA_0xB8 => 0xB8,
+            Self::CompareCIntoA_0xB9 => 0xB9,
+            Self::CompareDIntoA_0xBA => 0xBA,
+            Self::CompareEIntoA_0xBB => 0xBB,
+            Self::CompareHIntoA_0xBC => 0xBC,
+            Self::CompareLIntoA_0xBD => 0xBD,
+            Self::CompareMemoryHLIntoA_0xBE => 0xBE,
+            Self::CompareAIntoA_0xBF => 0xBF,
         }
     }
 }
@@ -735,6 +783,22 @@ impl Opcode {
             Self::XorLIntoA_0xAD => execute_0xad(cpu, memory),
             Self::XorMemoryHLIntoA_0xAE => execute_0xae(cpu, memory),
             Self::XorAIntoA_0xAF => execute_0xaf(cpu, memory),
+            Self::OrBIntoA_0xB0 => execute_0xb0(cpu, memory),
+            Self::OrCIntoA_0xB1 => execute_0xb1(cpu, memory),
+            Self::OrDIntoA_0xB2 => execute_0xb2(cpu, memory),
+            Self::OrEIntoA_0xB3 => execute_0xb3(cpu, memory),
+            Self::OrHIntoA_0xB4 => execute_0xb4(cpu, memory),
+            Self::OrLIntoA_0xB5 => execute_0xb5(cpu, memory),
+            Self::OrMemoryHLIntoA_0xB6 => execute_0xb6(cpu, memory),
+            Self::OrAIntoA_0xB7 => execute_0xb7(cpu, memory),
+            Self::CompareBIntoA_0xB8 => execute_0xb8(cpu, memory),
+            Self::CompareCIntoA_0xB9 => execute_0xb9(cpu, memory),
+            Self::CompareDIntoA_0xBA => execute_0xba(cpu, memory),
+            Self::CompareEIntoA_0xBB => execute_0xbb(cpu, memory),
+            Self::CompareHIntoA_0xBC => execute_0xbc(cpu, memory),
+            Self::CompareLIntoA_0xBD => execute_0xbd(cpu, memory),
+            Self::CompareMemoryHLIntoA_0xBE => execute_0xbe(cpu, memory),
+            Self::CompareAIntoA_0xBF => execute_0xbf(cpu, memory),
         }
     }
 }
@@ -2683,6 +2747,134 @@ fn execute_0xaf(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.xor_8_bit_registers(register::ID::A, register::ID::A);
+
+    4
+}
+
+fn execute_0xb0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.or_8_bit_registers(register::ID::A, register::ID::B);
+
+    4
+}
+
+fn execute_0xb1(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.or_8_bit_registers(register::ID::A, register::ID::C);
+
+    4
+}
+
+fn execute_0xb2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.or_8_bit_registers(register::ID::A, register::ID::D);
+
+    4
+}
+
+fn execute_0xb3(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.or_8_bit_registers(register::ID::A, register::ID::E);
+
+    4
+}
+
+fn execute_0xb4(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.or_8_bit_registers(register::ID::A, register::ID::H);
+
+    4
+}
+
+fn execute_0xb5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.or_8_bit_registers(register::ID::A, register::ID::L);
+
+    4
+}
+
+fn execute_0xb6(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.or_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()));
+
+    8
+}
+
+fn execute_0xb7(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.or_8_bit_registers(register::ID::A, register::ID::A);
+
+    4
+}
+
+fn execute_0xb8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.compare_8_bit_registers(register::ID::A, register::ID::B);
+
+    4
+}
+
+fn execute_0xb9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.compare_8_bit_registers(register::ID::A, register::ID::C);
+
+    4
+}
+
+fn execute_0xba(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.compare_8_bit_registers(register::ID::A, register::ID::D);
+
+    4
+}
+
+fn execute_0xbb(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.compare_8_bit_registers(register::ID::A, register::ID::E);
+
+    4
+}
+
+fn execute_0xbc(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.compare_8_bit_registers(register::ID::A, register::ID::H);
+
+    4
+}
+
+fn execute_0xbd(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.compare_8_bit_registers(register::ID::A, register::ID::L);
+
+    4
+}
+
+fn execute_0xbe(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.compare_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()));
+
+    8
+}
+
+fn execute_0xbf(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.compare_8_bit_registers(register::ID::A, register::ID::A);
 
     4
 }
