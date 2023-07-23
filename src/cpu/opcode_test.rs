@@ -6806,3 +6806,30 @@ fn _0xc0() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0xc1() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            cpu.sp = 0x0001;
+            let memory = mock::Memory::new(vec![Opcode::PopMemorySPIntoBC_0xC1.into(), 0xFF, 0x1F]);
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::PopMemorySPIntoBC_0xC1.into(), 0xFF, 0x1F]);
+            cpu.pc = 0x0001;
+            cpu.sp = 0x0003;
+            cpu.bc.lo = 0xFF;
+            cpu.bc.hi = 0x1F;
+
+            return (cpu, memory);
+        },
+        expected_cycles: 12,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}

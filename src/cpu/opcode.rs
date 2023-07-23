@@ -206,6 +206,7 @@ pub enum Opcode {
     CompareMemoryHLIntoA_0xBE,
     CompareAIntoA_0xBF,
     ReturnNotZero_0xC0,
+    PopMemorySPIntoBC_0xC1,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -404,6 +405,7 @@ impl std::convert::From<u8> for Opcode {
             0xBE => Self::CompareMemoryHLIntoA_0xBE,
             0xBF => Self::CompareAIntoA_0xBF,
             0xC0 => Self::ReturnNotZero_0xC0,
+            0xC1 => Self::PopMemorySPIntoBC_0xC1,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -605,6 +607,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::CompareMemoryHLIntoA_0xBE => 0xBE,
             Self::CompareAIntoA_0xBF => 0xBF,
             Self::ReturnNotZero_0xC0 => 0xC0,
+            Self::PopMemorySPIntoBC_0xC1 => 0xC1,
         }
     }
 }
@@ -805,6 +808,7 @@ impl Opcode {
             Self::CompareMemoryHLIntoA_0xBE => execute_0xbe(cpu, memory),
             Self::CompareAIntoA_0xBF => execute_0xbf(cpu, memory),
             Self::ReturnNotZero_0xC0 => execute_0xc0(cpu, memory),
+            Self::PopMemorySPIntoBC_0xC1 => execute_0xc1(cpu, memory),
         }
     }
 }
@@ -2910,4 +2914,24 @@ fn execute_0xc0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
     // TODO: Update timers
     return 8;
+}
+
+fn execute_0xc1(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.bc.lo = match memory.read(usize::from(cpu.sp)) {
+        Some(byte) => byte,
+        None => panic!("error occured when loading return address from stack pointer")
+    };
+
+    cpu.sp = cpu.sp.wrapping_add(1);
+
+    cpu.bc.hi = match memory.read(usize::from(cpu.sp)) {
+        Some(byte) => byte,
+        None => panic!("error occured when loading return address from stack pointer")
+    };
+
+    cpu.sp = cpu.sp.wrapping_add(1);
+
+    return 12;
 }
