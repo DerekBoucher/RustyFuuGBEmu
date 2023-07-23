@@ -2,6 +2,8 @@
 #[cfg(test)]
 mod test;
 
+use core::panic;
+
 use crate::cpu::bit;
 use crate::cpu::register;
 use crate::cpu::lr35902;
@@ -203,6 +205,7 @@ pub enum Opcode {
     CompareLIntoA_0xBD,
     CompareMemoryHLIntoA_0xBE,
     CompareAIntoA_0xBF,
+    ReturnNotZero_0xC0,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -400,6 +403,7 @@ impl std::convert::From<u8> for Opcode {
             0xBD => Self::CompareLIntoA_0xBD,
             0xBE => Self::CompareMemoryHLIntoA_0xBE,
             0xBF => Self::CompareAIntoA_0xBF,
+            0xC0 => Self::ReturnNotZero_0xC0,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -600,6 +604,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::CompareLIntoA_0xBD => 0xBD,
             Self::CompareMemoryHLIntoA_0xBE => 0xBE,
             Self::CompareAIntoA_0xBF => 0xBF,
+            Self::ReturnNotZero_0xC0 => 0xC0,
         }
     }
 }
@@ -799,6 +804,7 @@ impl Opcode {
             Self::CompareLIntoA_0xBD => execute_0xbd(cpu, memory),
             Self::CompareMemoryHLIntoA_0xBE => execute_0xbe(cpu, memory),
             Self::CompareAIntoA_0xBF => execute_0xbf(cpu, memory),
+            Self::ReturnNotZero_0xC0 => execute_0xc0(cpu, memory),
         }
     }
 }
@@ -2877,4 +2883,31 @@ fn execute_0xbf(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.compare_8_bit_registers(register::ID::A, register::ID::A);
 
     4
+}
+
+fn execute_0xc0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    if !cpu.test_zero_flag() {
+        let lo_byte = match memory.read(usize::from(cpu.sp)) {
+            Some(byte) => byte,
+            None => panic!("error occured when loading return address from stack pointer")
+        };
+
+        cpu.sp = cpu.sp.wrapping_add(1);
+
+        let hi_byte = match memory.read(usize::from(cpu.sp)) {
+            Some(byte) => byte,
+            None => panic!("error occured when loading return address from stack pointer")
+        };
+
+        cpu.sp = cpu.sp.wrapping_add(1);
+        cpu.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
+
+        // TODO: Update timers
+        return 20;
+    }
+
+    // TODO: Update timers
+    return 8;
 }
