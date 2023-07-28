@@ -206,10 +206,11 @@ pub enum Opcode {
     CompareMemoryHLIntoA_0xBE,
     CompareAIntoA_0xBF,
     ReturnNotZero_0xC0,
-    PopMemorySPIntoBC_0xC1,
+    PopBC_0xC1,
     JumpAbsoluteNotZero_0xC2,
     JumpAbsolute_0xC3,
     CallNotZero_0xC4,
+    PushBC_0xC5,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -408,10 +409,11 @@ impl std::convert::From<u8> for Opcode {
             0xBE => Self::CompareMemoryHLIntoA_0xBE,
             0xBF => Self::CompareAIntoA_0xBF,
             0xC0 => Self::ReturnNotZero_0xC0,
-            0xC1 => Self::PopMemorySPIntoBC_0xC1,
+            0xC1 => Self::PopBC_0xC1,
             0xC2 => Self::JumpAbsoluteNotZero_0xC2,
             0xC3 => Self::JumpAbsolute_0xC3,
             0xC4 => Self::CallNotZero_0xC4,
+            0xC5 => Self::PushBC_0xC5,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -613,10 +615,11 @@ impl std::convert::Into<u8> for Opcode {
             Self::CompareMemoryHLIntoA_0xBE => 0xBE,
             Self::CompareAIntoA_0xBF => 0xBF,
             Self::ReturnNotZero_0xC0 => 0xC0,
-            Self::PopMemorySPIntoBC_0xC1 => 0xC1,
+            Self::PopBC_0xC1 => 0xC1,
             Self::JumpAbsoluteNotZero_0xC2 => 0xC2,
             Self::JumpAbsolute_0xC3 => 0xC3,
             Self::CallNotZero_0xC4 => 0xC4,
+            Self::PushBC_0xC5 => 0xC5,
         }
     }
 }
@@ -817,10 +820,11 @@ impl Opcode {
             Self::CompareMemoryHLIntoA_0xBE => execute_0xbe(cpu, memory),
             Self::CompareAIntoA_0xBF => execute_0xbf(cpu, memory),
             Self::ReturnNotZero_0xC0 => execute_0xc0(cpu, memory),
-            Self::PopMemorySPIntoBC_0xC1 => execute_0xc1(cpu, memory),
+            Self::PopBC_0xC1 => execute_0xc1(cpu, memory),
             Self::JumpAbsoluteNotZero_0xC2 => execute_0xc2(cpu, memory),
             Self::JumpAbsolute_0xC3 => execute_0xc3(cpu, memory),
             Self::CallNotZero_0xC4 => execute_0xc4(cpu, memory),
+            Self::PushBC_0xC5 => execute_0xc5(cpu, memory),
         }
     }
 }
@@ -2931,19 +2935,7 @@ fn execute_0xc0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 fn execute_0xc1(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    cpu.bc.lo = match memory.read(usize::from(cpu.sp)) {
-        Some(byte) => byte,
-        None => panic!("error occured when loading return address from stack pointer")
-    };
-
-    cpu.sp = cpu.sp.wrapping_add(1);
-
-    cpu.bc.hi = match memory.read(usize::from(cpu.sp)) {
-        Some(byte) => byte,
-        None => panic!("error occured when loading return address from stack pointer")
-    };
-
-    cpu.sp = cpu.sp.wrapping_add(1);
+    cpu.pop_stack_into_16_bit_register(register::ID16::BC, memory);
 
     return 12;
 }
@@ -3014,10 +3006,18 @@ fn execute_0xc4(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     if !cpu.test_zero_flag() {
-        cpu.push_pc_on_stack(memory);
+        cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
         cpu.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
         return 24;
     }
+
+    return 16;
+}
+
+fn execute_0xc5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.push_16bit_register_on_stack(register::ID16::BC, memory);
 
     return 16;
 }

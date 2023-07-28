@@ -1527,16 +1527,57 @@ fn compare_8_bit_memory() {
 }
 
 #[test]
-fn push_pc_on_stack() {
-    let mut cpu = LR35902::new();
-    cpu.pc = 0x1FFF;
-    cpu.sp = 0x0010;
+fn push_16bit_register_on_stack() {
+    {
+        let mut cpu = LR35902::new();
+        cpu.pc = 0x1FFF;
+        cpu.sp = 0x0010;
 
-    let mut memory = mock::Memory::new(vec![0x00; 0x10]);
+        let mut memory = mock::Memory::new(vec![0x00; 0x10]);
 
-    cpu.push_pc_on_stack(&mut memory);
+        cpu.push_16bit_register_on_stack(register::ID16::PC, &mut memory);
 
-    assert_eq!(cpu.sp, 0x000E);
-    assert_eq!(memory.data[0x000F], 0x1F);
-    assert_eq!(memory.data[0x000E], 0xFF);
+        assert_eq!(cpu.sp, 0x000E);
+        assert_eq!(memory.data[0x000F], 0x1F);
+        assert_eq!(memory.data[0x000E], 0xFF);
+    }
+    {
+        let mut cpu = LR35902::new();
+        cpu.bc.set_word(0x1FFF);
+        cpu.sp = 0x0010;
+
+        let mut memory = mock::Memory::new(vec![0x00; 0x10]);
+
+        cpu.push_16bit_register_on_stack(register::ID16::BC, &mut memory);
+
+        assert_eq!(cpu.sp, 0x000E);
+        assert_eq!(memory.data[0x000F], 0x1F);
+        assert_eq!(memory.data[0x000E], 0xFF);
+    }
+    {
+        let mut cpu = LR35902::new();
+        cpu.de.set_word(0x1FFF);
+        cpu.sp = 0x0010;
+
+        let mut memory = mock::Memory::new(vec![0x00; 0x10]);
+
+        cpu.push_16bit_register_on_stack(register::ID16::DE, &mut memory);
+
+        assert_eq!(cpu.sp, 0x000E);
+        assert_eq!(memory.data[0x000F], 0x1F);
+        assert_eq!(memory.data[0x000E], 0xFF);
+    }
+    {
+        let mut cpu = LR35902::new();
+        cpu.hl.set_word(0x1FFF);
+        cpu.sp = 0x0010;
+
+        let mut memory = mock::Memory::new(vec![0x00; 0x10]);
+
+        cpu.push_16bit_register_on_stack(register::ID16::HL, &mut memory);
+
+        assert_eq!(cpu.sp, 0x000E);
+        assert_eq!(memory.data[0x000F], 0x1F);
+        assert_eq!(memory.data[0x000E], 0xFF);
+    }
 }

@@ -747,10 +747,60 @@ impl LR35902 {
         };
     }
 
-    pub fn push_pc_on_stack(&mut self, memory: &mut impl memory::Interface) {
-        let pc_bytes = self.pc.to_be_bytes();
-        let hi_byte = pc_bytes[0];
-        let lo_byte = pc_bytes[1];
+    pub fn pop_stack_into_16_bit_register(
+        &mut self,
+        reg_id: register::ID16,
+        memory: &impl memory::Interface,
+    ) {
+        let lo_byte = match memory.read(usize::from(self.sp)) {
+            Some(byte) => byte,
+            None => panic!("error occured when loading return address from stack pointer"),
+        };
+
+        self.sp = self.sp.wrapping_add(1);
+
+        let hi_byte = match memory.read(usize::from(self.sp)) {
+            Some(byte) => byte,
+            None => panic!("error occured when loading return address from stack pointer"),
+        };
+
+        self.sp = self.sp.wrapping_add(1);
+
+        match reg_id {
+            ID16::BC => {
+                self.bc.lo = lo_byte;
+                self.bc.hi = hi_byte;
+            }
+            ID16::DE => {
+                self.de.lo = lo_byte;
+                self.de.hi = hi_byte;
+            }
+            ID16::HL => {
+                self.hl.lo = lo_byte;
+                self.hl.hi = hi_byte;
+            }
+            ID16::AF => panic!("not supported"),
+            ID16::SP => panic!("not supported"),
+            ID16::PC => panic!("not supported"),
+        }
+    }
+
+    pub fn push_16bit_register_on_stack(
+        &mut self,
+        reg_id: register::ID16,
+        memory: &mut impl memory::Interface,
+    ) {
+        let bytes = match reg_id {
+            ID16::BC => self.bc.word().to_be_bytes(),
+            ID16::DE => self.de.word().to_be_bytes(),
+            ID16::HL => self.hl.word().to_be_bytes(),
+            ID16::AF => panic!("not supported"),
+            ID16::PC => self.pc.to_be_bytes(),
+            ID16::SP => panic!("not supported"),
+        };
+
+        let hi_byte = bytes[0];
+        let lo_byte = bytes[1];
 
         self.sp = self.sp.wrapping_sub(1);
         memory.write(usize::from(self.sp), hi_byte);
@@ -758,6 +808,6 @@ impl LR35902 {
         self.sp = self.sp.wrapping_sub(1);
         memory.write(usize::from(self.sp), lo_byte);
 
-        // TODO: Update timers
+        // TODO: Update timers.
     }
 }
