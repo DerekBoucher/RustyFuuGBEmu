@@ -746,4 +746,18 @@ impl LR35902 {
             _ => panic!("invalid 8 bit or operation: targetID {:?}", target),
         };
     }
+
+    pub fn push_pc_on_stack(&mut self, memory: &mut impl memory::Interface) {
+        let pc_bytes = self.pc.to_be_bytes();
+        let hi_byte = pc_bytes[0];
+        let lo_byte = pc_bytes[1];
+
+        self.sp = self.sp.wrapping_sub(1);
+        memory.write(usize::from(self.sp), hi_byte);
+
+        self.sp = self.sp.wrapping_sub(1);
+        memory.write(usize::from(self.sp), lo_byte);
+
+        // TODO: Update timers
+    }
 }

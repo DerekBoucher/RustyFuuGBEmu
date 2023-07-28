@@ -1525,3 +1525,18 @@ fn compare_8_bit_memory() {
         assert_eq!(initial_state, expected_state)
     }
 }
+
+#[test]
+fn push_pc_on_stack() {
+    let mut cpu = LR35902::new();
+    cpu.pc = 0x1FFF;
+    cpu.sp = 0x0010;
+
+    let mut memory = mock::Memory::new(vec![0x00; 0x10]);
+
+    cpu.push_pc_on_stack(&mut memory);
+
+    assert_eq!(cpu.sp, 0x000E);
+    assert_eq!(memory.data[0x000F], 0x1F);
+    assert_eq!(memory.data[0x000E], 0xFF);
+}
