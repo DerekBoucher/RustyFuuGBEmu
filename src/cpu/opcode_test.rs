@@ -6833,3 +6833,43 @@ fn _0xc1() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0xc2() {
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            initial_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.set_zero_flag();
+                let memory = mock::Memory::new(vec![Opcode::JumpNotZero_0xC2.into(), 0xFF, 0x1F]);
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.pc = 0x0003;
+                cpu.set_zero_flag();
+                let memory = mock::Memory::new(vec![Opcode::JumpNotZero_0xC2.into(), 0xFF, 0x1F]);
+                return (cpu, memory);
+            },
+            expected_cycles: 12,
+        },
+        TestCase {
+            initial_state: || -> (LR35902, mock::Memory) {
+                let cpu = LR35902::new();
+                let memory = mock::Memory::new(vec![Opcode::JumpNotZero_0xC2.into(), 0xFF, 0x1F]);
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.pc = 0x1FFF;
+                let memory = mock::Memory::new(vec![Opcode::JumpNotZero_0xC2.into(), 0xFF, 0x1F]);
+                return (cpu, memory);
+            },
+            expected_cycles: 16,
+        },
+    ];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
