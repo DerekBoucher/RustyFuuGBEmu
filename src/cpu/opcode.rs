@@ -207,7 +207,8 @@ pub enum Opcode {
     CompareAIntoA_0xBF,
     ReturnNotZero_0xC0,
     PopMemorySPIntoBC_0xC1,
-    JumpNotZero_0xC2,
+    JumpAbsoluteNotZero_0xC2,
+    JumpAbsolute_0xC3,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -407,7 +408,8 @@ impl std::convert::From<u8> for Opcode {
             0xBF => Self::CompareAIntoA_0xBF,
             0xC0 => Self::ReturnNotZero_0xC0,
             0xC1 => Self::PopMemorySPIntoBC_0xC1,
-            0xC2 => Self::JumpNotZero_0xC2,
+            0xC2 => Self::JumpAbsoluteNotZero_0xC2,
+            0xC3 => Self::JumpAbsolute_0xC3,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -610,7 +612,8 @@ impl std::convert::Into<u8> for Opcode {
             Self::CompareAIntoA_0xBF => 0xBF,
             Self::ReturnNotZero_0xC0 => 0xC0,
             Self::PopMemorySPIntoBC_0xC1 => 0xC1,
-            Self::JumpNotZero_0xC2 => 0xC2,
+            Self::JumpAbsoluteNotZero_0xC2 => 0xC2,
+            Self::JumpAbsolute_0xC3 => 0xC3,
         }
     }
 }
@@ -812,7 +815,8 @@ impl Opcode {
             Self::CompareAIntoA_0xBF => execute_0xbf(cpu, memory),
             Self::ReturnNotZero_0xC0 => execute_0xc0(cpu, memory),
             Self::PopMemorySPIntoBC_0xC1 => execute_0xc1(cpu, memory),
-            Self::JumpNotZero_0xC2 => execute_0xc2(cpu, memory),
+            Self::JumpAbsoluteNotZero_0xC2 => execute_0xc2(cpu, memory),
+            Self::JumpAbsolute_0xC3 => execute_0xc3(cpu, memory),
         }
     }
 }
@@ -2964,4 +2968,26 @@ fn execute_0xc2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     }
 
     return 12;
+}
+
+fn execute_0xc3(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let lo_byte = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!("error occured when loading lo byte address for non-zero jump")
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let hi_byte = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!("error occured when loading hi byte address for non-zero jump")
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
+    // TODO: Update timers
+    return 16;
 }
