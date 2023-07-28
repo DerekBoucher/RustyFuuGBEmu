@@ -211,6 +211,7 @@ pub enum Opcode {
     JumpAbsolute_0xC3,
     CallNotZero_0xC4,
     PushBC_0xC5,
+    Add8ImmIntoA_0xC6,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -414,6 +415,7 @@ impl std::convert::From<u8> for Opcode {
             0xC3 => Self::JumpAbsolute_0xC3,
             0xC4 => Self::CallNotZero_0xC4,
             0xC5 => Self::PushBC_0xC5,
+            0xC6 => Self::Add8ImmIntoA_0xC6,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -620,6 +622,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::JumpAbsolute_0xC3 => 0xC3,
             Self::CallNotZero_0xC4 => 0xC4,
             Self::PushBC_0xC5 => 0xC5,
+            Self::Add8ImmIntoA_0xC6 => 0xC6,
         }
     }
 }
@@ -825,6 +828,7 @@ impl Opcode {
             Self::JumpAbsolute_0xC3 => execute_0xc3(cpu, memory),
             Self::CallNotZero_0xC4 => execute_0xc4(cpu, memory),
             Self::PushBC_0xC5 => execute_0xc5(cpu, memory),
+            Self::Add8ImmIntoA_0xC6 => execute_0xc6(cpu, memory),
         }
     }
 }
@@ -3020,4 +3024,14 @@ fn execute_0xc5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.push_16bit_register_on_stack(register::ID16::BC, memory);
 
     return 16;
+}
+
+fn execute_0xc6(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), false);
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    return 8;
 }

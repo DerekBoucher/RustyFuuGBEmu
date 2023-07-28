@@ -6981,3 +6981,26 @@ fn _0xc5() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0xc6() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, mock::Memory) {
+            let cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::Add8ImmIntoA_0xC6.into(), 0x1F]);
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            cpu.pc = 0x0002;
+            cpu.af.hi = 0x1F;
+            let memory = mock::Memory::new(vec![Opcode::Add8ImmIntoA_0xC6.into(), 0x1F]);
+            return (cpu, memory);
+        },
+        expected_cycles: 8,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
