@@ -219,6 +219,7 @@ pub enum Opcode {
     ExtendedOpCode_0xCB,
     CallZero_0xCC,
     Call_0xCD,
+    Add8ImmIntoAWithCarry_0xCE,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -430,6 +431,7 @@ impl std::convert::From<u8> for Opcode {
             0xCB => Self::ExtendedOpCode_0xCB,
             0xCC => Self::CallZero_0xCC,
             0xCD => Self::Call_0xCD,
+            0xCE => Self::Add8ImmIntoAWithCarry_0xCE,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -644,6 +646,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::ExtendedOpCode_0xCB => 0xCB,
             Self::CallZero_0xCC => 0xCC,
             Self::Call_0xCD => 0xCD,
+            Self::Add8ImmIntoAWithCarry_0xCE => 0xCE,
         }
     }
 }
@@ -857,6 +860,7 @@ impl Opcode {
             Self::ExtendedOpCode_0xCB => execute_0xcb(cpu, memory),
             Self::CallZero_0xCC => execute_0xcc(cpu, memory),
             Self::Call_0xCD => execute_0xcd(cpu, memory),
+            Self::Add8ImmIntoAWithCarry_0xCE => execute_0xce(cpu, memory),
         }
     }
 }
@@ -2620,4 +2624,12 @@ fn execute_0xcc(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0xcd(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     return cpu.call_to_imm_address(memory, true);
+}
+
+fn execute_0xce(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), true);
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    return 8;
 }
