@@ -220,6 +220,7 @@ pub enum Opcode {
     CallZero_0xCC,
     Call_0xCD,
     Add8ImmIntoAWithCarry_0xCE,
+    Reset08h_0xCF,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -432,6 +433,7 @@ impl std::convert::From<u8> for Opcode {
             0xCC => Self::CallZero_0xCC,
             0xCD => Self::Call_0xCD,
             0xCE => Self::Add8ImmIntoAWithCarry_0xCE,
+            0xCF => Self::Reset08h_0xCF,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -647,6 +649,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::CallZero_0xCC => 0xCC,
             Self::Call_0xCD => 0xCD,
             Self::Add8ImmIntoAWithCarry_0xCE => 0xCE,
+            Self::Reset08h_0xCF => 0xCF,
         }
     }
 }
@@ -861,6 +864,7 @@ impl Opcode {
             Self::CallZero_0xCC => execute_0xcc(cpu, memory),
             Self::Call_0xCD => execute_0xcd(cpu, memory),
             Self::Add8ImmIntoAWithCarry_0xCE => execute_0xce(cpu, memory),
+            Self::Reset08h_0xCF => execute_0xcf(cpu, memory),
         }
     }
 }
@@ -2632,4 +2636,13 @@ fn execute_0xce(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     return 8;
+}
+
+fn execute_0xcf(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+
+    cpu.pc = 0x0008;
+
+    // TODO - Update Timers
+    return 16;
 }
