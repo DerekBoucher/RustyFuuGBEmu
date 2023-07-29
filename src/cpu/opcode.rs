@@ -216,6 +216,7 @@ pub enum Opcode {
     ReturnZero_0xC8,
     Return_0xC9,
     JumpAbsoluteZero_0xCA,
+    ExtendedOpCode_0xCB,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -424,6 +425,7 @@ impl std::convert::From<u8> for Opcode {
             0xC8 => Self::ReturnZero_0xC8,
             0xC9 => Self::Return_0xC9,
             0xCA => Self::JumpAbsoluteZero_0xCA,
+            0xCB => Self::ExtendedOpCode_0xCB,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -635,6 +637,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::ReturnZero_0xC8 => 0xC8,
             Self::Return_0xC9 => 0xC9,
             Self::JumpAbsoluteZero_0xCA => 0xCA,
+            Self::ExtendedOpCode_0xCB => 0xCB,
         }
     }
 }
@@ -845,6 +848,7 @@ impl Opcode {
             Self::ReturnZero_0xC8 => execute_0xc8(cpu, memory),
             Self::Return_0xC9 => execute_0xc9(cpu, memory),
             Self::JumpAbsoluteZero_0xCA => execute_0xca(cpu, memory),
+            Self::ExtendedOpCode_0xCB => execute_0xcb(cpu, memory),
         }
     }
 }
@@ -2595,4 +2599,9 @@ fn execute_0xc9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0xca(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     return cpu.jump_to_imm_address(memory, cpu.test_zero_flag());
+}
+
+fn execute_0xcb(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    // TODO
+    return 4;
 }
