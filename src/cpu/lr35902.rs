@@ -65,6 +65,8 @@ impl LR35902 {
             ),
         };
 
+        self.pc = self.pc.wrapping_add(1);
+
         return op.execute(self, memory);
     }
 
@@ -745,5 +747,159 @@ impl LR35902 {
             ID::A => self.af.hi = new_target_value,
             _ => panic!("invalid 8 bit or operation: targetID {:?}", target),
         };
+    }
+
+    pub fn pop_stack_into_16_bit_register(
+        &mut self,
+        reg_id: register::ID16,
+        memory: &impl memory::Interface,
+    ) {
+        let lo_byte = match memory.read(usize::from(self.sp)) {
+            Some(byte) => byte,
+            None => panic!("error occured when loading return address from stack pointer"),
+        };
+
+        self.sp = self.sp.wrapping_add(1);
+
+        let hi_byte = match memory.read(usize::from(self.sp)) {
+            Some(byte) => byte,
+            None => panic!("error occured when loading return address from stack pointer"),
+        };
+
+        self.sp = self.sp.wrapping_add(1);
+
+        match reg_id {
+            ID16::BC => {
+                self.bc.lo = lo_byte;
+                self.bc.hi = hi_byte;
+            }
+            ID16::DE => {
+                self.de.lo = lo_byte;
+                self.de.hi = hi_byte;
+            }
+            ID16::HL => {
+                self.hl.lo = lo_byte;
+                self.hl.hi = hi_byte;
+            }
+            ID16::AF => panic!("not supported"),
+            ID16::SP => panic!("not supported"),
+            ID16::PC => {
+                self.pc = u16::from(hi_byte) << 8 | u16::from(lo_byte);
+            }
+        }
+    }
+
+    pub fn push_16bit_register_on_stack(
+        &mut self,
+        reg_id: register::ID16,
+        memory: &mut impl memory::Interface,
+    ) {
+        let bytes = match reg_id {
+            ID16::BC => self.bc.word().to_be_bytes(),
+            ID16::DE => self.de.word().to_be_bytes(),
+            ID16::HL => self.hl.word().to_be_bytes(),
+            ID16::AF => panic!("not supported"),
+            ID16::PC => self.pc.to_be_bytes(),
+            ID16::SP => panic!("not supported"),
+        };
+
+        let hi_byte = bytes[0];
+        let lo_byte = bytes[1];
+
+        self.sp = self.sp.wrapping_sub(1);
+        memory.write(usize::from(self.sp), hi_byte);
+
+        self.sp = self.sp.wrapping_sub(1);
+        memory.write(usize::from(self.sp), lo_byte);
+
+        // TODO: Update timers.
+    }
+
+    pub fn jump_to_imm_address(&mut self, memory: &impl memory::Interface, condition: bool) -> u32 {
+        let lo_byte = match memory.read(usize::from(self.pc)) {
+            Some(byte) => byte,
+            None => panic!("error occured when loading lo byte address for non-zero jump"),
+        };
+
+        self.pc = self.pc.wrapping_add(1);
+
+        let hi_byte = match memory.read(usize::from(self.pc)) {
+            Some(byte) => byte,
+            None => panic!("error occured when loading hi byte address for non-zero jump"),
+        };
+
+        self.pc = self.pc.wrapping_add(1);
+
+        if condition {
+            self.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
+            // TODO: Update timers
+            return 16;
+        }
+
+        return 12;
+    }
+
+    pub fn call_to_imm_address(
+        &mut self,
+        memory: &mut impl memory::Interface,
+        condition: bool,
+    ) -> u32 {
+        let lo_byte = match memory.read(usize::from(self.pc)) {
+            Some(byte) => byte,
+            None => panic!("error occured when loading lo byte address for non-zero jump"),
+        };
+
+        self.pc = self.pc.wrapping_add(1);
+
+        let hi_byte = match memory.read(usize::from(self.pc)) {
+            Some(byte) => byte,
+            None => panic!("error occured when loading hi byte address for non-zero jump"),
+        };
+
+        self.pc = self.pc.wrapping_add(1);
+
+        if condition {
+            self.push_16bit_register_on_stack(register::ID16::PC, memory);
+            self.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
+            return 24;
+        }
+
+        return 16;
+    }
+
+    pub fn return_from_call_conditional(
+        &mut self,
+        memory: &impl memory::Interface,
+        condition: bool,
+    ) -> u32 {
+        if condition {
+            let lo_byte = match memory.read(usize::from(self.sp)) {
+                Some(byte) => byte,
+                None => panic!("error occured when loading return address from stack pointer"),
+            };
+
+            self.sp = self.sp.wrapping_add(1);
+
+            let hi_byte = match memory.read(usize::from(self.sp)) {
+                Some(byte) => byte,
+                None => panic!("error occured when loading return address from stack pointer"),
+            };
+
+            self.sp = self.sp.wrapping_add(1);
+            self.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
+
+            // TODO: Update timers
+            return 20;
+        }
+
+        // TODO: Update timers
+        return 8;
+    }
+
+    pub fn return_from_call(&mut self, memory: &impl memory::Interface) -> u32 {
+        self.pop_stack_into_16_bit_register(register::ID16::PC, memory);
+
+        // TODO: Update timers
+        return 16;
     }
 }
