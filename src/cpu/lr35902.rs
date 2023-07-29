@@ -65,6 +65,8 @@ impl LR35902 {
             ),
         };
 
+        self.pc = self.pc.wrapping_add(1);
+
         return op.execute(self, memory);
     }
 
