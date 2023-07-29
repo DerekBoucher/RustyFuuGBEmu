@@ -7370,3 +7370,28 @@ fn _0xc8() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0xc9() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            cpu.sp = 0x0002;
+            let memory = mock::Memory::new(vec![Opcode::Return_0xC9.into(), 0x00, 0xFF, 0x1F]);
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            cpu.sp = 0x0004;
+            cpu.pc = 0x1FFF;
+            let memory = mock::Memory::new(vec![Opcode::Return_0xC9.into(), 0x00, 0xFF, 0x1F]);
+            return (cpu, memory);
+        },
+        expected_cycles: 16,
+        disable_pc_check: false,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
