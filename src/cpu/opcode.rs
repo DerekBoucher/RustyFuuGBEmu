@@ -2,8 +2,6 @@
 #[cfg(test)]
 mod test;
 
-use core::panic;
-
 use crate::cpu::bit;
 use crate::cpu::register;
 use crate::cpu::lr35902;
