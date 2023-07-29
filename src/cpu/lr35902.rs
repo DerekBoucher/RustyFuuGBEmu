@@ -836,4 +836,32 @@ impl LR35902 {
 
         return 12;
     }
+
+    pub fn call_to_imm_address(
+        &mut self,
+        memory: &mut impl memory::Interface,
+        condition: bool,
+    ) -> u32 {
+        let lo_byte = match memory.read(usize::from(self.pc)) {
+            Some(byte) => byte,
+            None => panic!("error occured when loading lo byte address for non-zero jump"),
+        };
+
+        self.pc = self.pc.wrapping_add(1);
+
+        let hi_byte = match memory.read(usize::from(self.pc)) {
+            Some(byte) => byte,
+            None => panic!("error occured when loading hi byte address for non-zero jump"),
+        };
+
+        self.pc = self.pc.wrapping_add(1);
+
+        if condition {
+            self.push_16bit_register_on_stack(register::ID16::PC, memory);
+            self.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
+            return 24;
+        }
+
+        return 16;
+    }
 }

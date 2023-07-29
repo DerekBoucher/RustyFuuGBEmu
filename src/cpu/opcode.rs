@@ -2974,28 +2974,7 @@ fn execute_0xc3(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0xc4(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
-
-    let lo_byte = match memory.read(usize::from(cpu.pc)) {
-        Some(byte) => byte,
-        None => panic!("error occured when loading lo byte address for non-zero jump")
-    };
-
-    cpu.pc = cpu.pc.wrapping_add(1);
-
-    let hi_byte = match memory.read(usize::from(cpu.pc)) {
-        Some(byte) => byte,
-        None => panic!("error occured when loading hi byte address for non-zero jump")
-    };
-
-    cpu.pc = cpu.pc.wrapping_add(1);
-
-    if !cpu.test_zero_flag() {
-        cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
-        cpu.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
-        return 24;
-    }
-
-    return 16;
+    return cpu.call_to_imm_address(memory, !cpu.test_zero_flag());
 }
 
 fn execute_0xc5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
