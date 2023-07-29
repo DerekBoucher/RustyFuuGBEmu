@@ -2927,48 +2927,22 @@ fn execute_0xbf(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0xc0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
-
-    if !cpu.test_zero_flag() {
-        let lo_byte = match memory.read(usize::from(cpu.sp)) {
-            Some(byte) => byte,
-            None => panic!("error occured when loading return address from stack pointer")
-        };
-
-        cpu.sp = cpu.sp.wrapping_add(1);
-
-        let hi_byte = match memory.read(usize::from(cpu.sp)) {
-            Some(byte) => byte,
-            None => panic!("error occured when loading return address from stack pointer")
-        };
-
-        cpu.sp = cpu.sp.wrapping_add(1);
-        cpu.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
-
-        // TODO: Update timers
-        return 20;
-    }
-
-    // TODO: Update timers
-    return 8;
+    return cpu.return_from_call_conditional(memory, !cpu.test_zero_flag());
 }
 
 fn execute_0xc1(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
-
     cpu.pop_stack_into_16_bit_register(register::ID16::BC, memory);
-
     return 12;
 }
 
 fn execute_0xc2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
-
     return cpu.jump_to_imm_address(memory, !cpu.test_zero_flag());
 }
 
 fn execute_0xc3(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
-
     return cpu.jump_to_imm_address(memory, true);
 }
 
@@ -3008,29 +2982,15 @@ fn execute_0xc7(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0xc8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
-
-    if cpu.test_zero_flag() {
-        cpu.pop_stack_into_16_bit_register(register::ID16::PC, memory);
-
-        // TODO: Update timers
-
-        return 20;
-    }
-
-    // TODO: Update Timers
-    return 8;
+    return cpu.return_from_call_conditional(memory, cpu.test_zero_flag());
 }
 
 fn execute_0xc9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
-    cpu.pop_stack_into_16_bit_register(register::ID16::PC, memory);
-
-    // TODO: Update timers
-    return 16;
+    return cpu.return_from_call(memory);
 }
 
 fn execute_0xca(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
-
     return cpu.jump_to_imm_address(memory, cpu.test_zero_flag());
 }

@@ -864,4 +864,40 @@ impl LR35902 {
 
         return 16;
     }
+
+    pub fn return_from_call_conditional(
+        &mut self,
+        memory: &impl memory::Interface,
+        condition: bool,
+    ) -> u32 {
+        if condition {
+            let lo_byte = match memory.read(usize::from(self.sp)) {
+                Some(byte) => byte,
+                None => panic!("error occured when loading return address from stack pointer"),
+            };
+
+            self.sp = self.sp.wrapping_add(1);
+
+            let hi_byte = match memory.read(usize::from(self.sp)) {
+                Some(byte) => byte,
+                None => panic!("error occured when loading return address from stack pointer"),
+            };
+
+            self.sp = self.sp.wrapping_add(1);
+            self.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
+
+            // TODO: Update timers
+            return 20;
+        }
+
+        // TODO: Update timers
+        return 8;
+    }
+
+    pub fn return_from_call(&mut self, memory: &impl memory::Interface) -> u32 {
+        self.pop_stack_into_16_bit_register(register::ID16::PC, memory);
+
+        // TODO: Update timers
+        return 16;
+    }
 }
