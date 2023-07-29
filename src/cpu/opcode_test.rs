@@ -7,6 +7,7 @@ struct TestCase {
     initial_state: fn() -> (LR35902, mock::Memory),
     expected_state: fn() -> (LR35902, mock::Memory),
     expected_cycles: u32,
+    disable_pc_check: bool,
 }
 
 impl TestCase {
@@ -28,14 +29,17 @@ impl TestCase {
         assert_eq!(actual_cycles, self.expected_cycles);
         assert_eq!(cpu_initial_state, cpu_expected_state);
         assert_eq!(memory_initial_state, memory_expected_state);
-        assert_ne!(
-            cpu_initial_state.pc, 0x0000,
-            "pc should never be 0 after an opcode"
-        );
-        assert_ne!(
-            initial_pc, cpu_initial_state.pc,
-            "pc should have changed value after executing an op code"
-        );
+
+        if !self.disable_pc_check {
+            assert_ne!(
+                cpu_initial_state.pc, 0x0000,
+                "pc should never be 0 after an opcode"
+            );
+            assert_ne!(
+                initial_pc, cpu_initial_state.pc,
+                "pc should have changed value after executing an op code"
+            );
+        }
     }
 }
 
@@ -54,6 +58,7 @@ fn _0x00() {
             return (cpu, mock::Memory::new(vec![Opcode::Nop_0x00.into()]));
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -82,6 +87,7 @@ fn _0x01() {
             );
         },
         expected_cycles: 12,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -113,6 +119,7 @@ fn _0x02() {
             );
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -138,6 +145,7 @@ fn _0x03() {
                 return (cpu, mock::Memory::new(vec![Opcode::IncBC_0x03.into()]));
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -154,6 +162,7 @@ fn _0x03() {
                 return (cpu, mock::Memory::new(vec![Opcode::IncBC_0x03.into()]));
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
     ];
 
@@ -180,6 +189,7 @@ fn _0x04() {
                 return (cpu, mock::Memory::new(vec![Opcode::IncB_0x04.into()]));
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             expected_state: || -> (LR35902, mock::Memory) {
@@ -194,6 +204,7 @@ fn _0x04() {
                 return (cpu, mock::Memory::new(vec![Opcode::IncB_0x04.into()]));
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             expected_state: || -> (LR35902, mock::Memory) {
@@ -210,6 +221,7 @@ fn _0x04() {
                 return (cpu, mock::Memory::new(vec![Opcode::IncB_0x04.into()]));
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             expected_state: || -> (LR35902, mock::Memory) {
@@ -224,6 +236,7 @@ fn _0x04() {
                 return (cpu, mock::Memory::new(vec![Opcode::IncB_0x04.into()]));
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -249,6 +262,7 @@ fn _0x05() {
                 return (cpu, mock::Memory::new(vec![Opcode::DecB_0x05.into()]));
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -265,6 +279,7 @@ fn _0x05() {
                 return (cpu, mock::Memory::new(vec![Opcode::DecB_0x05.into()]));
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -281,6 +296,7 @@ fn _0x05() {
                 return (cpu, mock::Memory::new(vec![Opcode::DecB_0x05.into()]));
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -298,6 +314,7 @@ fn _0x05() {
                 return (cpu, mock::Memory::new(vec![Opcode::DecB_0x05.into()]));
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -326,6 +343,7 @@ fn _0x06() {
             );
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -359,6 +377,7 @@ fn _0x07() {
                 );
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -382,6 +401,7 @@ fn _0x07() {
                 );
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -415,6 +435,7 @@ fn _0x08() {
             return (cpu, mock::Memory::new(memory));
         },
         expected_cycles: 20,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -448,6 +469,7 @@ fn _0x09() {
             );
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -477,6 +499,7 @@ fn _0x0a() {
             );
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -498,6 +521,7 @@ fn _0x0b() {
             return (cpu, mock::Memory::new(vec![Opcode::DecBC_0x0B.into()]));
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -519,6 +543,7 @@ fn _0x0c() {
             return (cpu, mock::Memory::new(vec![Opcode::IncC_0x0C.into()]));
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -542,6 +567,7 @@ fn _0x0d() {
             return (cpu, mock::Memory::new(vec![Opcode::DecC_0x0D.into()]));
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -565,6 +591,7 @@ fn _0x0e() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -594,6 +621,7 @@ fn _0x0f() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -613,6 +641,7 @@ fn _0x0f() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -637,6 +666,7 @@ fn _0x10() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -662,6 +692,7 @@ fn _0x11() {
             return (cpu, memory);
         },
         expected_cycles: 12,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -688,6 +719,7 @@ fn _0x12() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -715,6 +747,7 @@ fn _0x13() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -733,6 +766,7 @@ fn _0x13() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
     ];
 
@@ -761,6 +795,7 @@ fn _0x14() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             expected_state: || -> (LR35902, mock::Memory) {
@@ -777,6 +812,7 @@ fn _0x14() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             expected_state: || -> (LR35902, mock::Memory) {
@@ -795,6 +831,7 @@ fn _0x14() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             expected_state: || -> (LR35902, mock::Memory) {
@@ -811,6 +848,7 @@ fn _0x14() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -838,6 +876,7 @@ fn _0x15() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -856,6 +895,7 @@ fn _0x15() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -874,6 +914,7 @@ fn _0x15() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -893,6 +934,7 @@ fn _0x15() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -917,6 +959,7 @@ fn _0x16() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -946,6 +989,7 @@ fn _0x17() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -966,6 +1010,7 @@ fn _0x17() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -987,6 +1032,7 @@ fn _0x17() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1006,6 +1052,7 @@ fn _0x17() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -1031,6 +1078,7 @@ fn _0x18() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1045,6 +1093,7 @@ fn _0x18() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
     ];
 
@@ -1075,6 +1124,7 @@ fn _0x19() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -1104,6 +1154,7 @@ fn _0x1a() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -1127,6 +1178,7 @@ fn _0x1b() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -1150,6 +1202,7 @@ fn _0x1c() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -1175,6 +1228,7 @@ fn _0x1d() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -1198,6 +1252,7 @@ fn _0x1e() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -1227,6 +1282,7 @@ fn _0x1f() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1247,6 +1303,7 @@ fn _0x1f() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1268,6 +1325,7 @@ fn _0x1f() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1287,6 +1345,7 @@ fn _0x1f() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -1314,6 +1373,7 @@ fn _0x20() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1330,6 +1390,7 @@ fn _0x20() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1349,6 +1410,7 @@ fn _0x20() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1367,6 +1429,7 @@ fn _0x20() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
     ];
 
@@ -1393,6 +1456,7 @@ fn _0x21() {
             return (cpu, memory);
         },
         expected_cycles: 12,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -1419,6 +1483,7 @@ fn _0x22() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -1446,6 +1511,7 @@ fn _0x23() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1464,6 +1530,7 @@ fn _0x23() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
     ];
 
@@ -1492,6 +1559,7 @@ fn _0x24() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             expected_state: || -> (LR35902, mock::Memory) {
@@ -1508,6 +1576,7 @@ fn _0x24() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             expected_state: || -> (LR35902, mock::Memory) {
@@ -1526,6 +1595,7 @@ fn _0x24() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             expected_state: || -> (LR35902, mock::Memory) {
@@ -1542,6 +1612,7 @@ fn _0x24() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -1569,6 +1640,7 @@ fn _0x25() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1587,6 +1659,7 @@ fn _0x25() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1605,6 +1678,7 @@ fn _0x25() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1624,6 +1698,7 @@ fn _0x25() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -1648,6 +1723,7 @@ fn _0x26() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -1674,6 +1750,7 @@ fn _0x27() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1692,6 +1769,7 @@ fn _0x27() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1708,6 +1786,7 @@ fn _0x27() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1724,6 +1803,7 @@ fn _0x27() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1743,6 +1823,7 @@ fn _0x27() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1761,6 +1842,7 @@ fn _0x27() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1778,6 +1860,7 @@ fn _0x27() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -1805,6 +1888,7 @@ fn _0x28() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1821,6 +1905,7 @@ fn _0x28() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1840,6 +1925,7 @@ fn _0x28() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -1856,6 +1942,7 @@ fn _0x28() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
     ];
 
@@ -1884,6 +1971,7 @@ fn _0x29() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -1913,6 +2001,7 @@ fn _0x2a() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -1936,6 +2025,7 @@ fn _0x2b() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -1959,6 +2049,7 @@ fn _0x2c() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -1984,6 +2075,7 @@ fn _0x2d() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2007,6 +2099,7 @@ fn _0x2e() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2032,6 +2125,7 @@ fn _0x2f() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2058,6 +2152,7 @@ fn _0x30() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -2074,6 +2169,7 @@ fn _0x30() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -2093,6 +2189,7 @@ fn _0x30() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -2111,6 +2208,7 @@ fn _0x30() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
     ];
 
@@ -2135,6 +2233,7 @@ fn _0x31() {
             return (cpu, memory);
         },
         expected_cycles: 12,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2161,6 +2260,7 @@ fn _0x32() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2186,6 +2286,7 @@ fn _0x33() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -2202,6 +2303,7 @@ fn _0x33() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
     ];
 
@@ -2231,6 +2333,7 @@ fn _0x34() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -2249,6 +2352,7 @@ fn _0x34() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -2266,6 +2370,7 @@ fn _0x34() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
     ];
 
@@ -2294,6 +2399,7 @@ fn _0x35() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -2312,6 +2418,7 @@ fn _0x35() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -2330,6 +2437,7 @@ fn _0x35() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
     ];
 
@@ -2357,6 +2465,7 @@ fn _0x36() {
             return (cpu, memory);
         },
         expected_cycles: 12,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2382,6 +2491,7 @@ fn _0x37() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2408,6 +2518,7 @@ fn _0x38() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -2424,6 +2535,7 @@ fn _0x38() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -2443,6 +2555,7 @@ fn _0x38() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -2459,6 +2572,7 @@ fn _0x38() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
     ];
 
@@ -2488,6 +2602,7 @@ fn _0x39() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2517,6 +2632,7 @@ fn _0x3a() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2540,6 +2656,7 @@ fn _0x3b() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2563,6 +2680,7 @@ fn _0x3c() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2588,6 +2706,7 @@ fn _0x3d() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2611,6 +2730,7 @@ fn _0x3e() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2637,6 +2757,7 @@ fn _0x3f() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -2654,6 +2775,7 @@ fn _0x3f() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -2679,6 +2801,7 @@ fn _0x40() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2704,6 +2827,7 @@ fn _0x41() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2729,6 +2853,7 @@ fn _0x42() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2754,6 +2879,7 @@ fn _0x43() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2779,6 +2905,7 @@ fn _0x44() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2804,6 +2931,7 @@ fn _0x45() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2829,6 +2957,7 @@ fn _0x46() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2854,6 +2983,7 @@ fn _0x47() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2879,6 +3009,7 @@ fn _0x48() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2903,6 +3034,7 @@ fn _0x49() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2928,6 +3060,7 @@ fn _0x4a() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2953,6 +3086,7 @@ fn _0x4b() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -2978,6 +3112,7 @@ fn _0x4c() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3003,6 +3138,7 @@ fn _0x4d() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3028,6 +3164,7 @@ fn _0x4e() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3053,6 +3190,7 @@ fn _0x4f() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3078,6 +3216,7 @@ fn _0x50() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3103,6 +3242,7 @@ fn _0x51() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3127,6 +3267,7 @@ fn _0x52() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3152,6 +3293,7 @@ fn _0x53() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3177,6 +3319,7 @@ fn _0x54() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3202,6 +3345,7 @@ fn _0x55() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3227,6 +3371,7 @@ fn _0x56() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3252,6 +3397,7 @@ fn _0x57() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3277,6 +3423,7 @@ fn _0x58() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3302,6 +3449,7 @@ fn _0x59() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3327,6 +3475,7 @@ fn _0x5a() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3351,6 +3500,7 @@ fn _0x5b() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3376,6 +3526,7 @@ fn _0x5c() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3401,6 +3552,7 @@ fn _0x5d() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3426,6 +3578,7 @@ fn _0x5e() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3451,6 +3604,7 @@ fn _0x5f() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3476,6 +3630,7 @@ fn _0x60() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3501,6 +3656,7 @@ fn _0x61() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3526,6 +3682,7 @@ fn _0x62() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3551,6 +3708,7 @@ fn _0x63() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3575,6 +3733,7 @@ fn _0x64() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3600,6 +3759,7 @@ fn _0x65() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3625,6 +3785,7 @@ fn _0x66() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3650,6 +3811,7 @@ fn _0x67() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3675,6 +3837,7 @@ fn _0x68() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3700,6 +3863,7 @@ fn _0x69() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3725,6 +3889,7 @@ fn _0x6a() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3750,6 +3915,7 @@ fn _0x6b() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3775,6 +3941,7 @@ fn _0x6c() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3799,6 +3966,7 @@ fn _0x6d() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3823,6 +3991,7 @@ fn _0x6e() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3848,6 +4017,7 @@ fn _0x6f() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3874,6 +4044,7 @@ fn _0x70() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3900,6 +4071,7 @@ fn _0x71() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3926,6 +4098,7 @@ fn _0x72() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3952,6 +4125,7 @@ fn _0x73() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -3976,6 +4150,7 @@ fn _0x74() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4000,6 +4175,7 @@ fn _0x75() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4030,6 +4206,7 @@ fn _0x76() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -4053,6 +4230,7 @@ fn _0x76() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -4077,6 +4255,7 @@ fn _0x76() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -4104,6 +4283,7 @@ fn _0x77() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4129,6 +4309,7 @@ fn _0x78() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4154,6 +4335,7 @@ fn _0x79() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4179,6 +4361,7 @@ fn _0x7a() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4204,6 +4387,7 @@ fn _0x7b() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4229,6 +4413,7 @@ fn _0x7c() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4254,6 +4439,7 @@ fn _0x7d() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4279,6 +4465,7 @@ fn _0x7e() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4303,6 +4490,7 @@ fn _0x7f() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4332,6 +4520,7 @@ fn _0x80() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4361,6 +4550,7 @@ fn _0x81() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4390,6 +4580,7 @@ fn _0x82() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4419,6 +4610,7 @@ fn _0x83() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4448,6 +4640,7 @@ fn _0x84() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4477,6 +4670,7 @@ fn _0x85() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4506,6 +4700,7 @@ fn _0x86() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4532,6 +4727,7 @@ fn _0x87() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -4563,6 +4759,7 @@ fn _0x88() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -4581,6 +4778,7 @@ fn _0x88() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -4613,6 +4811,7 @@ fn _0x89() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -4631,6 +4830,7 @@ fn _0x89() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -4663,6 +4863,7 @@ fn _0x8a() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -4681,6 +4882,7 @@ fn _0x8a() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -4713,6 +4915,7 @@ fn _0x8b() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -4731,6 +4934,7 @@ fn _0x8b() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -4763,6 +4967,7 @@ fn _0x8c() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -4781,6 +4986,7 @@ fn _0x8c() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -4813,6 +5019,7 @@ fn _0x8d() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -4831,6 +5038,7 @@ fn _0x8d() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -4863,6 +5071,7 @@ fn _0x8e() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -4887,6 +5096,7 @@ fn _0x8e() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
     ];
 
@@ -4915,6 +5125,7 @@ fn _0x8f() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -4933,6 +5144,7 @@ fn _0x8f() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -4964,6 +5176,7 @@ fn _0x90() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -4984,6 +5197,7 @@ fn _0x90() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -5015,6 +5229,7 @@ fn _0x91() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -5035,6 +5250,7 @@ fn _0x91() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -5066,6 +5282,7 @@ fn _0x92() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -5086,6 +5303,7 @@ fn _0x92() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -5117,6 +5335,7 @@ fn _0x93() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -5137,6 +5356,7 @@ fn _0x93() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -5168,6 +5388,7 @@ fn _0x94() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -5188,6 +5409,7 @@ fn _0x94() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -5219,6 +5441,7 @@ fn _0x95() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -5239,6 +5462,7 @@ fn _0x95() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -5269,6 +5493,7 @@ fn _0x96() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -5295,6 +5520,7 @@ fn _0x97() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -5325,6 +5551,7 @@ fn _0x98() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -5347,6 +5574,7 @@ fn _0x98() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -5378,6 +5606,7 @@ fn _0x99() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -5400,6 +5629,7 @@ fn _0x99() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -5431,6 +5661,7 @@ fn _0x9a() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -5453,6 +5684,7 @@ fn _0x9a() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -5484,6 +5716,7 @@ fn _0x9b() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -5506,6 +5739,7 @@ fn _0x9b() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -5537,6 +5771,7 @@ fn _0x9c() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -5559,6 +5794,7 @@ fn _0x9c() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -5590,6 +5826,7 @@ fn _0x9d() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -5612,6 +5849,7 @@ fn _0x9d() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -5645,6 +5883,7 @@ fn _0x9e() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -5669,6 +5908,7 @@ fn _0x9e() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
     ];
 
@@ -5697,6 +5937,7 @@ fn _0x9f() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -5717,6 +5958,7 @@ fn _0x9f() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -5745,6 +5987,7 @@ fn _0xa0() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -5772,6 +6015,7 @@ fn _0xa1() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -5799,6 +6043,7 @@ fn _0xa2() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -5826,6 +6071,7 @@ fn _0xa3() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -5853,6 +6099,7 @@ fn _0xa4() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -5880,6 +6127,7 @@ fn _0xa5() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -5907,6 +6155,7 @@ fn _0xa6() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -5932,6 +6181,7 @@ fn _0xa7() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -5959,6 +6209,7 @@ fn _0xa8() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -5986,6 +6237,7 @@ fn _0xa9() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6013,6 +6265,7 @@ fn _0xaa() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6040,6 +6293,7 @@ fn _0xab() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6067,6 +6321,7 @@ fn _0xac() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6094,6 +6349,7 @@ fn _0xad() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6121,6 +6377,7 @@ fn _0xae() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6146,6 +6403,7 @@ fn _0xaf() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6172,6 +6430,7 @@ fn _0xb0() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6198,6 +6457,7 @@ fn _0xb1() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6224,6 +6484,7 @@ fn _0xb2() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6250,6 +6511,7 @@ fn _0xb3() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6276,6 +6538,7 @@ fn _0xb4() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6302,6 +6565,7 @@ fn _0xb5() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6328,6 +6592,7 @@ fn _0xb6() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6352,6 +6617,7 @@ fn _0xb7() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6383,6 +6649,7 @@ fn _0xb8() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -6404,6 +6671,7 @@ fn _0xb8() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -6436,6 +6704,7 @@ fn _0xb9() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -6457,6 +6726,7 @@ fn _0xb9() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -6489,6 +6759,7 @@ fn _0xba() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -6510,6 +6781,7 @@ fn _0xba() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -6542,6 +6814,7 @@ fn _0xbb() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -6563,6 +6836,7 @@ fn _0xbb() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -6595,6 +6869,7 @@ fn _0xbc() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -6616,6 +6891,7 @@ fn _0xbc() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -6648,6 +6924,7 @@ fn _0xbd() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -6669,6 +6946,7 @@ fn _0xbd() {
                 return (cpu, memory);
             },
             expected_cycles: 4,
+            disable_pc_check: false,
         },
     ];
 
@@ -6703,6 +6981,7 @@ fn _0xbe() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -6726,6 +7005,7 @@ fn _0xbe() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
     ];
 
@@ -6754,6 +7034,7 @@ fn _0xbf() {
             return (cpu, memory);
         },
         expected_cycles: 4,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6782,6 +7063,7 @@ fn _0xc0() {
                 return (cpu, memory);
             },
             expected_cycles: 8,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -6799,6 +7081,7 @@ fn _0xc0() {
                 return (cpu, memory);
             },
             expected_cycles: 20,
+            disable_pc_check: false,
         },
     ];
 
@@ -6827,6 +7110,7 @@ fn _0xc1() {
             return (cpu, memory);
         },
         expected_cycles: 12,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6854,6 +7138,7 @@ fn _0xc2() {
                 return (cpu, memory);
             },
             expected_cycles: 12,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -6870,6 +7155,7 @@ fn _0xc2() {
                 return (cpu, memory);
             },
             expected_cycles: 16,
+            disable_pc_check: false,
         },
     ];
 
@@ -6893,6 +7179,7 @@ fn _0xc3() {
             return (cpu, memory);
         },
         expected_cycles: 16,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6918,6 +7205,7 @@ fn _0xc4() {
                 return (cpu, memory);
             },
             expected_cycles: 16,
+            disable_pc_check: false,
         },
         TestCase {
             initial_state: || -> (LR35902, mock::Memory) {
@@ -6948,6 +7236,7 @@ fn _0xc4() {
                 return (cpu, memory);
             },
             expected_cycles: 24,
+            disable_pc_check: false,
         },
     ];
 
@@ -6975,6 +7264,7 @@ fn _0xc5() {
             return (cpu, memory);
         },
         expected_cycles: 16,
+        disable_pc_check: false,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
@@ -6998,6 +7288,32 @@ fn _0xc6() {
             return (cpu, memory);
         },
         expected_cycles: 8,
+        disable_pc_check: false,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
+
+#[test]
+fn _0xc7() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            cpu.sp = 0x0004;
+            let memory = mock::Memory::new(vec![Opcode::Reset00h_0xC7.into(), 0x00, 0x00, 0x00]);
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            cpu.sp = 0x0002;
+            cpu.pc = 0x0000;
+            let memory = mock::Memory::new(vec![Opcode::Reset00h_0xC7.into(), 0x00, 0x01, 0x00]);
+            return (cpu, memory);
+        },
+        expected_cycles: 16,
+        disable_pc_check: true,
     }];
 
     for (i, tc) in test_cases.iter().enumerate() {
