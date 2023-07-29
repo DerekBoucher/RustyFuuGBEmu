@@ -215,6 +215,7 @@ pub enum Opcode {
     Reset00h_0xC7,
     ReturnZero_0xC8,
     Return_0xC9,
+    JumpAbsoluteZero_0xCA,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -422,6 +423,7 @@ impl std::convert::From<u8> for Opcode {
             0xC7 => Self::Reset00h_0xC7,
             0xC8 => Self::ReturnZero_0xC8,
             0xC9 => Self::Return_0xC9,
+            0xCA => Self::JumpAbsoluteZero_0xCA,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -632,6 +634,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::Reset00h_0xC7 => 0xC7,
             Self::ReturnZero_0xC8 => 0xC8,
             Self::Return_0xC9 => 0xC9,
+            Self::JumpAbsoluteZero_0xCA => 0xCA,
         }
     }
 }
@@ -841,6 +844,7 @@ impl Opcode {
             Self::Reset00h_0xC7 => execute_0xc7(cpu, memory),
             Self::ReturnZero_0xC8 => execute_0xc8(cpu, memory),
             Self::Return_0xC9 => execute_0xc9(cpu, memory),
+            Self::JumpAbsoluteZero_0xCA => execute_0xca(cpu, memory),
         }
     }
 }
@@ -2959,49 +2963,13 @@ fn execute_0xc1(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 fn execute_0xc2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    let lo_byte = match memory.read(usize::from(cpu.pc)) {
-        Some(byte) => byte,
-        None => panic!("error occured when loading lo byte address for non-zero jump")
-    };
-
-    cpu.pc = cpu.pc.wrapping_add(1);
-
-    let hi_byte = match memory.read(usize::from(cpu.pc)) {
-        Some(byte) => byte,
-        None => panic!("error occured when loading hi byte address for non-zero jump")
-    };
-
-    cpu.pc = cpu.pc.wrapping_add(1);
-
-    if !cpu.test_zero_flag() {
-        cpu.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
-        // TODO: Update timers
-        return 16;
-    }
-
-    return 12;
+    return cpu.jump_to_imm_address(memory, !cpu.test_zero_flag());
 }
 
 fn execute_0xc3(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    let lo_byte = match memory.read(usize::from(cpu.pc)) {
-        Some(byte) => byte,
-        None => panic!("error occured when loading lo byte address for non-zero jump")
-    };
-
-    cpu.pc = cpu.pc.wrapping_add(1);
-
-    let hi_byte = match memory.read(usize::from(cpu.pc)) {
-        Some(byte) => byte,
-        None => panic!("error occured when loading hi byte address for non-zero jump")
-    };
-
-    cpu.pc = cpu.pc.wrapping_add(1);
-
-    cpu.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
-    // TODO: Update timers
-    return 16;
+    return cpu.jump_to_imm_address(memory, true);
 }
 
 fn execute_0xc4(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
@@ -3080,4 +3048,10 @@ fn execute_0xc9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
     // TODO: Update timers
     return 16;
+}
+
+fn execute_0xca(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    return cpu.jump_to_imm_address(memory, cpu.test_zero_flag());
 }
