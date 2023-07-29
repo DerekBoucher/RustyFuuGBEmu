@@ -781,7 +781,9 @@ impl LR35902 {
             }
             ID16::AF => panic!("not supported"),
             ID16::SP => panic!("not supported"),
-            ID16::PC => panic!("not supported"),
+            ID16::PC => {
+                self.pc = u16::from(hi_byte) << 8 | u16::from(lo_byte);
+            }
         }
     }
 
