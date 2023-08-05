@@ -219,6 +219,22 @@ pub enum Opcode {
     Call_0xCD,
     Add8ImmIntoAWithCarry_0xCE,
     Reset08h_0xCF,
+    ReturnNotCarry_0xD0,
+    PopDE_0xD1,
+    JumpAbsoluteNotCarry_0xD2,
+    Nop_0xD3,
+    CallNotCarry_0xD4,
+    PushDE_0xD5,
+    Sub8ImmFromA_0xD6,
+    Reset10h_0xD7,
+    ReturnCarry_0xD8,
+    ReturnInterruptMasterEnable_0xD9,
+    JumpAbsoluteCarry_0xDA,
+    Nop_0xDB,
+    CallCarry_0xDC,
+    Nop_0xDD,
+    Sub8ImmFromAWithCarry_0xDE,
+    Reset18h_0xDF,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -432,6 +448,22 @@ impl std::convert::From<u8> for Opcode {
             0xCD => Self::Call_0xCD,
             0xCE => Self::Add8ImmIntoAWithCarry_0xCE,
             0xCF => Self::Reset08h_0xCF,
+            0xD0 => Self::ReturnNotCarry_0xD0,
+            0xD1 => Self::PopDE_0xD1,
+            0xD2 => Self::JumpAbsoluteNotCarry_0xD2,
+            0xD3 => Self::Nop_0xD3,
+            0xD4 => Self::CallNotCarry_0xD4,
+            0xD5 => Self::PushDE_0xD5,
+            0xD6 => Self::Sub8ImmFromA_0xD6,
+            0xD7 => Self::Reset10h_0xD7,
+            0xD8 => Self::ReturnCarry_0xD8,
+            0xD9 => Self::ReturnInterruptMasterEnable_0xD9,
+            0xDA => Self::JumpAbsoluteCarry_0xDA,
+            0xDB => Self::Nop_0xDB,
+            0xDC => Self::CallCarry_0xDC,
+            0xDD => Self::Nop_0xDD,
+            0xDE => Self::Sub8ImmFromAWithCarry_0xDE,
+            0xDF => Self::Reset18h_0xDF,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -648,6 +680,22 @@ impl std::convert::Into<u8> for Opcode {
             Self::Call_0xCD => 0xCD,
             Self::Add8ImmIntoAWithCarry_0xCE => 0xCE,
             Self::Reset08h_0xCF => 0xCF,
+            Self::ReturnNotCarry_0xD0 => 0xD0,
+            Self::PopDE_0xD1 => 0xD1,
+            Self::JumpAbsoluteNotCarry_0xD2 => 0xD2,
+            Self::Nop_0xD3 => 0xD3,
+            Self::CallNotCarry_0xD4 => 0xD4,
+            Self::PushDE_0xD5 => 0xD5,
+            Self::Sub8ImmFromA_0xD6 => 0xD6,
+            Self::Reset10h_0xD7 => 0xD7,
+            Self::ReturnCarry_0xD8 => 0xD8,
+            Self::ReturnInterruptMasterEnable_0xD9 => 0xD9,
+            Self::JumpAbsoluteCarry_0xDA => 0xDA,
+            Self::Nop_0xDB => 0xDB,
+            Self::CallCarry_0xDC => 0xDC,
+            Self::Nop_0xDD => 0xDD,
+            Self::Sub8ImmFromAWithCarry_0xDE => 0xDE,
+            Self::Reset18h_0xDF => 0xDF,
         }
     }
 }
@@ -863,8 +911,28 @@ impl Opcode {
             Self::Call_0xCD => execute_0xcd(cpu, memory),
             Self::Add8ImmIntoAWithCarry_0xCE => execute_0xce(cpu, memory),
             Self::Reset08h_0xCF => execute_0xcf(cpu, memory),
+            Self::ReturnNotCarry_0xD0 => execute_0xd0(cpu, memory),
+            Self::PopDE_0xD1 => execute_0xd1(cpu, memory),
+            Self::JumpAbsoluteNotCarry_0xD2 => execute_0xd2(cpu, memory),
+            Self::Nop_0xD3 => invalid_opcode(),
+            Self::CallNotCarry_0xD4 => execute_0xd4(cpu, memory),
+            Self::PushDE_0xD5 => execute_0xd5(cpu, memory),
+            Self::Sub8ImmFromA_0xD6 => execute_0xd6(cpu, memory),
+            Self::Reset10h_0xD7 => execute_0xd7(cpu, memory),
+            Self::ReturnCarry_0xD8 => execute_0xd8(cpu, memory),
+            Self::ReturnInterruptMasterEnable_0xD9 => execute_0xd9(cpu, memory),
+            Self::JumpAbsoluteCarry_0xDA => execute_0xda(cpu, memory),
+            Self::Nop_0xDB => invalid_opcode(),
+            Self::CallCarry_0xDC => execute_0xdc(cpu, memory),
+            Self::Nop_0xDD => invalid_opcode(),
+            Self::Sub8ImmFromAWithCarry_0xDE => execute_0xde(cpu, memory),
+            Self::Reset18h_0xDF => execute_0xdf(cpu, memory),
         }
     }
+}
+
+fn invalid_opcode() -> u32 {
+    panic!("TODO")
 }
 
 fn execute_0x00(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
@@ -2640,6 +2708,80 @@ fn execute_0xcf(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
 
     cpu.pc = 0x0008;
+
+    // TODO - Update Timers
+    return 16;
+}
+
+fn execute_0xd0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.return_from_call_conditional(memory, !cpu.test_carry_flag());
+}
+
+fn execute_0xd1(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pop_stack_into_16_bit_register(register::ID16::DE, memory);
+    return 12;
+}
+
+fn execute_0xd2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.jump_to_imm_address(memory, !cpu.test_carry_flag());
+}
+
+fn execute_0xd4(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.call_to_imm_address(memory, !cpu.test_carry_flag());
+}
+
+fn execute_0xd5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::DE, memory);
+
+    return 16;
+}
+
+fn execute_0xd6(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), false);
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    return 8;
+}
+
+fn execute_0xd7(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+
+    cpu.pc = 0x0010;
+
+    // TODO - Update Timers
+    return 16;
+}
+
+fn execute_0xd8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.return_from_call_conditional(memory, cpu.test_carry_flag());
+}
+
+fn execute_0xd9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.interrupt_master_enable = true;
+    return cpu.return_from_call(memory);
+}
+
+fn execute_0xda(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.jump_to_imm_address(memory, cpu.test_carry_flag());
+}
+
+fn execute_0xdc(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.call_to_imm_address(memory, cpu.test_carry_flag());
+}
+
+fn execute_0xde(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), true);
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    return 8;
+}
+
+fn execute_0xdf(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+
+    cpu.pc = 0x0018;
 
     // TODO - Update Timers
     return 16;
