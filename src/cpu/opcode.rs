@@ -221,6 +221,7 @@ pub enum Opcode {
     Reset08h_0xCF,
     ReturnNotCarry_0xD0,
     PopDE_0xD1,
+    JumpAbsoluteNotCarry_0xD2,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -436,6 +437,7 @@ impl std::convert::From<u8> for Opcode {
             0xCF => Self::Reset08h_0xCF,
             0xD0 => Self::ReturnNotCarry_0xD0,
             0xD1 => Self::PopDE_0xD1,
+            0xD2 => Self::JumpAbsoluteNotCarry_0xD2,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -654,6 +656,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::Reset08h_0xCF => 0xCF,
             Self::ReturnNotCarry_0xD0 => 0xD0,
             Self::PopDE_0xD1 => 0xD1,
+            Self::JumpAbsoluteNotCarry_0xD2 => 0xD2,
         }
     }
 }
@@ -871,6 +874,7 @@ impl Opcode {
             Self::Reset08h_0xCF => execute_0xcf(cpu, memory),
             Self::ReturnNotCarry_0xD0 => execute_0xd0(cpu, memory),
             Self::PopDE_0xD1 => execute_0xd1(cpu, memory),
+            Self::JumpAbsoluteNotCarry_0xD2 => execute_0xd2(cpu, memory),
         }
     }
 }
@@ -2660,4 +2664,8 @@ fn execute_0xd0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 fn execute_0xd1(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pop_stack_into_16_bit_register(register::ID16::DE, memory);
     return 12;
+}
+
+fn execute_0xd2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.jump_to_imm_address(memory, !cpu.test_carry_flag());
 }
