@@ -234,6 +234,7 @@ pub enum Opcode {
     CallCarry_0xDC,
     Nop_0xDD,
     Sub8ImmFromAWithCarry_0xDE,
+    Reset18h_0xDF,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -462,6 +463,7 @@ impl std::convert::From<u8> for Opcode {
             0xDC => Self::CallCarry_0xDC,
             0xDD => Self::Nop_0xDD,
             0xDE => Self::Sub8ImmFromAWithCarry_0xDE,
+            0xDF => Self::Reset18h_0xDF,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -693,6 +695,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::CallCarry_0xDC => 0xDC,
             Self::Nop_0xDD => 0xDD,
             Self::Sub8ImmFromAWithCarry_0xDE => 0xDE,
+            Self::Reset18h_0xDF => 0xDF,
         }
     }
 }
@@ -923,6 +926,7 @@ impl Opcode {
             Self::CallCarry_0xDC => execute_0xdc(cpu, memory),
             Self::Nop_0xDD => invalid_opcode(),
             Self::Sub8ImmFromAWithCarry_0xDE => execute_0xde(cpu, memory),
+            Self::Reset18h_0xDF => execute_0xdf(cpu, memory),
         }
     }
 }
@@ -2772,4 +2776,13 @@ fn execute_0xde(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     return 8;
+}
+
+fn execute_0xdf(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+
+    cpu.pc = 0x0018;
+
+    // TODO - Update Timers
+    return 16;
 }
