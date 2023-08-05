@@ -227,6 +227,7 @@ pub enum Opcode {
     PushDE_0xD5,
     Sub8ImmFromA_0xD6,
     Reset10h_0xD7,
+    ReturnCarry_0xD8,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -448,6 +449,7 @@ impl std::convert::From<u8> for Opcode {
             0xD5 => Self::PushDE_0xD5,
             0xD6 => Self::Sub8ImmFromA_0xD6,
             0xD7 => Self::Reset10h_0xD7,
+            0xD8 => Self::ReturnCarry_0xD8,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -672,6 +674,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::PushDE_0xD5 => 0xD5,
             Self::Sub8ImmFromA_0xD6 => 0xD6,
             Self::Reset10h_0xD7 => 0xD7,
+            Self::ReturnCarry_0xD8 => 0xD8,
         }
     }
 }
@@ -895,6 +898,7 @@ impl Opcode {
             Self::PushDE_0xD5 => execute_0xd5(cpu, memory),
             Self::Sub8ImmFromA_0xD6 => execute_0xd6(cpu, memory),
             Self::Reset10h_0xD7 => execute_0xd7(cpu, memory),
+            Self::ReturnCarry_0xD8 => execute_0xd8(cpu, memory),
         }
     }
 }
@@ -2719,4 +2723,8 @@ fn execute_0xd7(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
     // TODO - Update Timers
     return 16;
+}
+
+fn execute_0xd8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.return_from_call_conditional(memory, cpu.test_carry_flag());
 }
