@@ -224,6 +224,7 @@ pub enum Opcode {
     JumpAbsoluteNotCarry_0xD2,
     Nop_0xD3,
     CallNotCarry_0xD4,
+    PushDE_0xD5,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -442,6 +443,7 @@ impl std::convert::From<u8> for Opcode {
             0xD2 => Self::JumpAbsoluteNotCarry_0xD2,
             0xD3 => Self::Nop_0xD3,
             0xD4 => Self::CallNotCarry_0xD4,
+            0xD5 => Self::PushDE_0xD5,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -663,6 +665,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::JumpAbsoluteNotCarry_0xD2 => 0xD2,
             Self::Nop_0xD3 => 0xD3,
             Self::CallNotCarry_0xD4 => 0xD4,
+            Self::PushDE_0xD5 => 0xD5,
         }
     }
 }
@@ -883,6 +886,7 @@ impl Opcode {
             Self::JumpAbsoluteNotCarry_0xD2 => execute_0xd2(cpu, memory),
             Self::Nop_0xD3 => invalid_opcode(),
             Self::CallNotCarry_0xD4 => execute_0xd4(cpu, memory),
+            Self::PushDE_0xD5 => execute_0xd5(cpu, memory),
         }
     }
 }
@@ -2684,4 +2688,10 @@ fn execute_0xd2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0xd4(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     return cpu.call_to_imm_address(memory, !cpu.test_carry_flag());
+}
+
+fn execute_0xd5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::DE, memory);
+
+    return 16;
 }
