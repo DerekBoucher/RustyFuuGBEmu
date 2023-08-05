@@ -232,6 +232,8 @@ pub enum Opcode {
     JumpAbsoluteCarry_0xDA,
     Nop_0xDB,
     CallCarry_0xDC,
+    Nop_0xDD,
+    Sub8ImmFromAWithCarry_0xDE,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -458,6 +460,8 @@ impl std::convert::From<u8> for Opcode {
             0xDA => Self::JumpAbsoluteCarry_0xDA,
             0xDB => Self::Nop_0xDB,
             0xDC => Self::CallCarry_0xDC,
+            0xDD => Self::Nop_0xDD,
+            0xDE => Self::Sub8ImmFromAWithCarry_0xDE,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -687,6 +691,8 @@ impl std::convert::Into<u8> for Opcode {
             Self::JumpAbsoluteCarry_0xDA => 0xDA,
             Self::Nop_0xDB => 0xDB,
             Self::CallCarry_0xDC => 0xDC,
+            Self::Nop_0xDD => 0xDD,
+            Self::Sub8ImmFromAWithCarry_0xDE => 0xDE,
         }
     }
 }
@@ -915,6 +921,8 @@ impl Opcode {
             Self::JumpAbsoluteCarry_0xDA => execute_0xda(cpu, memory),
             Self::Nop_0xDB => invalid_opcode(),
             Self::CallCarry_0xDC => execute_0xdc(cpu, memory),
+            Self::Nop_0xDD => invalid_opcode(),
+            Self::Sub8ImmFromAWithCarry_0xDE => execute_0xde(cpu, memory),
         }
     }
 }
@@ -2756,4 +2764,12 @@ fn execute_0xda(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0xdc(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     return cpu.call_to_imm_address(memory, cpu.test_carry_flag());
+}
+
+fn execute_0xde(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), true);
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    return 8;
 }
