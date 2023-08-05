@@ -229,6 +229,7 @@ pub enum Opcode {
     Reset10h_0xD7,
     ReturnCarry_0xD8,
     ReturnInterruptMasterEnable_0xD9,
+    JumpAbsoluteCarry_0xDA,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -452,6 +453,7 @@ impl std::convert::From<u8> for Opcode {
             0xD7 => Self::Reset10h_0xD7,
             0xD8 => Self::ReturnCarry_0xD8,
             0xD9 => Self::ReturnInterruptMasterEnable_0xD9,
+            0xDA => Self::JumpAbsoluteCarry_0xDA,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -678,6 +680,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::Reset10h_0xD7 => 0xD7,
             Self::ReturnCarry_0xD8 => 0xD8,
             Self::ReturnInterruptMasterEnable_0xD9 => 0xD9,
+            Self::JumpAbsoluteCarry_0xDA => 0xDA,
         }
     }
 }
@@ -903,6 +906,7 @@ impl Opcode {
             Self::Reset10h_0xD7 => execute_0xd7(cpu, memory),
             Self::ReturnCarry_0xD8 => execute_0xd8(cpu, memory),
             Self::ReturnInterruptMasterEnable_0xD9 => execute_0xd9(cpu, memory),
+            Self::JumpAbsoluteCarry_0xDA => execute_0xda(cpu, memory),
         }
     }
 }
@@ -2736,4 +2740,8 @@ fn execute_0xd8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 fn execute_0xd9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.interrupt_master_enable = true;
     return cpu.return_from_call(memory);
+}
+
+fn execute_0xda(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.jump_to_imm_address(memory, cpu.test_carry_flag());
 }
