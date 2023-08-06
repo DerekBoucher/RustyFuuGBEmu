@@ -8128,3 +8128,35 @@ fn _0xdf() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0xe0() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            cpu.af.hi = 0xF0;
+            let mut bytes: Vec<u8> = vec![0x00; 0x10000];
+            bytes[0] = Opcode::LoadAIntoHiMemOffset_0xE0.into();
+            bytes[1] = 0xFF;
+            let memory = mock::Memory::new(bytes);
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            cpu.pc = 0x0002;
+            cpu.af.hi = 0xF0;
+            let mut bytes: Vec<u8> = vec![0x00; 0x10000];
+            bytes[0] = Opcode::LoadAIntoHiMemOffset_0xE0.into();
+            bytes[1] = 0xFF;
+            bytes[0xFFFF] = 0xF0;
+            let memory = mock::Memory::new(bytes);
+            return (cpu, memory);
+        },
+        expected_cycles: 12,
+        disable_pc_check: false,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}

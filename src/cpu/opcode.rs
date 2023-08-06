@@ -235,6 +235,7 @@ pub enum Opcode {
     Nop_0xDD,
     Sub8ImmFromAWithCarry_0xDE,
     Reset18h_0xDF,
+    LoadAIntoHiMemOffset_0xE0,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -464,6 +465,7 @@ impl std::convert::From<u8> for Opcode {
             0xDD => Self::Nop_0xDD,
             0xDE => Self::Sub8ImmFromAWithCarry_0xDE,
             0xDF => Self::Reset18h_0xDF,
+            0xE0 => Self::LoadAIntoHiMemOffset_0xE0,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -696,6 +698,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::Nop_0xDD => 0xDD,
             Self::Sub8ImmFromAWithCarry_0xDE => 0xDE,
             Self::Reset18h_0xDF => 0xDF,
+            Self::LoadAIntoHiMemOffset_0xE0 => 0xE0,
         }
     }
 }
@@ -927,6 +930,7 @@ impl Opcode {
             Self::Nop_0xDD => invalid_opcode(),
             Self::Sub8ImmFromAWithCarry_0xDE => execute_0xde(cpu, memory),
             Self::Reset18h_0xDF => execute_0xdf(cpu, memory),
+            Self::LoadAIntoHiMemOffset_0xE0 => execute_0xe0(cpu, memory),
         }
     }
 }
@@ -2785,4 +2789,19 @@ fn execute_0xdf(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
     // TODO - Update Timers
     return 16;
+}
+
+fn execute_0xe0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    let offset = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!("TODO")
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let effective_addr: usize = 0xFF00 + usize::from(offset);
+
+    memory.write(effective_addr, cpu.af.hi);
+
+    return 12;
 }
