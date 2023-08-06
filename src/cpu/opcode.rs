@@ -243,6 +243,7 @@ pub enum Opcode {
     PushHL_0xE5,
     And8ImmIntoA_0xE6,
     Reset20h_0xE7,
+    AddSigned8ImmIntoSP_0xE8,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -480,6 +481,7 @@ impl std::convert::From<u8> for Opcode {
             0xE5 => Self::PushHL_0xE5,
             0xE6 => Self::And8ImmIntoA_0xE6,
             0xE7 => Self::Reset20h_0xE7,
+            0xE8 => Self::AddSigned8ImmIntoSP_0xE8,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -720,6 +722,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::PushHL_0xE5 => 0xE5,
             Self::And8ImmIntoA_0xE6 => 0xE6,
             Self::Reset20h_0xE7 => 0xE7,
+            Self::AddSigned8ImmIntoSP_0xE8 => 0xE8,
         }
     }
 }
@@ -959,6 +962,7 @@ impl Opcode {
             Self::PushHL_0xE5 => execute_0xe5(cpu, memory),
             Self::And8ImmIntoA_0xE6 => execute_0xe6(cpu, memory),
             Self::Reset20h_0xE7 => execute_0xe7(cpu, memory),
+            Self::AddSigned8ImmIntoSP_0xE8 => execute_0xe8(cpu, memory),
         }
     }
 }
@@ -2867,5 +2871,55 @@ fn execute_0xe7(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = 0x0020;
 
     // TODO - Update Timers
+    return 16;
+}
+
+fn execute_0xe8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    let added_byte = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!("TODO"),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let lo_sp: u8 = cpu.sp.to_be_bytes()[1];
+
+    cpu.reset_sub_flag();
+    cpu.reset_zero_flag();
+    // TODO - Update Timers
+
+    // Negative number
+    if bit::test_most_significant_bit(added_byte) {
+        if bit::is_half_borrow(lo_sp, added_byte, false) {
+            cpu.set_half_carry_flag();
+        } else {
+            cpu.reset_half_carry_flag();
+        }
+
+        if bit::is_borrow(lo_sp, added_byte, false) {
+            cpu.set_carry_flag();
+        } else {
+            cpu.reset_carry_flag();
+        }
+
+        let masked_val: u8 = added_byte & 0x7F;
+
+        cpu.sp = cpu.sp.wrapping_sub(masked_val.into());
+    } else {
+        if bit::is_half_carry(lo_sp, added_byte, false) {
+            cpu.set_half_carry_flag();
+        } else {
+            cpu.reset_half_carry_flag();
+        }
+
+        if bit::is_carry(lo_sp, added_byte, false) {
+            cpu.set_carry_flag();
+        } else {
+            cpu.reset_carry_flag();
+        }
+
+        cpu.sp = cpu.sp.wrapping_add(added_byte.into());
+    }
+
     return 16;
 }
