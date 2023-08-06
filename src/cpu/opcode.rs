@@ -240,6 +240,7 @@ pub enum Opcode {
     LoadAIntoHiMemOffsetC_0xE2,
     Nop_0xE3,
     Nop_0xE4,
+    PushHL_0xE5,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -474,6 +475,7 @@ impl std::convert::From<u8> for Opcode {
             0xE2 => Self::LoadAIntoHiMemOffsetC_0xE2,
             0xE3 => Self::Nop_0xE3,
             0xE4 => Self::Nop_0xE4,
+            0xE5 => Self::PushHL_0xE5,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -711,6 +713,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::LoadAIntoHiMemOffsetC_0xE2 => 0xE2,
             Self::Nop_0xE3 => 0xE3,
             Self::Nop_0xE4 => 0xE4,
+            Self::PushHL_0xE5 => 0xE5,
         }
     }
 }
@@ -947,6 +950,7 @@ impl Opcode {
             Self::LoadAIntoHiMemOffsetC_0xE2 => execute_0xe2(cpu, memory),
             Self::Nop_0xE3 => invalid_opcode(),
             Self::Nop_0xE4 => invalid_opcode(),
+            Self::PushHL_0xE5 => execute_0xe5(cpu, memory),
         }
     }
 }
@@ -2833,4 +2837,10 @@ fn execute_0xe2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     memory.write(effective_addr, cpu.af.hi);
 
     return 8;
+}
+
+fn execute_0xe5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::HL, memory);
+
+    return 16;
 }
