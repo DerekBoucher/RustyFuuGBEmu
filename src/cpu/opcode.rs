@@ -238,6 +238,8 @@ pub enum Opcode {
     LoadAIntoHiMemOffset_0xE0,
     PopHL_0xE1,
     LoadAIntoHiMemOffsetC_0xE2,
+    Nop_0xE3,
+    Nop_0xE4,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -470,6 +472,8 @@ impl std::convert::From<u8> for Opcode {
             0xE0 => Self::LoadAIntoHiMemOffset_0xE0,
             0xE1 => Self::PopHL_0xE1,
             0xE2 => Self::LoadAIntoHiMemOffsetC_0xE2,
+            0xE3 => Self::Nop_0xE3,
+            0xE4 => Self::Nop_0xE4,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -705,6 +709,8 @@ impl std::convert::Into<u8> for Opcode {
             Self::LoadAIntoHiMemOffset_0xE0 => 0xE0,
             Self::PopHL_0xE1 => 0xE1,
             Self::LoadAIntoHiMemOffsetC_0xE2 => 0xE2,
+            Self::Nop_0xE3 => 0xE3,
+            Self::Nop_0xE4 => 0xE4,
         }
     }
 }
@@ -939,6 +945,8 @@ impl Opcode {
             Self::LoadAIntoHiMemOffset_0xE0 => execute_0xe0(cpu, memory),
             Self::PopHL_0xE1 => execute_0xe1(cpu, memory),
             Self::LoadAIntoHiMemOffsetC_0xE2 => execute_0xe2(cpu, memory),
+            Self::Nop_0xE3 => invalid_opcode(),
+            Self::Nop_0xE4 => invalid_opcode(),
         }
     }
 }
