@@ -241,6 +241,7 @@ pub enum Opcode {
     Nop_0xE3,
     Nop_0xE4,
     PushHL_0xE5,
+    And8ImmIntoA_0xE6,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -476,6 +477,7 @@ impl std::convert::From<u8> for Opcode {
             0xE3 => Self::Nop_0xE3,
             0xE4 => Self::Nop_0xE4,
             0xE5 => Self::PushHL_0xE5,
+            0xE6 => Self::And8ImmIntoA_0xE6,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -714,6 +716,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::Nop_0xE3 => 0xE3,
             Self::Nop_0xE4 => 0xE4,
             Self::PushHL_0xE5 => 0xE5,
+            Self::And8ImmIntoA_0xE6 => 0xE6,
         }
     }
 }
@@ -951,6 +954,7 @@ impl Opcode {
             Self::Nop_0xE3 => invalid_opcode(),
             Self::Nop_0xE4 => invalid_opcode(),
             Self::PushHL_0xE5 => execute_0xe5(cpu, memory),
+            Self::And8ImmIntoA_0xE6 => execute_0xe6(cpu, memory),
         }
     }
 }
@@ -2843,4 +2847,12 @@ fn execute_0xe5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.push_16bit_register_on_stack(register::ID16::HL, memory);
 
     return 16;
+}
+
+fn execute_0xe6(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.and_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc));
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    return 8;
 }
