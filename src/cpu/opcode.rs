@@ -235,6 +235,22 @@ pub enum Opcode {
     Nop_0xDD,
     Sub8ImmFromAWithCarry_0xDE,
     Reset18h_0xDF,
+    LoadAIntoHiMemOffset_0xE0,
+    PopHL_0xE1,
+    LoadAIntoHiMemOffsetC_0xE2,
+    Nop_0xE3,
+    Nop_0xE4,
+    PushHL_0xE5,
+    And8ImmIntoA_0xE6,
+    Reset20h_0xE7,
+    AddSigned8ImmIntoSP_0xE8,
+    JumpMemoryHL_0xE9,
+    WriteAInto16ImmAddress_0xEA,
+    Nop_0xEB,
+    Nop_0xEC,
+    Nop_0xED,
+    Xor8ImmIntoA_0xEE,
+    Reset28h_0xEF,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -464,6 +480,22 @@ impl std::convert::From<u8> for Opcode {
             0xDD => Self::Nop_0xDD,
             0xDE => Self::Sub8ImmFromAWithCarry_0xDE,
             0xDF => Self::Reset18h_0xDF,
+            0xE0 => Self::LoadAIntoHiMemOffset_0xE0,
+            0xE1 => Self::PopHL_0xE1,
+            0xE2 => Self::LoadAIntoHiMemOffsetC_0xE2,
+            0xE3 => Self::Nop_0xE3,
+            0xE4 => Self::Nop_0xE4,
+            0xE5 => Self::PushHL_0xE5,
+            0xE6 => Self::And8ImmIntoA_0xE6,
+            0xE7 => Self::Reset20h_0xE7,
+            0xE8 => Self::AddSigned8ImmIntoSP_0xE8,
+            0xE9 => Self::JumpMemoryHL_0xE9,
+            0xEA => Self::WriteAInto16ImmAddress_0xEA,
+            0xEB => Self::Nop_0xEB,
+            0xEC => Self::Nop_0xEC,
+            0xED => Self::Nop_0xED,
+            0xEE => Self::Xor8ImmIntoA_0xEE,
+            0xEF => Self::Reset28h_0xEF,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -696,6 +728,22 @@ impl std::convert::Into<u8> for Opcode {
             Self::Nop_0xDD => 0xDD,
             Self::Sub8ImmFromAWithCarry_0xDE => 0xDE,
             Self::Reset18h_0xDF => 0xDF,
+            Self::LoadAIntoHiMemOffset_0xE0 => 0xE0,
+            Self::PopHL_0xE1 => 0xE1,
+            Self::LoadAIntoHiMemOffsetC_0xE2 => 0xE2,
+            Self::Nop_0xE3 => 0xE3,
+            Self::Nop_0xE4 => 0xE4,
+            Self::PushHL_0xE5 => 0xE5,
+            Self::And8ImmIntoA_0xE6 => 0xE6,
+            Self::Reset20h_0xE7 => 0xE7,
+            Self::AddSigned8ImmIntoSP_0xE8 => 0xE8,
+            Self::JumpMemoryHL_0xE9 => 0xE9,
+            Self::WriteAInto16ImmAddress_0xEA => 0xEA,
+            Self::Nop_0xEB => 0xEB,
+            Self::Nop_0xEC => 0xEC,
+            Self::Nop_0xED => 0xED,
+            Self::Xor8ImmIntoA_0xEE => 0xEE,
+            Self::Reset28h_0xEF => 0xEF,
         }
     }
 }
@@ -927,6 +975,22 @@ impl Opcode {
             Self::Nop_0xDD => invalid_opcode(),
             Self::Sub8ImmFromAWithCarry_0xDE => execute_0xde(cpu, memory),
             Self::Reset18h_0xDF => execute_0xdf(cpu, memory),
+            Self::LoadAIntoHiMemOffset_0xE0 => execute_0xe0(cpu, memory),
+            Self::PopHL_0xE1 => execute_0xe1(cpu, memory),
+            Self::LoadAIntoHiMemOffsetC_0xE2 => execute_0xe2(cpu, memory),
+            Self::Nop_0xE3 => invalid_opcode(),
+            Self::Nop_0xE4 => invalid_opcode(),
+            Self::PushHL_0xE5 => execute_0xe5(cpu, memory),
+            Self::And8ImmIntoA_0xE6 => execute_0xe6(cpu, memory),
+            Self::Reset20h_0xE7 => execute_0xe7(cpu, memory),
+            Self::AddSigned8ImmIntoSP_0xE8 => execute_0xe8(cpu, memory),
+            Self::JumpMemoryHL_0xE9 => execute_0xe9(cpu, memory),
+            Self::WriteAInto16ImmAddress_0xEA => execute_0xea(cpu, memory),
+            Self::Nop_0xEB => invalid_opcode(),
+            Self::Nop_0xEC => invalid_opcode(),
+            Self::Nop_0xED => invalid_opcode(),
+            Self::Xor8ImmIntoA_0xEE => execute_0xee(cpu, memory),
+            Self::Reset28h_0xEF => execute_0xef(cpu, memory),
         }
     }
 }
@@ -2782,6 +2846,149 @@ fn execute_0xdf(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
 
     cpu.pc = 0x0018;
+
+    // TODO - Update Timers
+    return 16;
+}
+
+fn execute_0xe0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    let offset = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!("TODO")
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let effective_addr: usize = 0xFF00 + usize::from(offset);
+
+    memory.write(effective_addr, cpu.af.hi);
+
+    return 12;
+}
+
+fn execute_0xe1(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pop_stack_into_16_bit_register(register::ID16::HL, memory);
+    return 12;
+}
+
+fn execute_0xe2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    let effective_addr: usize = 0xFF00 + usize::from(cpu.bc.lo);
+
+    memory.write(effective_addr, cpu.af.hi);
+
+    return 8;
+}
+
+fn execute_0xe5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::HL, memory);
+
+    return 16;
+}
+
+fn execute_0xe6(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.and_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc));
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    return 8;
+}
+
+fn execute_0xe7(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+
+    cpu.pc = 0x0020;
+
+    // TODO - Update Timers
+    return 16;
+}
+
+fn execute_0xe8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    let added_byte = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!("TODO"),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let lo_sp: u8 = cpu.sp.to_be_bytes()[1];
+
+    cpu.reset_sub_flag();
+    cpu.reset_zero_flag();
+    // TODO - Update Timers
+
+    // Negative number
+    if bit::test_most_significant_bit(added_byte) {
+        if bit::is_half_borrow(lo_sp, added_byte, false) {
+            cpu.set_half_carry_flag();
+        } else {
+            cpu.reset_half_carry_flag();
+        }
+
+        if bit::is_borrow(lo_sp, added_byte, false) {
+            cpu.set_carry_flag();
+        } else {
+            cpu.reset_carry_flag();
+        }
+
+        let masked_val: u8 = added_byte & 0x7F;
+
+        cpu.sp = cpu.sp.wrapping_sub(masked_val.into());
+    } else {
+        if bit::is_half_carry(lo_sp, added_byte, false) {
+            cpu.set_half_carry_flag();
+        } else {
+            cpu.reset_half_carry_flag();
+        }
+
+        if bit::is_carry(lo_sp, added_byte, false) {
+            cpu.set_carry_flag();
+        } else {
+            cpu.reset_carry_flag();
+        }
+
+        cpu.sp = cpu.sp.wrapping_add(added_byte.into());
+    }
+
+    return 16;
+}
+
+fn execute_0xe9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.hl.word();
+    return 4;
+}
+
+fn execute_0xea(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    let lo_byte = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!("TODO"),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let hi_byte = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!("TODO"),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let effective_addr: usize = (usize::from(hi_byte) << 8) | usize::from(lo_byte);
+
+    memory.write(effective_addr, cpu.af.hi);
+
+    return 16;
+}
+
+fn execute_0xee(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.xor_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc));
+    cpu.pc = cpu.pc.wrapping_add(1);
+    return 8;
+}
+
+fn execute_0xef(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+
+    cpu.pc = 0x0028;
 
     // TODO - Update Timers
     return 16;
