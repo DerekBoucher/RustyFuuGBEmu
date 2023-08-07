@@ -781,7 +781,10 @@ impl LR35902 {
                 self.hl.lo = lo_byte;
                 self.hl.hi = hi_byte;
             }
-            ID16::AF => panic!("not supported"),
+            ID16::AF => {
+                self.af.lo = lo_byte;
+                self.af.hi = hi_byte;
+            }
             ID16::SP => panic!("not supported"),
             ID16::PC => {
                 self.pc = u16::from(hi_byte) << 8 | u16::from(lo_byte);
@@ -798,7 +801,7 @@ impl LR35902 {
             ID16::BC => self.bc.word().to_be_bytes(),
             ID16::DE => self.de.word().to_be_bytes(),
             ID16::HL => self.hl.word().to_be_bytes(),
-            ID16::AF => panic!("not supported"),
+            ID16::AF => self.af.word().to_be_bytes(),
             ID16::PC => self.pc.to_be_bytes(),
             ID16::SP => panic!("not supported"),
         };

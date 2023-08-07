@@ -251,6 +251,22 @@ pub enum Opcode {
     Nop_0xED,
     Xor8ImmIntoA_0xEE,
     Reset28h_0xEF,
+    LoadHiMemOffsetIntoA_0xF0,
+    PopAF_0xF1,
+    LoadMemOffsetCIntoA_0xF2,
+    DisableInterrupts_0xF3,
+    Nop_0xF4,
+    PushAF_0xF5,
+    Or8ImmIntoA_0xF6,
+    Reset30h_0xF7,
+    LoadSPSigned8ImmIntoHL_0xF8,
+    LoadHLIntoSP_0xF9,
+    LoadMemAddrIntoA_0xFA,
+    EnableInterrupts_0xFB,
+    Nop_0xFC,
+    Nop_0xFD,
+    CompareAWith8Imm_0xFE,
+    Reset38h_0xFF,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -496,7 +512,22 @@ impl std::convert::From<u8> for Opcode {
             0xED => Self::Nop_0xED,
             0xEE => Self::Xor8ImmIntoA_0xEE,
             0xEF => Self::Reset28h_0xEF,
-            _ => panic!("unsupported op code (TODO)"),
+            0xF0 => Self::LoadHiMemOffsetIntoA_0xF0,
+            0xF1 => Self::PopAF_0xF1,
+            0xF2 => Self::LoadMemOffsetCIntoA_0xF2,
+            0xF3 => Self::DisableInterrupts_0xF3,
+            0xF4 => Self::Nop_0xF4,
+            0xF5 => Self::PushAF_0xF5,
+            0xF6 => Self::Or8ImmIntoA_0xF6,
+            0xF7 => Self::Reset30h_0xF7,
+            0xF8 => Self::LoadSPSigned8ImmIntoHL_0xF8,
+            0xF9 => Self::LoadHLIntoSP_0xF9,
+            0xFA => Self::LoadMemAddrIntoA_0xFA,
+            0xFB => Self::EnableInterrupts_0xFB,
+            0xFC => Self::Nop_0xFC,
+            0xFD => Self::Nop_0xFD,
+            0xFE => Self::CompareAWith8Imm_0xFE,
+            0xFF => Self::Reset38h_0xFF,
         }
     }
 }
@@ -744,6 +775,22 @@ impl std::convert::Into<u8> for Opcode {
             Self::Nop_0xED => 0xED,
             Self::Xor8ImmIntoA_0xEE => 0xEE,
             Self::Reset28h_0xEF => 0xEF,
+            Self::LoadHiMemOffsetIntoA_0xF0 => 0xF0,
+            Self::PopAF_0xF1 => 0xF1,
+            Self::LoadMemOffsetCIntoA_0xF2 => 0xF2,
+            Self::DisableInterrupts_0xF3 => 0xF3,
+            Self::Nop_0xF4 => 0xF4,
+            Self::PushAF_0xF5 => 0xF5,
+            Self::Or8ImmIntoA_0xF6 => 0xF6,
+            Self::Reset30h_0xF7 => 0xF7,
+            Self::LoadSPSigned8ImmIntoHL_0xF8 => 0xF8,
+            Self::LoadHLIntoSP_0xF9 => 0xF9,
+            Self::LoadMemAddrIntoA_0xFA => 0xFA,
+            Self::EnableInterrupts_0xFB => 0xFB,
+            Self::Nop_0xFC => 0xFC,
+            Self::Nop_0xFD => 0xFD,
+            Self::CompareAWith8Imm_0xFE => 0xFE,
+            Self::Reset38h_0xFF => 0xFF,
         }
     }
 }
@@ -991,6 +1038,22 @@ impl Opcode {
             Self::Nop_0xED => invalid_opcode(),
             Self::Xor8ImmIntoA_0xEE => execute_0xee(cpu, memory),
             Self::Reset28h_0xEF => execute_0xef(cpu, memory),
+            Self::LoadHiMemOffsetIntoA_0xF0 => execute_0xf0(cpu, memory),
+            Self::PopAF_0xF1 => execute_0xf1(cpu, memory),
+            Self::LoadMemOffsetCIntoA_0xF2 => execute_0xf2(cpu, memory),
+            Self::DisableInterrupts_0xF3 => execute_0xf3(cpu, memory),
+            Self::Nop_0xF4 => invalid_opcode(),
+            Self::PushAF_0xF5 => execute_0xf5(cpu, memory),
+            Self::Or8ImmIntoA_0xF6 => execute_0xf6(cpu, memory),
+            Self::Reset30h_0xF7 => execute_0xf7(cpu, memory),
+            Self::LoadSPSigned8ImmIntoHL_0xF8 => execute_0xf8(cpu, memory),
+            Self::LoadHLIntoSP_0xF9 => execute_0xf9(cpu, memory),
+            Self::LoadMemAddrIntoA_0xFA => execute_0xfa(cpu, memory),
+            Self::EnableInterrupts_0xFB => execute_0xfb(cpu, memory),
+            Self::Nop_0xFC => invalid_opcode(),
+            Self::Nop_0xFD => invalid_opcode(),
+            Self::CompareAWith8Imm_0xFE => execute_0xfe(cpu, memory),
+            Self::Reset38h_0xFF => execute_0xff(cpu, memory),
         }
     }
 }
@@ -2989,6 +3052,178 @@ fn execute_0xef(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
 
     cpu.pc = 0x0028;
+
+    // TODO - Update Timers
+    return 16;
+}
+
+fn execute_0xf0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    let offset = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!("TODO")
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let effective_addr: usize = 0xFF00 + usize::from(offset);
+
+    let byte = match memory.read(effective_addr) {
+        Some(byte) => byte,
+        None => panic!("TODO"),
+    };
+
+    cpu.af.hi = byte;
+
+    return 12;
+}
+
+fn execute_0xf1(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pop_stack_into_16_bit_register(register::ID16::AF, memory);
+    return 12;
+}
+
+fn execute_0xf2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    let effective_addr: usize = 0xFF00 + usize::from(cpu.bc.lo);
+
+    let byte = match memory.read(effective_addr) {
+        Some(byte) => byte,
+        None => panic!("TODO"),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    cpu.af.hi = byte;
+
+    return 8;
+}
+
+fn execute_0xf3(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.interrupt_master_enable = false;
+    return 4;
+}
+
+fn execute_0xf5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::AF, memory);
+
+    return 16;
+}
+
+fn execute_0xf6(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.or_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc));
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    return 8;
+}
+
+fn execute_0xf7(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+
+    cpu.pc = 0x0030;
+
+    // TODO - Update Timers
+    return 16;
+}
+
+fn execute_0xf8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    let added_byte = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!("TODO"),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let lo_sp: u8 = cpu.sp.to_be_bytes()[1];
+
+    cpu.reset_sub_flag();
+    cpu.reset_zero_flag();
+    // TODO - Update Timers
+
+    // Negative number
+    if bit::test_most_significant_bit(added_byte) {
+        if bit::is_half_borrow(lo_sp, added_byte, false) {
+            cpu.set_half_carry_flag();
+        } else {
+            cpu.reset_half_carry_flag();
+        }
+
+        if bit::is_borrow(lo_sp, added_byte, false) {
+            cpu.set_carry_flag();
+        } else {
+            cpu.reset_carry_flag();
+        }
+
+        let masked_val: u8 = added_byte & 0x7F;
+
+        cpu.hl.set_word(cpu.sp.wrapping_sub(masked_val.into()));
+    } else {
+        if bit::is_half_carry(lo_sp, added_byte, false) {
+            cpu.set_half_carry_flag();
+        } else {
+            cpu.reset_half_carry_flag();
+        }
+
+        if bit::is_carry(lo_sp, added_byte, false) {
+            cpu.set_carry_flag();
+        } else {
+            cpu.reset_carry_flag();
+        }
+
+        cpu.hl.set_word(cpu.sp.wrapping_add(added_byte.into()));
+    }
+
+    return 12;
+}
+
+fn execute_0xf9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.sp = cpu.hl.word();
+
+    return 8;
+}
+
+fn execute_0xfa(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    let lo_byte = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!("TODO"),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let hi_byte = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!("TODO"),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let effective_addr: usize = (usize::from(hi_byte) << 8) | usize::from(lo_byte); 
+
+    cpu.af.hi = match memory.read(effective_addr) {
+        Some(byte) => byte,
+        None => panic!("TODO"),
+    };
+
+    return 16;
+}
+
+fn execute_0xfb(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.interrupt_master_enable = true;
+
+    return 4;
+}
+
+fn execute_0xfe(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.compare_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc));
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    return 8;
+}
+
+fn execute_0xff(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+
+    cpu.pc = 0x0038;
 
     // TODO - Update Timers
     return 16;
