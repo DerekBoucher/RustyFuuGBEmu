@@ -801,7 +801,7 @@ impl LR35902 {
             ID16::BC => self.bc.word().to_be_bytes(),
             ID16::DE => self.de.word().to_be_bytes(),
             ID16::HL => self.hl.word().to_be_bytes(),
-            ID16::AF => panic!("not supported"),
+            ID16::AF => self.af.word().to_be_bytes(),
             ID16::PC => self.pc.to_be_bytes(),
             ID16::SP => panic!("not supported"),
         };

@@ -255,6 +255,8 @@ pub enum Opcode {
     PopAF_0xF1,
     LoadMemOffsetCIntoA_0xF2,
     DisableInterrupts_0xF3,
+    Nop_0xF4,
+    PushAF_0xF5,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -504,6 +506,8 @@ impl std::convert::From<u8> for Opcode {
             0xF1 => Self::PopAF_0xF1,
             0xF2 => Self::LoadMemOffsetCIntoA_0xF2,
             0xF3 => Self::DisableInterrupts_0xF3,
+            0xF4 => Self::Nop_0xF4,
+            0xF5 => Self::PushAF_0xF5,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -756,6 +760,8 @@ impl std::convert::Into<u8> for Opcode {
             Self::PopAF_0xF1 => 0xF1,
             Self::LoadMemOffsetCIntoA_0xF2 => 0xF2,
             Self::DisableInterrupts_0xF3 => 0xF3,
+            Self::Nop_0xF4 => 0xF4,
+            Self::PushAF_0xF5 => 0xF5,
         }
     }
 }
@@ -1007,6 +1013,8 @@ impl Opcode {
             Self::PopAF_0xF1 => execute_0xf1(cpu, memory),
             Self::LoadMemOffsetCIntoA_0xF2 => execute_0xf2(cpu, memory),
             Self::DisableInterrupts_0xF3 => execute_0xf3(cpu, memory),
+            Self::Nop_0xF4 => invalid_opcode(),
+            Self::PushAF_0xF5 => execute_0xf5(cpu, memory),
         }
     }
 }
@@ -3053,4 +3061,10 @@ fn execute_0xf2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 fn execute_0xf3(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.interrupt_master_enable = false;
     return 4;
+}
+
+fn execute_0xf5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::AF, memory);
+
+    return 16;
 }
