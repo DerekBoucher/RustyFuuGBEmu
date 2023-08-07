@@ -260,6 +260,7 @@ pub enum Opcode {
     Or8ImmIntoA_0xF6,
     Reset30h_0xF7,
     LoadSPSigned8ImmIntoHL_0xF8,
+    LoadHLIntoSP_0xF9,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -514,6 +515,7 @@ impl std::convert::From<u8> for Opcode {
             0xF6 => Self::Or8ImmIntoA_0xF6,
             0xF7 => Self::Reset30h_0xF7,
             0xF8 => Self::LoadSPSigned8ImmIntoHL_0xF8,
+            0xF9 => Self::LoadHLIntoSP_0xF9,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -771,6 +773,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::Or8ImmIntoA_0xF6 => 0xF6,
             Self::Reset30h_0xF7 => 0xF7,
             Self::LoadSPSigned8ImmIntoHL_0xF8 => 0xF8,
+            Self::LoadHLIntoSP_0xF9 => 0xF9,
         }
     }
 }
@@ -1027,6 +1030,7 @@ impl Opcode {
             Self::Or8ImmIntoA_0xF6 => execute_0xf6(cpu, memory),
             Self::Reset30h_0xF7 => execute_0xf7(cpu, memory),
             Self::LoadSPSigned8ImmIntoHL_0xF8 => execute_0xf8(cpu, memory),
+            Self::LoadHLIntoSP_0xF9 => execute_0xf9(cpu, memory),
         }
     }
 }
@@ -3146,4 +3150,10 @@ fn execute_0xf8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     }
 
     return 12;
+}
+
+fn execute_0xf9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.sp = cpu.hl.word();
+
+    return 8;
 }
