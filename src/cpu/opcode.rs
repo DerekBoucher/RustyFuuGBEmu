@@ -262,6 +262,7 @@ pub enum Opcode {
     LoadSPSigned8ImmIntoHL_0xF8,
     LoadHLIntoSP_0xF9,
     LoadMemAddrIntoA_0xFA,
+    EnableInterrupts_0xFB,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -518,6 +519,7 @@ impl std::convert::From<u8> for Opcode {
             0xF8 => Self::LoadSPSigned8ImmIntoHL_0xF8,
             0xF9 => Self::LoadHLIntoSP_0xF9,
             0xFA => Self::LoadMemAddrIntoA_0xFA,
+            0xFB => Self::EnableInterrupts_0xFB,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -777,6 +779,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::LoadSPSigned8ImmIntoHL_0xF8 => 0xF8,
             Self::LoadHLIntoSP_0xF9 => 0xF9,
             Self::LoadMemAddrIntoA_0xFA => 0xFA,
+            Self::EnableInterrupts_0xFB => 0xFB,
         }
     }
 }
@@ -1035,6 +1038,7 @@ impl Opcode {
             Self::LoadSPSigned8ImmIntoHL_0xF8 => execute_0xf8(cpu, memory),
             Self::LoadHLIntoSP_0xF9 => execute_0xf9(cpu, memory),
             Self::LoadMemAddrIntoA_0xFA => execute_0xfa(cpu, memory),
+            Self::EnableInterrupts_0xFB => execute_0xfb(cpu, memory),
         }
     }
 }
@@ -3185,4 +3189,10 @@ fn execute_0xfa(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     };
 
     return 16;
+}
+
+fn execute_0xfb(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.interrupt_master_enable = true;
+
+    return 4;
 }
