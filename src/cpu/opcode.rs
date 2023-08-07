@@ -250,6 +250,7 @@ pub enum Opcode {
     Nop_0xEC,
     Nop_0xED,
     Xor8ImmIntoA_0xEE,
+    Reset28h_0xEF,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -494,6 +495,7 @@ impl std::convert::From<u8> for Opcode {
             0xEC => Self::Nop_0xEC,
             0xED => Self::Nop_0xED,
             0xEE => Self::Xor8ImmIntoA_0xEE,
+            0xEF => Self::Reset28h_0xEF,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -741,6 +743,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::Nop_0xEC => 0xEC,
             Self::Nop_0xED => 0xED,
             Self::Xor8ImmIntoA_0xEE => 0xEE,
+            Self::Reset28h_0xEF => 0xEF,
         }
     }
 }
@@ -987,6 +990,7 @@ impl Opcode {
             Self::Nop_0xEC => invalid_opcode(),
             Self::Nop_0xED => invalid_opcode(),
             Self::Xor8ImmIntoA_0xEE => execute_0xee(cpu, memory),
+            Self::Reset28h_0xEF => execute_0xef(cpu, memory),
         }
     }
 }
@@ -2979,4 +2983,13 @@ fn execute_0xee(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.xor_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc));
     cpu.pc = cpu.pc.wrapping_add(1);
     return 8;
+}
+
+fn execute_0xef(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+
+    cpu.pc = 0x0028;
+
+    // TODO - Update Timers
+    return 16;
 }
