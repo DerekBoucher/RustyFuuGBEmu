@@ -8544,3 +8544,27 @@ fn _0xf2() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0xf3() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, mock::Memory) {
+            let cpu = LR35902::new();
+            let memory = mock::Memory::new(vec![Opcode::DisableInterrupts_0xF3.into()]);
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            cpu.pc = 0x0001;
+            cpu.interrupt_master_enable = false;
+            let memory = mock::Memory::new(vec![Opcode::DisableInterrupts_0xF3.into()]);
+            return (cpu, memory);
+        },
+        expected_cycles: 4,
+        disable_pc_check: false,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}

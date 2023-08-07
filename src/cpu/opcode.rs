@@ -254,6 +254,7 @@ pub enum Opcode {
     LoadHiMemOffsetIntoA_0xF0,
     PopAF_0xF1,
     LoadMemOffsetCIntoA_0xF2,
+    DisableInterrupts_0xF3,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -502,6 +503,7 @@ impl std::convert::From<u8> for Opcode {
             0xF0 => Self::LoadHiMemOffsetIntoA_0xF0,
             0xF1 => Self::PopAF_0xF1,
             0xF2 => Self::LoadMemOffsetCIntoA_0xF2,
+            0xF3 => Self::DisableInterrupts_0xF3,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -753,6 +755,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::LoadHiMemOffsetIntoA_0xF0 => 0xF0,
             Self::PopAF_0xF1 => 0xF1,
             Self::LoadMemOffsetCIntoA_0xF2 => 0xF2,
+            Self::DisableInterrupts_0xF3 => 0xF3,
         }
     }
 }
@@ -1003,6 +1006,7 @@ impl Opcode {
             Self::LoadHiMemOffsetIntoA_0xF0 => execute_0xf0(cpu, memory),
             Self::PopAF_0xF1 => execute_0xf1(cpu, memory),
             Self::LoadMemOffsetCIntoA_0xF2 => execute_0xf2(cpu, memory),
+            Self::DisableInterrupts_0xF3 => execute_0xf3(cpu, memory),
         }
     }
 }
@@ -3044,4 +3048,9 @@ fn execute_0xf2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.af.hi = byte;
 
     return 8;
+}
+
+fn execute_0xf3(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.interrupt_master_enable = false;
+    return 4;
 }
