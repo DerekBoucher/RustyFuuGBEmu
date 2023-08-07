@@ -8368,3 +8368,37 @@ fn _0xe9() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0xea() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            let mut mem_data: Vec<u8> = vec![0x00; 0x10000];
+            mem_data[0] = Opcode::WriteAInto16ImmAddress_0xEA.into();
+            mem_data[1] = 0x1F;
+            mem_data[2] = 0xFF;
+            cpu.af.hi = 0xFF;
+            let memory = mock::Memory::new(mem_data);
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            let mut mem_data: Vec<u8> = vec![0x00; 0x10000];
+            mem_data[0] = Opcode::WriteAInto16ImmAddress_0xEA.into();
+            mem_data[1] = 0x1F;
+            mem_data[2] = 0xFF;
+            mem_data[0xFF1F] = 0xFF;
+            cpu.pc = 0x0003;
+            cpu.af.hi = 0xFF;
+            let memory = mock::Memory::new(mem_data);
+            return (cpu, memory);
+        },
+        expected_cycles: 16,
+        disable_pc_check: false,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}

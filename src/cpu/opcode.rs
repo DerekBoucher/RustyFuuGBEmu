@@ -245,6 +245,7 @@ pub enum Opcode {
     Reset20h_0xE7,
     AddSigned8ImmIntoSP_0xE8,
     JumpMemoryHL_0xE9,
+    WriteAInto16ImmAddress_0xEA,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -484,6 +485,7 @@ impl std::convert::From<u8> for Opcode {
             0xE7 => Self::Reset20h_0xE7,
             0xE8 => Self::AddSigned8ImmIntoSP_0xE8,
             0xE9 => Self::JumpMemoryHL_0xE9,
+            0xEA => Self::WriteAInto16ImmAddress_0xEA,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -726,6 +728,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::Reset20h_0xE7 => 0xE7,
             Self::AddSigned8ImmIntoSP_0xE8 => 0xE8,
             Self::JumpMemoryHL_0xE9 => 0xE9,
+            Self::WriteAInto16ImmAddress_0xEA => 0xEA,
         }
     }
 }
@@ -967,6 +970,7 @@ impl Opcode {
             Self::Reset20h_0xE7 => execute_0xe7(cpu, memory),
             Self::AddSigned8ImmIntoSP_0xE8 => execute_0xe8(cpu, memory),
             Self::JumpMemoryHL_0xE9 => execute_0xe9(cpu, memory),
+            Self::WriteAInto16ImmAddress_0xEA => execute_0xea(cpu, memory),
         }
     }
 }
@@ -2931,4 +2935,26 @@ fn execute_0xe8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 fn execute_0xe9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.pc = cpu.hl.word();
     return 4;
+}
+
+fn execute_0xea(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    let lo_byte = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!("TODO"),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let hi_byte = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!("TODO"),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let effective_addr: usize = (usize::from(hi_byte) << 8) | usize::from(lo_byte);
+
+    memory.write(effective_addr, cpu.af.hi);
+
+    return 16;
 }
