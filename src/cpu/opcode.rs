@@ -257,6 +257,7 @@ pub enum Opcode {
     DisableInterrupts_0xF3,
     Nop_0xF4,
     PushAF_0xF5,
+    Or8ImmIntoA_0xF6,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -508,6 +509,7 @@ impl std::convert::From<u8> for Opcode {
             0xF3 => Self::DisableInterrupts_0xF3,
             0xF4 => Self::Nop_0xF4,
             0xF5 => Self::PushAF_0xF5,
+            0xF6 => Self::Or8ImmIntoA_0xF6,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -762,6 +764,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::DisableInterrupts_0xF3 => 0xF3,
             Self::Nop_0xF4 => 0xF4,
             Self::PushAF_0xF5 => 0xF5,
+            Self::Or8ImmIntoA_0xF6 => 0xF6,
         }
     }
 }
@@ -1015,6 +1018,7 @@ impl Opcode {
             Self::DisableInterrupts_0xF3 => execute_0xf3(cpu, memory),
             Self::Nop_0xF4 => invalid_opcode(),
             Self::PushAF_0xF5 => execute_0xf5(cpu, memory),
+            Self::Or8ImmIntoA_0xF6 => execute_0xf6(cpu, memory),
         }
     }
 }
@@ -3067,4 +3071,12 @@ fn execute_0xf5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.push_16bit_register_on_stack(register::ID16::AF, memory);
 
     return 16;
+}
+
+fn execute_0xf6(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.or_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc));
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    return 8;
 }
