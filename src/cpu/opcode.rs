@@ -246,6 +246,9 @@ pub enum Opcode {
     AddSigned8ImmIntoSP_0xE8,
     JumpMemoryHL_0xE9,
     WriteAInto16ImmAddress_0xEA,
+    Nop_0xEB,
+    Nop_0xEC,
+    Nop_0xED,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -486,6 +489,9 @@ impl std::convert::From<u8> for Opcode {
             0xE8 => Self::AddSigned8ImmIntoSP_0xE8,
             0xE9 => Self::JumpMemoryHL_0xE9,
             0xEA => Self::WriteAInto16ImmAddress_0xEA,
+            0xEB => Self::Nop_0xEB,
+            0xEC => Self::Nop_0xEC,
+            0xED => Self::Nop_0xED,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -729,6 +735,9 @@ impl std::convert::Into<u8> for Opcode {
             Self::AddSigned8ImmIntoSP_0xE8 => 0xE8,
             Self::JumpMemoryHL_0xE9 => 0xE9,
             Self::WriteAInto16ImmAddress_0xEA => 0xEA,
+            Self::Nop_0xEB => 0xEB,
+            Self::Nop_0xEC => 0xEC,
+            Self::Nop_0xED => 0xED,
         }
     }
 }
@@ -971,6 +980,9 @@ impl Opcode {
             Self::AddSigned8ImmIntoSP_0xE8 => execute_0xe8(cpu, memory),
             Self::JumpMemoryHL_0xE9 => execute_0xe9(cpu, memory),
             Self::WriteAInto16ImmAddress_0xEA => execute_0xea(cpu, memory),
+            Self::Nop_0xEB => invalid_opcode(),
+            Self::Nop_0xEC => invalid_opcode(),
+            Self::Nop_0xED => invalid_opcode(),
         }
     }
 }
