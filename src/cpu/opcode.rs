@@ -244,6 +244,7 @@ pub enum Opcode {
     And8ImmIntoA_0xE6,
     Reset20h_0xE7,
     AddSigned8ImmIntoSP_0xE8,
+    JumpMemoryHL_0xE9,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -482,6 +483,7 @@ impl std::convert::From<u8> for Opcode {
             0xE6 => Self::And8ImmIntoA_0xE6,
             0xE7 => Self::Reset20h_0xE7,
             0xE8 => Self::AddSigned8ImmIntoSP_0xE8,
+            0xE9 => Self::JumpMemoryHL_0xE9,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -723,6 +725,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::And8ImmIntoA_0xE6 => 0xE6,
             Self::Reset20h_0xE7 => 0xE7,
             Self::AddSigned8ImmIntoSP_0xE8 => 0xE8,
+            Self::JumpMemoryHL_0xE9 => 0xE9,
         }
     }
 }
@@ -963,6 +966,7 @@ impl Opcode {
             Self::And8ImmIntoA_0xE6 => execute_0xe6(cpu, memory),
             Self::Reset20h_0xE7 => execute_0xe7(cpu, memory),
             Self::AddSigned8ImmIntoSP_0xE8 => execute_0xe8(cpu, memory),
+            Self::JumpMemoryHL_0xE9 => execute_0xe9(cpu, memory),
         }
     }
 }
@@ -2922,4 +2926,9 @@ fn execute_0xe8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     }
 
     return 16;
+}
+
+fn execute_0xe9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pc = cpu.hl.word();
+    return 4;
 }

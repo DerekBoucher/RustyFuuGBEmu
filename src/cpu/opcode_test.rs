@@ -8343,3 +8343,28 @@ fn _0xe8() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0xe9() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            cpu.hl.set_word(0xFFFF);
+            let memory = mock::Memory::new(vec![Opcode::JumpMemoryHL_0xE9.into()]);
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            cpu.hl.set_word(0xFFFF);
+            cpu.pc = 0xFFFF;
+            let memory = mock::Memory::new(vec![Opcode::JumpMemoryHL_0xE9.into()]);
+            return (cpu, memory);
+        },
+        expected_cycles: 4,
+        disable_pc_check: false,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
