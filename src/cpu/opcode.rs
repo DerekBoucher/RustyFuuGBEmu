@@ -252,6 +252,7 @@ pub enum Opcode {
     Xor8ImmIntoA_0xEE,
     Reset28h_0xEF,
     LoadHiMemOffsetIntoA_0xF0,
+    PopAF_0xF1,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -498,6 +499,7 @@ impl std::convert::From<u8> for Opcode {
             0xEE => Self::Xor8ImmIntoA_0xEE,
             0xEF => Self::Reset28h_0xEF,
             0xF0 => Self::LoadHiMemOffsetIntoA_0xF0,
+            0xF1 => Self::PopAF_0xF1,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -747,6 +749,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::Xor8ImmIntoA_0xEE => 0xEE,
             Self::Reset28h_0xEF => 0xEF,
             Self::LoadHiMemOffsetIntoA_0xF0 => 0xF0,
+            Self::PopAF_0xF1 => 0xF1,
         }
     }
 }
@@ -995,6 +998,7 @@ impl Opcode {
             Self::Xor8ImmIntoA_0xEE => execute_0xee(cpu, memory),
             Self::Reset28h_0xEF => execute_0xef(cpu, memory),
             Self::LoadHiMemOffsetIntoA_0xF0 => execute_0xf0(cpu, memory),
+            Self::PopAF_0xF1 => execute_0xf1(cpu, memory),
         }
     }
 }
@@ -3014,6 +3018,11 @@ fn execute_0xf0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     };
 
     cpu.af.hi = byte;
-    
+
+    return 12;
+}
+
+fn execute_0xf1(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.pop_stack_into_16_bit_register(register::ID16::AF, memory);
     return 12;
 }
