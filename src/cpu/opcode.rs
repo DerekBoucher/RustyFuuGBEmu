@@ -249,6 +249,7 @@ pub enum Opcode {
     Nop_0xEB,
     Nop_0xEC,
     Nop_0xED,
+    Xor8ImmIntoA_0xEE,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -492,6 +493,7 @@ impl std::convert::From<u8> for Opcode {
             0xEB => Self::Nop_0xEB,
             0xEC => Self::Nop_0xEC,
             0xED => Self::Nop_0xED,
+            0xEE => Self::Xor8ImmIntoA_0xEE,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -738,6 +740,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::Nop_0xEB => 0xEB,
             Self::Nop_0xEC => 0xEC,
             Self::Nop_0xED => 0xED,
+            Self::Xor8ImmIntoA_0xEE => 0xEE,
         }
     }
 }
@@ -983,6 +986,7 @@ impl Opcode {
             Self::Nop_0xEB => invalid_opcode(),
             Self::Nop_0xEC => invalid_opcode(),
             Self::Nop_0xED => invalid_opcode(),
+            Self::Xor8ImmIntoA_0xEE => execute_0xee(cpu, memory),
         }
     }
 }
@@ -2969,4 +2973,10 @@ fn execute_0xea(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     memory.write(effective_addr, cpu.af.hi);
 
     return 16;
+}
+
+fn execute_0xee(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    cpu.xor_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc));
+    cpu.pc = cpu.pc.wrapping_add(1);
+    return 8;
 }
