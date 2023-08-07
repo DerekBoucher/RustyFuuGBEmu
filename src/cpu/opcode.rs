@@ -261,6 +261,7 @@ pub enum Opcode {
     Reset30h_0xF7,
     LoadSPSigned8ImmIntoHL_0xF8,
     LoadHLIntoSP_0xF9,
+    LoadMemAddrIntoA_0xFA,
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -516,6 +517,7 @@ impl std::convert::From<u8> for Opcode {
             0xF7 => Self::Reset30h_0xF7,
             0xF8 => Self::LoadSPSigned8ImmIntoHL_0xF8,
             0xF9 => Self::LoadHLIntoSP_0xF9,
+            0xFA => Self::LoadMemAddrIntoA_0xFA,
             _ => panic!("unsupported op code (TODO)"),
         }
     }
@@ -774,6 +776,7 @@ impl std::convert::Into<u8> for Opcode {
             Self::Reset30h_0xF7 => 0xF7,
             Self::LoadSPSigned8ImmIntoHL_0xF8 => 0xF8,
             Self::LoadHLIntoSP_0xF9 => 0xF9,
+            Self::LoadMemAddrIntoA_0xFA => 0xFA,
         }
     }
 }
@@ -1031,6 +1034,7 @@ impl Opcode {
             Self::Reset30h_0xF7 => execute_0xf7(cpu, memory),
             Self::LoadSPSigned8ImmIntoHL_0xF8 => execute_0xf8(cpu, memory),
             Self::LoadHLIntoSP_0xF9 => execute_0xf9(cpu, memory),
+            Self::LoadMemAddrIntoA_0xFA => execute_0xfa(cpu, memory),
         }
     }
 }
@@ -3156,4 +3160,29 @@ fn execute_0xf9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     cpu.sp = cpu.hl.word();
 
     return 8;
+}
+
+fn execute_0xfa(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    let lo_byte = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!("TODO"),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let hi_byte = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => byte,
+        None => panic!("TODO"),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    let effective_addr: usize = (usize::from(hi_byte) << 8) | usize::from(lo_byte); 
+
+    cpu.af.hi = match memory.read(effective_addr) {
+        Some(byte) => byte,
+        None => panic!("TODO"),
+    };
+
+    return 16;
 }

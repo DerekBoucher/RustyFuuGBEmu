@@ -8723,3 +8723,29 @@ fn _0xf9() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0xfa() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, mock::Memory) {
+            let cpu = LR35902::new();
+            let memory =
+                mock::Memory::new(vec![Opcode::LoadMemAddrIntoA_0xFA.into(), 0x03, 0x00, 0xFF]);
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            cpu.pc = 0x0003;
+            cpu.af.hi = 0xFF;
+            let memory =
+                mock::Memory::new(vec![Opcode::LoadMemAddrIntoA_0xFA.into(), 0x03, 0x00, 0xFF]);
+            return (cpu, memory);
+        },
+        expected_cycles: 16,
+        disable_pc_check: false,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
