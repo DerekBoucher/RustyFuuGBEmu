@@ -8620,3 +8620,28 @@ fn _0xf6() {
         tc.run(i);
     }
 }
+
+#[test]
+fn _0xf7() {
+    let test_cases: Vec<TestCase> = vec![TestCase {
+        initial_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            cpu.sp = 0x0004;
+            let memory = mock::Memory::new(vec![Opcode::Reset30h_0xF7.into(), 0x00, 0x00, 0x00]);
+            return (cpu, memory);
+        },
+        expected_state: || -> (LR35902, mock::Memory) {
+            let mut cpu = LR35902::new();
+            cpu.sp = 0x0002;
+            cpu.pc = 0x0030;
+            let memory = mock::Memory::new(vec![Opcode::Reset30h_0xF7.into(), 0x00, 0x01, 0x00]);
+            return (cpu, memory);
+        },
+        expected_cycles: 16,
+        disable_pc_check: false,
+    }];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        tc.run(i);
+    }
+}
