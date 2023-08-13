@@ -28,6 +28,7 @@ pub enum ExtendedOpcode {
     RotateBLeftWithCarry_0x10,
     RotateCLeftWithCarry_0x11,
     RotateDLeftWithCarry_0x12,
+    RotateELeftWithCarry_0x13,
 }
 
 impl std::convert::From<u8> for ExtendedOpcode {
@@ -52,6 +53,7 @@ impl std::convert::From<u8> for ExtendedOpcode {
             0x10 => Self::RotateBLeftWithCarry_0x10,
             0x11 => Self::RotateCLeftWithCarry_0x11,
             0x12 => Self::RotateDLeftWithCarry_0x12,
+            0x13 => Self::RotateELeftWithCarry_0x13,
             _ => panic!("todo"),
         }
     }
@@ -79,6 +81,7 @@ impl std::convert::Into<u8> for ExtendedOpcode {
             Self::RotateBLeftWithCarry_0x10 => 0x10,
             Self::RotateCLeftWithCarry_0x11 => 0x11,
             Self::RotateDLeftWithCarry_0x12 => 0x12,
+            Self::RotateELeftWithCarry_0x13 => 0x13,
         }
     }
 }
@@ -105,6 +108,7 @@ impl ExtendedOpcode {
             Self::RotateBLeftWithCarry_0x10 => execute_0x10(cpu, memory),
             Self::RotateCLeftWithCarry_0x11 => execute_0x11(cpu, memory),
             Self::RotateDLeftWithCarry_0x12 => execute_0x12(cpu, memory),
+            Self::RotateELeftWithCarry_0x13 => execute_0x13(cpu, memory),
         }
     }
 }
@@ -183,4 +187,8 @@ fn execute_0x11(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0x12(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     return cpu.rotate_8bit_register_left_carry(register::ID::D);
+}
+
+fn execute_0x13(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.rotate_8bit_register_left_carry(register::ID::E);
 }
