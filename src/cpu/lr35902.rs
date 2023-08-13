@@ -962,4 +962,61 @@ impl LR35902 {
 
         return 12;
     }
+
+    pub fn rotate_8bit_register_right(&mut self, reg_id: register::ID) -> u32 {
+        let mut byte = match reg_id {
+            ID::A => self.af.hi,
+            ID::B => self.bc.hi,
+            ID::C => self.bc.lo,
+            ID::D => self.de.hi,
+            ID::E => self.de.lo,
+            ID::H => self.hl.hi,
+            ID::L => self.hl.lo,
+            _ => panic!("TODO"),
+        };
+
+        if (byte & 1) > 0 {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        byte = byte.rotate_right(1);
+
+        match reg_id {
+            ID::A => self.af.hi = byte,
+            ID::B => self.bc.hi = byte,
+            ID::C => self.bc.lo = byte,
+            ID::D => self.de.hi = byte,
+            ID::E => self.de.lo = byte,
+            ID::H => self.hl.hi = byte,
+            ID::L => self.hl.lo = byte,
+            _ => panic!("TODO"),
+        }
+
+        return 4;
+    }
+
+    pub fn rotate_8bit_memory_right(
+        &mut self,
+        memory: &mut impl memory::Interface,
+        addr: usize,
+    ) -> u32 {
+        let mut byte = match memory.read(addr) {
+            Some(byte) => byte,
+            None => panic!("TODO"),
+        };
+
+        if (byte & 1) > 0 {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        byte = byte.rotate_right(1);
+
+        memory.write(addr, byte);
+
+        return 12;
+    }
 }

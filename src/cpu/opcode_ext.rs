@@ -17,6 +17,14 @@ pub enum ExtendedOpcode {
     RotateLLeft_0x05,
     RotateMemoryHLLeft_0x06,
     RotateALeft_0x07,
+    RotateBRight_0x08,
+    RotateCRight_0x09,
+    RotateDRight_0x0A,
+    RotateERight_0x0B,
+    RotateHRight_0x0C,
+    RotateLRight_0x0D,
+    RotateMemoryHLRight_0x0E,
+    RotateARight_0x0F,
 }
 
 impl std::convert::From<u8> for ExtendedOpcode {
@@ -30,6 +38,14 @@ impl std::convert::From<u8> for ExtendedOpcode {
             0x05 => Self::RotateLLeft_0x05,
             0x06 => Self::RotateMemoryHLLeft_0x06,
             0x07 => Self::RotateALeft_0x07,
+            0x08 => Self::RotateBRight_0x08,
+            0x09 => Self::RotateCRight_0x09,
+            0x0A => Self::RotateDRight_0x0A,
+            0x0B => Self::RotateERight_0x0B,
+            0x0C => Self::RotateHRight_0x0C,
+            0x0D => Self::RotateLRight_0x0D,
+            0x0E => Self::RotateMemoryHLRight_0x0E,
+            0x0F => Self::RotateARight_0x0F,
             _ => panic!("todo"),
         }
     }
@@ -46,6 +62,14 @@ impl std::convert::Into<u8> for ExtendedOpcode {
             Self::RotateLLeft_0x05 => 0x05,
             Self::RotateMemoryHLLeft_0x06 => 0x06,
             Self::RotateALeft_0x07 => 0x07,
+            Self::RotateBRight_0x08 => 0x08,
+            Self::RotateCRight_0x09 => 0x09,
+            Self::RotateDRight_0x0A => 0x0A,
+            Self::RotateERight_0x0B => 0x0B,
+            Self::RotateHRight_0x0C => 0x0C,
+            Self::RotateLRight_0x0D => 0x0D,
+            Self::RotateMemoryHLRight_0x0E => 0x0E,
+            Self::RotateARight_0x0F => 0x0F,
         }
     }
 }
@@ -61,6 +85,14 @@ impl ExtendedOpcode {
             Self::RotateLLeft_0x05 => execute_0x05(cpu, memory),
             Self::RotateMemoryHLLeft_0x06 => execute_0x06(cpu, memory),
             Self::RotateALeft_0x07 => execute_0x07(cpu, memory),
+            Self::RotateBRight_0x08 => execute_0x08(cpu, memory),
+            Self::RotateCRight_0x09 => execute_0x09(cpu, memory),
+            Self::RotateDRight_0x0A => execute_0x0a(cpu, memory),
+            Self::RotateERight_0x0B => execute_0x0b(cpu, memory),
+            Self::RotateHRight_0x0C => execute_0x0c(cpu, memory),
+            Self::RotateLRight_0x0D => execute_0x0d(cpu, memory),
+            Self::RotateMemoryHLRight_0x0E => execute_0x0e(cpu, memory),
+            Self::RotateARight_0x0F => execute_0x0f(cpu, memory),
         }
     }
 }
@@ -95,4 +127,36 @@ fn execute_0x06(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0x07(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     return cpu.rotate_8bit_register_left(register::ID::A);
+}
+
+fn execute_0x08(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.rotate_8bit_register_right(register::ID::B);
+}
+
+fn execute_0x09(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.rotate_8bit_register_right(register::ID::C);
+}
+
+fn execute_0x0a(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.rotate_8bit_register_right(register::ID::D);
+}
+
+fn execute_0x0b(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.rotate_8bit_register_right(register::ID::E);
+}
+
+fn execute_0x0c(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.rotate_8bit_register_right(register::ID::H);
+}
+
+fn execute_0x0d(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.rotate_8bit_register_right(register::ID::L);
+}
+
+fn execute_0x0e(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.rotate_8bit_memory_right(memory, usize::from(cpu.hl.word()));
+}
+
+fn execute_0x0f(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.rotate_8bit_register_right(register::ID::A);
 }
