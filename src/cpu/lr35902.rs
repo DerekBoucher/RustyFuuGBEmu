@@ -939,4 +939,27 @@ impl LR35902 {
 
         return 4;
     }
+
+    pub fn rotate_8bit_memory_left(
+        &mut self,
+        memory: &mut impl memory::Interface,
+        addr: usize,
+    ) -> u32 {
+        let mut byte = match memory.read(addr) {
+            Some(byte) => byte,
+            None => panic!("TODO"),
+        };
+
+        if (byte & (1 << 7)) > 0 {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        byte = byte.rotate_left(1);
+
+        memory.write(addr, byte);
+
+        return 12;
+    }
 }
