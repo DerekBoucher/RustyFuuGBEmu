@@ -845,4 +845,80 @@ impl LR35902 {
             ID16::PC => self.pc = value,
         }
     }
+
+    pub fn rotate_8bit_register_left_carry(&mut self, reg_id: register::ID) -> u32 {
+        let mut byte = self.read_register(&reg_id);
+
+        let msb = byte & (1 << 7);
+
+        let old_carry: u8 = match self.test_carry_flag() {
+            true => 1,
+            false => 0,
+        };
+
+        if (msb) > 0 {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        byte = (byte << 1) | old_carry;
+
+        self.write_register(&reg_id, byte);
+
+        return 4;
+    }
+
+    pub fn rotate_8bit_memory_left_carry(
+        &mut self,
+        memory: &mut impl memory::Interface,
+        addr: usize,
+    ) -> u32 {
+        let mut byte = match memory.read(addr) {
+            Some(byte) => byte,
+            None => panic!("TODO"),
+        };
+
+        let msb = byte & (1 << 7);
+
+        let old_carry: u8 = match self.test_carry_flag() {
+            true => 1,
+            false => 0,
+        };
+
+        if (msb) > 0 {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        byte = (byte << 1) | old_carry;
+
+        memory.write(addr, byte);
+
+        return 12;
+    }
+
+    pub fn rotate_8bit_register_right_carry(&mut self, reg_id: register::ID) -> u32 {
+        let mut byte = self.read_register(&reg_id);
+
+        let lsb = byte & 1;
+
+        let old_carry: u8 = match self.test_carry_flag() {
+            true => 1 << 7,
+            false => 0,
+        };
+
+        if (lsb) > 0 {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        byte = (byte >> 1) | old_carry;
+
+        self.write_register(&reg_id, byte);
+
+        return 4;
+    }
 }
