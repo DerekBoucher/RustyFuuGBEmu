@@ -6,7 +6,9 @@
 mod bit;
 mod lr35902;
 mod opcode;
+mod opcode_ext;
 mod register;
+mod test_utils;
 
 use std::fmt::Debug;
 
