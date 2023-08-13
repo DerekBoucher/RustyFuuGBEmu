@@ -7,6 +7,7 @@ use crate::cpu::register;
 use crate::cpu::lr35902;
 use crate::memory;
 use crate::cpu::LR35902;
+use crate::cpu::opcode_ext::*;
 
 #[allow(non_camel_case_types)]
 #[repr(u8)]
@@ -2811,8 +2812,14 @@ fn execute_0xca(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 }
 
 fn execute_0xcb(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
-    // TODO
-    return 4;
+    let ext_opcode = match memory.read(usize::from(cpu.pc)) {
+        Some(byte) => ExtendedOpcode::from(byte),
+        None => panic!("TODO"),
+    };
+
+    cpu.pc = cpu.pc.wrapping_add(1);
+
+    return ext_opcode.execute(cpu, memory) + 4;
 }
 
 fn execute_0xcc(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
