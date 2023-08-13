@@ -11,6 +11,7 @@ use crate::memory;
 pub enum ExtendedOpcode {
     RotateBLeft_0x00,
     RotateCLeft_0x01,
+    RotateDLeft_0x02,
 }
 
 impl std::convert::From<u8> for ExtendedOpcode {
@@ -18,6 +19,7 @@ impl std::convert::From<u8> for ExtendedOpcode {
         match value {
             0x00 => Self::RotateBLeft_0x00,
             0x01 => Self::RotateCLeft_0x01,
+            0x02 => Self::RotateDLeft_0x02,
             _ => panic!("todo"),
         }
     }
@@ -28,6 +30,7 @@ impl std::convert::Into<u8> for ExtendedOpcode {
         match self {
             Self::RotateBLeft_0x00 => 0x00,
             Self::RotateCLeft_0x01 => 0x01,
+            Self::RotateDLeft_0x02 => 0x02,
         }
     }
 }
@@ -37,6 +40,7 @@ impl ExtendedOpcode {
         match self {
             Self::RotateBLeft_0x00 => execute_0x00(cpu, memory),
             Self::RotateCLeft_0x01 => execute_0x01(cpu, memory),
+            Self::RotateDLeft_0x02 => execute_0x02(cpu, memory),
         }
     }
 }
@@ -47,4 +51,8 @@ fn execute_0x00(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0x01(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     return cpu.rotate_8bit_register_left(register::ID::C);
+}
+
+fn execute_0x02(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.rotate_8bit_register_left(register::ID::D);
 }
