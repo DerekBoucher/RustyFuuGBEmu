@@ -119,19 +119,7 @@ impl LR35902 {
     }
 
     pub fn increment_8_bit_register(&mut self, reg_id: register::ID) {
-        let current_reg_value = match reg_id {
-            ID::A => self.af.hi,
-            ID::B => self.bc.hi,
-            ID::C => self.bc.lo,
-            ID::D => self.de.hi,
-            ID::E => self.de.lo,
-            ID::H => self.hl.hi,
-            ID::L => self.hl.lo,
-            _ => panic!(
-                "unrecognized 8 bit register identifier for 8 bit increment: {:?}",
-                reg_id
-            ),
-        };
+        let current_reg_value = self.read_register(&reg_id);
 
         self.reset_sub_flag();
 
@@ -147,35 +135,11 @@ impl LR35902 {
             self.reset_half_carry_flag();
         }
 
-        match reg_id {
-            ID::A => self.af.hi = self.af.hi.wrapping_add(1),
-            ID::B => self.bc.hi = self.bc.hi.wrapping_add(1),
-            ID::C => self.bc.lo = self.bc.lo.wrapping_add(1),
-            ID::D => self.de.hi = self.de.hi.wrapping_add(1),
-            ID::E => self.de.lo = self.de.lo.wrapping_add(1),
-            ID::H => self.hl.hi = self.hl.hi.wrapping_add(1),
-            ID::L => self.hl.lo = self.hl.lo.wrapping_add(1),
-            _ => panic!(
-                "unrecognized 8 bit register identifier for 8 bit increment: {:?}",
-                reg_id
-            ),
-        }
+        self.write_register(&reg_id, current_reg_value.wrapping_add(1));
     }
 
     pub fn decrement_8_bit_register(&mut self, reg_id: register::ID) {
-        let current_reg_value = match reg_id {
-            ID::A => self.af.hi,
-            ID::B => self.bc.hi,
-            ID::C => self.bc.lo,
-            ID::D => self.de.hi,
-            ID::E => self.de.lo,
-            ID::H => self.hl.hi,
-            ID::L => self.hl.lo,
-            _ => panic!(
-                "unrecognized 8 bit register identifier for 8 bit decrement: {:?}",
-                reg_id
-            ),
-        };
+        let current_reg_value = self.read_register(&reg_id);
 
         self.set_sub_flag();
 
@@ -191,37 +155,13 @@ impl LR35902 {
             self.reset_half_carry_flag();
         }
 
-        match reg_id {
-            ID::A => self.af.hi = self.af.hi.wrapping_sub(1),
-            ID::B => self.bc.hi = self.bc.hi.wrapping_sub(1),
-            ID::C => self.bc.lo = self.bc.lo.wrapping_sub(1),
-            ID::D => self.de.hi = self.de.hi.wrapping_sub(1),
-            ID::E => self.de.lo = self.de.lo.wrapping_sub(1),
-            ID::H => self.hl.hi = self.hl.hi.wrapping_sub(1),
-            ID::L => self.hl.lo = self.hl.lo.wrapping_sub(1),
-            _ => panic!(
-                "unrecognized 8 bit register identifier for 8 bit decrement: {:?}",
-                reg_id
-            ),
-        }
+        self.write_register(&reg_id, current_reg_value.wrapping_sub(1));
     }
 
     pub fn add_16_bit_registers(&mut self, target: register::ID16, src: register::ID16) {
-        let target_value = match target {
-            ID16::BC => self.bc.word(),
-            ID16::DE => self.de.word(),
-            ID16::HL => self.hl.word(),
-            ID16::SP => self.sp,
-            _ => panic!("invalid 16 bit add operation: targetID {:?}", target),
-        };
+        let target_value = self.read_16bit_register(&target);
 
-        let src_value = match src {
-            ID16::BC => self.bc.word(),
-            ID16::DE => self.de.word(),
-            ID16::HL => self.hl.word(),
-            ID16::SP => self.sp,
-            _ => panic!("invalid 16 bit add operation: srcID {:?}", src),
-        };
+        let src_value = self.read_16bit_register(&src);
 
         self.reset_sub_flag();
 
@@ -239,13 +179,7 @@ impl LR35902 {
 
         let new_word = target_value.wrapping_add(src_value);
 
-        match target {
-            ID16::BC => self.bc.set_word(new_word),
-            ID16::DE => self.de.set_word(new_word),
-            ID16::HL => self.hl.set_word(new_word),
-            ID16::SP => self.sp = new_word,
-            _ => panic!("invalid 16 bit add operation: targetID {:?}", target),
-        }
+        self.write_16bit_register(&target, new_word);
     }
 
     pub fn add_8_bit_registers(
@@ -254,26 +188,14 @@ impl LR35902 {
         src: register::ID,
         with_carry_flag: bool,
     ) {
-        let target_value = match target {
-            ID::A => self.af.hi,
-            _ => panic!("invalid 8 bit add operation: targetID {:?}", target),
-        };
+        let target_value = self.read_register(&target);
 
         let carry: u8 = match self.test_carry_flag() && with_carry_flag {
             true => 0x01,
             false => 0x00,
         };
 
-        let src_value = match src {
-            ID::A => self.af.hi,
-            ID::B => self.bc.hi,
-            ID::C => self.bc.lo,
-            ID::D => self.de.hi,
-            ID::E => self.de.lo,
-            ID::H => self.hl.hi,
-            ID::L => self.hl.lo,
-            _ => panic!("invalid 8 bit add operation: srcID {:?}", src),
-        };
+        let src_value = self.read_register(&src);
 
         if bit::is_half_carry(target_value, src_value, carry > 0x00) {
             self.set_half_carry_flag();
@@ -297,28 +219,13 @@ impl LR35902 {
 
         self.reset_sub_flag();
 
-        match target {
-            ID::A => self.af.hi = new_target_value,
-            _ => panic!("invalid 8 bit add operation: targetID {:?}", target),
-        };
+        self.write_register(&target, new_target_value);
     }
 
     pub fn compare_8_bit_registers(&mut self, target: register::ID, src: register::ID) {
-        let target_value = match target {
-            ID::A => self.af.hi,
-            _ => panic!("invalid 8 bit add operation: targetID {:?}", target),
-        };
+        let target_value = self.read_register(&target);
 
-        let src_value = match src {
-            ID::A => self.af.hi,
-            ID::B => self.bc.hi,
-            ID::C => self.bc.lo,
-            ID::D => self.de.hi,
-            ID::E => self.de.lo,
-            ID::H => self.hl.hi,
-            ID::L => self.hl.lo,
-            _ => panic!("invalid 8 bit add operation: srcID {:?}", src),
-        };
+        let src_value = self.read_register(&src);
 
         if target_value == src_value {
             self.set_zero_flag();
@@ -347,10 +254,7 @@ impl LR35902 {
         memory: &impl memory::Interface,
         addr: usize,
     ) {
-        let target_value = match target {
-            ID::A => self.af.hi,
-            _ => panic!("invalid 8 bit add operation: targetID {:?}", target),
-        };
+        let target_value = self.read_register(&target);
 
         let byte = match memory.read(addr) {
             Some(byte) => byte,
@@ -385,10 +289,7 @@ impl LR35902 {
         addr: usize,
         with_carry_flag: bool,
     ) {
-        let target_value = match target {
-            ID::A => self.af.hi,
-            _ => panic!("invalid 8 bit add operation: targetID {:?}", target),
-        };
+        let target_value = self.read_register(&target);
 
         let carry: u8 = match self.test_carry_flag() && with_carry_flag {
             true => 0x01,
@@ -422,10 +323,7 @@ impl LR35902 {
 
         self.reset_sub_flag();
 
-        match target {
-            ID::A => self.af.hi = new_target_value,
-            _ => panic!("invalid 8 bit add operation: targetID {:?}", target),
-        };
+        self.write_register(&target, new_target_value);
     }
 
     pub fn sub_8_bit_registers(
@@ -434,26 +332,14 @@ impl LR35902 {
         src: register::ID,
         with_carry_flag: bool,
     ) {
-        let target_value = match target {
-            ID::A => self.af.hi,
-            _ => panic!("invalid 8 bit sub operation: targetID {:?}", target),
-        };
+        let target_value = self.read_register(&target);
 
         let carry: u8 = match self.test_carry_flag() && with_carry_flag {
             true => 0x01,
             false => 0x00,
         };
 
-        let src_value = match src {
-            ID::A => self.af.hi,
-            ID::B => self.bc.hi,
-            ID::C => self.bc.lo,
-            ID::D => self.de.hi,
-            ID::E => self.de.lo,
-            ID::H => self.hl.hi,
-            ID::L => self.hl.lo,
-            _ => panic!("invalid 8 bit sub operation: srcID {:?}", src),
-        };
+        let src_value = self.read_register(&src);
 
         if bit::is_half_borrow(target_value, src_value, carry > 0x00) {
             self.set_half_carry_flag();
@@ -477,10 +363,7 @@ impl LR35902 {
 
         self.set_sub_flag();
 
-        match target {
-            ID::A => self.af.hi = new_target_value,
-            _ => panic!("invalid 8 bit sub operation: targetID {:?}", target),
-        };
+        self.write_register(&target, new_target_value);
     }
 
     pub fn sub_8_bit_memory(
@@ -490,10 +373,7 @@ impl LR35902 {
         addr: usize,
         with_carry_flag: bool,
     ) {
-        let target_value = match target {
-            ID::A => self.af.hi,
-            _ => panic!("invalid 8 bit sub operation: targetID {:?}", target),
-        };
+        let target_value = self.read_register(&target);
 
         let carry: u8 = match self.test_carry_flag() && with_carry_flag {
             true => 0x01,
@@ -527,28 +407,13 @@ impl LR35902 {
 
         self.set_sub_flag();
 
-        match target {
-            ID::A => self.af.hi = new_target_value,
-            _ => panic!("invalid 8 bit sub operation: targetID {:?}", target),
-        };
+        self.write_register(&target, new_target_value);
     }
 
     pub fn and_8_bit_registers(&mut self, target: register::ID, src: register::ID) {
-        let target_value = match target {
-            ID::A => self.af.hi,
-            _ => panic!("invalid 8 bit and operation: targetID {:?}", target),
-        };
+        let target_value = self.read_register(&target);
 
-        let src_value = match src {
-            ID::A => self.af.hi,
-            ID::B => self.bc.hi,
-            ID::C => self.bc.lo,
-            ID::D => self.de.hi,
-            ID::E => self.de.lo,
-            ID::H => self.hl.hi,
-            ID::L => self.hl.lo,
-            _ => panic!("invalid 8 bit and operation: srcID {:?}", src),
-        };
+        let src_value = self.read_register(&src);
 
         self.reset_sub_flag();
         self.reset_carry_flag();
@@ -562,10 +427,7 @@ impl LR35902 {
             self.reset_zero_flag();
         }
 
-        match target {
-            ID::A => self.af.hi = new_target_value,
-            _ => panic!("invalid 8 bit and operation: targetID {:?}", target),
-        };
+        self.write_register(&target, new_target_value);
     }
 
     pub fn and_8_bit_memory(
@@ -574,10 +436,7 @@ impl LR35902 {
         memory: &impl memory::Interface,
         addr: usize,
     ) {
-        let target_value = match target {
-            ID::A => self.af.hi,
-            _ => panic!("invalid 8 bit and operation: targetID {:?}", target),
-        };
+        let target_value = self.read_register(&target);
 
         let byte = match memory.read(addr) {
             Some(byte) => byte,
@@ -599,28 +458,13 @@ impl LR35902 {
             self.reset_zero_flag();
         }
 
-        match target {
-            ID::A => self.af.hi = new_target_value,
-            _ => panic!("invalid 8 bit and operation: targetID {:?}", target),
-        };
+        self.write_register(&target, new_target_value);
     }
 
     pub fn xor_8_bit_registers(&mut self, target: register::ID, src: register::ID) {
-        let target_value = match target {
-            ID::A => self.af.hi,
-            _ => panic!("invalid 8 bit xor operation: targetID {:?}", target),
-        };
+        let target_value = self.read_register(&target);
 
-        let src_value = match src {
-            ID::A => self.af.hi,
-            ID::B => self.bc.hi,
-            ID::C => self.bc.lo,
-            ID::D => self.de.hi,
-            ID::E => self.de.lo,
-            ID::H => self.hl.hi,
-            ID::L => self.hl.lo,
-            _ => panic!("invalid 8 bit xor operation: srcID {:?}", src),
-        };
+        let src_value = self.read_register(&src);
 
         self.reset_sub_flag();
         self.reset_carry_flag();
@@ -634,10 +478,7 @@ impl LR35902 {
             self.reset_zero_flag();
         }
 
-        match target {
-            ID::A => self.af.hi = new_target_value,
-            _ => panic!("invalid 8 bit xor operation: targetID {:?}", target),
-        };
+        self.write_register(&target, new_target_value);
     }
 
     pub fn xor_8_bit_memory(
@@ -646,10 +487,7 @@ impl LR35902 {
         memory: &impl memory::Interface,
         addr: usize,
     ) {
-        let target_value = match target {
-            ID::A => self.af.hi,
-            _ => panic!("invalid 8 bit xor operation: targetID {:?}", target),
-        };
+        let target_value = self.read_register(&target);
 
         let byte = match memory.read(addr) {
             Some(byte) => byte,
@@ -671,28 +509,13 @@ impl LR35902 {
             self.reset_zero_flag();
         }
 
-        match target {
-            ID::A => self.af.hi = new_target_value,
-            _ => panic!("invalid 8 bit xor operation: targetID {:?}", target),
-        };
+        self.write_register(&target, new_target_value);
     }
 
     pub fn or_8_bit_registers(&mut self, target: register::ID, src: register::ID) {
-        let target_value = match target {
-            ID::A => self.af.hi,
-            _ => panic!("invalid 8 bit or operation: targetID {:?}", target),
-        };
+        let target_value = self.read_register(&target);
 
-        let src_value = match src {
-            ID::A => self.af.hi,
-            ID::B => self.bc.hi,
-            ID::C => self.bc.lo,
-            ID::D => self.de.hi,
-            ID::E => self.de.lo,
-            ID::H => self.hl.hi,
-            ID::L => self.hl.lo,
-            _ => panic!("invalid 8 bit or operation: srcID {:?}", src),
-        };
+        let src_value = self.read_register(&src);
 
         self.reset_sub_flag();
         self.reset_carry_flag();
@@ -706,10 +529,7 @@ impl LR35902 {
             self.reset_zero_flag();
         }
 
-        match target {
-            ID::A => self.af.hi = new_target_value,
-            _ => panic!("invalid 8 bit or operation: targetID {:?}", target),
-        };
+        self.write_register(&target, new_target_value);
     }
 
     pub fn or_8_bit_memory(
@@ -718,10 +538,7 @@ impl LR35902 {
         memory: &impl memory::Interface,
         addr: usize,
     ) {
-        let target_value = match target {
-            ID::A => self.af.hi,
-            _ => panic!("invalid 8 bit or operation: targetID {:?}", target),
-        };
+        let target_value = self.read_register(&target);
 
         let byte = match memory.read(addr) {
             Some(byte) => byte,
@@ -743,10 +560,7 @@ impl LR35902 {
             self.reset_zero_flag();
         }
 
-        match target {
-            ID::A => self.af.hi = new_target_value,
-            _ => panic!("invalid 8 bit or operation: targetID {:?}", target),
-        };
+        self.write_register(&target, new_target_value);
     }
 
     pub fn pop_stack_into_16_bit_register(
@@ -907,16 +721,7 @@ impl LR35902 {
     }
 
     pub fn rotate_8bit_register_left(&mut self, reg_id: register::ID) -> u32 {
-        let mut byte = match reg_id {
-            ID::A => self.af.hi,
-            ID::B => self.bc.hi,
-            ID::C => self.bc.lo,
-            ID::D => self.de.hi,
-            ID::E => self.de.lo,
-            ID::H => self.hl.hi,
-            ID::L => self.hl.lo,
-            _ => panic!("TODO"),
-        };
+        let mut byte = self.read_register(&reg_id);
 
         if (byte & (1 << 7)) > 0 {
             self.set_carry_flag();
@@ -926,16 +731,7 @@ impl LR35902 {
 
         byte = byte.rotate_left(1);
 
-        match reg_id {
-            ID::A => self.af.hi = byte,
-            ID::B => self.bc.hi = byte,
-            ID::C => self.bc.lo = byte,
-            ID::D => self.de.hi = byte,
-            ID::E => self.de.lo = byte,
-            ID::H => self.hl.hi = byte,
-            ID::L => self.hl.lo = byte,
-            _ => panic!("TODO"),
-        }
+        self.write_register(&reg_id, byte);
 
         return 4;
     }
@@ -964,16 +760,7 @@ impl LR35902 {
     }
 
     pub fn rotate_8bit_register_right(&mut self, reg_id: register::ID) -> u32 {
-        let mut byte = match reg_id {
-            ID::A => self.af.hi,
-            ID::B => self.bc.hi,
-            ID::C => self.bc.lo,
-            ID::D => self.de.hi,
-            ID::E => self.de.lo,
-            ID::H => self.hl.hi,
-            ID::L => self.hl.lo,
-            _ => panic!("TODO"),
-        };
+        let mut byte = self.read_register(&reg_id);
 
         if (byte & 1) > 0 {
             self.set_carry_flag();
@@ -983,16 +770,7 @@ impl LR35902 {
 
         byte = byte.rotate_right(1);
 
-        match reg_id {
-            ID::A => self.af.hi = byte,
-            ID::B => self.bc.hi = byte,
-            ID::C => self.bc.lo = byte,
-            ID::D => self.de.hi = byte,
-            ID::E => self.de.lo = byte,
-            ID::H => self.hl.hi = byte,
-            ID::L => self.hl.lo = byte,
-            _ => panic!("TODO"),
-        }
+        self.write_register(&reg_id, byte);
 
         return 4;
     }
@@ -1014,6 +792,160 @@ impl LR35902 {
         }
 
         byte = byte.rotate_right(1);
+
+        memory.write(addr, byte);
+
+        return 12;
+    }
+
+    fn read_register(&self, reg_id: &register::ID) -> u8 {
+        match reg_id {
+            ID::A => self.af.hi,
+            ID::F => self.af.lo,
+            ID::B => self.bc.hi,
+            ID::C => self.bc.lo,
+            ID::D => self.de.hi,
+            ID::E => self.de.lo,
+            ID::H => self.hl.hi,
+            ID::L => self.hl.lo,
+        }
+    }
+
+    fn write_register(&mut self, reg_id: &register::ID, value: u8) {
+        match reg_id {
+            ID::A => self.af.hi = value,
+            ID::F => self.af.lo = value,
+            ID::B => self.bc.hi = value,
+            ID::C => self.bc.lo = value,
+            ID::D => self.de.hi = value,
+            ID::E => self.de.lo = value,
+            ID::H => self.hl.hi = value,
+            ID::L => self.hl.lo = value,
+        }
+    }
+
+    fn read_16bit_register(&self, reg_id: &register::ID16) -> u16 {
+        match reg_id {
+            ID16::AF => self.af.word(),
+            ID16::BC => self.bc.word(),
+            ID16::DE => self.de.word(),
+            ID16::HL => self.hl.word(),
+            ID16::SP => self.sp,
+            ID16::PC => self.pc,
+        }
+    }
+
+    fn write_16bit_register(&mut self, reg_id: &register::ID16, value: u16) {
+        match reg_id {
+            ID16::AF => self.af.set_word(value),
+            ID16::BC => self.bc.set_word(value),
+            ID16::DE => self.de.set_word(value),
+            ID16::HL => self.hl.set_word(value),
+            ID16::SP => self.sp = value,
+            ID16::PC => self.pc = value,
+        }
+    }
+
+    pub fn rotate_8bit_register_left_carry(&mut self, reg_id: register::ID) -> u32 {
+        let mut byte = self.read_register(&reg_id);
+
+        let msb = byte & (1 << 7);
+
+        let old_carry: u8 = match self.test_carry_flag() {
+            true => 1,
+            false => 0,
+        };
+
+        if (msb) > 0 {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        byte = (byte << 1) | old_carry;
+
+        self.write_register(&reg_id, byte);
+
+        return 4;
+    }
+
+    pub fn rotate_8bit_memory_left_carry(
+        &mut self,
+        memory: &mut impl memory::Interface,
+        addr: usize,
+    ) -> u32 {
+        let mut byte = match memory.read(addr) {
+            Some(byte) => byte,
+            None => panic!("TODO"),
+        };
+
+        let msb = byte & (1 << 7);
+
+        let old_carry: u8 = match self.test_carry_flag() {
+            true => 1,
+            false => 0,
+        };
+
+        if (msb) > 0 {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        byte = (byte << 1) | old_carry;
+
+        memory.write(addr, byte);
+
+        return 12;
+    }
+
+    pub fn rotate_8bit_register_right_carry(&mut self, reg_id: register::ID) -> u32 {
+        let mut byte = self.read_register(&reg_id);
+
+        let lsb = byte & 1;
+
+        let old_carry: u8 = match self.test_carry_flag() {
+            true => 1 << 7,
+            false => 0,
+        };
+
+        if (lsb) > 0 {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        byte = (byte >> 1) | old_carry;
+
+        self.write_register(&reg_id, byte);
+
+        return 4;
+    }
+
+    pub fn rotate_8bit_memory_right_carry(
+        &mut self,
+        memory: &mut impl memory::Interface,
+        addr: usize,
+    ) -> u32 {
+        let mut byte = match memory.read(addr) {
+            Some(byte) => byte,
+            None => panic!("TODO"),
+        };
+
+        let lsb = byte & (1);
+
+        let old_carry: u8 = match self.test_carry_flag() {
+            true => 1,
+            false => 0,
+        };
+
+        if (lsb) > 0 {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        byte = (old_carry << 7) | (byte >> 1);
 
         memory.write(addr, byte);
 
