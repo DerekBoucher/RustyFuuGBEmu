@@ -47,6 +47,7 @@ pub enum ExtendedOpcode {
     ShiftLeftEIntoCarry_0x23,
     ShiftLeftHIntoCarry_0x24,
     ShiftLeftLIntoCarry_0x25,
+    ShiftLeftMemoryHLIntoCarry_0x26,
 }
 
 impl std::convert::From<u8> for ExtendedOpcode {
@@ -90,6 +91,7 @@ impl std::convert::From<u8> for ExtendedOpcode {
             0x23 => Self::ShiftLeftEIntoCarry_0x23,
             0x24 => Self::ShiftLeftHIntoCarry_0x24,
             0x25 => Self::ShiftLeftLIntoCarry_0x25,
+            0x26 => Self::ShiftLeftMemoryHLIntoCarry_0x26,
             _ => panic!("todo"),
         }
     }
@@ -136,6 +138,7 @@ impl std::convert::Into<u8> for ExtendedOpcode {
             Self::ShiftLeftEIntoCarry_0x23 => 0x23,
             Self::ShiftLeftHIntoCarry_0x24 => 0x24,
             Self::ShiftLeftLIntoCarry_0x25 => 0x25,
+            Self::ShiftLeftMemoryHLIntoCarry_0x26 => 0x26,
         }
     }
 }
@@ -181,6 +184,7 @@ impl ExtendedOpcode {
             Self::ShiftLeftEIntoCarry_0x23 => execute_0x23(cpu, memory),
             Self::ShiftLeftHIntoCarry_0x24 => execute_0x24(cpu, memory),
             Self::ShiftLeftLIntoCarry_0x25 => execute_0x25(cpu, memory),
+            Self::ShiftLeftMemoryHLIntoCarry_0x26 => execute_0x26(cpu, memory),
         }
     }
 }
@@ -335,4 +339,8 @@ fn execute_0x24(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0x25(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     return cpu.shift_left_8bit_register_into_carry(register::ID::L);
+}
+
+fn execute_0x26(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.shift_left_8bit_memory_into_carry(memory, usize::from(cpu.hl.word()));
 }
