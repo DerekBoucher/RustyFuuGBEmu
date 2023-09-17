@@ -963,8 +963,106 @@ impl LR35902 {
 
         byte = byte << 1;
 
+        if byte == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
         self.write_register(&reg_id, byte);
 
+        self.reset_sub_flag();
+        self.reset_half_carry_flag();
+
         return 4;
+    }
+
+    pub fn shift_left_8bit_memory_into_carry(
+        &mut self,
+        memory: &mut impl memory::Interface,
+        addr: usize,
+    ) -> u32 {
+        let mut byte = match memory.read(addr) {
+            Some(byte) => byte,
+            None => panic!("TODO"),
+        };
+
+        if (byte & (1 << 7)) > 0 {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        byte = byte << 1;
+
+        if byte == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        memory.write(addr, byte);
+
+        self.reset_sub_flag();
+        self.reset_half_carry_flag();
+
+        return 12;
+    }
+
+    pub fn shift_right_8bit_register_into_carry(&mut self, reg_id: register::ID) -> u32 {
+        let mut byte = self.read_register(&reg_id);
+
+        if (byte & 0x01) > 0 {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        byte = byte >> 1;
+
+        if byte == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.write_register(&reg_id, byte);
+
+        self.reset_sub_flag();
+        self.reset_half_carry_flag();
+
+        return 4;
+    }
+
+    pub fn shift_right_8bit_memory_into_carry(
+        &mut self,
+        memory: &mut impl memory::Interface,
+        addr: usize,
+    ) -> u32 {
+        let mut byte = match memory.read(addr) {
+            Some(byte) => byte,
+            None => panic!("TODO"),
+        };
+
+        if (byte & 0x01) > 0 {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        byte = byte >> 1;
+
+        if byte == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        memory.write(addr, byte);
+
+        self.reset_sub_flag();
+        self.reset_half_carry_flag();
+
+        return 12;
     }
 }
