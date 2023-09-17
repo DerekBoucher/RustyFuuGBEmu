@@ -43,6 +43,9 @@ pub enum ExtendedOpcode {
     RotateARightWithCarry_0x1F,
     ShiftLeftBIntoCarry_0x20,
     ShiftLeftCIntoCarry_0x21,
+    ShiftLeftDIntoCarry_0x22,
+    ShiftLeftEIntoCarry_0x23,
+    ShiftLeftHIntoCarry_0x24,
 }
 
 impl std::convert::From<u8> for ExtendedOpcode {
@@ -82,6 +85,9 @@ impl std::convert::From<u8> for ExtendedOpcode {
             0x1F => Self::RotateARightWithCarry_0x1F,
             0x20 => Self::ShiftLeftBIntoCarry_0x20,
             0x21 => Self::ShiftLeftCIntoCarry_0x21,
+            0x22 => Self::ShiftLeftDIntoCarry_0x22,
+            0x23 => Self::ShiftLeftEIntoCarry_0x23,
+            0x24 => Self::ShiftLeftHIntoCarry_0x24,
             _ => panic!("todo"),
         }
     }
@@ -124,6 +130,9 @@ impl std::convert::Into<u8> for ExtendedOpcode {
             Self::RotateARightWithCarry_0x1F => 0x1F,
             Self::ShiftLeftBIntoCarry_0x20 => 0x20,
             Self::ShiftLeftCIntoCarry_0x21 => 0x21,
+            Self::ShiftLeftDIntoCarry_0x22 => 0x22,
+            Self::ShiftLeftEIntoCarry_0x23 => 0x23,
+            Self::ShiftLeftHIntoCarry_0x24 => 0x24,
         }
     }
 }
@@ -165,6 +174,9 @@ impl ExtendedOpcode {
             Self::RotateARightWithCarry_0x1F => execute_0x1f(cpu, memory),
             Self::ShiftLeftBIntoCarry_0x20 => execute_0x20(cpu, memory),
             Self::ShiftLeftCIntoCarry_0x21 => execute_0x21(cpu, memory),
+            Self::ShiftLeftDIntoCarry_0x22 => execute_0x22(cpu, memory),
+            Self::ShiftLeftEIntoCarry_0x23 => execute_0x23(cpu, memory),
+            Self::ShiftLeftHIntoCarry_0x24 => execute_0x24(cpu, memory),
         }
     }
 }
@@ -303,4 +315,16 @@ fn execute_0x20(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0x21(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     return cpu.shift_left_8bit_register_into_carry(register::ID::C);
+}
+
+fn execute_0x22(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.shift_left_8bit_register_into_carry(register::ID::D);
+}
+
+fn execute_0x23(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.shift_left_8bit_register_into_carry(register::ID::E);
+}
+
+fn execute_0x24(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.shift_left_8bit_register_into_carry(register::ID::H);
 }
