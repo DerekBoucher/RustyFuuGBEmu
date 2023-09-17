@@ -951,4 +951,20 @@ impl LR35902 {
 
         return 12;
     }
+
+    pub fn shift_left_8bit_register_into_carry(&mut self, reg_id: register::ID) -> u32 {
+        let mut byte = self.read_register(&reg_id);
+
+        if (byte & (1 << 7)) > 0 {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        byte = byte << 1;
+
+        self.write_register(&reg_id, byte);
+
+        return 4;
+    }
 }
