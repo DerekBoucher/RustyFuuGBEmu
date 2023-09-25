@@ -57,6 +57,9 @@ pub enum ExtendedOpcode {
     ShiftRightLIntoCarry_0x2D,
     ShiftRightMemoryHLIntoCarry_0x2E,
     ShiftRightAIntoCarry_0x2F,
+    SwapB_0x30,
+    SwapC_0x31,
+    SwapD_0x32,
 }
 
 impl std::convert::From<u8> for ExtendedOpcode {
@@ -110,6 +113,9 @@ impl std::convert::From<u8> for ExtendedOpcode {
             0x2D => Self::ShiftRightLIntoCarry_0x2D,
             0x2E => Self::ShiftRightMemoryHLIntoCarry_0x2E,
             0x2F => Self::ShiftRightAIntoCarry_0x2F,
+            0x30 => Self::SwapB_0x30,
+            0x31 => Self::SwapC_0x31,
+            0x32 => Self::SwapD_0x32,
             _ => panic!("todo"),
         }
     }
@@ -166,6 +172,9 @@ impl std::convert::Into<u8> for ExtendedOpcode {
             Self::ShiftRightLIntoCarry_0x2D => 0x2D,
             Self::ShiftRightMemoryHLIntoCarry_0x2E => 0x2E,
             Self::ShiftRightAIntoCarry_0x2F => 0x2F,
+            Self::SwapB_0x30 => 0x30,
+            Self::SwapC_0x31 => 0x31,
+            Self::SwapD_0x32 => 0x32,
         }
     }
 }
@@ -221,6 +230,9 @@ impl ExtendedOpcode {
             Self::ShiftRightLIntoCarry_0x2D => execute_0x2d(cpu, memory),
             Self::ShiftRightMemoryHLIntoCarry_0x2E => execute_0x2e(cpu, memory),
             Self::ShiftRightAIntoCarry_0x2F => execute_0x2f(cpu, memory),
+            Self::SwapB_0x30 => execute_0x30(cpu, memory),
+            Self::SwapC_0x31 => execute_0x31(cpu, memory),
+            Self::SwapD_0x32 => execute_0x32(cpu, memory),
         }
     }
 }
@@ -415,4 +427,16 @@ fn execute_0x2e(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0x2f(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     return cpu.shift_right_8bit_register_into_carry(register::ID::A);
+}
+
+fn execute_0x30(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.swap_8bit_register(register::ID::B);
+}
+
+fn execute_0x31(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.swap_8bit_register(register::ID::C);
+}
+
+fn execute_0x32(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.swap_8bit_register(register::ID::D);
 }
