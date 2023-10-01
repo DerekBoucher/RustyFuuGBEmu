@@ -81,6 +81,14 @@ pub enum ExtendedOpcode {
     TestBit0_L_0x45,
     TestBit0_MemoryHL_0x46,
     TestBit0_A_0x47,
+    TestBit1_B_0x48,
+    TestBit1_C_0x49,
+    TestBit1_D_0x4A,
+    TestBit1_E_0x4B,
+    TestBit1_H_0x4C,
+    TestBit1_L_0x4D,
+    TestBit1_MemoryHL_0x4E,
+    TestBit1_A_0x4F,
 }
 
 impl std::convert::From<u8> for ExtendedOpcode {
@@ -158,6 +166,14 @@ impl std::convert::From<u8> for ExtendedOpcode {
             0x45 => Self::TestBit0_L_0x45,
             0x46 => Self::TestBit0_MemoryHL_0x46,
             0x47 => Self::TestBit0_A_0x47,
+            0x48 => Self::TestBit1_B_0x48,
+            0x49 => Self::TestBit1_C_0x49,
+            0x4A => Self::TestBit1_D_0x4A,
+            0x4B => Self::TestBit1_E_0x4B,
+            0x4C => Self::TestBit1_H_0x4C,
+            0x4D => Self::TestBit1_L_0x4D,
+            0x4E => Self::TestBit1_MemoryHL_0x4E,
+            0x4F => Self::TestBit1_A_0x4F,
             _ => panic!("todo"),
         }
     }
@@ -238,6 +254,14 @@ impl std::convert::Into<u8> for ExtendedOpcode {
             Self::TestBit0_L_0x45 => 0x45,
             Self::TestBit0_MemoryHL_0x46 => 0x46,
             Self::TestBit0_A_0x47 => 0x47,
+            Self::TestBit1_B_0x48 => 0x48,
+            Self::TestBit1_C_0x49 => 0x49,
+            Self::TestBit1_D_0x4A => 0x4A,
+            Self::TestBit1_E_0x4B => 0x4B,
+            Self::TestBit1_H_0x4C => 0x4C,
+            Self::TestBit1_L_0x4D => 0x4D,
+            Self::TestBit1_MemoryHL_0x4E => 0x4E,
+            Self::TestBit1_A_0x4F => 0x4F,
         }
     }
 }
@@ -317,6 +341,14 @@ impl ExtendedOpcode {
             Self::TestBit0_L_0x45 => execute_0x45(cpu, memory),
             Self::TestBit0_MemoryHL_0x46 => execute_0x46(cpu, memory),
             Self::TestBit0_A_0x47 => execute_0x47(cpu, memory),
+            Self::TestBit1_B_0x48 => execute_0x48(cpu, memory),
+            Self::TestBit1_C_0x49 => execute_0x49(cpu, memory),
+            Self::TestBit1_D_0x4A => execute_0x4a(cpu, memory),
+            Self::TestBit1_E_0x4B => execute_0x4b(cpu, memory),
+            Self::TestBit1_H_0x4C => execute_0x4c(cpu, memory),
+            Self::TestBit1_L_0x4D => execute_0x4d(cpu, memory),
+            Self::TestBit1_MemoryHL_0x4E => execute_0x4e(cpu, memory),
+            Self::TestBit1_A_0x4F => execute_0x4f(cpu, memory),
         }
     }
 }
@@ -607,4 +639,36 @@ fn execute_0x46(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0x47(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     return cpu.test_bit(register::ID::A, 0);
+}
+
+fn execute_0x48(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.test_bit(register::ID::B, 1);
+}
+
+fn execute_0x49(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.test_bit(register::ID::C, 1);
+}
+
+fn execute_0x4a(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.test_bit(register::ID::D, 1);
+}
+
+fn execute_0x4b(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.test_bit(register::ID::E, 1);
+}
+
+fn execute_0x4c(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.test_bit(register::ID::H, 1);
+}
+
+fn execute_0x4d(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.test_bit(register::ID::L, 1);
+}
+
+fn execute_0x4e(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 1);
+}
+
+fn execute_0x4f(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.test_bit(register::ID::A, 1);
 }
