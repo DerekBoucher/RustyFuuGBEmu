@@ -1178,4 +1178,27 @@ impl LR35902 {
 
         return 4;
     }
+
+    pub fn test_bit_memory(
+        &mut self,
+        memory: &mut impl memory::Interface,
+        addr: usize,
+        bit_position: u8,
+    ) -> u32 {
+        let current = match memory.read(addr) {
+            Some(byte) => byte,
+            None => panic!("TODO"),
+        };
+
+        if current & (1 << bit_position) > 0 {
+            self.reset_zero_flag();
+        } else {
+            self.set_zero_flag();
+        }
+
+        self.reset_sub_flag();
+        self.set_half_carry_flag();
+
+        return 12;
+    }
 }
