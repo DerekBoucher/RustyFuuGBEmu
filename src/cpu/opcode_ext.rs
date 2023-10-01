@@ -60,6 +60,11 @@ pub enum ExtendedOpcode {
     SwapB_0x30,
     SwapC_0x31,
     SwapD_0x32,
+    SwapE_0x33,
+    SwapH_0x34,
+    SwapL_0x35,
+    SwapMemoryHL_0x36,
+    SwapA_0x37,
 }
 
 impl std::convert::From<u8> for ExtendedOpcode {
@@ -116,6 +121,11 @@ impl std::convert::From<u8> for ExtendedOpcode {
             0x30 => Self::SwapB_0x30,
             0x31 => Self::SwapC_0x31,
             0x32 => Self::SwapD_0x32,
+            0x33 => Self::SwapE_0x33,
+            0x34 => Self::SwapH_0x34,
+            0x35 => Self::SwapL_0x35,
+            0x36 => Self::SwapMemoryHL_0x36,
+            0x37 => Self::SwapA_0x37,
             _ => panic!("todo"),
         }
     }
@@ -175,6 +185,11 @@ impl std::convert::Into<u8> for ExtendedOpcode {
             Self::SwapB_0x30 => 0x30,
             Self::SwapC_0x31 => 0x31,
             Self::SwapD_0x32 => 0x32,
+            Self::SwapE_0x33 => 0x33,
+            Self::SwapH_0x34 => 0x34,
+            Self::SwapL_0x35 => 0x35,
+            Self::SwapMemoryHL_0x36 => 0x36,
+            Self::SwapA_0x37 => 0x37,
         }
     }
 }
@@ -233,6 +248,11 @@ impl ExtendedOpcode {
             Self::SwapB_0x30 => execute_0x30(cpu, memory),
             Self::SwapC_0x31 => execute_0x31(cpu, memory),
             Self::SwapD_0x32 => execute_0x32(cpu, memory),
+            Self::SwapE_0x33 => execute_0x33(cpu, memory),
+            Self::SwapH_0x34 => execute_0x34(cpu, memory),
+            Self::SwapL_0x35 => execute_0x35(cpu, memory),
+            Self::SwapMemoryHL_0x36 => execute_0x36(cpu, memory),
+            Self::SwapA_0x37 => execute_0x37(cpu, memory),
         }
     }
 }
@@ -439,4 +459,24 @@ fn execute_0x31(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0x32(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     return cpu.swap_8bit_register(register::ID::D);
+}
+
+fn execute_0x33(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.swap_8bit_register(register::ID::E);
+}
+
+fn execute_0x34(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.swap_8bit_register(register::ID::H);
+}
+
+fn execute_0x35(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.swap_8bit_register(register::ID::L);
+}
+
+fn execute_0x36(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.swap_8bit_memory(memory, usize::from(cpu.hl.word()));
+}
+
+fn execute_0x37(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.swap_8bit_register(register::ID::A);
 }

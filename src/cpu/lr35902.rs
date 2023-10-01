@@ -1083,4 +1083,27 @@ impl LR35902 {
 
         return 4;
     }
+
+    pub fn swap_8bit_memory(&mut self, memory: &mut impl memory::Interface, addr: usize) -> u32 {
+        let current = match memory.read(addr) {
+            Some(byte) => byte,
+            None => panic!("TODO"),
+        };
+
+        let result = ((current & 0x0F) << 4) | ((current & 0xF0) >> 4);
+
+        memory.write(addr, result);
+
+        if result == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.reset_carry_flag();
+        self.reset_half_carry_flag();
+        self.reset_sub_flag();
+
+        return 12;
+    }
 }
