@@ -65,6 +65,14 @@ pub enum ExtendedOpcode {
     SwapL_0x35,
     SwapMemoryHL_0x36,
     SwapA_0x37,
+    ShiftRightB_0x38,
+    ShiftRightC_0x39,
+    ShiftRightD_0x3A,
+    ShiftRightE_0x3B,
+    ShiftRightH_0x3C,
+    ShiftRightL_0x3D,
+    ShiftRightMemoryHL_0x3E,
+    ShiftRightA_0x3F,
 }
 
 impl std::convert::From<u8> for ExtendedOpcode {
@@ -126,6 +134,14 @@ impl std::convert::From<u8> for ExtendedOpcode {
             0x35 => Self::SwapL_0x35,
             0x36 => Self::SwapMemoryHL_0x36,
             0x37 => Self::SwapA_0x37,
+            0x38 => Self::ShiftRightB_0x38,
+            0x39 => Self::ShiftRightC_0x39,
+            0x3A => Self::ShiftRightD_0x3A,
+            0x3B => Self::ShiftRightE_0x3B,
+            0x3C => Self::ShiftRightH_0x3C,
+            0x3D => Self::ShiftRightL_0x3D,
+            0x3E => Self::ShiftRightMemoryHL_0x3E,
+            0x3F => Self::ShiftRightA_0x3F,
             _ => panic!("todo"),
         }
     }
@@ -190,6 +206,14 @@ impl std::convert::Into<u8> for ExtendedOpcode {
             Self::SwapL_0x35 => 0x35,
             Self::SwapMemoryHL_0x36 => 0x36,
             Self::SwapA_0x37 => 0x37,
+            Self::ShiftRightB_0x38 => 0x38,
+            Self::ShiftRightC_0x39 => 0x39,
+            Self::ShiftRightD_0x3A => 0x3A,
+            Self::ShiftRightE_0x3B => 0x3B,
+            Self::ShiftRightH_0x3C => 0x3C,
+            Self::ShiftRightL_0x3D => 0x3D,
+            Self::ShiftRightMemoryHL_0x3E => 0x3E,
+            Self::ShiftRightA_0x3F => 0x3F,
         }
     }
 }
@@ -253,6 +277,14 @@ impl ExtendedOpcode {
             Self::SwapL_0x35 => execute_0x35(cpu, memory),
             Self::SwapMemoryHL_0x36 => execute_0x36(cpu, memory),
             Self::SwapA_0x37 => execute_0x37(cpu, memory),
+            Self::ShiftRightB_0x38 => execute_0x38(cpu, memory),
+            Self::ShiftRightC_0x39 => execute_0x39(cpu, memory),
+            Self::ShiftRightD_0x3A => execute_0x3a(cpu, memory),
+            Self::ShiftRightE_0x3B => execute_0x3b(cpu, memory),
+            Self::ShiftRightH_0x3C => execute_0x3c(cpu, memory),
+            Self::ShiftRightL_0x3D => execute_0x3d(cpu, memory),
+            Self::ShiftRightMemoryHL_0x3E => execute_0x3e(cpu, memory),
+            Self::ShiftRightA_0x3F => execute_0x3f(cpu, memory),
         }
     }
 }
@@ -479,4 +511,36 @@ fn execute_0x36(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0x37(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     return cpu.swap_8bit_register(register::ID::A);
+}
+
+fn execute_0x38(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.shift_right_8bit_register(register::ID::B);
+}
+
+fn execute_0x39(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.shift_right_8bit_register(register::ID::C);
+}
+
+fn execute_0x3a(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.shift_right_8bit_register(register::ID::D);
+}
+
+fn execute_0x3b(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.shift_right_8bit_register(register::ID::E);
+}
+
+fn execute_0x3c(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.shift_right_8bit_register(register::ID::H);
+}
+
+fn execute_0x3d(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.shift_right_8bit_register(register::ID::L);
+}
+
+fn execute_0x3e(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.shift_right_8bit_memory(memory, usize::from(cpu.hl.word()));
+}
+
+fn execute_0x3f(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.shift_right_8bit_register(register::ID::A);
 }

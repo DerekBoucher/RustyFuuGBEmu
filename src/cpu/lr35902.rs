@@ -1106,4 +1106,61 @@ impl LR35902 {
 
         return 12;
     }
+
+    pub fn shift_right_8bit_register(&mut self, reg_id: register::ID) -> u32 {
+        let current = self.read_register(&reg_id);
+
+        if current & (1 << 0) > 0 {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        let result = current >> 1;
+
+        if result == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.reset_sub_flag();
+        self.reset_half_carry_flag();
+
+        self.write_register(&reg_id, result);
+
+        return 4;
+    }
+
+    pub fn shift_right_8bit_memory(
+        &mut self,
+        memory: &mut impl memory::Interface,
+        addr: usize,
+    ) -> u32 {
+        let current = match memory.read(addr) {
+            Some(byte) => byte,
+            None => panic!("TODO"),
+        };
+
+        if current & (1 << 0) > 0 {
+            self.set_carry_flag();
+        } else {
+            self.reset_carry_flag();
+        }
+
+        let result = current >> 1;
+
+        if result == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        memory.write(addr, result);
+
+        self.reset_sub_flag();
+        self.reset_half_carry_flag();
+
+        return 12;
+    }
 }
