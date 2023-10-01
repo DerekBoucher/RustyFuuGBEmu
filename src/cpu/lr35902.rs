@@ -1163,4 +1163,19 @@ impl LR35902 {
 
         return 12;
     }
+
+    pub fn test_bit(&mut self, reg_id: register::ID, bit_position: u8) -> u32 {
+        let current = self.read_register(&reg_id);
+
+        if current & (1 << bit_position) > 0 {
+            self.reset_zero_flag();
+        } else {
+            self.set_zero_flag();
+        }
+
+        self.reset_sub_flag();
+        self.set_half_carry_flag();
+
+        return 4;
+    }
 }

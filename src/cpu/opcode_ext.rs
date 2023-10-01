@@ -73,6 +73,7 @@ pub enum ExtendedOpcode {
     ShiftRightL_0x3D,
     ShiftRightMemoryHL_0x3E,
     ShiftRightA_0x3F,
+    TestBit0_B_0x40,
 }
 
 impl std::convert::From<u8> for ExtendedOpcode {
@@ -142,6 +143,7 @@ impl std::convert::From<u8> for ExtendedOpcode {
             0x3D => Self::ShiftRightL_0x3D,
             0x3E => Self::ShiftRightMemoryHL_0x3E,
             0x3F => Self::ShiftRightA_0x3F,
+            0x40 => Self::TestBit0_B_0x40,
             _ => panic!("todo"),
         }
     }
@@ -214,6 +216,7 @@ impl std::convert::Into<u8> for ExtendedOpcode {
             Self::ShiftRightL_0x3D => 0x3D,
             Self::ShiftRightMemoryHL_0x3E => 0x3E,
             Self::ShiftRightA_0x3F => 0x3F,
+            Self::TestBit0_B_0x40 => 0x40,
         }
     }
 }
@@ -285,6 +288,7 @@ impl ExtendedOpcode {
             Self::ShiftRightL_0x3D => execute_0x3d(cpu, memory),
             Self::ShiftRightMemoryHL_0x3E => execute_0x3e(cpu, memory),
             Self::ShiftRightA_0x3F => execute_0x3f(cpu, memory),
+            Self::TestBit0_B_0x40 => execute_0x40(cpu, memory),
         }
     }
 }
@@ -543,4 +547,8 @@ fn execute_0x3e(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0x3f(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     return cpu.shift_right_8bit_register(register::ID::A);
+}
+
+fn execute_0x40(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.test_bit(register::ID::B, 0);
 }
