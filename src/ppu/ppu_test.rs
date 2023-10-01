@@ -18,10 +18,10 @@ fn render_tiles() {
     data[WIN_Y_ADDRESS] = 0x00; // No win-y
     data[PALETTE_ADDR] = 0b11100100; // Normal color palette
 
-    // Only define 1 tile, for test simplicity
-    // (1 tile is 16 bytes wide).
-    // Only the top row of the tile is defined, again,
-    // for simplicity. The top row of the tile will alternate
+    // Only define the top line of a single tile, for test simplicity.
+    // (1 tile is 16 bytes wide, with each 2 consecutive bytes representing a line).
+    // Only the top line of the tile is defined, again,
+    // for simplicity. The top line of the tile will alternate
     // white, light gray, dark gray, black, etc...
     data[0x8000] = 0b01010101;
     data[0x8001] = 0b00110011;
