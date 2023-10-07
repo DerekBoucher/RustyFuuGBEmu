@@ -201,6 +201,70 @@ pub enum ExtendedOpcode {
     ResetBit7_L_0xBD,
     ResetBit7_MemoryHL_0xBE,
     ResetBit7_A_0xBF,
+    SetBit0_B_0xC0,
+    SetBit0_C_0xC1,
+    SetBit0_D_0xC2,
+    SetBit0_E_0xC3,
+    SetBit0_H_0xC4,
+    SetBit0_L_0xC5,
+    SetBit0_MemoryHL_0xC6,
+    SetBit0_A_0xC7,
+    SetBit1_B_0xC8,
+    SetBit1_C_0xC9,
+    SetBit1_D_0xCA,
+    SetBit1_E_0xCB,
+    SetBit1_H_0xCC,
+    SetBit1_L_0xCD,
+    SetBit1_MemoryHL_0xCE,
+    SetBit1_A_0xCF,
+    SetBit2_B_0xD0,
+    SetBit2_C_0xD1,
+    SetBit2_D_0xD2,
+    SetBit2_E_0xD3,
+    SetBit2_H_0xD4,
+    SetBit2_L_0xD5,
+    SetBit2_MemoryHL_0xD6,
+    SetBit2_A_0xD7,
+    SetBit3_B_0xD8,
+    SetBit3_C_0xD9,
+    SetBit3_D_0xDA,
+    SetBit3_E_0xDB,
+    SetBit3_H_0xDC,
+    SetBit3_L_0xDD,
+    SetBit3_MemoryHL_0xDE,
+    SetBit3_A_0xDF,
+    SetBit4_B_0xE0,
+    SetBit4_C_0xE1,
+    SetBit4_D_0xE2,
+    SetBit4_E_0xE3,
+    SetBit4_H_0xE4,
+    SetBit4_L_0xE5,
+    SetBit4_MemoryHL_0xE6,
+    SetBit4_A_0xE7,
+    SetBit5_B_0xE8,
+    SetBit5_C_0xE9,
+    SetBit5_D_0xEA,
+    SetBit5_E_0xEB,
+    SetBit5_H_0xEC,
+    SetBit5_L_0xED,
+    SetBit5_MemoryHL_0xEE,
+    SetBit5_A_0xEF,
+    SetBit6_B_0xF0,
+    SetBit6_C_0xF1,
+    SetBit6_D_0xF2,
+    SetBit6_E_0xF3,
+    SetBit6_H_0xF4,
+    SetBit6_L_0xF5,
+    SetBit6_MemoryHL_0xF6,
+    SetBit6_A_0xF7,
+    SetBit7_B_0xF8,
+    SetBit7_C_0xF9,
+    SetBit7_D_0xFA,
+    SetBit7_E_0xFB,
+    SetBit7_H_0xFC,
+    SetBit7_L_0xFD,
+    SetBit7_MemoryHL_0xFE,
+    SetBit7_A_0xFF,
 }
 
 impl std::convert::From<u8> for ExtendedOpcode {
@@ -398,7 +462,70 @@ impl std::convert::From<u8> for ExtendedOpcode {
             0xBD => Self::ResetBit7_L_0xBD,
             0xBE => Self::ResetBit7_MemoryHL_0xBE,
             0xBF => Self::ResetBit7_A_0xBF,
-            _ => panic!("todo"),
+            0xC0 => Self::SetBit0_B_0xC0,
+            0xC1 => Self::SetBit0_C_0xC1,
+            0xC2 => Self::SetBit0_D_0xC2,
+            0xC3 => Self::SetBit0_E_0xC3,
+            0xC4 => Self::SetBit0_H_0xC4,
+            0xC5 => Self::SetBit0_L_0xC5,
+            0xC6 => Self::SetBit0_MemoryHL_0xC6,
+            0xC7 => Self::SetBit0_A_0xC7,
+            0xC8 => Self::SetBit1_B_0xC8,
+            0xC9 => Self::SetBit1_C_0xC9,
+            0xCA => Self::SetBit1_D_0xCA,
+            0xCB => Self::SetBit1_E_0xCB,
+            0xCC => Self::SetBit1_H_0xCC,
+            0xCD => Self::SetBit1_L_0xCD,
+            0xCE => Self::SetBit1_MemoryHL_0xCE,
+            0xCF => Self::SetBit1_A_0xCF,
+            0xD0 => Self::SetBit2_B_0xD0,
+            0xD1 => Self::SetBit2_C_0xD1,
+            0xD2 => Self::SetBit2_D_0xD2,
+            0xD3 => Self::SetBit2_E_0xD3,
+            0xD4 => Self::SetBit2_H_0xD4,
+            0xD5 => Self::SetBit2_L_0xD5,
+            0xD6 => Self::SetBit2_MemoryHL_0xD6,
+            0xD7 => Self::SetBit2_A_0xD7,
+            0xD8 => Self::SetBit3_B_0xD8,
+            0xD9 => Self::SetBit3_C_0xD9,
+            0xDA => Self::SetBit3_D_0xDA,
+            0xDB => Self::SetBit3_E_0xDB,
+            0xDC => Self::SetBit3_H_0xDC,
+            0xDD => Self::SetBit3_L_0xDD,
+            0xDE => Self::SetBit3_MemoryHL_0xDE,
+            0xDF => Self::SetBit3_A_0xDF,
+            0xE0 => Self::SetBit4_B_0xE0,
+            0xE1 => Self::SetBit4_C_0xE1,
+            0xE2 => Self::SetBit4_D_0xE2,
+            0xE3 => Self::SetBit4_E_0xE3,
+            0xE4 => Self::SetBit4_H_0xE4,
+            0xE5 => Self::SetBit4_L_0xE5,
+            0xE6 => Self::SetBit4_MemoryHL_0xE6,
+            0xE7 => Self::SetBit4_A_0xE7,
+            0xE8 => Self::SetBit5_B_0xE8,
+            0xE9 => Self::SetBit5_C_0xE9,
+            0xEA => Self::SetBit5_D_0xEA,
+            0xEB => Self::SetBit5_E_0xEB,
+            0xEC => Self::SetBit5_H_0xEC,
+            0xED => Self::SetBit5_L_0xED,
+            0xEE => Self::SetBit5_MemoryHL_0xEE,
+            0xEF => Self::SetBit5_A_0xEF,
+            0xF0 => Self::SetBit6_B_0xF0,
+            0xF1 => Self::SetBit6_C_0xF1,
+            0xF2 => Self::SetBit6_D_0xF2,
+            0xF3 => Self::SetBit6_E_0xF3,
+            0xF4 => Self::SetBit6_H_0xF4,
+            0xF5 => Self::SetBit6_L_0xF5,
+            0xF6 => Self::SetBit6_MemoryHL_0xF6,
+            0xF7 => Self::SetBit6_A_0xF7,
+            0xF8 => Self::SetBit7_B_0xF8,
+            0xF9 => Self::SetBit7_C_0xF9,
+            0xFA => Self::SetBit7_D_0xFA,
+            0xFB => Self::SetBit7_E_0xFB,
+            0xFC => Self::SetBit7_H_0xFC,
+            0xFD => Self::SetBit7_L_0xFD,
+            0xFE => Self::SetBit7_MemoryHL_0xFE,
+            0xFF => Self::SetBit7_A_0xFF,
         }
     }
 }
@@ -598,6 +725,70 @@ impl std::convert::Into<u8> for ExtendedOpcode {
             Self::ResetBit7_L_0xBD => 0xBD,
             Self::ResetBit7_MemoryHL_0xBE => 0xBE,
             Self::ResetBit7_A_0xBF => 0xBF,
+            Self::SetBit0_B_0xC0 => 0xC0,
+            Self::SetBit0_C_0xC1 => 0xC1,
+            Self::SetBit0_D_0xC2 => 0xC2,
+            Self::SetBit0_E_0xC3 => 0xC3,
+            Self::SetBit0_H_0xC4 => 0xC4,
+            Self::SetBit0_L_0xC5 => 0xC5,
+            Self::SetBit0_MemoryHL_0xC6 => 0xC6,
+            Self::SetBit0_A_0xC7 => 0xC7,
+            Self::SetBit1_B_0xC8 => 0xC8,
+            Self::SetBit1_C_0xC9 => 0xC9,
+            Self::SetBit1_D_0xCA => 0xCA,
+            Self::SetBit1_E_0xCB => 0xCB,
+            Self::SetBit1_H_0xCC => 0xCC,
+            Self::SetBit1_L_0xCD => 0xCD,
+            Self::SetBit1_MemoryHL_0xCE => 0xCE,
+            Self::SetBit1_A_0xCF => 0xCF,
+            Self::SetBit2_B_0xD0 => 0xD0,
+            Self::SetBit2_C_0xD1 => 0xD1,
+            Self::SetBit2_D_0xD2 => 0xD2,
+            Self::SetBit2_E_0xD3 => 0xD3,
+            Self::SetBit2_H_0xD4 => 0xD4,
+            Self::SetBit2_L_0xD5 => 0xD5,
+            Self::SetBit2_MemoryHL_0xD6 => 0xD6,
+            Self::SetBit2_A_0xD7 => 0xD7,
+            Self::SetBit3_B_0xD8 => 0xD8,
+            Self::SetBit3_C_0xD9 => 0xD9,
+            Self::SetBit3_D_0xDA => 0xDA,
+            Self::SetBit3_E_0xDB => 0xDB,
+            Self::SetBit3_H_0xDC => 0xDC,
+            Self::SetBit3_L_0xDD => 0xDD,
+            Self::SetBit3_MemoryHL_0xDE => 0xDE,
+            Self::SetBit3_A_0xDF => 0xDF,
+            Self::SetBit4_B_0xE0 => 0xE0,
+            Self::SetBit4_C_0xE1 => 0xE1,
+            Self::SetBit4_D_0xE2 => 0xE2,
+            Self::SetBit4_E_0xE3 => 0xE3,
+            Self::SetBit4_H_0xE4 => 0xE4,
+            Self::SetBit4_L_0xE5 => 0xE5,
+            Self::SetBit4_MemoryHL_0xE6 => 0xE6,
+            Self::SetBit4_A_0xE7 => 0xE7,
+            Self::SetBit5_B_0xE8 => 0xE8,
+            Self::SetBit5_C_0xE9 => 0xE9,
+            Self::SetBit5_D_0xEA => 0xEA,
+            Self::SetBit5_E_0xEB => 0xEB,
+            Self::SetBit5_H_0xEC => 0xEC,
+            Self::SetBit5_L_0xED => 0xED,
+            Self::SetBit5_MemoryHL_0xEE => 0xEE,
+            Self::SetBit5_A_0xEF => 0xEF,
+            Self::SetBit6_B_0xF0 => 0xF0,
+            Self::SetBit6_C_0xF1 => 0xF1,
+            Self::SetBit6_D_0xF2 => 0xF2,
+            Self::SetBit6_E_0xF3 => 0xF3,
+            Self::SetBit6_H_0xF4 => 0xF4,
+            Self::SetBit6_L_0xF5 => 0xF5,
+            Self::SetBit6_MemoryHL_0xF6 => 0xF6,
+            Self::SetBit6_A_0xF7 => 0xF7,
+            Self::SetBit7_B_0xF8 => 0xF8,
+            Self::SetBit7_C_0xF9 => 0xF9,
+            Self::SetBit7_D_0xFA => 0xFA,
+            Self::SetBit7_E_0xFB => 0xFB,
+            Self::SetBit7_H_0xFC => 0xFC,
+            Self::SetBit7_L_0xFD => 0xFD,
+            Self::SetBit7_MemoryHL_0xFE => 0xFE,
+            Self::SetBit7_A_0xFF => 0xFF,
         }
     }
 }
@@ -797,6 +988,70 @@ impl ExtendedOpcode {
             Self::ResetBit7_L_0xBD => execute_0xbd(cpu, memory),
             Self::ResetBit7_MemoryHL_0xBE => execute_0xbe(cpu, memory),
             Self::ResetBit7_A_0xBF => execute_0xbf(cpu, memory),
+            Self::SetBit0_B_0xC0 => execute_0xc0(cpu, memory),
+            Self::SetBit0_C_0xC1 => execute_0xc1(cpu, memory),
+            Self::SetBit0_D_0xC2 => execute_0xc2(cpu, memory),
+            Self::SetBit0_E_0xC3 => execute_0xc3(cpu, memory),
+            Self::SetBit0_H_0xC4 => execute_0xc4(cpu, memory),
+            Self::SetBit0_L_0xC5 => execute_0xc5(cpu, memory),
+            Self::SetBit0_MemoryHL_0xC6 => execute_0xc6(cpu, memory),
+            Self::SetBit0_A_0xC7 => execute_0xc7(cpu, memory),
+            Self::SetBit1_B_0xC8 => execute_0xc8(cpu, memory),
+            Self::SetBit1_C_0xC9 => execute_0xc9(cpu, memory),
+            Self::SetBit1_D_0xCA => execute_0xca(cpu, memory),
+            Self::SetBit1_E_0xCB => execute_0xcb(cpu, memory),
+            Self::SetBit1_H_0xCC => execute_0xcc(cpu, memory),
+            Self::SetBit1_L_0xCD => execute_0xcd(cpu, memory),
+            Self::SetBit1_MemoryHL_0xCE => execute_0xce(cpu, memory),
+            Self::SetBit1_A_0xCF => execute_0xcf(cpu, memory),
+            Self::SetBit2_B_0xD0 => execute_0xd0(cpu, memory),
+            Self::SetBit2_C_0xD1 => execute_0xd1(cpu, memory),
+            Self::SetBit2_D_0xD2 => execute_0xd2(cpu, memory),
+            Self::SetBit2_E_0xD3 => execute_0xd3(cpu, memory),
+            Self::SetBit2_H_0xD4 => execute_0xd4(cpu, memory),
+            Self::SetBit2_L_0xD5 => execute_0xd5(cpu, memory),
+            Self::SetBit2_MemoryHL_0xD6 => execute_0xd6(cpu, memory),
+            Self::SetBit2_A_0xD7 => execute_0xd7(cpu, memory),
+            Self::SetBit3_B_0xD8 => execute_0xd8(cpu, memory),
+            Self::SetBit3_C_0xD9 => execute_0xd9(cpu, memory),
+            Self::SetBit3_D_0xDA => execute_0xda(cpu, memory),
+            Self::SetBit3_E_0xDB => execute_0xdb(cpu, memory),
+            Self::SetBit3_H_0xDC => execute_0xdc(cpu, memory),
+            Self::SetBit3_L_0xDD => execute_0xdd(cpu, memory),
+            Self::SetBit3_MemoryHL_0xDE => execute_0xde(cpu, memory),
+            Self::SetBit3_A_0xDF => execute_0xdf(cpu, memory),
+            Self::SetBit4_B_0xE0 => execute_0xe0(cpu, memory),
+            Self::SetBit4_C_0xE1 => execute_0xe1(cpu, memory),
+            Self::SetBit4_D_0xE2 => execute_0xe2(cpu, memory),
+            Self::SetBit4_E_0xE3 => execute_0xe3(cpu, memory),
+            Self::SetBit4_H_0xE4 => execute_0xe4(cpu, memory),
+            Self::SetBit4_L_0xE5 => execute_0xe5(cpu, memory),
+            Self::SetBit4_MemoryHL_0xE6 => execute_0xe6(cpu, memory),
+            Self::SetBit4_A_0xE7 => execute_0xe7(cpu, memory),
+            Self::SetBit5_B_0xE8 => execute_0xe8(cpu, memory),
+            Self::SetBit5_C_0xE9 => execute_0xe9(cpu, memory),
+            Self::SetBit5_D_0xEA => execute_0xea(cpu, memory),
+            Self::SetBit5_E_0xEB => execute_0xeb(cpu, memory),
+            Self::SetBit5_H_0xEC => execute_0xec(cpu, memory),
+            Self::SetBit5_L_0xED => execute_0xed(cpu, memory),
+            Self::SetBit5_MemoryHL_0xEE => execute_0xee(cpu, memory),
+            Self::SetBit5_A_0xEF => execute_0xef(cpu, memory),
+            Self::SetBit6_B_0xF0 => execute_0xf0(cpu, memory),
+            Self::SetBit6_C_0xF1 => execute_0xf1(cpu, memory),
+            Self::SetBit6_D_0xF2 => execute_0xf2(cpu, memory),
+            Self::SetBit6_E_0xF3 => execute_0xf3(cpu, memory),
+            Self::SetBit6_H_0xF4 => execute_0xf4(cpu, memory),
+            Self::SetBit6_L_0xF5 => execute_0xf5(cpu, memory),
+            Self::SetBit6_MemoryHL_0xF6 => execute_0xf6(cpu, memory),
+            Self::SetBit6_A_0xF7 => execute_0xf7(cpu, memory),
+            Self::SetBit7_B_0xF8 => execute_0xf8(cpu, memory),
+            Self::SetBit7_C_0xF9 => execute_0xf9(cpu, memory),
+            Self::SetBit7_D_0xFA => execute_0xfa(cpu, memory),
+            Self::SetBit7_E_0xFB => execute_0xfb(cpu, memory),
+            Self::SetBit7_H_0xFC => execute_0xfc(cpu, memory),
+            Self::SetBit7_L_0xFD => execute_0xfd(cpu, memory),
+            Self::SetBit7_MemoryHL_0xFE => execute_0xfe(cpu, memory),
+            Self::SetBit7_A_0xFF => execute_0xff(cpu, memory),
         }
     }
 }
@@ -1567,4 +1822,260 @@ fn execute_0xbe(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0xbf(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     return cpu.reset_bit(register::ID::A, 7);
+}
+
+fn execute_0xc0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::B, 0);
+}
+
+fn execute_0xc1(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::C, 0);
+}
+
+fn execute_0xc2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::D, 0);
+}
+
+fn execute_0xc3(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::E, 0);
+}
+
+fn execute_0xc4(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::H, 0);
+}
+
+fn execute_0xc5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::L, 0);
+}
+
+fn execute_0xc6(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 0);
+}
+
+fn execute_0xc7(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::A, 0);
+}
+
+fn execute_0xc8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::B, 1);
+}
+
+fn execute_0xc9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::C, 1);
+}
+
+fn execute_0xca(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::D, 1);
+}
+
+fn execute_0xcb(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::E, 1);
+}
+
+fn execute_0xcc(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::H, 1);
+}
+
+fn execute_0xcd(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::L, 1);
+}
+
+fn execute_0xce(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 1);
+}
+
+fn execute_0xcf(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::A, 1);
+}
+
+fn execute_0xd0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::B, 2);
+}
+
+fn execute_0xd1(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::C, 2);
+}
+
+fn execute_0xd2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::D, 2);
+}
+
+fn execute_0xd3(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::E, 2);
+}
+
+fn execute_0xd4(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::H, 2);
+}
+
+fn execute_0xd5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::L, 2);
+}
+
+fn execute_0xd6(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 2);
+}
+
+fn execute_0xd7(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::A, 2);
+}
+
+fn execute_0xd8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::B, 3);
+}
+
+fn execute_0xd9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::C, 3);
+}
+
+fn execute_0xda(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::D, 3);
+}
+
+fn execute_0xdb(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::E, 3);
+}
+
+fn execute_0xdc(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::H, 3);
+}
+
+fn execute_0xdd(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::L, 3);
+}
+
+fn execute_0xde(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 3);
+}
+
+fn execute_0xdf(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::A, 3);
+}
+
+fn execute_0xe0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::B, 4);
+}
+
+fn execute_0xe1(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::C, 4);
+}
+
+fn execute_0xe2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::D, 4);
+}
+
+fn execute_0xe3(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::E, 4);
+}
+
+fn execute_0xe4(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::H, 4);
+}
+
+fn execute_0xe5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::L, 4);
+}
+
+fn execute_0xe6(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 4);
+}
+
+fn execute_0xe7(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::A, 4);
+}
+
+fn execute_0xe8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::B, 5);
+}
+
+fn execute_0xe9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::C, 5);
+}
+
+fn execute_0xea(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::D, 5);
+}
+
+fn execute_0xeb(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::E, 5);
+}
+
+fn execute_0xec(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::H, 5);
+}
+
+fn execute_0xed(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::L, 5);
+}
+
+fn execute_0xee(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 5);
+}
+
+fn execute_0xef(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::A, 5);
+}
+
+fn execute_0xf0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::B, 6);
+}
+
+fn execute_0xf1(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::C, 6);
+}
+
+fn execute_0xf2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::D, 6);
+}
+
+fn execute_0xf3(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::E, 6);
+}
+
+fn execute_0xf4(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::H, 6);
+}
+
+fn execute_0xf5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::L, 6);
+}
+
+fn execute_0xf6(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 6);
+}
+
+fn execute_0xf7(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::A, 6);
+}
+
+fn execute_0xf8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::B, 7);
+}
+
+fn execute_0xf9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::C, 7);
+}
+
+fn execute_0xfa(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::D, 7);
+}
+
+fn execute_0xfb(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::E, 7);
+}
+
+fn execute_0xfc(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::H, 7);
+}
+
+fn execute_0xfd(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::L, 7);
+}
+
+fn execute_0xfe(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 7);
+}
+
+fn execute_0xff(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.set_bit(register::ID::A, 7);
 }
