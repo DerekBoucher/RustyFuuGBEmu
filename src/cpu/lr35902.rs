@@ -1224,4 +1224,27 @@ impl LR35902 {
 
         return 12;
     }
+
+    pub fn set_bit(&mut self, reg_id: register::ID, bit_position: u8) -> u32 {
+        let current = self.read_register(&reg_id);
+        self.write_register(&reg_id, current | (1 << bit_position));
+
+        return 4;
+    }
+
+    pub fn set_bit_memory(
+        &mut self,
+        memory: &mut impl memory::Interface,
+        addr: usize,
+        bit_position: u8,
+    ) -> u32 {
+        let current = match memory.read(addr) {
+            Some(byte) => byte,
+            None => panic!("TODO"),
+        };
+
+        memory.write(addr, current | (1 << bit_position));
+
+        return 12;
+    }
 }
