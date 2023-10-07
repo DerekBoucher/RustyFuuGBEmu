@@ -185,6 +185,22 @@ pub enum ExtendedOpcode {
     ResetBit5_L_0xAD,
     ResetBit5_MemoryHL_0xAE,
     ResetBit5_A_0xAF,
+    ResetBit6_B_0xB0,
+    ResetBit6_C_0xB1,
+    ResetBit6_D_0xB2,
+    ResetBit6_E_0xB3,
+    ResetBit6_H_0xB4,
+    ResetBit6_L_0xB5,
+    ResetBit6_MemoryHL_0xB6,
+    ResetBit6_A_0xB7,
+    ResetBit7_B_0xB8,
+    ResetBit7_C_0xB9,
+    ResetBit7_D_0xBA,
+    ResetBit7_E_0xBB,
+    ResetBit7_H_0xBC,
+    ResetBit7_L_0xBD,
+    ResetBit7_MemoryHL_0xBE,
+    ResetBit7_A_0xBF,
 }
 
 impl std::convert::From<u8> for ExtendedOpcode {
@@ -366,6 +382,22 @@ impl std::convert::From<u8> for ExtendedOpcode {
             0xAD => Self::ResetBit5_L_0xAD,
             0xAE => Self::ResetBit5_MemoryHL_0xAE,
             0xAF => Self::ResetBit5_A_0xAF,
+            0xB0 => Self::ResetBit6_B_0xB0,
+            0xB1 => Self::ResetBit6_C_0xB1,
+            0xB2 => Self::ResetBit6_D_0xB2,
+            0xB3 => Self::ResetBit6_E_0xB3,
+            0xB4 => Self::ResetBit6_H_0xB4,
+            0xB5 => Self::ResetBit6_L_0xB5,
+            0xB6 => Self::ResetBit6_MemoryHL_0xB6,
+            0xB7 => Self::ResetBit6_A_0xB7,
+            0xB8 => Self::ResetBit7_B_0xB8,
+            0xB9 => Self::ResetBit7_C_0xB9,
+            0xBA => Self::ResetBit7_D_0xBA,
+            0xBB => Self::ResetBit7_E_0xBB,
+            0xBC => Self::ResetBit7_H_0xBC,
+            0xBD => Self::ResetBit7_L_0xBD,
+            0xBE => Self::ResetBit7_MemoryHL_0xBE,
+            0xBF => Self::ResetBit7_A_0xBF,
             _ => panic!("todo"),
         }
     }
@@ -550,6 +582,22 @@ impl std::convert::Into<u8> for ExtendedOpcode {
             Self::ResetBit5_L_0xAD => 0xAD,
             Self::ResetBit5_MemoryHL_0xAE => 0xAE,
             Self::ResetBit5_A_0xAF => 0xAF,
+            Self::ResetBit6_B_0xB0 => 0xB0,
+            Self::ResetBit6_C_0xB1 => 0xB1,
+            Self::ResetBit6_D_0xB2 => 0xB2,
+            Self::ResetBit6_E_0xB3 => 0xB3,
+            Self::ResetBit6_H_0xB4 => 0xB4,
+            Self::ResetBit6_L_0xB5 => 0xB5,
+            Self::ResetBit6_MemoryHL_0xB6 => 0xB6,
+            Self::ResetBit6_A_0xB7 => 0xB7,
+            Self::ResetBit7_B_0xB8 => 0xB8,
+            Self::ResetBit7_C_0xB9 => 0xB9,
+            Self::ResetBit7_D_0xBA => 0xBA,
+            Self::ResetBit7_E_0xBB => 0xBB,
+            Self::ResetBit7_H_0xBC => 0xBC,
+            Self::ResetBit7_L_0xBD => 0xBD,
+            Self::ResetBit7_MemoryHL_0xBE => 0xBE,
+            Self::ResetBit7_A_0xBF => 0xBF,
         }
     }
 }
@@ -733,6 +781,22 @@ impl ExtendedOpcode {
             Self::ResetBit5_L_0xAD => execute_0xad(cpu, memory),
             Self::ResetBit5_MemoryHL_0xAE => execute_0xae(cpu, memory),
             Self::ResetBit5_A_0xAF => execute_0xaf(cpu, memory),
+            Self::ResetBit6_B_0xB0 => execute_0xb0(cpu, memory),
+            Self::ResetBit6_C_0xB1 => execute_0xb1(cpu, memory),
+            Self::ResetBit6_D_0xB2 => execute_0xb2(cpu, memory),
+            Self::ResetBit6_E_0xB3 => execute_0xb3(cpu, memory),
+            Self::ResetBit6_H_0xB4 => execute_0xb4(cpu, memory),
+            Self::ResetBit6_L_0xB5 => execute_0xb5(cpu, memory),
+            Self::ResetBit6_MemoryHL_0xB6 => execute_0xb6(cpu, memory),
+            Self::ResetBit6_A_0xB7 => execute_0xb7(cpu, memory),
+            Self::ResetBit7_B_0xB8 => execute_0xb8(cpu, memory),
+            Self::ResetBit7_C_0xB9 => execute_0xb9(cpu, memory),
+            Self::ResetBit7_D_0xBA => execute_0xba(cpu, memory),
+            Self::ResetBit7_E_0xBB => execute_0xbb(cpu, memory),
+            Self::ResetBit7_H_0xBC => execute_0xbc(cpu, memory),
+            Self::ResetBit7_L_0xBD => execute_0xbd(cpu, memory),
+            Self::ResetBit7_MemoryHL_0xBE => execute_0xbe(cpu, memory),
+            Self::ResetBit7_A_0xBF => execute_0xbf(cpu, memory),
         }
     }
 }
@@ -1439,4 +1503,68 @@ fn execute_0xae(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
 
 fn execute_0xaf(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
     return cpu.reset_bit(register::ID::A, 5);
+}
+
+fn execute_0xb0(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.reset_bit(register::ID::B, 6);
+}
+
+fn execute_0xb1(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.reset_bit(register::ID::C, 6);
+}
+
+fn execute_0xb2(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.reset_bit(register::ID::D, 6);
+}
+
+fn execute_0xb3(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.reset_bit(register::ID::E, 6);
+}
+
+fn execute_0xb4(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.reset_bit(register::ID::H, 6);
+}
+
+fn execute_0xb5(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.reset_bit(register::ID::L, 6);
+}
+
+fn execute_0xb6(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 6);
+}
+
+fn execute_0xb7(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.reset_bit(register::ID::A, 6);
+}
+
+fn execute_0xb8(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.reset_bit(register::ID::B, 7);
+}
+
+fn execute_0xb9(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.reset_bit(register::ID::C, 7);
+}
+
+fn execute_0xba(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.reset_bit(register::ID::D, 7);
+}
+
+fn execute_0xbb(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.reset_bit(register::ID::E, 7);
+}
+
+fn execute_0xbc(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.reset_bit(register::ID::H, 7);
+}
+
+fn execute_0xbd(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.reset_bit(register::ID::L, 7);
+}
+
+fn execute_0xbe(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 7);
+}
+
+fn execute_0xbf(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
+    return cpu.reset_bit(register::ID::A, 7);
 }
