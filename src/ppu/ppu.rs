@@ -26,13 +26,16 @@ impl Ppu {
     // Background tiles make up the background environment, and typically have lower precedence then the window tiles.
     // Window tiles have precedence over background tiles, when enabled.
     fn render_tiles(&mut self, memory: &impl memory::Interface) {
-        let current_scanline = memory.read(LY_ADDRESS).unwrap();
-        let lcdc = memory.read(LCDC_ADDRESS).unwrap();
-        let scroll_x = memory.read(SCROLL_X_ADDRESS).unwrap();
-        let scroll_y = memory.read(SCROLL_Y_ADDRESS).unwrap();
-        let win_x = memory.read(WIN_X_ADDRESS).unwrap().wrapping_sub(7); // TODO: Explain the sub 7
-        let win_y = memory.read(WIN_Y_ADDRESS).unwrap();
-        let color_palette = memory.read(PALETTE_ADDR).unwrap();
+        let current_scanline = memory.read(memory::io_registers::LCD_LY_ADDR).unwrap();
+        let lcdc = memory.read(memory::io_registers::LCD_CONTROL_ADDR).unwrap();
+        let scroll_x = memory.read(memory::io_registers::LCD_SCX_ADDR).unwrap();
+        let scroll_y = memory.read(memory::io_registers::LCD_SCY_ADDR).unwrap();
+        let win_x = memory
+            .read(memory::io_registers::LCD_WINX_ADDR)
+            .unwrap()
+            .wrapping_sub(7); // TODO: Explain the sub 7
+        let win_y = memory.read(memory::io_registers::LCD_WINY_ADDR).unwrap();
+        let color_palette = memory.read(memory::io_registers::LCD_PALETTE_ADDR).unwrap();
 
         // Base address for the tile data in VRAM.
         // This area of memory contains the actual pixel color encodings to render tiles.
