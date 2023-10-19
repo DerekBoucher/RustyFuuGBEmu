@@ -1,5 +1,6 @@
 mod cartridge;
 mod cpu;
+mod gameboy;
 mod memory;
 mod ppu;
 

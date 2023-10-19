@@ -100,6 +100,15 @@ impl LR35902 {
         return op.execute(self, memory);
     }
 
+    pub fn set_post_boot_rom_state(&mut self) {
+        self.af.set_word(0x0108);
+        self.bc.set_word(0x0013);
+        self.de.set_word(0x00D8);
+        self.hl.set_word(0x014D);
+        self.pc = 0x0100;
+        self.sp = 0xFFFE;
+    }
+
     fn reset_half_carry_flag(&mut self) {
         self.af.lo &= !HALF_CARRY_FLAG_MASK;
     }

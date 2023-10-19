@@ -8,7 +8,7 @@ const SCREEN_WIDTH: usize = 160;
 const SCREEN_HEIGHT: usize = 144;
 
 #[derive(Debug)]
-struct Ppu {
+pub struct Ppu {
     pixels: [[Color; SCREEN_WIDTH]; SCREEN_HEIGHT],
     draw_counter: i32,
 }
