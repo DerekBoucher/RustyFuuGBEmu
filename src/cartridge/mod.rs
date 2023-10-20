@@ -66,7 +66,7 @@ mod mbc_id {
 /// Cartridge trait which serves as an interface to the various
 /// types of memory bank controllers that Gameboy cartridges
 /// can contain.
-pub trait Interface: Any + Debug {
+pub trait Interface: Any + Debug + Send {
     fn as_any(&self) -> &dyn Any;
     fn read(&self, addr: usize) -> Option<u8>;
     fn write(&mut self, addr: usize, val: u8);

@@ -6,19 +6,32 @@ mod ppu;
 
 extern crate glium;
 
+use clap::Parser;
 use glium::{glutin, Surface};
+use std::{fs, path};
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    #[arg(short, long)]
+    rom_path: String,
+
+    #[arg(short, long, default_value_t = false)]
+    skip_boot_rom: bool,
+}
 
 fn main() {
-    let events_loop = glium::glutin::event_loop::EventLoop::new();
+    let args = Args::parse();
+    let rom_data = fs::read(path::Path::new(args.rom_path.as_str())).unwrap();
 
+    let events_loop = glium::glutin::event_loop::EventLoop::new();
     let wb = glium::glutin::window::WindowBuilder::new()
         .with_inner_size(glium::glutin::dpi::LogicalSize::new(1024.0, 768.0))
         .with_title("RustyFuuGBemu");
-
     let cb = glium::glutin::ContextBuilder::new();
     let _display = glium::Display::new(wb, cb, &events_loop).unwrap();
 
-    let gameboy = gameboy::Gameboy::new();
+    let gameboy = gameboy::Gameboy::new(rom_data);
     let (gb_closer, gb_joiner) = gameboy.start();
 
     events_loop.run(move |ev, _, control_flow| {
