@@ -9,17 +9,17 @@ extern crate glium;
 use glium::{glutin, Surface};
 
 fn main() {
-    // 1. The **winit::EventsLoop** for handling events.
     let events_loop = glium::glutin::event_loop::EventLoop::new();
-    // 2. Parameters for building the Window.
+
     let wb = glium::glutin::window::WindowBuilder::new()
         .with_inner_size(glium::glutin::dpi::LogicalSize::new(1024.0, 768.0))
         .with_title("RustyFuuGBemu");
-    // 3. Parameters for building the OpenGL context.
+
     let cb = glium::glutin::ContextBuilder::new();
-    // 4. Build the Display with the given window and OpenGL context parameters and register the
-    //    window with the events_loop.
     let _display = glium::Display::new(wb, cb, &events_loop).unwrap();
+
+    let gameboy = gameboy::Gameboy::new();
+    let (gb_closer, gb_joiner) = gameboy.start();
 
     events_loop.run(move |ev, _, control_flow| {
         let mut target = _display.draw();
@@ -35,6 +35,10 @@ fn main() {
             glutin::event::Event::WindowEvent { event, .. } => match event {
                 glutin::event::WindowEvent::CloseRequested => {
                     *control_flow = glutin::event_loop::ControlFlow::Exit;
+                    gb_closer.send(()).unwrap();
+                    gb_joiner
+                        .recv_timeout(std::time::Duration::from_secs(5))
+                        .unwrap();
                     return;
                 }
                 _ => return,
