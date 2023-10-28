@@ -2,10 +2,12 @@
 #![allow(unused_variables)]
 
 use crate::cartridge;
-use crate::cpu::LR35902;
+use crate::cpu::{CPU_CYCLES_PER_FRAME, LR35902};
 use crate::memory::Memory;
 use crate::ppu::Ppu;
-use std::sync::mpsc;
+use std::sync::mpsc::{self, Receiver, Sender};
+
+mod controller;
 
 pub struct Gameboy {
     cpu: LR35902,
@@ -17,13 +19,13 @@ pub struct Gameboy {
 
 impl Gameboy {
     pub fn new(rom_data: Vec<u8>) -> Self {
-        Self {
+        return Self {
             cpu: LR35902::new(),
             memory: Memory::new(cartridge::new(rom_data)),
             ppu: Ppu::new(),
 
             require_render: false,
-        }
+        };
     }
 
     pub fn skip_boot_rom(&mut self) {
@@ -31,31 +33,72 @@ impl Gameboy {
         self.memory.set_post_boot_rom_state();
     }
 
-    pub fn start(mut self) -> (mpsc::Sender<()>, mpsc::Receiver<()>) {
-        let (close_signal_writer, close_signal_receiver) = mpsc::channel();
-        let (acker, joiner) = mpsc::channel();
-        std::thread::spawn(move || self.run(close_signal_receiver, acker));
-        return (close_signal_writer, joiner);
+    pub fn start(mut self) -> controller::Controller {
+        let (controller, close_receiver, pause_receiver, ack_sender) =
+            controller::Controller::new();
+
+        std::thread::spawn(move || self.run(close_receiver, pause_receiver, ack_sender));
+        return controller;
     }
 
-    fn run(&mut self, close_signal_receiver: mpsc::Receiver<()>, ack: mpsc::Sender<()>) {
-        loop {
-            match close_signal_receiver.try_recv() {
-                Ok(_) => {
-                    println!("closing gb thread...");
-                    break;
+    fn run(
+        &mut self,
+        close_receiver: Receiver<()>,
+        pause_receiver: Receiver<()>,
+        ack_sender: Sender<()>,
+    ) {
+        'main: loop {
+            let cycles_this_update: u32 = 0;
+
+            while cycles_this_update < CPU_CYCLES_PER_FRAME {
+                if self.should_close(&close_receiver) {
+                    break 'main;
                 }
-                Err(err) => {
-                    if err == mpsc::TryRecvError::Disconnected {
-                        println!("channel disconnected");
-                        break;
-                    }
+
+                if self.should_pause(&pause_receiver) {
+                    log::debug!("gb emulation paused");
+                    pause_receiver.recv().unwrap();
+                    log::debug!("gb emulation resumed");
+                }
+
+                // let cycles = self.cpu.execute_next_opcode(&mut self.memory);
+            }
+        }
+
+        log::info!("gb thread closed");
+        ack_sender.send(()).unwrap();
+    }
+
+    fn should_pause(&self, pause_receiver: &Receiver<()>) -> bool {
+        match pause_receiver.try_recv() {
+            Ok(_) => {
+                return true;
+            }
+            Err(err) => {
+                if err == mpsc::TryRecvError::Disconnected {
+                    log::error!("gb thread cannot pause, channel disconnected unexpectedly");
+                    panic!("gb thread cannot pause, channel disconnected unexpectedly");
                 }
             }
         }
 
-        // Signals to the initiator that the thread has closed.
-        ack.send(()).unwrap();
-        println!("cleanly terminated gb thread...");
+        return false;
+    }
+
+    fn should_close(&self, close_receiver: &Receiver<()>) -> bool {
+        match close_receiver.try_recv() {
+            Ok(_) => {
+                log::info!("closing gb thread...");
+                return true;
+            }
+            Err(err) => {
+                if err == mpsc::TryRecvError::Disconnected {
+                    log::error!("gb thread channel disconnected unexpectedly");
+                    panic!("gb thread channel disconnected unexpectedly");
+                }
+            }
+        }
+
+        return false;
     }
 }

@@ -55,6 +55,8 @@ const HALF_CARRY_FLAG_MASK: u8 = 1 << 5;
 /// Bit mask for the carry flag
 const CARRY_FLAG_MASK: u8 = 1 << 4;
 
+pub const CPU_CYCLES_PER_FRAME: u32 = 4194304 / 60;
+
 impl PartialEq for LR35902 {
     fn eq(&self, other: &Self) -> bool {
         self.pc == other.pc
