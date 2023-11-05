@@ -37,8 +37,9 @@ See https://stackoverflow.com/questions/57958631/game-boy-half-carry-flag-and-16
 
 ## Ubuntu Dependencies
 
-
-FontConfig (For Glium)
-```
+`glium` dependencies:
+```sh
 sudo apt install libfontconfig1-dev
 ```
+
+

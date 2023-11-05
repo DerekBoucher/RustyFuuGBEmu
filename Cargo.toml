@@ -4,7 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+bytemuck = "1.14.0"
 clap = { version = "4.4.6", features = ["derive"] }
+egui = { version = "0.20.1", default-features = true }
+egui_glium = "0.20.1"
 env_logger = "0.10.0"
 glium = "0.32.1"
 log = "0.4.20"

@@ -1,4 +1,7 @@
-use crate::{memory, ppu::*};
+use crate::{
+    memory::{self, io_registers},
+    ppu::*,
+};
 use std::collections::HashMap;
 
 #[path = "ppu_test.rs"]
@@ -11,6 +14,18 @@ impl Ppu {
             pixels: [[Color::White; SCREEN_WIDTH]; SCREEN_HEIGHT],
             draw_counter: 0,
         }
+    }
+
+    pub fn step(&mut self, cycles: u32, memory: &mut impl memory::Interface) {}
+
+    fn set_lcdc_status(&mut self, memory: &mut impl memory::Interface) {
+        let lcdc = match memory.read(io_registers::LCD_CONTROL_ADDR) {
+            Some(value) => value,
+            None => {
+                log::error!("failed to read lcdc register");
+                return;
+            }
+        };
     }
 
     // Tiles on GB are represented in VRAM as 16 bytes. They are located in the address range
