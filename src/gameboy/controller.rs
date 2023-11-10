@@ -1,33 +1,34 @@
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::time::Duration;
 
-/// Not to be confused with the Gameboy's player controller, this struct is a
-/// mechanism for controlling the behaviour of the asynchronous gameboy thread.
-pub struct Controller {
-    close_sender: mpsc::Sender<()>,
-    pause_sender: mpsc::SyncSender<()>,
-    ack_receiver: mpsc::Receiver<()>,
-
-    paused: bool,
-}
+use crate::gameboy::Controller;
 
 impl Controller {
-    pub fn new() -> (Self, Receiver<()>, Receiver<()>, Sender<()>) {
+    pub fn new() -> (
+        Self,
+        Receiver<()>,
+        Receiver<()>,
+        Sender<()>,
+        Receiver<Vec<u8>>,
+    ) {
         let (close_sender, close_receiver) = mpsc::channel();
         let (pause_sender, pause_receiver) = mpsc::sync_channel(1);
         let (ack_sender, ack_receiver) = mpsc::channel();
+        let (rom_data_sender, rom_data_receiver) = mpsc::channel::<Vec<u8>>();
 
         return (
             Self {
                 close_sender: close_sender,
                 pause_sender: pause_sender,
                 ack_receiver: ack_receiver,
+                rom_data_sender: rom_data_sender,
 
                 paused: false,
             },
             close_receiver,
             pause_receiver,
             ack_sender,
+            rom_data_receiver,
         );
     }
 
@@ -62,5 +63,9 @@ impl Controller {
 
         self.paused = false;
         self.pause_sender.send(()).unwrap();
+    }
+
+    pub fn load_rom(&self, rom_data: Vec<u8>) {
+        self.rom_data_sender.send(rom_data).unwrap();
     }
 }
