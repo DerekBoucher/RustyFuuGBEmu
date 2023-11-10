@@ -1,20 +1,29 @@
 use egui::Context;
 use glium::glutin::event::WindowEvent;
 use glium::glutin::event_loop::ControlFlow;
+use glium::glutin::event_loop::EventLoopProxy;
 use glium::Display;
 use glium::Surface as _;
+
 use std::fs;
 
 use crate::gameboy;
 
+pub mod events;
+
 pub struct Ui {
     egui_glium_client: egui_glium::EguiGlium,
+    ui_event_loop_proxy: EventLoopProxy<events::UiEvent>,
 }
 
 impl Ui {
-    pub fn new(egui_glium_client: egui_glium::EguiGlium) -> Self {
+    pub fn new(
+        egui_glium_client: egui_glium::EguiGlium,
+        event_loop_proxy: EventLoopProxy<events::UiEvent>,
+    ) -> Self {
         Self {
             egui_glium_client: egui_glium_client,
+            ui_event_loop_proxy: event_loop_proxy,
         }
     }
 
@@ -25,7 +34,7 @@ impl Ui {
         gb_controller: &gameboy::Controller,
     ) {
         let egui_redraw_timer = self.egui_glium_client.run(&display, |egui_ctx| {
-            Ui::draw(egui_ctx, gb_controller);
+            Ui::draw(egui_ctx, gb_controller, &self.ui_event_loop_proxy);
         });
 
         let time_until_next_redraw = std::time::Instant::now().checked_add(egui_redraw_timer);
@@ -60,11 +69,23 @@ impl Ui {
         }
     }
 
-    fn draw(egui_ctx: &Context, gb_controller: &gameboy::Controller) {
+    fn draw(
+        egui_ctx: &Context,
+        gb_controller: &gameboy::Controller,
+        ui_event_loop_proxy: &EventLoopProxy<events::UiEvent>,
+    ) {
         egui::TopBottomPanel::top("top_panel").show(egui_ctx, |ui| {
             ui.menu_button("File", |ui| {
                 if ui.button("Load ROM").clicked() {
                     Ui::load_rom_from_file_dialog(gb_controller);
+                    ui.close_menu();
+                }
+
+                if ui.button("Exit").clicked() {
+                    ui_event_loop_proxy
+                        .send_event(events::UiEvent::CloseWindow)
+                        .unwrap();
+                    ui.close_menu();
                 }
             })
         });

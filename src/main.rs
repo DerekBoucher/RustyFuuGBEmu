@@ -34,7 +34,7 @@ fn main() {
         gameboy.skip_boot_rom();
     }
 
-    let mut ui = ui::Ui::new(egui_glium_client);
+    let mut ui = ui::Ui::new(egui_glium_client, events_loop.create_proxy());
     let gb_controller = gameboy.start();
 
     events_loop.run(move |ev, _, control_flow| {
@@ -54,6 +54,14 @@ fn main() {
 
                 _ => ui.process_events(event, &display),
             },
+            Event::UserEvent(ui_event) => match ui_event {
+                ui::events::UiEvent::CloseWindow => {
+                    *control_flow = glutin::event_loop::ControlFlow::Exit;
+                    gb_controller.close();
+                    gb_controller.join();
+                    return;
+                }
+            },
             Event::NewEvents(_) => {}
             Event::MainEventsCleared => {}
             Event::RedrawRequested(_) => {
@@ -64,8 +72,10 @@ fn main() {
     });
 }
 
-fn init_glium() -> (EventLoop<()>, Display) {
-    let events_loop = glium::glutin::event_loop::EventLoop::new();
+fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
+    let events_loop =
+        glium::glutin::event_loop::EventLoopBuilder::<ui::events::UiEvent>::with_user_event()
+            .build();
     let wb = glium::glutin::window::WindowBuilder::new()
         .with_inner_size(glium::glutin::dpi::LogicalSize::new(1024.0, 768.0))
         .with_title("RustyFuuGBemu");
