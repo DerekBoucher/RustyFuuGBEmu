@@ -5,7 +5,8 @@ use crate::cartridge;
 use crate::cpu::{CPU_CYCLES_PER_FRAME, LR35902};
 use crate::memory::Memory;
 use crate::ppu::Ppu;
-use std::sync::mpsc::{self, Receiver, Sender};
+use crossbeam::channel::{self};
+use crossbeam::select;
 
 mod controller;
 
@@ -21,11 +22,10 @@ pub struct Gameboy {
 /// Not to be confused with the Gameboy's player controller, this struct is a
 /// mechanism for controlling the behaviour of the asynchronous gameboy thread.
 pub struct Controller {
-    close_sender: mpsc::Sender<()>,
-    pause_sender: mpsc::SyncSender<()>,
-    ack_receiver: mpsc::Receiver<()>,
-    rom_data_sender: mpsc::Sender<Vec<u8>>,
-
+    close_sender: channel::Sender<()>,
+    pause_sender: channel::Sender<()>,
+    ack_receiver: channel::Receiver<()>,
+    rom_data_sender: channel::Sender<Vec<u8>>,
     paused: bool,
 }
 
@@ -68,17 +68,26 @@ impl Gameboy {
 
     fn run(
         &mut self,
-        close_receiver: Receiver<()>,
-        pause_receiver: Receiver<()>,
-        ack_sender: Sender<()>,
-        rom_data_receiver: Receiver<Vec<u8>>,
+        close_receiver: channel::Receiver<()>,
+        pause_receiver: channel::Receiver<()>,
+        ack_sender: channel::Sender<()>,
+        rom_data_receiver: channel::Receiver<Vec<u8>>,
     ) {
-        // if !self.cartridge_inserted {
-        //     log::debug!("Waiting for rom to be loaded...");
-        //     let rom_data = Gameboy::wait_for_cartridge(&rom_data_receiver);
-        //     self.load_rom(rom_data);
-        //     log::debug!("Rom loaded!");
-        // }
+        if !self.cartridge_inserted {
+            log::debug!("Waiting for ROM cartridge...");
+
+            select! {
+                recv(rom_data_receiver) -> rom_data => {
+                    self.load_rom(rom_data.unwrap());
+                    log::debug!("ROM cartridge loaded!");
+                }
+                recv(close_receiver) -> _ => {
+                    log::debug!("gb thread closed");
+                    ack_sender.send(()).unwrap();
+                    return;
+                }
+            }
+        }
 
         'main: loop {
             let cycles_this_update: u32 = 0;
@@ -106,17 +115,17 @@ impl Gameboy {
             }
         }
 
-        log::info!("gb thread closed");
+        log::debug!("gb thread closed");
         ack_sender.send(()).unwrap();
     }
 
-    fn should_pause(pause_receiver: &Receiver<()>) -> bool {
+    fn should_pause(pause_receiver: &channel::Receiver<()>) -> bool {
         match pause_receiver.try_recv() {
             Ok(_) => {
                 return true;
             }
             Err(err) => {
-                if err == mpsc::TryRecvError::Disconnected {
+                if err == channel::TryRecvError::Disconnected {
                     log::error!("gb thread cannot pause, channel disconnected unexpectedly");
                     panic!("gb thread cannot pause, channel disconnected unexpectedly");
                 }
@@ -126,14 +135,14 @@ impl Gameboy {
         return false;
     }
 
-    fn should_close(close_receiver: &Receiver<()>) -> bool {
+    fn should_close(close_receiver: &channel::Receiver<()>) -> bool {
         match close_receiver.try_recv() {
             Ok(_) => {
                 log::info!("closing gb thread...");
                 return true;
             }
             Err(err) => {
-                if err == mpsc::TryRecvError::Disconnected {
+                if err == channel::TryRecvError::Disconnected {
                     log::error!("gb thread channel disconnected unexpectedly");
                     panic!("gb thread channel disconnected unexpectedly");
                 }
@@ -143,13 +152,13 @@ impl Gameboy {
         return false;
     }
 
-    fn should_load_rom(rom_data_receiver: &Receiver<Vec<u8>>) -> Option<Vec<u8>> {
+    fn should_load_rom(rom_data_receiver: &channel::Receiver<Vec<u8>>) -> Option<Vec<u8>> {
         match rom_data_receiver.try_recv() {
             Ok(rom_data) => {
                 return Some(rom_data);
             }
             Err(err) => {
-                if err == mpsc::TryRecvError::Disconnected {
+                if err == channel::TryRecvError::Disconnected {
                     log::error!("gb thread channel disconnected unexpectedly");
                     panic!("gb thread channel disconnected unexpectedly");
                 }
@@ -158,16 +167,4 @@ impl Gameboy {
 
         return None;
     }
-
-    // fn wait_for_cartridge(rom_data_receiver: &Receiver<Vec<u8>>) -> Vec<u8> {
-    //     match rom_data_receiver.recv() {
-    //         Ok(rom_data) => {
-    //             return rom_data;
-    //         }
-    //         Err(err) => {
-    //             log::error!("gb thread channel disconnected unexpectedly: {:?}", err);
-    //             panic!("gb thread channel disconnected unexpectedly");
-    //         }
-    //     }
-    // }
 }

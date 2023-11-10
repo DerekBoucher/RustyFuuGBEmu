@@ -1,20 +1,19 @@
-use std::sync::mpsc::{self, Receiver, Sender};
+use super::Controller;
+use crossbeam::channel;
 use std::time::Duration;
-
-use crate::gameboy::Controller;
 
 impl Controller {
     pub fn new() -> (
         Self,
-        Receiver<()>,
-        Receiver<()>,
-        Sender<()>,
-        Receiver<Vec<u8>>,
+        channel::Receiver<()>,
+        channel::Receiver<()>,
+        channel::Sender<()>,
+        channel::Receiver<Vec<u8>>,
     ) {
-        let (close_sender, close_receiver) = mpsc::channel();
-        let (pause_sender, pause_receiver) = mpsc::sync_channel(1);
-        let (ack_sender, ack_receiver) = mpsc::channel();
-        let (rom_data_sender, rom_data_receiver) = mpsc::channel::<Vec<u8>>();
+        let (close_sender, close_receiver) = channel::unbounded();
+        let (pause_sender, pause_receiver) = channel::bounded(1);
+        let (ack_sender, ack_receiver) = channel::unbounded();
+        let (rom_data_sender, rom_data_receiver) = channel::bounded::<Vec<u8>>(1);
 
         return (
             Self {

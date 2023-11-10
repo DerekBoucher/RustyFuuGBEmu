@@ -10,7 +10,7 @@ use glium::glutin;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::Display;
-use std::fs;
+use std::{fs, path};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -37,18 +37,18 @@ fn main() {
 
     let gb_controller = gameboy.start();
 
-    // match args.rom_path {
-    //     Some(rom_path) => match fs::read(path::Path::new(&rom_path)) {
-    //         Ok(rom_data) => {
-    //             // gb_controller.
-    //         }
-    //         Err(err) => {
-    //             // TODO: Add UI dialog indicating error
-    //             log::error!("Failed to load ROM: {}", err);
-    //         }
-    //     },
-    //     None => {}
-    // }
+    match args.rom_path {
+        Some(rom_path) => match fs::read(path::Path::new(&rom_path)) {
+            Ok(rom_data) => {
+                gb_controller.load_rom(rom_data);
+            }
+            Err(err) => {
+                // TODO: Add UI dialog indicating error
+                log::error!("Failed to load ROM: {}", err);
+            }
+        },
+        None => {}
+    }
 
     events_loop.run(move |ev, _, control_flow| {
         let next_frame_time =
