@@ -4,12 +4,11 @@ mod gameboy;
 mod memory;
 mod ppu;
 
-extern crate egui;
-
 use clap::Parser;
+use egui_glium::EguiGlium;
 use glium::glutin;
 use glium::glutin::event::{Event, WindowEvent};
-use glium::glutin::event_loop::{self, EventLoop};
+use glium::glutin::event_loop::{ControlFlow, EventLoop};
 use glium::Display;
 use std::{fs, path};
 
@@ -17,7 +16,7 @@ use std::{fs, path};
 #[command(author, version, about, long_about = None)]
 struct Args {
     #[arg(short, long)]
-    rom_path: String,
+    rom_path: Option<String>,
 
     #[arg(short, long, default_value_t = false)]
     skip_boot_rom: bool,
@@ -27,46 +26,16 @@ fn main() {
     env_logger::init();
     log::info!("Starting RustyFuuGBemu");
     let args = Args::parse();
-    let rom_data = fs::read(path::Path::new(args.rom_path.as_str())).unwrap();
+
+    let rom_data = fs::read(path::Path::new(args.rom_path.unwrap().as_str())).unwrap();
 
     let (events_loop, display) = init_glium();
     let mut egui_glium_impl = egui_glium::EguiGlium::new(&display, &events_loop);
 
-    let gameboy = gameboy::Gameboy::new(rom_data);
+    let gameboy = gameboy::Gameboy::new();
     let gb_controller = gameboy.start();
 
     events_loop.run(move |ev, _, control_flow| {
-        let mut redraw = |control_flow: &mut event_loop::ControlFlow| {
-            let repaint_after = egui_glium_impl.run(&display, |_egui_ctx| {});
-
-            *control_flow = if repaint_after.is_zero() {
-                display.gl_window().window().request_redraw();
-                glutin::event_loop::ControlFlow::Poll
-            } else if let Some(repaint_after_instant) =
-                std::time::Instant::now().checked_add(repaint_after)
-            {
-                glutin::event_loop::ControlFlow::WaitUntil(repaint_after_instant)
-            } else {
-                glutin::event_loop::ControlFlow::Wait
-            };
-
-            {
-                use glium::Surface as _;
-                let mut target = display.draw();
-
-                let color = egui::Rgba::from_rgb(1.0, 1.0, 1.0);
-                target.clear_color(color[0], color[1], color[2], color[3]);
-
-                // draw things behind egui here
-
-                egui_glium_impl.paint(&display, &mut target);
-
-                // draw things on top of egui here
-
-                target.finish().unwrap();
-            }
-        };
-
         let next_frame_time =
             std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
 
@@ -92,11 +61,58 @@ fn main() {
             Event::NewEvents(_) => {}
             Event::MainEventsCleared => {}
             Event::RedrawRequested(_) => {
-                redraw(control_flow);
+                draw_egui(control_flow, &display, &mut egui_glium_impl);
             }
             _ => {}
         }
     });
+}
+
+fn draw_egui(control_flow: &mut ControlFlow, display: &Display, egui_glium_impl: &mut EguiGlium) {
+    let repaint_after = egui_glium_impl.run(&display, |_egui_ctx| {
+        egui::TopBottomPanel::top("top_panel").show(_egui_ctx, |ui| {
+            ui.menu_button("File", |ui| {
+                if ui.button("Load ROM").clicked() {
+                    rfd::FileDialog::new()
+                        .add_filter("Gameboy ROM", &["gb"])
+                        .pick_file()
+                        .map(|path| {
+                            log::info!("Loading ROM: {}", path.display());
+                        })
+                        .unwrap_or_else(|| {
+                            log::info!("No file selected");
+                        });
+                }
+                ui.button("Exit");
+            })
+        });
+    });
+
+    *control_flow = if repaint_after.is_zero() {
+        display.gl_window().window().request_redraw();
+        glutin::event_loop::ControlFlow::Poll
+    } else if let Some(repaint_after_instant) = std::time::Instant::now().checked_add(repaint_after)
+    {
+        glutin::event_loop::ControlFlow::WaitUntil(repaint_after_instant)
+    } else {
+        glutin::event_loop::ControlFlow::Wait
+    };
+
+    {
+        use glium::Surface as _;
+        let mut target = display.draw();
+
+        let color = egui::Rgba::from_rgb(1.0, 1.0, 1.0);
+        target.clear_color(color[0], color[1], color[2], color[3]);
+
+        // draw things behind egui here
+
+        egui_glium_impl.paint(&display, &mut target);
+
+        // draw things on top of egui here
+
+        target.finish().unwrap();
+    }
 }
 
 fn init_glium() -> (EventLoop<()>, Display) {

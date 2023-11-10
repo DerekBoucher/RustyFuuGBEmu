@@ -18,10 +18,10 @@ pub struct Gameboy {
 }
 
 impl Gameboy {
-    pub fn new(rom_data: Vec<u8>) -> Self {
+    pub fn new() -> Self {
         return Self {
             cpu: LR35902::new(),
-            memory: Memory::new(cartridge::new(rom_data)),
+            memory: Memory::new(cartridge::default()),
             ppu: Ppu::new(),
 
             require_render: false,

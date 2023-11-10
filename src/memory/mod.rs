@@ -139,6 +139,20 @@ impl Memory {
         }
     }
 
+    pub fn default() -> Self {
+        Self {
+            cartridge: cartridge::new(vec![]),
+            video_ram: [0x00; 0x2000],
+            work_ram0: [0x00; 0x1000],
+            work_ram1: [0x00; 0x1000],
+            echo_ram: [0x00; 0x1E00],
+            sprite_attributes: [0x00; 0xA0],
+            io_registers: [0x00; 0x80],
+            hi_ram: [0x00; 0x7F],
+            interrupt_enable_register: 0x00,
+        }
+    }
+
     fn boot_rom_enabled(&self) -> bool {
         return self.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] == 0x00;
     }
