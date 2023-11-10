@@ -1,6 +1,6 @@
 use crate::cpu::opcode::Opcode;
 use crate::cpu::opcode_ext::ExtendedOpcode;
-use crate::cpu::test_utils::*;
+use crate::cpu::test::TestCase;
 use crate::cpu::LR35902;
 use crate::memory::mock;
 
@@ -11877,8 +11877,6 @@ fn _0xef() {
         tc.run(i);
     }
 }
-
-// -------------------------
 
 #[test]
 fn _0xf0() {

@@ -4,7 +4,7 @@ mod test;
 
 use crate::cpu::bit;
 use crate::cpu::register;
-use crate::cpu::lr35902;
+use crate::cpu;
 use crate::memory;
 use crate::cpu::LR35902;
 use crate::cpu::opcode_ext::*;
@@ -2297,8 +2297,8 @@ fn execute_0x76(cpu: &mut LR35902, memory: &mut impl memory::Interface) -> u32 {
         return clock_cycles
     }
 
-    let interrupt_enable_register = memory.read(lr35902::INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
-    let interrupt_flag_register = memory.read(lr35902::INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
+    let interrupt_enable_register = memory.read(cpu::INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
+    let interrupt_flag_register = memory.read(cpu::INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
 
     if (interrupt_enable_register & interrupt_flag_register & 0x1F) == 0x00 {
         cpu.halted = true;

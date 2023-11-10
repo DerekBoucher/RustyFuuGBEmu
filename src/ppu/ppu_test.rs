@@ -1,8 +1,6 @@
+use crate::memory;
 use crate::memory::mock;
-use crate::ppu::{
-    self, Color, LCDC_ADDRESS, LY_ADDRESS, PALETTE_ADDR, SCREEN_WIDTH, SCROLL_X_ADDRESS,
-    SCROLL_Y_ADDRESS, WIN_X_ADDRESS, WIN_Y_ADDRESS,
-};
+use crate::ppu::{self, Color, SCREEN_WIDTH};
 
 #[test]
 fn render_tiles() {
@@ -10,13 +8,13 @@ fn render_tiles() {
 
     // Setup the VRAM data
     let mut data: Vec<u8> = vec![0x00; 0x10000];
-    data[LY_ADDRESS] = 0x00; // current scanline
-    data[LCDC_ADDRESS] = 1 << 4; // Unsigned addressing, window disabled.
-    data[SCROLL_X_ADDRESS] = 0x00; // No x-scroll
-    data[SCROLL_Y_ADDRESS] = 0x00; // No y-scroll
-    data[WIN_X_ADDRESS] = 0x00; // No win-x
-    data[WIN_Y_ADDRESS] = 0x00; // No win-y
-    data[PALETTE_ADDR] = 0b11100100; // Normal color palette
+    data[memory::io_registers::LCD_LY_ADDR] = 0x00; // current scanline
+    data[memory::io_registers::LCD_CONTROL_ADDR] = 1 << 4; // Unsigned addressing, window disabled.
+    data[memory::io_registers::LCD_SCX_ADDR] = 0x00; // No x-scroll
+    data[memory::io_registers::LCD_SCY_ADDR] = 0x00; // No y-scroll
+    data[memory::io_registers::LCD_WINX_ADDR] = 0x00; // No win-x
+    data[memory::io_registers::LCD_WINY_ADDR] = 0x00; // No win-y
+    data[memory::io_registers::LCD_PALETTE_ADDR] = 0b11100100; // Normal color palette
 
     // Only define the top line of a single tile, for test simplicity.
     // (1 tile is 16 bytes wide, with each 2 consecutive bytes representing a line).

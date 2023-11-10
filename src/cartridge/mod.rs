@@ -3,6 +3,7 @@
 
 mod mbc1;
 mod no_mbc;
+mod null;
 
 pub mod mock;
 
@@ -66,7 +67,7 @@ mod mbc_id {
 /// Cartridge trait which serves as an interface to the various
 /// types of memory bank controllers that Gameboy cartridges
 /// can contain.
-pub trait Interface: Any + Debug {
+pub trait Interface: Any + Debug + Send {
     fn as_any(&self) -> &dyn Any;
     fn read(&self, addr: usize) -> Option<u8>;
     fn write(&mut self, addr: usize, val: u8);
@@ -79,6 +80,12 @@ pub fn new(data: Vec<u8>) -> Box<dyn Interface> {
     match data[header::TYPE_ADDR] {
         mbc_id::ROM_ONLY => return NoMBC::new(data),
         mbc_id::MBC1 | mbc_id::MBC1_RAM | mbc_id::MBC1_RAM_BATTERY => return MBC1::new(data),
-        _ => panic!("unsupported cartridge type!"),
+        _ => {
+            panic!("Unsupported cartridge type");
+        }
     }
+}
+
+pub fn default() -> Box<dyn Interface> {
+    return Box::new(null::NullCartridge {});
 }
