@@ -1647,7 +1647,6 @@ dependencies = [
 name = "rusty_fuugbemu"
 version = "0.1.0"
 dependencies = [
- "bytemuck",
  "clap",
  "crossbeam",
  "egui",
