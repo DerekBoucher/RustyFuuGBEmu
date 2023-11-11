@@ -57,6 +57,8 @@ pub trait Interface: Debug {
     fn read(&self, addr: usize) -> Option<u8>;
     fn write(&mut self, addr: usize, val: u8);
     fn dump(&self) -> Vec<u8>;
+    fn update_timers(&mut self, cycles: u32);
+    fn request_interrupt(&mut self, code: interrupt_code);
 }
 
 /// Module containing important addresses for
@@ -69,6 +71,7 @@ pub mod io_registers {
     pub const TIMER_COUNTER_ADDR: usize = 0xFF05;
     pub const TIMER_MOD_ADDR: usize = 0xFF06;
     pub const TIMER_CTRL_ADDR: usize = 0xFF07;
+    pub const INTERRUPT_FLAG_ADDR: usize = 0xFF0F;
     pub const AUDIO_CH1_SWEEP_ADDR: usize = 0xFF10;
     pub const AUDIO_CH1_LENGTH_ADDR: usize = 0xFF11;
     pub const AUDIO_CH1_VOLUME_ADDR: usize = 0xFF12;
@@ -101,6 +104,15 @@ pub mod io_registers {
     pub const LCD_WINX_ADDR: usize = 0xFF4B;
     pub const LCD_PALETTE_ADDR: usize = 0xFF47;
     pub const BOOT_ROM_DISABLE_ADDR: usize = 0xFF50;
+}
+
+#[allow(non_camel_case_types)]
+pub enum interrupt_code {
+    VBLANK,
+    LCDC,
+    TIMER_OVERFLOW,
+    SERIAL,
+    JOYPAD,
 }
 
 impl Memory {
@@ -219,6 +231,85 @@ impl Memory {
         self.io_registers[0xFF70 - offset] = 0xFF;
         self.io_registers[0xFFFF - offset] = 0x00;
     }
+
+    pub fn update_timers(&mut self, cycles: u32) {
+        let timer_control_register = self.io_registers[io_registers::TIMER_CTRL_ADDR - 0xFF00];
+
+        self.divider_register_tick_counter += cycles;
+        if self.divider_register_tick_counter >= 256 {
+            self.divider_register_tick_counter -= 256;
+            let incremented_div_timer =
+                self.io_registers[io_registers::TIMER_DIV_ADDR - 0xFF00].wrapping_add(1);
+            self.io_registers[io_registers::TIMER_DIV_ADDR - 0xFF00] = incremented_div_timer;
+            log::debug!(
+                "Divider register incremented to {:X}",
+                incremented_div_timer
+            );
+        }
+
+        if timer_control_register & (1 << 2) > 0 {
+            self.timer_tick_counter -= cycles as i32;
+
+            while self.timer_tick_counter <= 0 {
+                self.timer_tick_counter += match timer_control_register & 0x03 {
+                    0 => {
+                        log::debug!("Timer frequency set to 1024");
+                        1024
+                    }
+                    1 => {
+                        log::debug!("Timer frequency set to 16");
+                        16
+                    }
+                    2 => {
+                        log::debug!("Timer frequency set to 64");
+                        64
+                    }
+                    3 => {
+                        log::debug!("Timer frequency set to 256");
+                        256
+                    }
+                    _ => panic!("Invalid timer control register value"),
+                } as i32;
+
+                let timer_register = self.io_registers[io_registers::TIMER_COUNTER_ADDR - 0xFF00];
+                if timer_register == 0xFF {
+                    self.io_registers[io_registers::TIMER_COUNTER_ADDR - 0xFF00] =
+                        self.io_registers[io_registers::TIMER_MOD_ADDR - 0xFF00];
+
+                    self.request_interrupt(interrupt_code::TIMER_OVERFLOW);
+                    break;
+                }
+
+                self.io_registers[io_registers::TIMER_COUNTER_ADDR - 0xFF00] =
+                    timer_register.wrapping_add(1);
+            }
+        }
+    }
+
+    pub fn request_interrupt(&mut self, code: interrupt_code) {
+        match code {
+            interrupt_code::VBLANK => {
+                log::debug!("VBLANK interrupt requested");
+                self.io_registers[io_registers::INTERRUPT_FLAG_ADDR - 0xFF00] |= 1 << 0;
+            }
+            interrupt_code::LCDC => {
+                log::debug!("LCDC interrupt requested");
+                self.io_registers[io_registers::INTERRUPT_FLAG_ADDR - 0xFF00] |= 1 << 1;
+            }
+            interrupt_code::TIMER_OVERFLOW => {
+                log::debug!("Timer overflow interrupt requested");
+                self.io_registers[io_registers::INTERRUPT_FLAG_ADDR - 0xFF00] |= 1 << 2;
+            }
+            interrupt_code::SERIAL => {
+                log::debug!("Serial interrupt requested");
+                self.io_registers[io_registers::INTERRUPT_FLAG_ADDR - 0xFF00] |= 1 << 3;
+            }
+            interrupt_code::JOYPAD => {
+                log::debug!("Joypad interrupt requested");
+                self.io_registers[io_registers::INTERRUPT_FLAG_ADDR - 0xFF00] |= 1 << 4;
+            }
+        }
+    }
 }
 
 impl Interface for Memory {
@@ -335,5 +426,13 @@ impl Interface for Memory {
 
     fn dump(&self) -> Vec<u8> {
         return vec![]; // TODO
+    }
+
+    fn update_timers(&mut self, cycles: u32) {
+        self.update_timers(cycles);
+    }
+
+    fn request_interrupt(&mut self, code: interrupt_code) {
+        self.request_interrupt(code);
     }
 }

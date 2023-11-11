@@ -27,6 +27,10 @@ impl memory::Interface for Memory {
     fn dump(&self) -> Vec<u8> {
         return self.dump();
     }
+
+    fn update_timers(&mut self, cycles: u32) {}
+
+    fn request_interrupt(&mut self, code: memory::interrupt_code) {}
 }
 
 impl PartialEq for Memory {
