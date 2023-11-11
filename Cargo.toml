@@ -3,6 +3,9 @@ name = "rusty_fuugbemu"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+serial_debug = []
+
 [dependencies]
 bytemuck = "1.14.0"
 clap = { version = "4.4.6", features = ["derive"] }

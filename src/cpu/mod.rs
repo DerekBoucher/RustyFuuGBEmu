@@ -12,6 +12,9 @@ mod test;
 
 use crate::memory;
 
+#[cfg(feature = "serial_debug")]
+use memory::io_registers;
+
 use opcode::Opcode;
 use register::{ID, ID16};
 use std::fmt::Debug;
@@ -98,6 +101,9 @@ impl LR35902 {
         };
 
         self.pc = self.pc.wrapping_add(1);
+
+        #[cfg(feature = "serial_debug")]
+        LR35902::serial_debug_output(memory);
 
         return op.execute(self, memory);
     }
@@ -1275,5 +1281,23 @@ impl LR35902 {
         memory.write(addr, current | (1 << bit_position));
 
         return 12;
+    }
+
+    #[cfg(feature = "serial_debug")]
+    fn serial_debug_output(memory: &mut impl memory::Interface) {
+        match memory.read(io_registers::SERIAL_TRANSFER_CONTROL_ADDR) {
+            Some(byte) => {
+                if byte == 0x81 {
+                    match memory.read(io_registers::SERIAL_TRANSFER_DATA_ADDR) {
+                        Some(byte) => {
+                            print!("{}", byte as char);
+                            memory.write(io_registers::SERIAL_TRANSFER_CONTROL_ADDR, 0x00);
+                        }
+                        None => {}
+                    }
+                }
+            }
+            None => {}
+        }
     }
 }
