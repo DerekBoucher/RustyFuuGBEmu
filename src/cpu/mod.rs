@@ -675,8 +675,6 @@ impl LR35902 {
 
         self.sp = self.sp.wrapping_sub(1);
         memory.write(usize::from(self.sp), lo_byte);
-
-        // TODO: Update timers.
     }
 
     fn jump_to_imm_address(&mut self, memory: &impl memory::Interface, condition: bool) -> u32 {
@@ -696,7 +694,7 @@ impl LR35902 {
 
         if condition {
             self.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
-            // TODO: Update timers
+
             return 16;
         }
 
@@ -748,18 +746,15 @@ impl LR35902 {
             self.sp = self.sp.wrapping_add(1);
             self.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
 
-            // TODO: Update timers
             return 20;
         }
 
-        // TODO: Update timers
         return 8;
     }
 
     fn return_from_call(&mut self, memory: &impl memory::Interface) -> u32 {
         self.pop_stack_into_16_bit_register(register::ID16::PC, memory);
 
-        // TODO: Update timers
         return 16;
     }
 

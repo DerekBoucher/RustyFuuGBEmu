@@ -111,7 +111,8 @@ impl Gameboy {
                     None => {}
                 }
 
-                let _cycles = self.cpu.execute_next_opcode(&mut self.memory);
+                let cycles = self.cpu.execute_next_opcode(&mut self.memory);
+                self.memory.update_timers(cycles);
             }
         }
 
