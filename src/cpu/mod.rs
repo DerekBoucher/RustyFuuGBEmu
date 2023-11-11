@@ -11,6 +11,7 @@ mod register;
 mod test;
 
 use crate::memory;
+use memory::io_registers;
 
 use opcode::Opcode;
 use register::{ID, ID16};
@@ -98,6 +99,21 @@ impl LR35902 {
         };
 
         self.pc = self.pc.wrapping_add(1);
+
+        match memory.read(io_registers::SERIAL_TRANSFER_CONTROL_ADDR) {
+            Some(byte) => {
+                if byte == 0x81 {
+                    match memory.read(io_registers::SERIAL_TRANSFER_DATA_ADDR) {
+                        Some(byte) => {
+                            print!("{}", byte as char);
+                            memory.write(io_registers::SERIAL_TRANSFER_CONTROL_ADDR, 0x00);
+                        }
+                        None => {}
+                    }
+                }
+            }
+            None => {}
+        }
 
         return op.execute(self, memory);
     }
