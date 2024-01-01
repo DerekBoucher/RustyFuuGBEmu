@@ -114,7 +114,7 @@ impl Gameboy {
                 let cycles = self.cpu.execute_next_opcode(&mut self.memory);
 
                 cycles_this_update += cycles;
-                self.memory.update_timers(cycles);
+                self.cpu.update_timers(&mut self.memory, cycles);
 
                 if !self.cpu.is_halted() {
                     self.cpu.process_interrupts(&mut self.memory);

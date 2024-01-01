@@ -12,7 +12,6 @@ mod test;
 
 use crate::memory;
 
-#[cfg(feature = "serial_debug")]
 use memory::io_registers;
 
 use opcode::Opcode;
@@ -33,6 +32,15 @@ struct Register {
     lo: u8,
 }
 
+#[allow(non_camel_case_types)]
+pub enum interrupt_code {
+    VBLANK,
+    LCDC,
+    TIMER_OVERFLOW,
+    SERIAL,
+    JOYPAD,
+}
+
 /// Struct representing the Sharp LR35902 CPU found inside the original
 /// DMG Gameboy hardware
 #[derive(Debug)]
@@ -47,6 +55,9 @@ pub struct LR35902 {
     interrupt_master_enable: bool,
     halted: bool,
     bugged_halt: bool,
+
+    divider_register_tick_counter: u32,
+    timer_tick_counter: i32,
 }
 
 const INTERRUPT_ENABLE_REGISTER_ADDR: usize = 0xFFFF;
@@ -94,6 +105,8 @@ impl LR35902 {
             interrupt_master_enable: false,
             halted: false,
             bugged_halt: false,
+            timer_tick_counter: 0,
+            divider_register_tick_counter: 0,
         }
     }
 
@@ -127,6 +140,88 @@ impl LR35902 {
         return self.halted;
     }
 
+    pub fn update_timers(&mut self, memory: &mut impl memory::Interface, cycles: u32) {
+        let timer_control_register = memory.read(io_registers::TIMER_CTRL_ADDR).unwrap();
+
+        self.divider_register_tick_counter += cycles;
+        if self.divider_register_tick_counter >= 256 {
+            self.divider_register_tick_counter -= 256;
+            let incremented_div_timer = memory
+                .read(io_registers::TIMER_DIV_ADDR)
+                .unwrap()
+                .wrapping_add(1);
+
+            memory.write(io_registers::TIMER_DIV_ADDR, incremented_div_timer);
+        }
+
+        if timer_control_register & (1 << 2) > 0 {
+            self.timer_tick_counter -= cycles as i32;
+
+            while self.timer_tick_counter <= 0 {
+                self.timer_tick_counter += match timer_control_register & 0x03 {
+                    0 => {
+                        log::debug!("Timer frequency set to 1024");
+                        1024
+                    }
+                    1 => {
+                        log::debug!("Timer frequency set to 16");
+                        16
+                    }
+                    2 => {
+                        log::debug!("Timer frequency set to 64");
+                        64
+                    }
+                    3 => {
+                        log::debug!("Timer frequency set to 256");
+                        256
+                    }
+                    _ => panic!("Invalid timer control register value"),
+                } as i32;
+
+                let timer_register = memory.read(io_registers::TIMER_COUNTER_ADDR).unwrap();
+
+                if timer_register == 0xFF {
+                    let timer_mod = memory.read(io_registers::TIMER_MOD_ADDR).unwrap();
+                    memory.write(io_registers::TIMER_COUNTER_ADDR, timer_mod);
+
+                    LR35902::set_interrupt(memory, interrupt_code::TIMER_OVERFLOW);
+                    break;
+                }
+
+                memory.write(
+                    io_registers::TIMER_COUNTER_ADDR,
+                    timer_register.wrapping_add(1),
+                );
+            }
+        }
+    }
+
+    fn set_interrupt(memory: &mut impl memory::Interface, code: interrupt_code) {
+        let current_flags = memory.read(io_registers::INTERRUPT_FLAG_ADDR).unwrap();
+        match code {
+            interrupt_code::VBLANK => {
+                log::debug!("VBLANK interrupt requested");
+                memory.write(io_registers::INTERRUPT_FLAG_ADDR, current_flags | 1 << 0);
+            }
+            interrupt_code::LCDC => {
+                log::debug!("LCDC interrupt requested");
+                memory.write(io_registers::INTERRUPT_FLAG_ADDR, current_flags | 1 << 1);
+            }
+            interrupt_code::TIMER_OVERFLOW => {
+                log::debug!("Timer overflow interrupt requested");
+                memory.write(io_registers::INTERRUPT_FLAG_ADDR, current_flags | 1 << 2);
+            }
+            interrupt_code::SERIAL => {
+                log::debug!("Serial interrupt requested");
+                memory.write(io_registers::INTERRUPT_FLAG_ADDR, current_flags | 1 << 3);
+            }
+            interrupt_code::JOYPAD => {
+                log::debug!("Joypad interrupt requested");
+                memory.write(io_registers::INTERRUPT_FLAG_ADDR, current_flags | 1 << 4);
+            }
+        }
+    }
+
     pub fn process_interrupts(&mut self, memory: &mut impl memory::Interface) {
         if !self.interrupt_master_enable {
             return;
@@ -134,7 +229,7 @@ impl LR35902 {
 
         self.interrupt_master_enable = false;
         self.push_16bit_register_on_stack(register::ID16::PC, memory);
-        memory.update_timers(8);
+        self.update_timers(memory, 8);
 
         let interrupt_enable_register = memory.read(INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
         let interrupt_flag_register = memory.read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
