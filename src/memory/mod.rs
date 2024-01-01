@@ -58,7 +58,6 @@ pub trait Interface: Debug {
     fn write(&mut self, addr: usize, val: u8);
     fn dump(&self) -> Vec<u8>;
     fn update_timers(&mut self, cycles: u32);
-    fn request_interrupt(&mut self, code: interrupt_code);
 }
 
 /// Module containing important addresses for
@@ -241,10 +240,6 @@ impl Memory {
             let incremented_div_timer =
                 self.io_registers[io_registers::TIMER_DIV_ADDR - 0xFF00].wrapping_add(1);
             self.io_registers[io_registers::TIMER_DIV_ADDR - 0xFF00] = incremented_div_timer;
-            log::debug!(
-                "Divider register incremented to {:X}",
-                incremented_div_timer
-            );
         }
 
         if timer_control_register & (1 << 2) > 0 {
@@ -276,7 +271,7 @@ impl Memory {
                     self.io_registers[io_registers::TIMER_COUNTER_ADDR - 0xFF00] =
                         self.io_registers[io_registers::TIMER_MOD_ADDR - 0xFF00];
 
-                    self.request_interrupt(interrupt_code::TIMER_OVERFLOW);
+                    self.set_interrupt(interrupt_code::TIMER_OVERFLOW);
                     break;
                 }
 
@@ -286,7 +281,7 @@ impl Memory {
         }
     }
 
-    pub fn request_interrupt(&mut self, code: interrupt_code) {
+    fn set_interrupt(&mut self, code: interrupt_code) {
         match code {
             interrupt_code::VBLANK => {
                 log::debug!("VBLANK interrupt requested");
@@ -430,9 +425,5 @@ impl Interface for Memory {
 
     fn update_timers(&mut self, cycles: u32) {
         self.update_timers(cycles);
-    }
-
-    fn request_interrupt(&mut self, code: interrupt_code) {
-        self.request_interrupt(code);
     }
 }

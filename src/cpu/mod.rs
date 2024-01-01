@@ -19,6 +19,12 @@ use opcode::Opcode;
 use register::{ID, ID16};
 use std::fmt::Debug;
 
+const VBLANK_INTERUPT_VECTOR: usize = 0x0040;
+const LCDC_STATUS_INTERUPT_VECTOR: usize = 0x0048;
+const TIMER_OVERFLOW_INTERUPT_VECTOR: usize = 0x0050;
+const SERIAL_TRANSFER_COMPLETION_INTERUPT_VECTOR: usize = 0x0058;
+const JOYPAD_INTERUPT_VECTOR: usize = 0x0060;
+
 /// Represents a byte addressable word register found
 /// inside the Sharp LR35902
 #[derive(Debug)]
@@ -115,6 +121,68 @@ impl LR35902 {
         self.hl.set_word(0x014D);
         self.pc = 0x0100;
         self.sp = 0xFFFE;
+    }
+
+    pub fn is_halted(&self) -> bool {
+        return self.halted;
+    }
+
+    pub fn process_interrupts(&mut self, memory: &mut impl memory::Interface) {
+        if !self.interrupt_master_enable {
+            return;
+        }
+
+        self.interrupt_master_enable = false;
+        self.push_16bit_register_on_stack(register::ID16::PC, memory);
+        memory.update_timers(8);
+
+        let interrupt_enable_register = memory.read(INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
+        let interrupt_flag_register = memory.read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
+
+        // VBLANK
+        if (interrupt_enable_register & (1 << 0) > 0) && (interrupt_flag_register & (1 << 0)) > 0 {
+            memory.write(
+                INTERRUPT_FLAG_REGISTER_ADDR,
+                interrupt_flag_register & !(1 << 0),
+            );
+            self.pc = VBLANK_INTERUPT_VECTOR as u16;
+        }
+
+        // LCDC
+        if (interrupt_enable_register & (1 << 1) > 0) && (interrupt_flag_register & (1 << 1)) > 0 {
+            memory.write(
+                INTERRUPT_FLAG_REGISTER_ADDR,
+                interrupt_flag_register & !(1 << 1),
+            );
+            self.pc = LCDC_STATUS_INTERUPT_VECTOR as u16;
+        }
+
+        // TIMER OVERFLOW
+        if (interrupt_enable_register & (1 << 2) > 0) && (interrupt_flag_register & (1 << 2)) > 0 {
+            memory.write(
+                INTERRUPT_FLAG_REGISTER_ADDR,
+                interrupt_flag_register & !(1 << 2),
+            );
+            self.pc = TIMER_OVERFLOW_INTERUPT_VECTOR as u16;
+        }
+
+        // SERIAL TRANSFER COMPLETION
+        if (interrupt_enable_register & (1 << 3) > 0) && (interrupt_flag_register & (1 << 3)) > 0 {
+            memory.write(
+                INTERRUPT_FLAG_REGISTER_ADDR,
+                interrupt_flag_register & !(1 << 3),
+            );
+            self.pc = SERIAL_TRANSFER_COMPLETION_INTERUPT_VECTOR as u16;
+        }
+
+        // JOYPAD
+        if (interrupt_enable_register & (1 << 4) > 0) && (interrupt_flag_register & (1 << 4)) > 0 {
+            memory.write(
+                INTERRUPT_FLAG_REGISTER_ADDR,
+                interrupt_flag_register & !(1 << 4),
+            );
+            self.pc = JOYPAD_INTERUPT_VECTOR as u16;
+        }
     }
 
     fn reset_half_carry_flag(&mut self) {

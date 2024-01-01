@@ -90,7 +90,7 @@ impl Gameboy {
         }
 
         'main: loop {
-            let cycles_this_update: u32 = 0;
+            let mut cycles_this_update: u32 = 0;
 
             while cycles_this_update < CPU_CYCLES_PER_FRAME {
                 if Gameboy::should_close(&close_receiver) {
@@ -111,7 +111,14 @@ impl Gameboy {
                     None => {}
                 }
 
-                let _cycles = self.cpu.execute_next_opcode(&mut self.memory);
+                let cycles = self.cpu.execute_next_opcode(&mut self.memory);
+
+                cycles_this_update += cycles;
+                self.memory.update_timers(cycles);
+
+                if !self.cpu.is_halted() {
+                    self.cpu.process_interrupts(&mut self.memory);
+                }
             }
         }
 
