@@ -146,12 +146,8 @@ impl LR35902 {
         self.divider_register_tick_counter += cycles;
         if self.divider_register_tick_counter >= 256 {
             self.divider_register_tick_counter -= 256;
-            let incremented_div_timer = memory
-                .read(io_registers::TIMER_DIV_ADDR)
-                .unwrap()
-                .wrapping_add(1);
 
-            memory.write(io_registers::TIMER_DIV_ADDR, incremented_div_timer);
+            memory.increment_timer_divider();
         }
 
         if timer_control_register & (1 << 2) > 0 {

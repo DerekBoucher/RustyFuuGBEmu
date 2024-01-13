@@ -58,9 +58,7 @@ impl IORegisters {
             *register = IORegister::new(idx + 0xFF00);
         }
 
-        Self {
-            registers: registers,
-        }
+        Self { registers }
     }
 
     pub fn post_boot_rom_state() -> Self {
@@ -133,6 +131,16 @@ impl IORegisters {
     pub fn write(&mut self, addr: usize, val: u8) {
         self.registers[addr].write(val);
     }
+
+    pub fn tick_timer_divider(&mut self) {
+        self.registers[TIMER_DIV_ADDR - 0xFF00].tick();
+    }
+}
+
+impl Default for IORegisters {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl IORegister {
@@ -155,6 +163,13 @@ impl IORegister {
             // Writing to TimerDiv resets it to 0, no matter the value.
             IORegister::TimerDiv(_) => *self = IORegister::TimerDiv(0x00),
             IORegister::Default(_) => *self = IORegister::Default(val),
+        }
+    }
+
+    fn tick(&mut self) {
+        match self {
+            IORegister::TimerDiv(val) => *self = IORegister::TimerDiv(val.wrapping_add(1)),
+            _ => panic!("attempted to tick a non-timer io register"),
         }
     }
 }

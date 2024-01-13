@@ -58,6 +58,7 @@ pub struct Memory {
 pub trait Interface: Debug {
     fn read(&self, addr: usize) -> Option<u8>;
     fn write(&mut self, addr: usize, val: u8);
+    fn increment_timer_divider(&mut self);
     fn dump(&self) -> Vec<u8>;
 }
 
@@ -234,6 +235,10 @@ impl Interface for Memory {
         if addr == 0xFFFF {
             self.interrupt_enable_register = val;
         }
+    }
+
+    fn increment_timer_divider(&mut self) {
+        self.io_registers.tick_timer_divider();
     }
 
     fn dump(&self) -> Vec<u8> {

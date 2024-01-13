@@ -27,6 +27,8 @@ impl memory::Interface for Memory {
     fn dump(&self) -> Vec<u8> {
         return self.dump();
     }
+
+    fn increment_timer_divider(&mut self) {}
 }
 
 impl PartialEq for Memory {
