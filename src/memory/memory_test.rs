@@ -27,7 +27,7 @@ fn read() {
                 let mut cartridge: Box<dyn cartridge::Interface> = mock::Cartridge::new(vec![0x0; 0x10000]);
                 cartridge.write(0x0000, 0x17);
                 let mut mem = Memory::new(cartridge);
-                mem.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] = 0x1;
+                mem.io_registers.write(io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00, 0x1);
                 return mem;
             },
             assert_fn: |memory| {
@@ -109,7 +109,7 @@ fn read() {
             description: String::from("reading from memory region 0xFF00 - 0xFF80, should access io registers"),
             init_fn: || -> Memory {
                 let mut mem = Memory::new(mock::Cartridge::new(vec![0x0; 0x10000]));
-                mem.io_registers[0x0000] = 0x17;
+                mem.io_registers.write(0x0000, 0x17);
                 return mem;
             },
             assert_fn: |memory| {
@@ -246,7 +246,7 @@ fn write() {
             init_fn: || -> Memory { Memory::new(mock::Cartridge::new(vec![0x0; 0x10000])) },
             assert_fn: |mut memory| {
                 memory.write(0xFF00, 0x17);
-                assert_eq!(memory.io_registers[0x0000], 0x17);
+                assert_eq!(memory.io_registers.read(0x0000), 0x17);
             },
         },
         TestCase {
@@ -281,8 +281,10 @@ fn write() {
 #[test]
 fn boot_rom_enabled() {
     let mut mem = Memory::new(mock::Cartridge::new(vec![0x0; 0x10000]));
-    mem.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] = 0x1;
+    mem.io_registers
+        .write(io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00, 0x1);
     assert!(!mem.boot_rom_enabled());
-    mem.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] = 0x0;
+    mem.io_registers
+        .write(io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00, 0x0);
     assert!(mem.boot_rom_enabled());
 }

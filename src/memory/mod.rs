@@ -1,12 +1,14 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
+pub mod io_registers;
 #[path = "memory_test.rs"]
 #[cfg(test)]
 mod test;
 
 pub mod mock;
 
+use self::io_registers::IORegisters;
 use crate::cartridge;
 use std::fmt::Debug;
 
@@ -42,7 +44,7 @@ pub struct Memory {
 
     /// IO Registers such as interupts, controls, etc...
     /// Occupies memory locations 0xFF00 ~ 0xFF7F.
-    io_registers: [u8; 0x80],
+    io_registers: IORegisters,
 
     /// High RAM used by the CPU.
     /// Occupies memory locations 0xFF80 ~ 0xFFFE.
@@ -57,51 +59,6 @@ pub trait Interface: Debug {
     fn read(&self, addr: usize) -> Option<u8>;
     fn write(&mut self, addr: usize, val: u8);
     fn dump(&self) -> Vec<u8>;
-}
-
-/// Module containing important addresses for
-/// IO registers.
-pub mod io_registers {
-    pub const JOYPAD_ADDR: usize = 0xFF00;
-    pub const SERIAL_TRANSFER_DATA_ADDR: usize = 0xFF01;
-    pub const SERIAL_TRANSFER_CONTROL_ADDR: usize = 0xFF02;
-    pub const TIMER_DIV_ADDR: usize = 0xFF04;
-    pub const TIMER_COUNTER_ADDR: usize = 0xFF05;
-    pub const TIMER_MOD_ADDR: usize = 0xFF06;
-    pub const TIMER_CTRL_ADDR: usize = 0xFF07;
-    pub const INTERRUPT_FLAG_ADDR: usize = 0xFF0F;
-    pub const AUDIO_CH1_SWEEP_ADDR: usize = 0xFF10;
-    pub const AUDIO_CH1_LENGTH_ADDR: usize = 0xFF11;
-    pub const AUDIO_CH1_VOLUME_ADDR: usize = 0xFF12;
-    pub const AUDIO_CH1_WAV_LO_ADDR: usize = 0xFF13;
-    pub const AUDIO_CH1_WAV_HI_ADDR: usize = 0xFF14;
-    pub const AUDIO_CH2_LENGTH_ADDR: usize = 0xFF16;
-    pub const AUDIO_CH2_VOLUME_ADDR: usize = 0xFF17;
-    pub const AUDIO_CH2_WAV_LO_ADDR: usize = 0xFF18;
-    pub const AUDIO_CH2_WAV_HI_ADDR: usize = 0xFF19;
-    pub const AUDIO_CH3_DAC_ENABLE_ADDR: usize = 0xFF1A;
-    pub const AUDIO_CH3_LENGTH_ADDR: usize = 0xFF1B;
-    pub const AUDIO_CH3_OUTPUT_LVL_ADDR: usize = 0xFF1C;
-    pub const AUDIO_CH3_WAV_LO_ADDR: usize = 0xFF1D;
-    pub const AUDIO_CH3_WAV_HI_ADDR: usize = 0xFF1E;
-    pub const AUDIO_CH4_LENGTH_ADDR: usize = 0xFF20;
-    pub const AUDIO_CH4_VOLUME_ADDR: usize = 0xFF21;
-    pub const AUDIO_CH4_FREQ_ADDR: usize = 0xFF22;
-    pub const AUDIO_CH4_CTRL_ADDR: usize = 0xFF23;
-    pub const AUDIO_WAV_PATTERN_RAM_START_ADDR: usize = 0xFF30;
-    pub const AUDIO_GLOBAL_CTRL_ADDR: usize = 0xFF26;
-    pub const AUDIO_GLOBAL_PANNING_ADDR: usize = 0xFF25;
-    pub const AUDIO_GLOBAL_VOLUME_ADDR: usize = 0xFF24;
-    pub const LCD_CONTROL_ADDR: usize = 0xFF40;
-    pub const LCD_STAT_ADDR: usize = 0xFF41;
-    pub const LCD_SCY_ADDR: usize = 0xFF42;
-    pub const LCD_SCX_ADDR: usize = 0xFF43;
-    pub const LCD_LY_ADDR: usize = 0xFF44;
-    pub const LCD_LYC_ADDR: usize = 0xFF45;
-    pub const LCD_WINY_ADDR: usize = 0xFF4A;
-    pub const LCD_WINX_ADDR: usize = 0xFF4B;
-    pub const LCD_PALETTE_ADDR: usize = 0xFF47;
-    pub const BOOT_ROM_DISABLE_ADDR: usize = 0xFF50;
 }
 
 impl Memory {
@@ -134,7 +91,7 @@ impl Memory {
             work_ram1: [0x00; 0x1000],
             echo_ram: [0x00; 0x1E00],
             sprite_attributes: [0x00; 0xA0],
-            io_registers: [0x00; 0x80],
+            io_registers: IORegisters::new(),
             hi_ram: [0x00; 0x7F],
             interrupt_enable_register: 0x00,
         }
@@ -148,77 +105,22 @@ impl Memory {
             work_ram1: [0x00; 0x1000],
             echo_ram: [0x00; 0x1E00],
             sprite_attributes: [0x00; 0xA0],
-            io_registers: [0x00; 0x80],
+            io_registers: IORegisters::new(),
             hi_ram: [0x00; 0x7F],
             interrupt_enable_register: 0x00,
         }
     }
 
     fn boot_rom_enabled(&self) -> bool {
-        return self.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] == 0x00;
+        return self
+            .io_registers
+            .read(io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00)
+            == 0x00;
     }
 
     pub fn set_post_boot_rom_state(&mut self) {
-        let offset: usize = 0xFF00;
-
-        // Disable boot rom
-        self.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - offset] = 0x01;
-
-        self.io_registers[io_registers::JOYPAD_ADDR - offset] = 0xCF;
-        self.io_registers[io_registers::SERIAL_TRANSFER_DATA_ADDR - offset] = 0x00;
-        self.io_registers[io_registers::SERIAL_TRANSFER_CONTROL_ADDR - offset] = 0x7E;
-        self.io_registers[io_registers::TIMER_DIV_ADDR - offset] = 0x00;
-        self.io_registers[io_registers::TIMER_COUNTER_ADDR - offset] = 0x00;
-        self.io_registers[io_registers::TIMER_MOD_ADDR - offset] = 0x00;
-        self.io_registers[io_registers::TIMER_CTRL_ADDR - offset] = 0xF8;
-        self.io_registers[0xFF0F - offset] = 0xE1;
-        self.io_registers[io_registers::AUDIO_CH1_SWEEP_ADDR - offset] = 0x80;
-        self.io_registers[io_registers::AUDIO_CH1_LENGTH_ADDR - offset] = 0xBF;
-        self.io_registers[io_registers::AUDIO_CH1_VOLUME_ADDR - offset] = 0xF3;
-        self.io_registers[io_registers::AUDIO_CH1_WAV_LO_ADDR - offset] = 0xFF;
-        self.io_registers[io_registers::AUDIO_CH1_WAV_HI_ADDR - offset] = 0xBF;
-        self.io_registers[io_registers::AUDIO_CH2_LENGTH_ADDR - offset] = 0x3F;
-        self.io_registers[io_registers::AUDIO_CH2_VOLUME_ADDR - offset] = 0x00;
-        self.io_registers[io_registers::AUDIO_CH2_WAV_LO_ADDR - offset] = 0xFF;
-        self.io_registers[io_registers::AUDIO_CH2_WAV_HI_ADDR - offset] = 0xBF;
-        self.io_registers[io_registers::AUDIO_CH3_DAC_ENABLE_ADDR - offset] = 0x7F;
-        self.io_registers[io_registers::AUDIO_CH3_LENGTH_ADDR - offset] = 0xFF;
-        self.io_registers[io_registers::AUDIO_CH3_OUTPUT_LVL_ADDR - offset] = 0x9F;
-        self.io_registers[io_registers::AUDIO_CH3_WAV_LO_ADDR - offset] = 0xFF;
-        self.io_registers[io_registers::AUDIO_CH3_WAV_HI_ADDR - offset] = 0xBF;
-        self.io_registers[io_registers::AUDIO_CH4_LENGTH_ADDR - offset] = 0xFF;
-        self.io_registers[io_registers::AUDIO_CH4_VOLUME_ADDR - offset] = 0x00;
-        self.io_registers[io_registers::AUDIO_CH4_FREQ_ADDR - offset] = 0x00;
-        self.io_registers[io_registers::AUDIO_CH4_CTRL_ADDR - offset] = 0xBF;
-        self.io_registers[io_registers::AUDIO_GLOBAL_VOLUME_ADDR - offset] = 0x77;
-        self.io_registers[io_registers::AUDIO_GLOBAL_PANNING_ADDR - offset] = 0xF3;
-        self.io_registers[io_registers::AUDIO_GLOBAL_CTRL_ADDR - offset] = 0xF1;
-        self.io_registers[io_registers::LCD_CONTROL_ADDR - offset] = 0x91;
-        self.io_registers[io_registers::LCD_STAT_ADDR - offset] = 0x81;
-        self.io_registers[io_registers::LCD_SCY_ADDR - offset] = 0x00;
-        self.io_registers[io_registers::LCD_SCX_ADDR - offset] = 0x00;
-        self.io_registers[io_registers::LCD_LY_ADDR - offset] = 0x91;
-        self.io_registers[io_registers::LCD_LYC_ADDR - offset] = 0x00;
-        self.io_registers[0xFF46 - offset] = 0xFF;
-        self.io_registers[io_registers::LCD_PALETTE_ADDR - offset] = 0xFC;
-        self.io_registers[0xFF48 - offset] = 0x00;
-        self.io_registers[0xFF49 - offset] = 0x00;
-        self.io_registers[io_registers::LCD_WINY_ADDR - offset] = 0x00;
-        self.io_registers[io_registers::LCD_WINX_ADDR - offset] = 0x00;
-        self.io_registers[0xFF4D - offset] = 0xFF;
-        self.io_registers[0xFF4F - offset] = 0xFF;
-        self.io_registers[0xFF51 - offset] = 0xFF;
-        self.io_registers[0xFF52 - offset] = 0xFF;
-        self.io_registers[0xFF53 - offset] = 0xFF;
-        self.io_registers[0xFF54 - offset] = 0xFF;
-        self.io_registers[0xFF55 - offset] = 0xFF;
-        self.io_registers[0xFF56 - offset] = 0xFF;
-        self.io_registers[0xFF68 - offset] = 0xFF;
-        self.io_registers[0xFF69 - offset] = 0xFF;
-        self.io_registers[0xFF6A - offset] = 0xFF;
-        self.io_registers[0xFF6B - offset] = 0xFF;
-        self.io_registers[0xFF70 - offset] = 0xFF;
-        self.io_registers[0xFFFF - offset] = 0x00;
+        self.io_registers = IORegisters::post_boot_rom_state();
+        self.interrupt_enable_register = 0x00;
     }
 }
 
@@ -266,7 +168,7 @@ impl Interface for Memory {
 
         // IO Registers
         if addr >= 0xFF00 && addr < 0xFF80 {
-            return Some(self.io_registers[addr - 0xFF00].clone());
+            return Some(self.io_registers.read(addr - 0xFF00));
         }
 
         // High RAM
@@ -320,7 +222,7 @@ impl Interface for Memory {
 
         // IO Registers
         if addr >= 0xFF00 && addr < 0xFF80 {
-            self.io_registers[addr - 0xFF00] = val;
+            self.io_registers.write(addr - 0xFF00, val);
         }
 
         // High RAM
