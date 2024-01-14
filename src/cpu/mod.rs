@@ -75,6 +75,14 @@ const HALF_CARRY_FLAG_MASK: u8 = 1 << 5;
 /// Bit mask for the carry flag
 const CARRY_FLAG_MASK: u8 = 1 << 4;
 
+const TIMA_TIMER_ENABLE_MASK: u8 = 1 << 2;
+
+const VBLANK_INTERRUPT_REQUESTED_MASK: u8 = 1 << 0;
+const LCDC_INTERUPT_REQUESTED_MASK: u8 = 1 << 1;
+const TIMER_OVERFLOW_INTERUPT_REQUESTED_MASK: u8 = 1 << 2;
+const SERIAL_TRANSFER_COMPLETED_INTERUPT_REQUESTED_MASK: u8 = 1 << 3;
+const JOYPAD_INTERUPT_REQUESTED_MASK: u8 = 1 << 4;
+
 pub const CPU_CYCLES_PER_FRAME: u32 = 4194304 / 60;
 
 impl PartialEq for LR35902 {
@@ -150,7 +158,7 @@ impl LR35902 {
             memory.increment_timer_divider();
         }
 
-        if timer_control_register & (1 << 2) > 0 {
+        if timer_control_register & TIMA_TIMER_ENABLE_MASK > 0 {
             self.timer_tick_counter -= cycles as i32;
 
             while self.timer_tick_counter <= 0 {
@@ -231,46 +239,56 @@ impl LR35902 {
         let interrupt_flag_register = memory.read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
 
         // VBLANK
-        if (interrupt_enable_register & (1 << 0) > 0) && (interrupt_flag_register & (1 << 0)) > 0 {
+        if (interrupt_enable_register & VBLANK_INTERRUPT_REQUESTED_MASK > 0)
+            && (interrupt_flag_register & VBLANK_INTERRUPT_REQUESTED_MASK > 0)
+        {
             memory.write(
                 INTERRUPT_FLAG_REGISTER_ADDR,
-                interrupt_flag_register & !(1 << 0),
+                interrupt_flag_register & !VBLANK_INTERRUPT_REQUESTED_MASK,
             );
             self.pc = VBLANK_INTERUPT_VECTOR as u16;
         }
 
         // LCDC
-        if (interrupt_enable_register & (1 << 1) > 0) && (interrupt_flag_register & (1 << 1)) > 0 {
+        if (interrupt_enable_register & LCDC_INTERUPT_REQUESTED_MASK > 0)
+            && (interrupt_flag_register & LCDC_INTERUPT_REQUESTED_MASK > 0)
+        {
             memory.write(
                 INTERRUPT_FLAG_REGISTER_ADDR,
-                interrupt_flag_register & !(1 << 1),
+                interrupt_flag_register & !LCDC_INTERUPT_REQUESTED_MASK,
             );
             self.pc = LCDC_STATUS_INTERUPT_VECTOR as u16;
         }
 
         // TIMER OVERFLOW
-        if (interrupt_enable_register & (1 << 2) > 0) && (interrupt_flag_register & (1 << 2)) > 0 {
+        if (interrupt_enable_register & TIMER_OVERFLOW_INTERUPT_REQUESTED_MASK > 0)
+            && (interrupt_flag_register & TIMER_OVERFLOW_INTERUPT_REQUESTED_MASK > 0)
+        {
             memory.write(
                 INTERRUPT_FLAG_REGISTER_ADDR,
-                interrupt_flag_register & !(1 << 2),
+                interrupt_flag_register & !TIMER_OVERFLOW_INTERUPT_REQUESTED_MASK,
             );
             self.pc = TIMER_OVERFLOW_INTERUPT_VECTOR as u16;
         }
 
         // SERIAL TRANSFER COMPLETION
-        if (interrupt_enable_register & (1 << 3) > 0) && (interrupt_flag_register & (1 << 3)) > 0 {
+        if (interrupt_enable_register & SERIAL_TRANSFER_COMPLETED_INTERUPT_REQUESTED_MASK > 0)
+            && (interrupt_flag_register & SERIAL_TRANSFER_COMPLETED_INTERUPT_REQUESTED_MASK > 0)
+        {
             memory.write(
                 INTERRUPT_FLAG_REGISTER_ADDR,
-                interrupt_flag_register & !(1 << 3),
+                interrupt_flag_register & !SERIAL_TRANSFER_COMPLETED_INTERUPT_REQUESTED_MASK,
             );
             self.pc = SERIAL_TRANSFER_COMPLETION_INTERUPT_VECTOR as u16;
         }
 
         // JOYPAD
-        if (interrupt_enable_register & (1 << 4) > 0) && (interrupt_flag_register & (1 << 4)) > 0 {
+        if (interrupt_enable_register & JOYPAD_INTERUPT_REQUESTED_MASK > 0)
+            && (interrupt_flag_register & JOYPAD_INTERUPT_REQUESTED_MASK > 0)
+        {
             memory.write(
                 INTERRUPT_FLAG_REGISTER_ADDR,
-                interrupt_flag_register & !(1 << 4),
+                interrupt_flag_register & !JOYPAD_INTERUPT_REQUESTED_MASK,
             );
             self.pc = JOYPAD_INTERUPT_VECTOR as u16;
         }
