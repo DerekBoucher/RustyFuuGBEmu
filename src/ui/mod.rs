@@ -22,7 +22,7 @@ impl Ui {
         event_loop_proxy: EventLoopProxy<events::UiEvent>,
     ) -> Self {
         Self {
-            egui_glium_client: egui_glium_client,
+            egui_glium_client,
             ui_event_loop_proxy: event_loop_proxy,
         }
     }
