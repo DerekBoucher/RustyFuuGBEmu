@@ -86,7 +86,7 @@ impl Memory {
 
     pub fn new(cartridge: Box<dyn cartridge::Interface>) -> Self {
         Self {
-            cartridge: cartridge,
+            cartridge,
             video_ram: [0x00; 0x2000],
             work_ram0: [0x00; 0x1000],
             work_ram1: [0x00; 0x1000],
