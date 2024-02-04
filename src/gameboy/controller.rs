@@ -2,6 +2,10 @@ use super::Controller;
 use crossbeam::channel;
 use std::time::Duration;
 
+#[path = "controller_test.rs"]
+#[cfg(test)]
+mod test;
+
 impl Controller {
     pub fn new() -> (
         Self,
@@ -17,10 +21,10 @@ impl Controller {
 
         return (
             Self {
-                close_sender: close_sender,
-                pause_sender: pause_sender,
-                ack_receiver: ack_receiver,
-                rom_data_sender: rom_data_sender,
+                close_sender,
+                pause_sender,
+                ack_receiver,
+                rom_data_sender,
 
                 paused: false,
             },

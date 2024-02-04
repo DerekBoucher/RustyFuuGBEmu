@@ -7,7 +7,6 @@ mod bit;
 mod opcode;
 mod opcode_ext;
 mod register;
-
 mod test;
 
 use crate::memory;
