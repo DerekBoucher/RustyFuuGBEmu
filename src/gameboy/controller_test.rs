@@ -17,7 +17,7 @@ fn close() -> Result<(), TestFailureError> {
 
     ctrl.close();
 
-    match close_receiver.recv_timeout(std::time::Duration::from_secs(5)) {
+    match close_receiver.recv_timeout(std::time::Duration::from_secs(1)) {
         Ok(msg) => Ok(()),
         Err(err) => Err(TestFailureError {
             description: err.to_string(),
@@ -32,7 +32,7 @@ fn pause() -> Result<(), TestFailureError> {
     ctrl.pause();
     assert!(ctrl.paused);
 
-    match pause_receiver.recv_timeout(std::time::Duration::from_secs(5)) {
+    match pause_receiver.recv_timeout(std::time::Duration::from_secs(1)) {
         Ok(msg) => Ok(()),
         Err(err) => Err(TestFailureError {
             description: err.to_string(),
@@ -54,6 +54,87 @@ fn already_paused() -> Result<(), TestFailureError> {
                 "received additional pause signal when controller was already paused",
             ),
         }),
-        Err(_) => Ok(()),
+        Err(err) => match err {
+            crossbeam::channel::RecvTimeoutError::Timeout => Ok(()),
+            _ => Err(TestFailureError {
+                description: err.to_string(),
+            }),
+        },
+    }
+}
+
+#[test]
+fn resume() -> Result<(), TestFailureError> {
+    let (mut ctrl, _, pause_receiver, _, _) = Controller::new();
+
+    ctrl.resume();
+    match pause_receiver.recv_timeout(std::time::Duration::from_secs(1)) {
+        Ok(_) => Err(TestFailureError {
+            description: String::from(
+                "received a resume signal when the controller was not in a paused state",
+            ),
+        }),
+        Err(err) => match err {
+            crossbeam::channel::RecvTimeoutError::Timeout => Ok(()),
+            _ => Err(TestFailureError {
+                description: err.to_string(),
+            }),
+        },
+    }
+}
+
+#[test]
+fn resume_paused() -> Result<(), TestFailureError> {
+    let (mut ctrl, _, pause_receiver, _, _) = Controller::new();
+    ctrl.paused = true;
+
+    ctrl.resume();
+
+    match pause_receiver.recv_timeout(std::time::Duration::from_secs(1)) {
+        Ok(_) => Ok(()),
+        Err(err) => Err(TestFailureError {
+            description: err.to_string(),
+        }),
+    }
+}
+
+#[test]
+fn load_rom() -> Result<(), TestFailureError> {
+    let (ctrl, _, _, _, rom_receiver) = Controller::new();
+
+    let data: Vec<u8> = vec![0x01, 0x02, 0x03];
+
+    ctrl.load_rom(data);
+
+    match rom_receiver.recv_timeout(std::time::Duration::from_secs(1)) {
+        Ok(recv_data) => {
+            assert_eq!(recv_data, vec![0x01, 0x02, 0x03]);
+            Ok(())
+        }
+        Err(err) => Err(TestFailureError {
+            description: err.to_string(),
+        }),
+    }
+}
+
+#[test]
+fn join() -> Result<(), TestFailureError> {
+    let (ctrl, _, _, ack_sender, _) = Controller::new();
+
+    let send_result = match ack_sender.send(()) {
+        Ok(()) => Ok(()),
+        Err(err) => Err(TestFailureError {
+            description: err.to_string(),
+        }),
+    };
+    if send_result.is_err() {
+        return send_result;
+    }
+
+    match ctrl.join() {
+        Ok(_) => Ok(()),
+        Err(err) => Err(TestFailureError {
+            description: err.to_string(),
+        }),
     }
 }

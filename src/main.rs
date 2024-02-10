@@ -48,8 +48,14 @@ fn main() {
                 WindowEvent::CloseRequested => {
                     *control_flow = glutin::event_loop::ControlFlow::Exit;
                     gb_controller.close();
-                    gb_controller.join();
-                    return;
+                     match gb_controller.join() {
+                        Ok(_) => (),
+                        Err(err) => match err {
+                            crossbeam::channel::RecvTimeoutError::Timeout => log::error!("gb thread deadlocked -> join operation did not complete on time"),
+                            crossbeam::channel::RecvTimeoutError::Disconnected => log::error!("lost connection to gb thread while waiting for a join"),
+                        }
+                    }
+                   return;
                 }
 
                 _ => ui.process_events(event, &display),
@@ -58,7 +64,13 @@ fn main() {
                 ui::events::UiEvent::CloseWindow => {
                     *control_flow = glutin::event_loop::ControlFlow::Exit;
                     gb_controller.close();
-                    gb_controller.join();
+                    match gb_controller.join() {
+                        Ok(_) => (),
+                        Err(err) => match err {
+                            crossbeam::channel::RecvTimeoutError::Timeout => log::error!("gb thread deadlocked -> join operation did not complete on time"),
+                            crossbeam::channel::RecvTimeoutError::Disconnected => log::error!("lost connection to gb thread while waiting for a join"),
+                        }
+                    }
                     return;
                 }
             },

@@ -1,5 +1,5 @@
 use super::Controller;
-use crossbeam::channel;
+use crossbeam::channel::{self, RecvTimeoutError};
 use std::time::Duration;
 
 #[path = "controller_test.rs"]
@@ -19,7 +19,7 @@ impl Controller {
         let (ack_sender, ack_receiver) = channel::unbounded();
         let (rom_data_sender, rom_data_receiver) = channel::bounded::<Vec<u8>>(1);
 
-        return (
+        (
             Self {
                 close_sender,
                 pause_sender,
@@ -32,20 +32,15 @@ impl Controller {
             pause_receiver,
             ack_sender,
             rom_data_receiver,
-        );
+        )
     }
 
     pub fn close(&self) {
         self.close_sender.send(()).unwrap();
     }
 
-    pub fn join(&self) {
-        match self.ack_receiver.recv_timeout(Duration::from_secs(5)) {
-            Ok(_) => (),
-            Err(err) => {
-                log::error!("gb thread did not close in time: {:?}", err);
-            }
-        }
+    pub fn join(&self) -> Result<(), RecvTimeoutError> {
+        self.ack_receiver.recv_timeout(Duration::from_secs(5))
     }
 
     pub fn pause(&mut self) {
