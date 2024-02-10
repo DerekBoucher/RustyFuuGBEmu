@@ -22,7 +22,7 @@ impl Ui {
         event_loop_proxy: EventLoopProxy<events::UiEvent>,
     ) -> Self {
         Self {
-            egui_glium_client: egui_glium_client,
+            egui_glium_client,
             ui_event_loop_proxy: event_loop_proxy,
         }
     }
@@ -31,7 +31,7 @@ impl Ui {
         &mut self,
         control_flow: &mut ControlFlow,
         display: &Display,
-        gb_controller: &gameboy::Controller,
+        gb_controller: &gameboy::Orchestrator,
     ) {
         let egui_redraw_timer = self.egui_glium_client.run(&display, |egui_ctx| {
             Ui::draw(egui_ctx, gb_controller, &self.ui_event_loop_proxy);
@@ -71,7 +71,7 @@ impl Ui {
 
     fn draw(
         egui_ctx: &Context,
-        gb_controller: &gameboy::Controller,
+        gb_controller: &gameboy::Orchestrator,
         ui_event_loop_proxy: &EventLoopProxy<events::UiEvent>,
     ) {
         egui::TopBottomPanel::top("top_panel").show(egui_ctx, |ui| {
@@ -91,7 +91,7 @@ impl Ui {
         });
     }
 
-    fn load_rom_from_file_dialog(gb_controller: &gameboy::Controller) {
+    fn load_rom_from_file_dialog(gb_controller: &gameboy::Orchestrator) {
         let selected_rom = rfd::FileDialog::new()
             .add_filter("Gameboy ROM", &["gb"])
             .pick_file();

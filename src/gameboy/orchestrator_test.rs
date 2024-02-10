@@ -1,4 +1,4 @@
-use crate::gameboy::Controller;
+use crate::gameboy::Orchestrator;
 
 #[derive(Debug, Clone)]
 struct TestFailureError {
@@ -13,7 +13,7 @@ impl std::fmt::Display for TestFailureError {
 
 #[test]
 fn close() -> Result<(), TestFailureError> {
-    let (ctrl, close_receiver, _, _, _) = Controller::new();
+    let (ctrl, close_receiver, _, _, _) = Orchestrator::new();
 
     ctrl.close();
 
@@ -27,7 +27,7 @@ fn close() -> Result<(), TestFailureError> {
 
 #[test]
 fn pause() -> Result<(), TestFailureError> {
-    let (mut ctrl, _, pause_receiver, _, _) = Controller::new();
+    let (mut ctrl, _, pause_receiver, _, _) = Orchestrator::new();
 
     ctrl.pause();
     assert!(ctrl.paused);
@@ -42,7 +42,7 @@ fn pause() -> Result<(), TestFailureError> {
 
 #[test]
 fn already_paused() -> Result<(), TestFailureError> {
-    let (mut ctrl, _, pause_receiver, _, _) = Controller::new();
+    let (mut ctrl, _, pause_receiver, _, _) = Orchestrator::new();
     ctrl.paused = true;
 
     ctrl.pause();
@@ -65,7 +65,7 @@ fn already_paused() -> Result<(), TestFailureError> {
 
 #[test]
 fn resume() -> Result<(), TestFailureError> {
-    let (mut ctrl, _, pause_receiver, _, _) = Controller::new();
+    let (mut ctrl, _, pause_receiver, _, _) = Orchestrator::new();
 
     ctrl.resume();
     match pause_receiver.recv_timeout(std::time::Duration::from_secs(1)) {
@@ -85,7 +85,7 @@ fn resume() -> Result<(), TestFailureError> {
 
 #[test]
 fn resume_paused() -> Result<(), TestFailureError> {
-    let (mut ctrl, _, pause_receiver, _, _) = Controller::new();
+    let (mut ctrl, _, pause_receiver, _, _) = Orchestrator::new();
     ctrl.paused = true;
 
     ctrl.resume();
@@ -100,7 +100,7 @@ fn resume_paused() -> Result<(), TestFailureError> {
 
 #[test]
 fn load_rom() -> Result<(), TestFailureError> {
-    let (ctrl, _, _, _, rom_receiver) = Controller::new();
+    let (ctrl, _, _, _, rom_receiver) = Orchestrator::new();
 
     let data: Vec<u8> = vec![0x01, 0x02, 0x03];
 
@@ -119,7 +119,7 @@ fn load_rom() -> Result<(), TestFailureError> {
 
 #[test]
 fn join() -> Result<(), TestFailureError> {
-    let (ctrl, _, _, ack_sender, _) = Controller::new();
+    let (ctrl, _, _, ack_sender, _) = Orchestrator::new();
 
     let send_result = match ack_sender.send(()) {
         Ok(()) => Ok(()),

@@ -1,12 +1,12 @@
-use super::Controller;
+use super::Orchestrator;
 use crossbeam::channel::{self, RecvTimeoutError};
 use std::time::Duration;
 
-#[path = "controller_test.rs"]
+#[path = "orchestrator_test.rs"]
 #[cfg(test)]
 mod test;
 
-impl Controller {
+impl Orchestrator {
     pub fn new() -> (
         Self,
         channel::Receiver<()>,

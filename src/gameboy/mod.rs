@@ -8,7 +8,7 @@ use crate::ppu::Ppu;
 use crossbeam::channel::{self};
 use crossbeam::select;
 
-mod controller;
+mod orchestrator;
 
 pub struct Gameboy {
     cpu: LR35902,
@@ -19,9 +19,7 @@ pub struct Gameboy {
     cartridge_inserted: bool,
 }
 
-/// Not to be confused with the Gameboy's player controller, this struct is a
-/// mechanism for controlling the behaviour of the asynchronous gameboy thread.
-pub struct Controller {
+pub struct Orchestrator {
     close_sender: channel::Sender<()>,
     pause_sender: channel::Sender<()>,
     ack_receiver: channel::Receiver<()>,
@@ -51,9 +49,9 @@ impl Gameboy {
         self.memory.set_post_boot_rom_state();
     }
 
-    pub fn start(mut self) -> Controller {
-        let (controller, close_receiver, pause_receiver, ack_sender, rom_data_receiver) =
-            Controller::new();
+    pub fn start(mut self) -> Orchestrator {
+        let (orchestrator, close_receiver, pause_receiver, ack_sender, rom_data_receiver) =
+            Orchestrator::new();
 
         std::thread::spawn(move || {
             self.run(
@@ -63,7 +61,7 @@ impl Gameboy {
                 rom_data_receiver,
             )
         });
-        return controller;
+        return orchestrator;
     }
 
     fn run(
