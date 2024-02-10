@@ -76,6 +76,16 @@ impl PartialEq for LR35902 {
     }
 }
 
+impl interface::CPU for LR35902 {
+    fn execute_next_opcode(&mut self, memory: &mut impl interface::Memory) -> u32 {
+        return self.execute_next_opcode(memory);
+    }
+
+    fn set_post_boot_rom_state(&mut self, memory: &mut impl interface::Memory) {
+        self.execute_next_opcode(memory);
+    }
+}
+
 impl LR35902 {
     pub fn new() -> Self {
         Self {

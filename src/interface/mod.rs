@@ -31,3 +31,9 @@ pub trait PPU: Debug {
     fn set_lcdc_status(&mut self, memory: &mut impl Memory);
     fn render_tiles(&mut self, memory: &impl Memory);
 }
+
+/// CPU trait that lets implementors of the LR35902 Sharp processing unit expose the necessary API
+pub trait CPU: Debug {
+    fn execute_next_opcode(&mut self, memory: &mut impl Memory) -> u32;
+    fn set_post_boot_rom_state(&mut self, memory: &mut impl Memory);
+}
