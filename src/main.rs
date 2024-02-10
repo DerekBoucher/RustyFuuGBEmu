@@ -1,6 +1,7 @@
 mod cartridge;
 mod cpu;
 mod gameboy;
+mod interface;
 mod memory;
 mod ppu;
 mod ui;
