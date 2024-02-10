@@ -3,6 +3,7 @@
 mod test;
 
 use crate::cartridge;
+use crate::interface;
 use std::any::Any;
 
 /// MBC1 type of cartridge has a memory bank controller
@@ -44,7 +45,7 @@ impl MBC1 {
     }
 }
 
-impl cartridge::Interface for MBC1 {
+impl interface::Cartridge for MBC1 {
     fn as_any(&self) -> &dyn Any {
         self
     }

@@ -5,13 +5,9 @@ mod mbc1;
 mod no_mbc;
 mod null;
 
-pub mod mock;
-
 use crate::cartridge::mbc1::MBC1;
 use crate::cartridge::no_mbc::NoMBC;
-
-use std::any::Any;
-use std::fmt::Debug;
+use crate::interface;
 
 /// Module containing important addresses in the cartridge
 /// header.
@@ -64,19 +60,10 @@ mod mbc_id {
     pub const MBC1_RAM_BATTERY: u8 = 0x03;
 }
 
-/// Cartridge trait which serves as an interface to the various
-/// types of memory bank controllers that Gameboy cartridges
-/// can contain.
-pub trait Interface: Any + Debug + Send {
-    fn as_any(&self) -> &dyn Any;
-    fn read(&self, addr: usize) -> Option<u8>;
-    fn write(&mut self, addr: usize, val: u8);
-}
-
 /// Cartridge constructor which returns the appropriate
 /// cartridge implementation at runtime, depending on the value of the
 /// ROM at memory location 0x147.
-pub fn new(data: Vec<u8>) -> Box<dyn Interface> {
+pub fn new(data: Vec<u8>) -> Box<dyn interface::Cartridge> {
     match data[header::TYPE_ADDR] {
         mbc_id::ROM_ONLY => return NoMBC::new(data),
         mbc_id::MBC1 | mbc_id::MBC1_RAM | mbc_id::MBC1_RAM_BATTERY => return MBC1::new(data),
@@ -86,6 +73,6 @@ pub fn new(data: Vec<u8>) -> Box<dyn Interface> {
     }
 }
 
-pub fn default() -> Box<dyn Interface> {
+pub fn default() -> Box<dyn interface::Cartridge> {
     return Box::new(null::NullCartridge {});
 }

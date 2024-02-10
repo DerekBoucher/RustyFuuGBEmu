@@ -17,7 +17,7 @@ use std::fmt::Debug;
 pub struct Memory {
     /// Cartridge data.
     /// Mapped into memory locations 0x0000 - 0x7FFF.
-    cartridge: Box<dyn cartridge::Interface>,
+    cartridge: Box<dyn interface::Cartridge>,
 
     /// Video RAM where tile data is located.
     /// Occupies memory locations 0x8000 ~ 0x9FFF.
@@ -129,7 +129,7 @@ impl Memory {
         0x50,
     ];
 
-    pub fn new(cartridge: Box<dyn cartridge::Interface>) -> Self {
+    pub fn new(cartridge: Box<dyn interface::Cartridge>) -> Self {
         Self {
             cartridge,
             video_ram: [0x00; 0x2000],

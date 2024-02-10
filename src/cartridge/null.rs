@@ -1,10 +1,10 @@
-use super::Interface;
+use crate::interface;
 
 /// Placeholder cartridge for when no cartridge is inserted.
 #[derive(Debug)]
 pub struct NullCartridge;
 
-impl Interface for NullCartridge {
+impl interface::Cartridge for NullCartridge {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
