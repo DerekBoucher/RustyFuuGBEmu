@@ -1,9 +1,8 @@
-#[allow(unused_imports)]
 use crate::cpu;
-#[allow(unused_imports)]
 use crate::cpu::register;
 use crate::cpu::LR35902;
-use crate::memory::mock;
+
+use crate::interface::mock;
 
 pub struct TestCase {
     pub initial_state: fn() -> (LR35902, mock::Memory),

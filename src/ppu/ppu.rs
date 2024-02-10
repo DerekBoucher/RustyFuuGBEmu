@@ -1,4 +1,5 @@
 use crate::{
+    interface,
     memory::{self, io_registers},
     ppu::*,
 };
@@ -16,9 +17,9 @@ impl Ppu {
         }
     }
 
-    pub fn step(&mut self, cycles: u32, memory: &mut impl memory::Interface) {}
+    pub fn step(&mut self, cycles: u32, memory: &mut impl interface::Memory) {}
 
-    fn set_lcdc_status(&mut self, memory: &mut impl memory::Interface) {
+    fn set_lcdc_status(&mut self, memory: &mut impl interface::Memory) {
         let lcdc = match memory.read(io_registers::LCD_CONTROL_ADDR) {
             Some(value) => value,
             None => {
@@ -40,7 +41,7 @@ impl Ppu {
 
     // Background tiles make up the background environment, and typically have lower precedence then the window tiles.
     // Window tiles have precedence over background tiles, when enabled.
-    fn render_tiles(&mut self, memory: &impl memory::Interface) {
+    fn render_tiles(&mut self, memory: &impl interface::Memory) {
         let current_scanline = memory.read(memory::io_registers::LCD_LY_ADDR).unwrap();
         let lcdc = memory.read(memory::io_registers::LCD_CONTROL_ADDR).unwrap();
         let scroll_x = memory.read(memory::io_registers::LCD_SCX_ADDR).unwrap();

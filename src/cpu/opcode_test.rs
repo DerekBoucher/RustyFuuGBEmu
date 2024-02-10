@@ -2,7 +2,7 @@ use crate::cpu;
 use crate::cpu::opcode::Opcode;
 use crate::cpu::test::TestCase;
 use crate::cpu::LR35902;
-use crate::memory::mock;
+use crate::interface::mock;
 use std::vec;
 
 #[test]

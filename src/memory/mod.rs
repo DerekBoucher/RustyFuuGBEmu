@@ -5,9 +5,8 @@
 #[cfg(test)]
 mod test;
 
-pub mod mock;
-
 use crate::cartridge;
+use crate::interface;
 use core::panic;
 use std::fmt::Debug;
 
@@ -62,13 +61,6 @@ pub struct Memory {
     /// to increment the timer register. The timer register is incremented whenever this ticker
     /// is less than or equal to 0.
     timer_tick_counter: i32,
-}
-
-pub trait Interface: Debug {
-    fn read(&self, addr: usize) -> Option<u8>;
-    fn write(&mut self, addr: usize, val: u8);
-    fn dump(&self) -> Vec<u8>;
-    fn update_timers(&mut self, cycles: u32);
 }
 
 /// Module containing important addresses for
@@ -139,7 +131,7 @@ impl Memory {
 
     pub fn new(cartridge: Box<dyn cartridge::Interface>) -> Self {
         Self {
-            cartridge: cartridge,
+            cartridge,
             video_ram: [0x00; 0x2000],
             work_ram0: [0x00; 0x1000],
             work_ram1: [0x00; 0x1000],
@@ -289,9 +281,7 @@ impl Memory {
             }
         }
     }
-}
 
-impl Interface for Memory {
     fn read(&self, addr: usize) -> Option<u8> {
         // If boot rom is enabled, the data should come from it.
         if addr < 0x100 && self.boot_rom_enabled() {
@@ -405,6 +395,20 @@ impl Interface for Memory {
 
     fn dump(&self) -> Vec<u8> {
         return vec![]; // TODO
+    }
+}
+
+impl interface::Memory for Memory {
+    fn read(&self, addr: usize) -> Option<u8> {
+        return self.read(addr);
+    }
+
+    fn write(&mut self, addr: usize, val: u8) {
+        self.write(addr, val);
+    }
+
+    fn dump(&self) -> Vec<u8> {
+        return self.dump();
     }
 
     fn update_timers(&mut self, cycles: u32) {

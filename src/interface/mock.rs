@@ -1,4 +1,4 @@
-use crate::memory;
+use crate::interface;
 
 #[derive(Debug)]
 pub struct Memory {
@@ -10,12 +10,6 @@ impl Memory {
         Memory { data: vec }
     }
 
-    pub fn dump(&self) -> Vec<u8> {
-        self.data.clone()
-    }
-}
-
-impl memory::Interface for Memory {
     fn read(&self, addr: usize) -> Option<u8> {
         Some(self.data[addr].clone())
     }
@@ -24,11 +18,28 @@ impl memory::Interface for Memory {
         self.data[addr] = val;
     }
 
+    pub fn dump(&self) -> Vec<u8> {
+        self.data.clone()
+    }
+
+    fn update_timers(&mut self, _cycles: u32) {}
+}
+
+impl interface::Memory for Memory {
+    fn read(&self, addr: usize) -> Option<u8> {
+        return self.read(addr);
+    }
+
+    fn write(&mut self, addr: usize, val: u8) {
+        self.write(addr, val);
+    }
     fn dump(&self) -> Vec<u8> {
         return self.dump();
     }
 
-    fn update_timers(&mut self, cycles: u32) {}
+    fn update_timers(&mut self, cycles: u32) {
+        self.update_timers(cycles);
+    }
 }
 
 impl PartialEq for Memory {
