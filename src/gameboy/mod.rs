@@ -2,19 +2,14 @@
 #![allow(unused_variables)]
 
 use crate::cartridge;
-use crate::cpu::{CPU_CYCLES_PER_FRAME, LR35902};
-use crate::memory::Memory;
-use crate::ppu::Ppu;
+use crate::cpu::CPU_CYCLES_PER_FRAME;
+use crate::interface;
 use crossbeam::channel::{self};
 use crossbeam::select;
 
 mod orchestrator;
 
 pub struct Gameboy {
-    cpu: LR35902,
-    memory: Memory,
-    ppu: Ppu,
-
     require_render: bool,
     cartridge_inserted: bool,
 }
@@ -30,26 +25,39 @@ pub struct Orchestrator {
 impl Gameboy {
     pub fn new() -> Self {
         return Self {
-            cpu: LR35902::new(),
-            memory: Memory::new(cartridge::default()),
-            ppu: Ppu::new(),
             require_render: false,
             cartridge_inserted: false,
         };
     }
 
-    pub fn load_rom(&mut self, rom_data: Vec<u8>) {
-        *self = Gameboy::new();
-        self.memory = Memory::new(cartridge::new(rom_data));
+    fn load_rom(
+        &mut self,
+        rom_data: Vec<u8>,
+        cpu: &mut impl interface::CPU,
+        memory: &mut impl interface::Memory,
+        ppu: &mut impl interface::PPU,
+    ) {
+        cpu.reset();
+        ppu.reset();
+        memory.reset(cartridge::new(rom_data));
         self.cartridge_inserted = true;
     }
 
-    pub fn skip_boot_rom(&mut self) {
-        self.cpu.set_post_boot_rom_state();
-        self.memory.set_post_boot_rom_state();
+    pub fn skip_boot_rom(
+        &self,
+        cpu: &mut impl interface::CPU,
+        memory: &mut impl interface::Memory,
+    ) {
+        cpu.set_post_boot_rom_state();
+        memory.set_post_boot_rom_state();
     }
 
-    pub fn start(mut self) -> Orchestrator {
+    pub fn start(
+        mut self,
+        cpu: impl interface::CPU + 'static,
+        memory: impl interface::Memory + 'static,
+        ppu: impl interface::PPU + 'static,
+    ) -> Orchestrator {
         let (orchestrator, close_receiver, pause_receiver, ack_sender, rom_data_receiver) =
             Orchestrator::new();
 
@@ -59,6 +67,9 @@ impl Gameboy {
                 pause_receiver,
                 ack_sender,
                 rom_data_receiver,
+                cpu,
+                memory,
+                ppu,
             )
         });
         return orchestrator;
@@ -70,13 +81,17 @@ impl Gameboy {
         pause_receiver: channel::Receiver<()>,
         ack_sender: channel::Sender<()>,
         rom_data_receiver: channel::Receiver<Vec<u8>>,
+
+        mut cpu: impl interface::CPU,
+        mut memory: impl interface::Memory,
+        mut ppu: impl interface::PPU,
     ) {
         if !self.cartridge_inserted {
             log::debug!("Waiting for ROM cartridge...");
 
             select! {
                 recv(rom_data_receiver) -> rom_data => {
-                    self.load_rom(rom_data.unwrap());
+                    self.load_rom(rom_data.unwrap(), &mut cpu, &mut memory, &mut ppu);
                     log::debug!("ROM cartridge loaded!");
                 }
                 recv(close_receiver) -> _ => {
@@ -103,14 +118,14 @@ impl Gameboy {
 
                 match Gameboy::should_load_rom(&rom_data_receiver) {
                     Some(rom_data) => {
-                        self.load_rom(rom_data);
+                        self.load_rom(rom_data, &mut cpu, &mut memory, &mut ppu);
                         continue 'main;
                     }
                     None => {}
                 }
 
-                let cycles = self.cpu.execute_next_opcode(&mut self.memory);
-                self.memory.update_timers(cycles);
+                let cycles = cpu.execute_next_opcode(&mut memory);
+                memory.update_timers(cycles);
             }
         }
 

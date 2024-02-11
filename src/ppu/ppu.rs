@@ -153,6 +153,10 @@ impl Ppu {
 }
 
 impl interface::PPU for Ppu {
+    fn reset(&mut self) {
+        *self = Ppu::new();
+    }
+
     fn step(&mut self, cycles: u32, memory: &mut impl interface::Memory) {
         self.step(cycles, memory)
     }

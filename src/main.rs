@@ -30,13 +30,16 @@ fn main() {
     let (events_loop, display) = init_glium();
     let egui_glium_client = egui_glium::EguiGlium::new(&display, &events_loop);
 
-    let mut gameboy = gameboy::Gameboy::new();
+    let mut cpu = cpu::LR35902::new();
+    let mut memory = memory::Memory::new(cartridge::default());
+    let ppu = ppu::Ppu::new();
+    let gameboy = gameboy::Gameboy::new();
     if args.skip_boot_rom {
-        gameboy.skip_boot_rom();
+        gameboy.skip_boot_rom(&mut cpu, &mut memory);
     }
 
     let mut ui = ui::Ui::new(egui_glium_client, events_loop.create_proxy());
-    let gb_controller = gameboy.start();
+    let gb_controller = gameboy.start(cpu, memory, ppu);
 
     events_loop.run(move |ev, _, control_flow| {
         let next_frame_time =

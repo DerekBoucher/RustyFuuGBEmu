@@ -14,6 +14,10 @@ impl Memory {
         Memory { data: vec }
     }
 
+    fn reset(&mut self) {
+        self.data = vec![0x00; self.data.len()];
+    }
+
     fn read(&self, addr: usize) -> Option<u8> {
         Some(self.data[addr].clone())
     }
@@ -30,6 +34,10 @@ impl Memory {
 }
 
 impl interface::Memory for Memory {
+    fn reset(&mut self, _cartridge: Box<dyn interface::Cartridge>) {
+        self.reset()
+    }
+
     fn read(&self, addr: usize) -> Option<u8> {
         return self.read(addr);
     }
@@ -44,6 +52,8 @@ impl interface::Memory for Memory {
     fn update_timers(&mut self, cycles: u32) {
         self.update_timers(cycles);
     }
+
+    fn set_post_boot_rom_state(&mut self) {}
 }
 
 impl PartialEq for Memory {

@@ -399,6 +399,10 @@ impl Memory {
 }
 
 impl interface::Memory for Memory {
+    fn reset(&mut self, cartridge: Box<dyn interface::Cartridge>) {
+        *self = Memory::new(cartridge);
+    }
+
     fn read(&self, addr: usize) -> Option<u8> {
         return self.read(addr);
     }
@@ -413,5 +417,9 @@ impl interface::Memory for Memory {
 
     fn update_timers(&mut self, cycles: u32) {
         self.update_timers(cycles);
+    }
+
+    fn set_post_boot_rom_state(&mut self) {
+        self.set_post_boot_rom_state();
     }
 }
