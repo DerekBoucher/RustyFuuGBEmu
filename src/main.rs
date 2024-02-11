@@ -39,7 +39,7 @@ fn main() {
     }
 
     let mut ui = ui::Ui::new(egui_glium_client, events_loop.create_proxy());
-    let gb_controller = gameboy.start(cpu, memory, ppu);
+    let mut gb_controller = gameboy.start(cpu, memory, ppu);
 
     events_loop.run(move |ev, _, control_flow| {
         let next_frame_time =
@@ -81,7 +81,7 @@ fn main() {
             Event::NewEvents(_) => {}
             Event::MainEventsCleared => {}
             Event::RedrawRequested(_) => {
-                ui.render(control_flow, &display, &gb_controller);
+                ui.render(control_flow, &display, &mut gb_controller);
             }
             _ => {}
         }

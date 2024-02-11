@@ -248,22 +248,10 @@ impl Memory {
 
             while self.timer_tick_counter <= 0 {
                 self.timer_tick_counter += match timer_control_register & 0x03 {
-                    0 => {
-                        log::debug!("Timer frequency set to 1024");
-                        1024
-                    }
-                    1 => {
-                        log::debug!("Timer frequency set to 16");
-                        16
-                    }
-                    2 => {
-                        log::debug!("Timer frequency set to 64");
-                        64
-                    }
-                    3 => {
-                        log::debug!("Timer frequency set to 256");
-                        256
-                    }
+                    0 => 1024,
+                    1 => 16,
+                    2 => 64,
+                    3 => 256,
                     _ => panic!("Invalid timer control register value"),
                 } as i32;
 

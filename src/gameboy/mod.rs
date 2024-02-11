@@ -119,6 +119,7 @@ impl Gameboy {
                 match Gameboy::should_load_rom(&rom_data_receiver) {
                     Some(rom_data) => {
                         self.load_rom(rom_data, &mut cpu, &mut memory, &mut ppu);
+                        log::debug!("ROM cartridge loaded!");
                         continue 'main;
                     }
                     None => {}

@@ -1,13 +1,11 @@
+use crate::gameboy;
 use egui::Context;
 use glium::glutin::event::WindowEvent;
 use glium::glutin::event_loop::ControlFlow;
 use glium::glutin::event_loop::EventLoopProxy;
 use glium::Display;
 use glium::Surface as _;
-
 use std::fs;
-
-use crate::gameboy;
 
 pub mod events;
 
@@ -31,7 +29,7 @@ impl Ui {
         &mut self,
         control_flow: &mut ControlFlow,
         display: &Display,
-        gb_controller: &gameboy::Orchestrator,
+        gb_controller: &mut gameboy::Orchestrator,
     ) {
         let egui_redraw_timer = self.egui_glium_client.run(&display, |egui_ctx| {
             Ui::draw(egui_ctx, gb_controller, &self.ui_event_loop_proxy);
@@ -71,14 +69,16 @@ impl Ui {
 
     fn draw(
         egui_ctx: &Context,
-        gb_controller: &gameboy::Orchestrator,
+        gb_controller: &mut gameboy::Orchestrator,
         ui_event_loop_proxy: &EventLoopProxy<events::UiEvent>,
     ) {
         egui::TopBottomPanel::top("top_panel").show(egui_ctx, |ui| {
             ui.menu_button("File", |ui| {
                 if ui.button("Load ROM").clicked() {
+                    gb_controller.pause();
                     Ui::load_rom_from_file_dialog(gb_controller);
                     ui.close_menu();
+                    gb_controller.resume();
                 }
 
                 if ui.button("Exit").clicked() {
@@ -91,7 +91,7 @@ impl Ui {
         });
     }
 
-    fn load_rom_from_file_dialog(gb_controller: &gameboy::Orchestrator) {
+    fn load_rom_from_file_dialog(gb_controller: &mut gameboy::Orchestrator) {
         let selected_rom = rfd::FileDialog::new()
             .add_filter("Gameboy ROM", &["gb"])
             .pick_file();
