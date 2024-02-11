@@ -1,6 +1,7 @@
 mod cartridge;
 mod cpu;
 mod gameboy;
+mod interface;
 mod memory;
 mod ppu;
 mod ui;
@@ -29,13 +30,16 @@ fn main() {
     let (events_loop, display) = init_glium();
     let egui_glium_client = egui_glium::EguiGlium::new(&display, &events_loop);
 
-    let mut gameboy = gameboy::Gameboy::new();
+    let mut cpu = cpu::LR35902::new();
+    let mut memory = memory::Memory::new(cartridge::default());
+    let ppu = ppu::Ppu::new();
+    let gameboy = gameboy::Gameboy::new();
     if args.skip_boot_rom {
-        gameboy.skip_boot_rom();
+        gameboy.skip_boot_rom(&mut cpu, &mut memory);
     }
 
     let mut ui = ui::Ui::new(egui_glium_client, events_loop.create_proxy());
-    let gb_controller = gameboy.start();
+    let mut gb_controller = gameboy.start(cpu, memory, ppu);
 
     events_loop.run(move |ev, _, control_flow| {
         let next_frame_time =
@@ -48,8 +52,14 @@ fn main() {
                 WindowEvent::CloseRequested => {
                     *control_flow = glutin::event_loop::ControlFlow::Exit;
                     gb_controller.close();
-                    gb_controller.join();
-                    return;
+                     match gb_controller.join() {
+                        Ok(_) => (),
+                        Err(err) => match err {
+                            crossbeam::channel::RecvTimeoutError::Timeout => log::error!("gb thread deadlocked -> join operation did not complete on time"),
+                            crossbeam::channel::RecvTimeoutError::Disconnected => log::error!("lost connection to gb thread while waiting for a join"),
+                        }
+                    }
+                   return;
                 }
 
                 _ => ui.process_events(event, &display),
@@ -58,14 +68,20 @@ fn main() {
                 ui::events::UiEvent::CloseWindow => {
                     *control_flow = glutin::event_loop::ControlFlow::Exit;
                     gb_controller.close();
-                    gb_controller.join();
+                    match gb_controller.join() {
+                        Ok(_) => (),
+                        Err(err) => match err {
+                            crossbeam::channel::RecvTimeoutError::Timeout => log::error!("gb thread deadlocked -> join operation did not complete on time"),
+                            crossbeam::channel::RecvTimeoutError::Disconnected => log::error!("lost connection to gb thread while waiting for a join"),
+                        }
+                    }
                     return;
                 }
             },
             Event::NewEvents(_) => {}
             Event::MainEventsCleared => {}
             Event::RedrawRequested(_) => {
-                ui.render(control_flow, &display, &gb_controller);
+                ui.render(control_flow, &display, &mut gb_controller);
             }
             _ => {}
         }

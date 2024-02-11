@@ -1,5 +1,4 @@
 use crate::cartridge;
-use crate::cartridge::Interface;
 use crate::cartridge::NoMBC;
 
 #[test]

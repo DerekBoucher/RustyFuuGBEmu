@@ -1,6 +1,6 @@
 use crate::cartridge;
 use crate::cartridge::mbc1::MBC1;
-use crate::cartridge::Interface;
+use crate::interface::Cartridge;
 
 #[test]
 fn new() {

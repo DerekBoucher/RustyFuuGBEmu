@@ -1,4 +1,5 @@
-use crate::cartridge::mock;
+use crate::interface;
+use crate::interface::mock;
 use crate::memory::*;
 use std::vec;
 
@@ -24,7 +25,7 @@ fn read() {
         TestCase{
             description: String::from("reading from memory region 0x0000 - 0x8000, should access cartridge rom"),
             init_fn: || -> Memory {
-                let mut cartridge: Box<dyn cartridge::Interface> = mock::Cartridge::new(vec![0x0; 0x10000]);
+                let mut cartridge: Box<dyn interface::Cartridge> = mock::Cartridge::new(vec![0x0; 0x10000]);
                 cartridge.write(0x0000, 0x17);
                 let mut mem = Memory::new(cartridge);
                 mem.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] = 0x1;

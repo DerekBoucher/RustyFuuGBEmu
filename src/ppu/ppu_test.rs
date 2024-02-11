@@ -1,5 +1,5 @@
+use crate::interface::mock;
 use crate::memory;
-use crate::memory::mock;
 use crate::ppu::{self, Color, SCREEN_WIDTH};
 
 #[test]

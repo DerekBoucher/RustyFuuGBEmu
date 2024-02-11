@@ -5,9 +5,8 @@
 #[cfg(test)]
 mod test;
 
-pub mod mock;
-
 use crate::cartridge;
+use crate::interface;
 use core::panic;
 use std::fmt::Debug;
 
@@ -18,7 +17,7 @@ use std::fmt::Debug;
 pub struct Memory {
     /// Cartridge data.
     /// Mapped into memory locations 0x0000 - 0x7FFF.
-    cartridge: Box<dyn cartridge::Interface>,
+    cartridge: Box<dyn interface::Cartridge>,
 
     /// Video RAM where tile data is located.
     /// Occupies memory locations 0x8000 ~ 0x9FFF.
@@ -62,13 +61,6 @@ pub struct Memory {
     /// to increment the timer register. The timer register is incremented whenever this ticker
     /// is less than or equal to 0.
     timer_tick_counter: i32,
-}
-
-pub trait Interface: Debug {
-    fn read(&self, addr: usize) -> Option<u8>;
-    fn write(&mut self, addr: usize, val: u8);
-    fn dump(&self) -> Vec<u8>;
-    fn update_timers(&mut self, cycles: u32);
 }
 
 /// Module containing important addresses for
@@ -137,9 +129,9 @@ impl Memory {
         0x50,
     ];
 
-    pub fn new(cartridge: Box<dyn cartridge::Interface>) -> Self {
+    pub fn new(cartridge: Box<dyn interface::Cartridge>) -> Self {
         Self {
-            cartridge: cartridge,
+            cartridge,
             video_ram: [0x00; 0x2000],
             work_ram0: [0x00; 0x1000],
             work_ram1: [0x00; 0x1000],
@@ -256,22 +248,10 @@ impl Memory {
 
             while self.timer_tick_counter <= 0 {
                 self.timer_tick_counter += match timer_control_register & 0x03 {
-                    0 => {
-                        log::debug!("Timer frequency set to 1024");
-                        1024
-                    }
-                    1 => {
-                        log::debug!("Timer frequency set to 16");
-                        16
-                    }
-                    2 => {
-                        log::debug!("Timer frequency set to 64");
-                        64
-                    }
-                    3 => {
-                        log::debug!("Timer frequency set to 256");
-                        256
-                    }
+                    0 => 1024,
+                    1 => 16,
+                    2 => 64,
+                    3 => 256,
                     _ => panic!("Invalid timer control register value"),
                 } as i32;
 
@@ -289,9 +269,7 @@ impl Memory {
             }
         }
     }
-}
 
-impl Interface for Memory {
     fn read(&self, addr: usize) -> Option<u8> {
         // If boot rom is enabled, the data should come from it.
         if addr < 0x100 && self.boot_rom_enabled() {
@@ -406,8 +384,30 @@ impl Interface for Memory {
     fn dump(&self) -> Vec<u8> {
         return vec![]; // TODO
     }
+}
+
+impl interface::Memory for Memory {
+    fn reset(&mut self, cartridge: Box<dyn interface::Cartridge>) {
+        *self = Memory::new(cartridge);
+    }
+
+    fn read(&self, addr: usize) -> Option<u8> {
+        return self.read(addr);
+    }
+
+    fn write(&mut self, addr: usize, val: u8) {
+        self.write(addr, val);
+    }
+
+    fn dump(&self) -> Vec<u8> {
+        return self.dump();
+    }
 
     fn update_timers(&mut self, cycles: u32) {
         self.update_timers(cycles);
+    }
+
+    fn set_post_boot_rom_state(&mut self) {
+        self.set_post_boot_rom_state();
     }
 }

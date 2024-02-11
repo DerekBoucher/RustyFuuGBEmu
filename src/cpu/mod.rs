@@ -8,9 +8,10 @@ mod opcode;
 mod opcode_ext;
 mod register;
 
+#[cfg(test)]
 mod test;
 
-use crate::memory;
+use crate::interface;
 
 #[cfg(feature = "serial_debug")]
 use memory::io_registers;
@@ -75,6 +76,20 @@ impl PartialEq for LR35902 {
     }
 }
 
+impl interface::CPU for LR35902 {
+    fn reset(&mut self) {
+        *self = LR35902::new();
+    }
+
+    fn execute_next_opcode(&mut self, memory: &mut impl interface::Memory) -> u32 {
+        return self.execute_next_opcode(memory);
+    }
+
+    fn set_post_boot_rom_state(&mut self) {
+        self.set_post_boot_rom_state();
+    }
+}
+
 impl LR35902 {
     pub fn new() -> Self {
         Self {
@@ -91,7 +106,7 @@ impl LR35902 {
         }
     }
 
-    pub fn execute_next_opcode(&mut self, memory: &mut impl memory::Interface) -> u32 {
+    pub fn execute_next_opcode(&mut self, memory: &mut impl interface::Memory) -> u32 {
         let op = match memory.read(usize::from(self.pc)) {
             Some(x) => Opcode::from(x),
             None => panic!(
@@ -298,7 +313,7 @@ impl LR35902 {
     fn compare_8_bit_memory(
         &mut self,
         target: register::ID,
-        memory: &impl memory::Interface,
+        memory: &impl interface::Memory,
         addr: usize,
     ) {
         let target_value = self.read_register(&target);
@@ -332,7 +347,7 @@ impl LR35902 {
     fn add_8_bit_memory(
         &mut self,
         target: register::ID,
-        memory: &impl memory::Interface,
+        memory: &impl interface::Memory,
         addr: usize,
         with_carry_flag: bool,
     ) {
@@ -416,7 +431,7 @@ impl LR35902 {
     fn sub_8_bit_memory(
         &mut self,
         target: register::ID,
-        memory: &impl memory::Interface,
+        memory: &impl interface::Memory,
         addr: usize,
         with_carry_flag: bool,
     ) {
@@ -480,7 +495,7 @@ impl LR35902 {
     fn and_8_bit_memory(
         &mut self,
         target: register::ID,
-        memory: &impl memory::Interface,
+        memory: &impl interface::Memory,
         addr: usize,
     ) {
         let target_value = self.read_register(&target);
@@ -531,7 +546,7 @@ impl LR35902 {
     fn xor_8_bit_memory(
         &mut self,
         target: register::ID,
-        memory: &impl memory::Interface,
+        memory: &impl interface::Memory,
         addr: usize,
     ) {
         let target_value = self.read_register(&target);
@@ -582,7 +597,7 @@ impl LR35902 {
     fn or_8_bit_memory(
         &mut self,
         target: register::ID,
-        memory: &impl memory::Interface,
+        memory: &impl interface::Memory,
         addr: usize,
     ) {
         let target_value = self.read_register(&target);
@@ -613,7 +628,7 @@ impl LR35902 {
     fn pop_stack_into_16_bit_register(
         &mut self,
         reg_id: register::ID16,
-        memory: &impl memory::Interface,
+        memory: &impl interface::Memory,
     ) {
         let lo_byte = match memory.read(usize::from(self.sp)) {
             Some(byte) => byte,
@@ -656,7 +671,7 @@ impl LR35902 {
     fn push_16bit_register_on_stack(
         &mut self,
         reg_id: register::ID16,
-        memory: &mut impl memory::Interface,
+        memory: &mut impl interface::Memory,
     ) {
         let bytes = match reg_id {
             ID16::BC => self.bc.word().to_be_bytes(),
@@ -677,7 +692,7 @@ impl LR35902 {
         memory.write(usize::from(self.sp), lo_byte);
     }
 
-    fn jump_to_imm_address(&mut self, memory: &impl memory::Interface, condition: bool) -> u32 {
+    fn jump_to_imm_address(&mut self, memory: &impl interface::Memory, condition: bool) -> u32 {
         let lo_byte = match memory.read(usize::from(self.pc)) {
             Some(byte) => byte,
             None => panic!("error occured when loading lo byte address for non-zero jump"),
@@ -701,7 +716,7 @@ impl LR35902 {
         return 12;
     }
 
-    fn call_to_imm_address(&mut self, memory: &mut impl memory::Interface, condition: bool) -> u32 {
+    fn call_to_imm_address(&mut self, memory: &mut impl interface::Memory, condition: bool) -> u32 {
         let lo_byte = match memory.read(usize::from(self.pc)) {
             Some(byte) => byte,
             None => panic!("error occured when loading lo byte address for non-zero jump"),
@@ -727,7 +742,7 @@ impl LR35902 {
 
     fn return_from_call_conditional(
         &mut self,
-        memory: &impl memory::Interface,
+        memory: &impl interface::Memory,
         condition: bool,
     ) -> u32 {
         if condition {
@@ -752,7 +767,7 @@ impl LR35902 {
         return 8;
     }
 
-    fn return_from_call(&mut self, memory: &impl memory::Interface) -> u32 {
+    fn return_from_call(&mut self, memory: &impl interface::Memory) -> u32 {
         self.pop_stack_into_16_bit_register(register::ID16::PC, memory);
 
         return 16;
@@ -774,7 +789,7 @@ impl LR35902 {
         return 4;
     }
 
-    fn rotate_8bit_memory_left(&mut self, memory: &mut impl memory::Interface, addr: usize) -> u32 {
+    fn rotate_8bit_memory_left(&mut self, memory: &mut impl interface::Memory, addr: usize) -> u32 {
         let mut byte = match memory.read(addr) {
             Some(byte) => byte,
             None => panic!("TODO"),
@@ -811,7 +826,7 @@ impl LR35902 {
 
     fn rotate_8bit_memory_right(
         &mut self,
-        memory: &mut impl memory::Interface,
+        memory: &mut impl interface::Memory,
         addr: usize,
     ) -> u32 {
         let mut byte = match memory.read(addr) {
@@ -905,7 +920,7 @@ impl LR35902 {
 
     fn rotate_8bit_memory_left_carry(
         &mut self,
-        memory: &mut impl memory::Interface,
+        memory: &mut impl interface::Memory,
         addr: usize,
     ) -> u32 {
         let mut byte = match memory.read(addr) {
@@ -958,7 +973,7 @@ impl LR35902 {
 
     fn rotate_8bit_memory_right_carry(
         &mut self,
-        memory: &mut impl memory::Interface,
+        memory: &mut impl interface::Memory,
         addr: usize,
     ) -> u32 {
         let mut byte = match memory.read(addr) {
@@ -1013,7 +1028,7 @@ impl LR35902 {
 
     fn shift_left_8bit_memory_into_carry(
         &mut self,
-        memory: &mut impl memory::Interface,
+        memory: &mut impl interface::Memory,
         addr: usize,
     ) -> u32 {
         let mut byte = match memory.read(addr) {
@@ -1070,7 +1085,7 @@ impl LR35902 {
 
     fn shift_right_8bit_memory_into_carry(
         &mut self,
-        memory: &mut impl memory::Interface,
+        memory: &mut impl interface::Memory,
         addr: usize,
     ) -> u32 {
         let mut byte = match memory.read(addr) {
@@ -1118,7 +1133,7 @@ impl LR35902 {
         return 4;
     }
 
-    fn swap_8bit_memory(&mut self, memory: &mut impl memory::Interface, addr: usize) -> u32 {
+    fn swap_8bit_memory(&mut self, memory: &mut impl interface::Memory, addr: usize) -> u32 {
         let current = match memory.read(addr) {
             Some(byte) => byte,
             None => panic!("TODO"),
@@ -1166,7 +1181,7 @@ impl LR35902 {
         return 4;
     }
 
-    fn shift_right_8bit_memory(&mut self, memory: &mut impl memory::Interface, addr: usize) -> u32 {
+    fn shift_right_8bit_memory(&mut self, memory: &mut impl interface::Memory, addr: usize) -> u32 {
         let current = match memory.read(addr) {
             Some(byte) => byte,
             None => panic!("TODO"),
@@ -1211,7 +1226,7 @@ impl LR35902 {
 
     fn test_bit_memory(
         &mut self,
-        memory: &mut impl memory::Interface,
+        memory: &mut impl interface::Memory,
         addr: usize,
         bit_position: u8,
     ) -> u32 {
@@ -1241,7 +1256,7 @@ impl LR35902 {
 
     fn reset_bit_memory(
         &mut self,
-        memory: &mut impl memory::Interface,
+        memory: &mut impl interface::Memory,
         addr: usize,
         bit_position: u8,
     ) -> u32 {
@@ -1264,7 +1279,7 @@ impl LR35902 {
 
     fn set_bit_memory(
         &mut self,
-        memory: &mut impl memory::Interface,
+        memory: &mut impl interface::Memory,
         addr: usize,
         bit_position: u8,
     ) -> u32 {
@@ -1279,7 +1294,7 @@ impl LR35902 {
     }
 
     #[cfg(feature = "serial_debug")]
-    fn serial_debug_output(memory: &mut impl memory::Interface) {
+    fn serial_debug_output(memory: &mut impl interface::Memory) {
         match memory.read(io_registers::SERIAL_TRANSFER_CONTROL_ADDR) {
             Some(byte) => {
                 if byte == 0x81 {
