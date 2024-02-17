@@ -61,6 +61,14 @@ const CARRY_FLAG_MASK: u8 = 1 << 4;
 
 pub const CPU_CYCLES_PER_FRAME: u32 = 4194304 / 60;
 
+const V_BLANK_INTERRUPT_MASK: u8 = 1 << 0;
+const LCDC_INTERRUPT_MASK: u8 = 1 << 1;
+const TIMER_OVERFLOW_INTERRUPT_MASK: u8 = 1 << 2;
+const SERIAL_IO_INTERRUPT_MASK: u8 = 1 << 3;
+const CONTROLLER_IO_INTERRUPT_MASK: u8 = 1 << 4;
+
+const V_BLANK_INTERRUPT_VECTOR: u16 = 0x0040;
+
 impl PartialEq for LR35902 {
     fn eq(&self, other: &Self) -> bool {
         self.pc == other.pc
@@ -130,6 +138,25 @@ impl LR35902 {
         self.hl.set_word(0x014D);
         self.pc = 0x0100;
         self.sp = 0xFFFE;
+    }
+
+    pub fn process_interrupts(&mut self, memory: &mut impl interface::Memory) {
+        if !self.interrupt_master_enable {
+            return;
+        }
+
+        let interrupt_enable_register = memory.read(INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
+        let interrupt_flag_register = memory.read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
+
+        if (interrupt_flag_register & V_BLANK_INTERRUPT_MASK > 0)
+            && (interrupt_enable_register & V_BLANK_INTERRUPT_MASK > 0)
+        {
+            self.interrupt_master_enable = false;
+            self.push_16bit_register_on_stack(ID16::PC, memory);
+            self.pc = V_BLANK_INTERRUPT_VECTOR;
+            memory.update_timers(8);
+            return;
+        }
     }
 
     fn reset_half_carry_flag(&mut self) {
