@@ -68,6 +68,7 @@ const SERIAL_IO_INTERRUPT_MASK: u8 = 1 << 3;
 const CONTROLLER_IO_INTERRUPT_MASK: u8 = 1 << 4;
 
 const V_BLANK_INTERRUPT_VECTOR: u16 = 0x0040;
+const LCDC_INTERRUPT_VECTOR: u16 = 0x0048;
 
 impl PartialEq for LR35902 {
     fn eq(&self, other: &Self) -> bool {
@@ -154,6 +155,16 @@ impl LR35902 {
             self.interrupt_master_enable = false;
             self.push_16bit_register_on_stack(ID16::PC, memory);
             self.pc = V_BLANK_INTERRUPT_VECTOR;
+            memory.update_timers(8);
+            return;
+        }
+
+        if (interrupt_flag_register & LCDC_INTERRUPT_MASK > 0)
+            && (interrupt_enable_register & LCDC_INTERRUPT_MASK > 0)
+        {
+            self.interrupt_master_enable = false;
+            self.push_16bit_register_on_stack(ID16::PC, memory);
+            self.pc = LCDC_INTERRUPT_VECTOR;
             memory.update_timers(8);
             return;
         }
