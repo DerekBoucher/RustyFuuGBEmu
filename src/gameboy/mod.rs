@@ -1,6 +1,3 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
-
 use crate::cartridge;
 use crate::cpu::CPU_CYCLES_PER_FRAME;
 use crate::interface;
@@ -10,7 +7,7 @@ use crossbeam::select;
 mod orchestrator;
 
 pub struct Gameboy {
-    require_render: bool,
+    // require_render: bool,
     cartridge_inserted: bool,
 }
 
@@ -25,7 +22,7 @@ pub struct Orchestrator {
 impl Gameboy {
     pub fn new() -> Self {
         return Self {
-            require_render: false,
+            // require_render: false,
             cartridge_inserted: false,
         };
     }
@@ -143,7 +140,6 @@ impl Gameboy {
             }
             Err(err) => {
                 if err == channel::TryRecvError::Disconnected {
-                    log::error!("gb thread cannot pause, channel disconnected unexpectedly");
                     panic!("gb thread cannot pause, channel disconnected unexpectedly");
                 }
             }
@@ -160,7 +156,6 @@ impl Gameboy {
             }
             Err(err) => {
                 if err == channel::TryRecvError::Disconnected {
-                    log::error!("gb thread channel disconnected unexpectedly");
                     panic!("gb thread channel disconnected unexpectedly");
                 }
             }
@@ -176,7 +171,6 @@ impl Gameboy {
             }
             Err(err) => {
                 if err == channel::TryRecvError::Disconnected {
-                    log::error!("gb thread channel disconnected unexpectedly");
                     panic!("gb thread channel disconnected unexpectedly");
                 }
             }

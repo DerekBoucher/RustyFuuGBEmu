@@ -1063,7 +1063,7 @@ fn invalid_opcode() -> u32 {
     panic!("TODO")
 }
 
-fn execute_0x00(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x00(_: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     4
 }
 

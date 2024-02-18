@@ -1,6 +1,3 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
-
 //! Module containing all logic relevant to the emulation of the original
 //! Gameboy's CPU (Sharp LR35902)
 mod bit;
