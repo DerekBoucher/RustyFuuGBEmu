@@ -39,4 +39,5 @@ pub trait CPU: Debug + Send {
     fn reset(&mut self);
     fn execute_next_opcode(&mut self, memory: &mut impl Memory) -> u32;
     fn set_post_boot_rom_state(&mut self);
+    fn process_interrupts(&mut self, memory: &mut impl Memory);
 }

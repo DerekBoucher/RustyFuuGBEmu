@@ -42,6 +42,8 @@ impl NoMBC {
     }
 
     fn read(&self, addr: usize) -> Option<u8> {
+        log::trace!("NoMBC read at address: {:#X}", addr);
+
         if addr < 0x8000 {
             let byte = match self.data.get(addr) {
                 Some(byte) => *byte,
@@ -59,6 +61,8 @@ impl NoMBC {
     }
 
     fn write(&mut self, addr: usize, val: u8) {
+        log::trace!("NoMBC write at address: {:#X}", addr);
+
         if addr >= 0xA000 && addr < 0xC000 {
             self.ram_bank[addr - 0xA000] = val;
         }

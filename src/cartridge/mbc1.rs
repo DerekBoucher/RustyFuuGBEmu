@@ -51,6 +51,7 @@ impl interface::Cartridge for MBC1 {
     }
 
     fn read(&self, addr: usize) -> Option<u8> {
+        log::trace!("MBC1 read at address: {:#X}", addr);
         if addr < 0x4000 {
             // If the ROM size is greater than 1MiB, then the cartridge
             // might be using the RAM select register's 2-bits as an extension
@@ -107,6 +108,7 @@ impl interface::Cartridge for MBC1 {
     }
 
     fn write(&mut self, addr: usize, val: u8) {
+        log::trace!("MBC1 write at address: {:#X} with value: {:#X}", addr, val);
         if addr < 0x2000 {
             if val & 0x0F == 0x0A {
                 self.ram_enabled = true;

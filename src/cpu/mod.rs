@@ -14,7 +14,7 @@ mod test;
 use crate::interface;
 
 #[cfg(feature = "serial_debug")]
-use memory::io_registers;
+use crate::memory::io_registers;
 
 use opcode::Opcode;
 use register::{ID, ID16};
@@ -70,6 +70,8 @@ const CONTROLLER_IO_INTERRUPT_MASK: u8 = 1 << 4;
 const V_BLANK_INTERRUPT_VECTOR: u16 = 0x0040;
 const LCDC_INTERRUPT_VECTOR: u16 = 0x0048;
 const TIMER_OVERFLOW_INTERRUPT_VECTOR: u16 = 0x0050;
+const SERIAL_IO_INTERRUPT_VECTOR: u16 = 0x0058;
+const CONTROLLER_IO_INTERRUPT_VECTOR: u16 = 0x0060;
 
 impl PartialEq for LR35902 {
     fn eq(&self, other: &Self) -> bool {
@@ -97,6 +99,10 @@ impl interface::CPU for LR35902 {
 
     fn set_post_boot_rom_state(&mut self) {
         self.set_post_boot_rom_state();
+    }
+
+    fn process_interrupts(&mut self, memory: &mut impl interface::Memory) {
+        self.process_interrupts(memory);
     }
 }
 
@@ -143,7 +149,7 @@ impl LR35902 {
     }
 
     pub fn process_interrupts(&mut self, memory: &mut impl interface::Memory) {
-        if !self.interrupt_master_enable {
+        if !self.interrupt_master_enable || self.halted {
             return;
         }
 
@@ -176,6 +182,26 @@ impl LR35902 {
             self.interrupt_master_enable = false;
             self.push_16bit_register_on_stack(ID16::PC, memory);
             self.pc = TIMER_OVERFLOW_INTERRUPT_VECTOR;
+            memory.update_timers(8);
+            return;
+        }
+
+        if (interrupt_flag_register & SERIAL_IO_INTERRUPT_MASK > 0)
+            && (interrupt_enable_register & SERIAL_IO_INTERRUPT_MASK > 0)
+        {
+            self.interrupt_master_enable = false;
+            self.push_16bit_register_on_stack(ID16::PC, memory);
+            self.pc = SERIAL_IO_INTERRUPT_VECTOR;
+            memory.update_timers(8);
+            return;
+        }
+
+        if (interrupt_flag_register & CONTROLLER_IO_INTERRUPT_MASK > 0)
+            && (interrupt_enable_register & CONTROLLER_IO_INTERRUPT_MASK > 0)
+        {
+            self.interrupt_master_enable = false;
+            self.push_16bit_register_on_stack(ID16::PC, memory);
+            self.pc = CONTROLLER_IO_INTERRUPT_VECTOR;
             memory.update_timers(8);
             return;
         }

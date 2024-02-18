@@ -237,7 +237,7 @@ impl Memory {
             let incremented_div_timer =
                 self.io_registers[io_registers::TIMER_DIV_ADDR - 0xFF00].wrapping_add(1);
             self.io_registers[io_registers::TIMER_DIV_ADDR - 0xFF00] = incremented_div_timer;
-            log::debug!(
+            log::trace!(
                 "Divider register incremented to {:X}",
                 incremented_div_timer
             );
@@ -260,7 +260,7 @@ impl Memory {
                     self.io_registers[io_registers::TIMER_COUNTER_ADDR - 0xFF00] =
                         self.io_registers[io_registers::TIMER_MOD_ADDR - 0xFF00];
 
-                    log::debug!("Timer interrupt requested");
+                    log::trace!("Timer interrupt requested");
                     break;
                 }
 
@@ -271,6 +271,7 @@ impl Memory {
     }
 
     fn read(&self, addr: usize) -> Option<u8> {
+        log::trace!("Reading from memory address {:X}", addr);
         // If boot rom is enabled, the data should come from it.
         if addr < 0x100 && self.boot_rom_enabled() {
             return Some(Memory::BOOT_ROM[addr].clone());
@@ -330,6 +331,7 @@ impl Memory {
     }
 
     fn write(&mut self, addr: usize, val: u8) {
+        log::trace!("Writing to memory address {:X} value {:X}", addr, val);
         // Cartridge ROM
         if addr < 0x8000 {
             self.cartridge.write(addr, val)
