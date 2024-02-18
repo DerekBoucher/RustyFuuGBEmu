@@ -1640,7 +1640,7 @@ fn process_interrupts() {
                 let memory = mock::Memory::new(data);
                 return (cpu, memory);
             },
-            assert: |cpu, memory| {
+            assert: |cpu, _| {
                 assert_eq!(cpu.pc, 0x0100);
                 assert_eq!(cpu.sp, 0xFFFE);
                 assert!(!cpu.interrupt_master_enable);
@@ -1657,7 +1657,7 @@ fn process_interrupts() {
                 let memory = mock::Memory::new(data);
                 return (cpu, memory);
             },
-            assert: |cpu, memory| {
+            assert: |cpu, _| {
                 assert_eq!(cpu.pc, 0x0100);
                 assert_eq!(cpu.sp, 0xFFFE);
                 assert!(cpu.interrupt_master_enable);
@@ -1674,7 +1674,7 @@ fn process_interrupts() {
                 let memory = mock::Memory::new(data);
                 return (cpu, memory);
             },
-            assert: |cpu, memory| {
+            assert: |cpu, _| {
                 assert_eq!(cpu.pc, 0x0100);
                 assert_eq!(cpu.sp, 0xFFFE);
                 assert!(cpu.interrupt_master_enable);
@@ -1711,7 +1711,7 @@ fn process_interrupts() {
                 let memory = mock::Memory::new(data);
                 return (cpu, memory);
             },
-            assert: |cpu, memory| {
+            assert: |cpu, _| {
                 assert_eq!(cpu.pc, 0x0100);
                 assert_eq!(cpu.sp, 0xFFFE);
                 assert!(cpu.interrupt_master_enable);
@@ -1748,7 +1748,7 @@ fn process_interrupts() {
                 let memory = mock::Memory::new(data);
                 return (cpu, memory);
             },
-            assert: |cpu, memory| {
+            assert: |cpu, _| {
                 assert_eq!(cpu.pc, 0x0100);
                 assert_eq!(cpu.sp, 0xFFFE);
                 assert!(cpu.interrupt_master_enable);
@@ -1785,7 +1785,7 @@ fn process_interrupts() {
                 let memory = mock::Memory::new(data);
                 return (cpu, memory);
             },
-            assert: |cpu, memory| {
+            assert: |cpu, _| {
                 assert_eq!(cpu.pc, 0x0100);
                 assert_eq!(cpu.sp, 0xFFFE);
                 assert!(cpu.interrupt_master_enable);
@@ -1824,7 +1824,7 @@ fn process_interrupts() {
                 let memory = mock::Memory::new(data);
                 return (cpu, memory);
             },
-            assert: |cpu, memory| {
+            assert: |cpu, _| {
                 assert_eq!(cpu.pc, 0x0100);
                 assert_eq!(cpu.sp, 0xFFFE);
                 assert!(cpu.interrupt_master_enable);
@@ -1863,7 +1863,7 @@ fn process_interrupts() {
                 let memory = mock::Memory::new(data);
                 return (cpu, memory);
             },
-            assert: |cpu, memory| {
+            assert: |cpu, _| {
                 assert_eq!(cpu.pc, 0x0100);
                 assert_eq!(cpu.sp, 0xFFFE);
                 assert!(cpu.interrupt_master_enable);
@@ -1873,7 +1873,7 @@ fn process_interrupts() {
     ];
 
     for (i, tc) in test_cases.iter().enumerate() {
-        println!("{}", tc.description);
+        println!("Testcase #{}: {}", i, tc.description);
         let (mut cpu, mut memory) = (tc.setup)();
         cpu.process_interrupts(&mut memory);
         (tc.assert)(&cpu, &memory);

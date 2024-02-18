@@ -1,6 +1,3 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
-
 mod mbc1;
 mod no_mbc;
 mod null;

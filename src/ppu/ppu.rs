@@ -13,11 +13,10 @@ impl Ppu {
     pub fn new() -> Self {
         Ppu {
             pixels: [[Color::White; SCREEN_WIDTH]; SCREEN_HEIGHT],
-            draw_counter: 0,
         }
     }
 
-    pub fn step(&mut self, cycles: u32, memory: &mut impl interface::Memory) {}
+    pub fn step(&mut self, _cycles: u32, _memory: &mut impl interface::Memory) {}
 
     fn set_lcdc_status(&mut self, memory: &mut impl interface::Memory) {
         let lcdc = match memory.read(io_registers::LCD_CONTROL_ADDR) {

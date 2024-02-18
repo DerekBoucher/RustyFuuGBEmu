@@ -1,6 +1,3 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
-
 #[path = "memory_test.rs"]
 #[cfg(test)]
 mod test;
