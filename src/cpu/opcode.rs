@@ -9,6 +9,8 @@ use crate::cpu::LR35902;
 use crate::cpu::opcode_ext::*;
 use crate::interface;
 
+use super::bit::two_compliment_byte;
+
 #[allow(non_camel_case_types)]
 #[repr(u8)]
 pub enum Opcode {
@@ -2988,21 +2990,19 @@ fn execute_0xe8(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
 
     // Negative number
     if bit::test_most_significant_bit(added_byte) {
-        if bit::is_half_borrow(lo_sp, added_byte, false) {
+        if bit::is_half_carry(lo_sp, added_byte, false) {
             cpu.set_half_carry_flag();
         } else {
             cpu.reset_half_carry_flag();
         }
 
-        if bit::is_borrow(lo_sp, added_byte, false) {
+        if bit::is_carry(lo_sp, added_byte, false) {
             cpu.set_carry_flag();
         } else {
             cpu.reset_carry_flag();
         }
 
-        let masked_val: u8 = added_byte & 0x7F;
-
-        cpu.sp = cpu.sp.wrapping_sub(masked_val.into());
+        cpu.sp = cpu.sp.wrapping_sub(two_compliment_byte(added_byte).into());
     } else {
         if bit::is_half_carry(lo_sp, added_byte, false) {
             cpu.set_half_carry_flag();

@@ -8273,9 +8273,9 @@ fn _0xe8() {
             },
             expected_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
-                cpu.sp = 0x0000;
+                cpu.sp = 0xFF9E;
                 cpu.pc = 0x0002;
-                cpu.set_carry_flag();
+                cpu.set_half_carry_flag();
                 let memory = mock::Memory::new(vec![Opcode::AddSigned8ImmIntoSP_0xE8.into(), 0x8F]);
                 return (cpu, memory);
             },
