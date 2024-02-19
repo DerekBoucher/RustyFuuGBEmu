@@ -29,9 +29,7 @@ pub trait Cartridge: Any + Debug + Send {
 /// the implementations that prepare pixel data when a new frame is to be drawn.
 pub trait PPU: Debug + Send {
     fn reset(&mut self);
-    fn step(&mut self, cycles: u32, memory: &mut impl Memory);
-    fn set_lcdc_status(&mut self, memory: &mut impl Memory);
-    fn render_tiles(&mut self, memory: &impl Memory);
+    fn update_graphics(&mut self, cycles: u32, memory: &mut impl Memory);
 }
 
 /// CPU trait that lets implementors of the LR35902 Sharp processing unit expose the necessary API
