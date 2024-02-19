@@ -124,7 +124,7 @@ impl Gameboy {
 
                 let cycles = cpu.execute_next_opcode(&mut memory);
                 memory.update_timers(cycles);
-
+                ppu.update_graphics(cycles, &mut memory, &mut cpu);
                 cpu.process_interrupts(&mut memory);
             }
         }

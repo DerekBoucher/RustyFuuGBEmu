@@ -29,7 +29,7 @@ pub trait Cartridge: Any + Debug + Send {
 /// the implementations that prepare pixel data when a new frame is to be drawn.
 pub trait PPU: Debug + Send {
     fn reset(&mut self);
-    fn update_graphics(&mut self, cycles: u32, memory: &mut impl Memory);
+    fn update_graphics(&mut self, cycles: u32, memory: &mut impl Memory, cpu: &mut impl CPU);
 }
 
 /// CPU trait that lets implementors of the LR35902 Sharp processing unit expose the necessary API
@@ -38,4 +38,13 @@ pub trait CPU: Debug + Send {
     fn execute_next_opcode(&mut self, memory: &mut impl Memory) -> u32;
     fn set_post_boot_rom_state(&mut self);
     fn process_interrupts(&mut self, memory: &mut impl Memory);
+    fn request_interrupt(&mut self, memory: &mut impl Memory, interrupt: Interrupt);
+}
+
+pub enum Interrupt {
+    VBlank,
+    LCDC,
+    Timer,
+    Serial,
+    Joypad,
 }

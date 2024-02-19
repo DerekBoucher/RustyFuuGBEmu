@@ -1,5 +1,5 @@
 use crate::{
-    interface,
+    interface::{self, Interrupt},
     memory::{self, io_registers},
     ppu::stat,
     ppu::{stat::StatUpdater, *},
@@ -20,7 +20,12 @@ impl Ppu {
         }
     }
 
-    fn update_graphics(&mut self, _cycles: u32, memory: &mut impl interface::Memory) {
+    fn update_graphics(
+        &mut self,
+        cycles: u32,
+        memory: &mut impl interface::Memory,
+        cpu: &mut impl interface::CPU,
+    ) {
         let lcdc = match memory.read(io_registers::LCD_CONTROL_ADDR) {
             Some(value) => value,
             None => {
@@ -36,23 +41,6 @@ impl Ppu {
                 return;
             }
         };
-
-        self.set_lcdc_status(lcdc, stat, memory);
-    }
-
-    fn set_lcdc_status(&mut self, lcdc: u8, stat: u8, memory: &mut impl interface::Memory) {
-        if lcdc & LCD_ENABLE_MASK == 0 {
-            self.scanline_counter = stat::MAX_SCANLINE_COUNT;
-
-            // Reset the LY register
-            memory.write(io_registers::LCD_LY_ADDR, 0x00);
-
-            // Reset the STAT register to 1111 1100
-            memory.write(io_registers::LCD_STAT_ADDR, stat & !stat::MODE_MASK);
-
-            // Exit pre-emptively, since LCD is disabled
-            return;
-        }
 
         let current_scanline = match memory.read(io_registers::LCD_LY_ADDR) {
             Some(value) => value,
@@ -78,6 +66,60 @@ impl Ppu {
             }
         };
 
+        self.set_lcdc_status(lcdc, stat, current_scanline, ly, lyc, memory, cpu);
+
+        if lcdc & LCD_ENABLE_MASK == 0 {
+            return;
+        }
+
+        self.scanline_counter -= cycles as i32;
+
+        if self.scanline_counter <= 0 {
+            self.scanline_counter += stat::MAX_SCANLINE_COUNT;
+
+            if current_scanline < 144 {
+                // TODO: Render tiles and sprites
+
+                memory.write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
+                return;
+            }
+
+            // V-Blank period
+            if current_scanline >= 144 && current_scanline < 154 {
+                cpu.request_interrupt(memory, Interrupt::VBlank);
+                memory.write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
+                return;
+            }
+
+            // Else, this means we've been through an entire frame cycle,
+            // reset the LY register to 0.
+            memory.write(io_registers::LCD_LY_ADDR, 0x00);
+        }
+    }
+
+    fn set_lcdc_status(
+        &mut self,
+        lcdc: u8,
+        stat: u8,
+        current_scanline: u8,
+        ly: u8,
+        lyc: u8,
+        memory: &mut impl interface::Memory,
+        cpu: &mut impl interface::CPU,
+    ) {
+        if lcdc & LCD_ENABLE_MASK == 0 {
+            self.scanline_counter = stat::MAX_SCANLINE_COUNT;
+
+            // Reset the LY register
+            memory.write(io_registers::LCD_LY_ADDR, 0x00);
+
+            // Reset the STAT register to 1111 1100
+            memory.write(io_registers::LCD_STAT_ADDR, stat & !stat::MODE_MASK);
+
+            // Exit pre-emptively, since LCD is disabled
+            return;
+        }
+
         let (new_stat, requires_interrupt) = StatUpdater::new(stat)
             .process_vblank(current_scanline)
             .process_oam_search(self.scanline_counter)
@@ -88,7 +130,7 @@ impl Ppu {
 
         memory.write(io_registers::LCD_STAT_ADDR, new_stat);
         if requires_interrupt {
-            // TODO: Implement the interrupt logic
+            cpu.request_interrupt(memory, Interrupt::LCDC);
         }
     }
 
@@ -220,8 +262,13 @@ impl interface::PPU for Ppu {
         *self = Ppu::new();
     }
 
-    fn update_graphics(&mut self, cycles: u32, memory: &mut impl interface::Memory) {
-        self.update_graphics(cycles, memory)
+    fn update_graphics(
+        &mut self,
+        cycles: u32,
+        memory: &mut impl interface::Memory,
+        cpu: &mut impl interface::CPU,
+    ) {
+        self.update_graphics(cycles, memory, cpu)
     }
 }
 

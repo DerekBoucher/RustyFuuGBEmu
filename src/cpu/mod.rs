@@ -101,6 +101,14 @@ impl interface::CPU for LR35902 {
     fn process_interrupts(&mut self, memory: &mut impl interface::Memory) {
         self.process_interrupts(memory);
     }
+
+    fn request_interrupt(
+        &mut self,
+        memory: &mut impl interface::Memory,
+        interrupt: interface::Interrupt,
+    ) {
+        self.request_interrupt(memory, interrupt);
+    }
 }
 
 impl LR35902 {
@@ -143,6 +151,47 @@ impl LR35902 {
         self.hl.set_word(0x014D);
         self.pc = 0x0100;
         self.sp = 0xFFFE;
+    }
+
+    pub fn request_interrupt(
+        &mut self,
+        memory: &mut impl interface::Memory,
+        interrupt: interface::Interrupt,
+    ) {
+        let interrupt_flag_register = memory.read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
+
+        match interrupt {
+            interface::Interrupt::VBlank => {
+                memory.write(
+                    INTERRUPT_FLAG_REGISTER_ADDR,
+                    interrupt_flag_register | V_BLANK_INTERRUPT_MASK,
+                );
+            }
+            interface::Interrupt::LCDC => {
+                memory.write(
+                    INTERRUPT_FLAG_REGISTER_ADDR,
+                    interrupt_flag_register | LCDC_INTERRUPT_MASK,
+                );
+            }
+            interface::Interrupt::Timer => {
+                memory.write(
+                    INTERRUPT_FLAG_REGISTER_ADDR,
+                    interrupt_flag_register | TIMER_OVERFLOW_INTERRUPT_MASK,
+                );
+            }
+            interface::Interrupt::Serial => {
+                memory.write(
+                    INTERRUPT_FLAG_REGISTER_ADDR,
+                    interrupt_flag_register | SERIAL_IO_INTERRUPT_MASK,
+                );
+            }
+            interface::Interrupt::Joypad => {
+                memory.write(
+                    INTERRUPT_FLAG_REGISTER_ADDR,
+                    interrupt_flag_register | CONTROLLER_IO_INTERRUPT_MASK,
+                );
+            }
+        }
     }
 
     pub fn process_interrupts(&mut self, memory: &mut impl interface::Memory) {
