@@ -8623,9 +8623,9 @@ fn _0xf8() {
             expected_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.sp = 0x001F;
-                cpu.hl.set_word(0x0010);
+                cpu.hl.set_word(0xFFAE);
                 cpu.pc = 0x0002;
-                cpu.set_carry_flag();
+                cpu.set_half_carry_flag();
                 let memory =
                     mock::Memory::new(vec![Opcode::LoadSPSigned8ImmIntoHL_0xF8.into(), 0x8F]);
                 return (cpu, memory);
