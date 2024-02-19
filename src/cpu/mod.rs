@@ -779,7 +779,7 @@ impl LR35902 {
                 self.hl.hi = hi_byte;
             }
             ID16::AF => {
-                self.af.lo = lo_byte;
+                self.af.lo = 0xF0 & lo_byte;
                 self.af.hi = hi_byte;
             }
             ID16::SP => panic!("not supported"),

@@ -8461,7 +8461,7 @@ fn _0xf1() {
             let memory = mock::Memory::new(vec![Opcode::PopAF_0xF1.into(), 0xFF, 0x1F]);
             cpu.pc = 0x0001;
             cpu.sp = 0x0003;
-            cpu.af.lo = 0xFF;
+            cpu.af.lo = 0xF0;
             cpu.af.hi = 0x1F;
 
             return (cpu, memory);
