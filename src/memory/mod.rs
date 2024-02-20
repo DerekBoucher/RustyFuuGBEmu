@@ -4,7 +4,6 @@ mod test;
 
 use crate::cartridge;
 use crate::interface;
-use core::panic;
 use std::fmt::Debug;
 
 /// Struct emulating the DMG Gameboy's memory behaviour.
@@ -48,16 +47,6 @@ pub struct Memory {
     /// Master interrupt enable register.
     /// Occupies a single byte of memory at location 0xFFFF.
     interrupt_enable_register: u8,
-
-    /// Counter used to keep track of when the divider register timer
-    /// should be incremented. The divider register is incremented whenever this
-    /// counter reaches 256.
-    divider_register_tick_counter: u32,
-
-    /// Similar to the divider register tick counter, this counter is used to determine when
-    /// to increment the timer register. The timer register is incremented whenever this ticker
-    /// is less than or equal to 0.
-    timer_tick_counter: i32,
 }
 
 /// Module containing important addresses for
@@ -137,8 +126,6 @@ impl Memory {
             io_registers: [0x00; 0x80],
             hi_ram: [0x00; 0x7F],
             interrupt_enable_register: 0x00,
-            divider_register_tick_counter: 0,
-            timer_tick_counter: 0,
         }
     }
 
@@ -153,8 +140,6 @@ impl Memory {
             io_registers: [0x00; 0x80],
             hi_ram: [0x00; 0x7F],
             interrupt_enable_register: 0x00,
-            divider_register_tick_counter: 0,
-            timer_tick_counter: 0,
         }
     }
 
@@ -223,48 +208,6 @@ impl Memory {
         self.io_registers[0xFF6B - offset] = 0xFF;
         self.io_registers[0xFF70 - offset] = 0xFF;
         self.io_registers[0xFFFF - offset] = 0x00;
-    }
-
-    pub fn update_timers(&mut self, cycles: u32) {
-        let timer_control_register = self.io_registers[io_registers::TIMER_CTRL_ADDR - 0xFF00];
-
-        self.divider_register_tick_counter += cycles;
-        if self.divider_register_tick_counter >= 256 {
-            self.divider_register_tick_counter -= 256;
-            let incremented_div_timer =
-                self.io_registers[io_registers::TIMER_DIV_ADDR - 0xFF00].wrapping_add(1);
-            self.io_registers[io_registers::TIMER_DIV_ADDR - 0xFF00] = incremented_div_timer;
-            log::trace!(
-                "Divider register incremented to {:X}",
-                incremented_div_timer
-            );
-        }
-
-        if timer_control_register & (1 << 2) > 0 {
-            self.timer_tick_counter -= cycles as i32;
-
-            while self.timer_tick_counter <= 0 {
-                self.timer_tick_counter += match timer_control_register & 0x03 {
-                    0 => 1024,
-                    1 => 16,
-                    2 => 64,
-                    3 => 256,
-                    _ => panic!("Invalid timer control register value"),
-                } as i32;
-
-                let timer_register = self.io_registers[io_registers::TIMER_COUNTER_ADDR - 0xFF00];
-                if timer_register == 0xFF {
-                    self.io_registers[io_registers::TIMER_COUNTER_ADDR - 0xFF00] =
-                        self.io_registers[io_registers::TIMER_MOD_ADDR - 0xFF00];
-
-                    log::trace!("Timer interrupt requested");
-                    break;
-                }
-
-                self.io_registers[io_registers::TIMER_COUNTER_ADDR - 0xFF00] =
-                    timer_register.wrapping_add(1);
-            }
-        }
     }
 
     fn read(&self, addr: usize) -> Option<u8> {
@@ -400,10 +343,6 @@ impl interface::Memory for Memory {
 
     fn dump(&self) -> Vec<u8> {
         return self.dump();
-    }
-
-    fn update_timers(&mut self, cycles: u32) {
-        self.update_timers(cycles);
     }
 
     fn set_post_boot_rom_state(&mut self) {

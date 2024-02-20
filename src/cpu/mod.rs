@@ -98,8 +98,12 @@ impl interface::CPU for LR35902 {
         self.set_post_boot_rom_state();
     }
 
-    fn process_interrupts(&mut self, memory: &mut impl interface::Memory) {
-        self.process_interrupts(memory);
+    fn process_interrupts(
+        &mut self,
+        memory: &mut impl interface::Memory,
+        timers: &mut impl interface::Timers,
+    ) {
+        self.process_interrupts(memory, timers);
     }
 
     fn request_interrupt(
@@ -194,7 +198,11 @@ impl LR35902 {
         }
     }
 
-    pub fn process_interrupts(&mut self, memory: &mut impl interface::Memory) {
+    pub fn process_interrupts(
+        &mut self,
+        memory: &mut impl interface::Memory,
+        timers: &mut impl interface::Timers,
+    ) {
         if !self.interrupt_master_enable || self.halted {
             return;
         }
@@ -208,7 +216,7 @@ impl LR35902 {
             self.interrupt_master_enable = false;
             self.push_16bit_register_on_stack(ID16::PC, memory);
             self.pc = V_BLANK_INTERRUPT_VECTOR;
-            memory.update_timers(8);
+            timers.update(8, memory, self);
             return;
         }
 
@@ -218,7 +226,7 @@ impl LR35902 {
             self.interrupt_master_enable = false;
             self.push_16bit_register_on_stack(ID16::PC, memory);
             self.pc = LCDC_INTERRUPT_VECTOR;
-            memory.update_timers(8);
+            timers.update(8, memory, self);
             return;
         }
 
@@ -228,7 +236,7 @@ impl LR35902 {
             self.interrupt_master_enable = false;
             self.push_16bit_register_on_stack(ID16::PC, memory);
             self.pc = TIMER_OVERFLOW_INTERRUPT_VECTOR;
-            memory.update_timers(8);
+            timers.update(8, memory, self);
             return;
         }
 
@@ -238,7 +246,7 @@ impl LR35902 {
             self.interrupt_master_enable = false;
             self.push_16bit_register_on_stack(ID16::PC, memory);
             self.pc = SERIAL_IO_INTERRUPT_VECTOR;
-            memory.update_timers(8);
+            timers.update(8, memory, self);
             return;
         }
 
@@ -248,7 +256,7 @@ impl LR35902 {
             self.interrupt_master_enable = false;
             self.push_16bit_register_on_stack(ID16::PC, memory);
             self.pc = CONTROLLER_IO_INTERRUPT_VECTOR;
-            memory.update_timers(8);
+            timers.update(8, memory, self);
             return;
         }
     }

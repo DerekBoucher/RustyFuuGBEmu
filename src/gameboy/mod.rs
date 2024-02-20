@@ -1,6 +1,6 @@
-use crate::cartridge;
 use crate::cpu::CPU_CYCLES_PER_FRAME;
 use crate::interface;
+use crate::{cartridge, timers};
 use crossbeam::channel::{self};
 use crossbeam::select;
 
@@ -33,9 +33,11 @@ impl Gameboy {
         cpu: &mut impl interface::CPU,
         memory: &mut impl interface::Memory,
         ppu: &mut impl interface::PPU,
+        timers: &mut impl interface::Timers,
     ) {
         cpu.reset();
         ppu.reset();
+        timers.reset();
         memory.reset(cartridge::new(rom_data));
         self.cartridge_inserted = true;
     }
@@ -54,6 +56,7 @@ impl Gameboy {
         cpu: impl interface::CPU + 'static,
         memory: impl interface::Memory + 'static,
         ppu: impl interface::PPU + 'static,
+        timers: impl interface::Timers + 'static,
     ) -> Orchestrator {
         let (orchestrator, close_receiver, pause_receiver, ack_sender, rom_data_receiver) =
             Orchestrator::new();
@@ -67,6 +70,7 @@ impl Gameboy {
                 cpu,
                 memory,
                 ppu,
+                timers,
             )
         });
         return orchestrator;
@@ -82,13 +86,14 @@ impl Gameboy {
         mut cpu: impl interface::CPU,
         mut memory: impl interface::Memory,
         mut ppu: impl interface::PPU,
+        mut timers: impl interface::Timers,
     ) {
         if !self.cartridge_inserted {
             log::debug!("Waiting for ROM cartridge...");
 
             select! {
                 recv(rom_data_receiver) -> rom_data => {
-                    self.load_rom(rom_data.unwrap(), &mut cpu, &mut memory, &mut ppu);
+                    self.load_rom(rom_data.unwrap(), &mut cpu, &mut memory, &mut ppu, &mut timers);
                     log::debug!("ROM cartridge loaded!");
                 }
                 recv(close_receiver) -> _ => {
@@ -115,7 +120,7 @@ impl Gameboy {
 
                 match Gameboy::should_load_rom(&rom_data_receiver) {
                     Some(rom_data) => {
-                        self.load_rom(rom_data, &mut cpu, &mut memory, &mut ppu);
+                        self.load_rom(rom_data, &mut cpu, &mut memory, &mut ppu, &mut timers);
                         log::debug!("ROM cartridge loaded!");
                         continue 'main;
                     }
@@ -123,9 +128,10 @@ impl Gameboy {
                 }
 
                 let cycles = cpu.execute_next_opcode(&mut memory);
-                memory.update_timers(cycles);
+
+                timers.update(cycles, &mut memory, &mut cpu);
                 ppu.update_graphics(cycles, &mut memory, &mut cpu);
-                cpu.process_interrupts(&mut memory);
+                cpu.process_interrupts(&mut memory, &mut timers);
             }
         }
 

@@ -12,8 +12,13 @@ pub trait Memory: Debug + Send {
     fn read(&self, addr: usize) -> Option<u8>;
     fn write(&mut self, addr: usize, val: u8);
     fn dump(&self) -> Vec<u8>;
-    fn update_timers(&mut self, cycles: u32);
     fn set_post_boot_rom_state(&mut self);
+}
+
+/// Timer trait which serves as an interface to the various timer implementations
+pub trait Timers: Debug + Send {
+    fn update(&mut self, cycles: u32, memory: &mut impl Memory, cpu: &mut impl CPU);
+    fn reset(&mut self);
 }
 
 /// Cartridge trait which serves as an interface to the various
@@ -37,7 +42,7 @@ pub trait CPU: Debug + Send {
     fn reset(&mut self);
     fn execute_next_opcode(&mut self, memory: &mut impl Memory) -> u32;
     fn set_post_boot_rom_state(&mut self);
-    fn process_interrupts(&mut self, memory: &mut impl Memory);
+    fn process_interrupts(&mut self, memory: &mut impl Memory, timers: &mut impl Timers);
     fn request_interrupt(&mut self, memory: &mut impl Memory, interrupt: Interrupt);
 }
 
