@@ -3039,7 +3039,7 @@ fn _0x2e() {
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::ShiftRightMemoryHLIntoCarry_0x2E.into(),
-                    0x40,
+                    0xC0,
                 ]);
 
                 return (cpu, memory);
