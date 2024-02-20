@@ -2582,7 +2582,7 @@ fn _0x28() {
             },
             expected_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
-                cpu.bc.hi = 0x40;
+                cpu.bc.hi = 0xC0;
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -2674,7 +2674,7 @@ fn _0x29() {
             },
             expected_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
-                cpu.bc.lo = 0x40;
+                cpu.bc.lo = 0xC0;
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -2766,7 +2766,7 @@ fn _0x2a() {
             },
             expected_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
-                cpu.de.hi = 0x40;
+                cpu.de.hi = 0xC0;
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -2858,7 +2858,7 @@ fn _0x2b() {
             },
             expected_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
-                cpu.de.lo = 0x40;
+                cpu.de.lo = 0xC0;
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -2950,7 +2950,7 @@ fn _0x2c() {
             },
             expected_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
-                cpu.hl.hi = 0x40;
+                cpu.hl.hi = 0xC0;
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -3042,7 +3042,7 @@ fn _0x2d() {
             },
             expected_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
-                cpu.hl.lo = 0x40;
+                cpu.hl.lo = 0xC0;
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -3232,7 +3232,7 @@ fn _0x2f() {
             },
             expected_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
-                cpu.af.hi = 0x40;
+                cpu.af.hi = 0xC0;
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),

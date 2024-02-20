@@ -1254,13 +1254,15 @@ impl LR35902 {
     fn shift_right_8bit_register_into_carry(&mut self, reg_id: register::ID) -> u32 {
         let mut byte = self.read_register(&reg_id);
 
+        let old_msb = byte & 0x80;
+
         if (byte & 0x01) > 0 {
             self.set_carry_flag();
         } else {
             self.reset_carry_flag();
         }
 
-        byte = byte >> 1;
+        byte = (byte >> 1) | old_msb;
 
         if byte == 0x00 {
             self.set_zero_flag();
