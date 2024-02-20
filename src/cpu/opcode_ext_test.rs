@@ -1567,6 +1567,8 @@ fn _0x1e() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.hl.set_word(0x0002);
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateMemoryHLRightWithCarry_0x1E.into(),
@@ -1579,6 +1581,7 @@ fn _0x1e() {
                 let mut cpu = LR35902::new();
                 cpu.hl.set_word(0x0002);
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
