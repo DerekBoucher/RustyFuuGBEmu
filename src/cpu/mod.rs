@@ -1070,6 +1070,15 @@ impl LR35902 {
 
         byte = (byte << 1) | old_carry;
 
+        if byte == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.reset_sub_flag();
+        self.reset_half_carry_flag();
+
         self.write_register(&reg_id, byte);
 
         return 4;
