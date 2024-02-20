@@ -1074,13 +1074,22 @@ impl LR35902 {
             false => 0,
         };
 
-        if (msb) > 0 {
+        if (byte & (1 << 7)) > 0 {
             self.set_carry_flag();
         } else {
             self.reset_carry_flag();
         }
 
         byte = (byte << 1) | old_carry;
+
+        if byte == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.reset_sub_flag();
+        self.reset_half_carry_flag();
 
         memory.write(addr, byte);
 
