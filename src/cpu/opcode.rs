@@ -2797,7 +2797,6 @@ fn execute_0xc7(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
 
     cpu.pc = 0x0000;
 
-    // TODO - Update Timers
     return 16;
 }
 
@@ -2845,7 +2844,6 @@ fn execute_0xcf(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
 
     cpu.pc = 0x0008;
 
-    // TODO - Update Timers
     return 16;
 }
 
@@ -2885,7 +2883,6 @@ fn execute_0xd7(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
 
     cpu.pc = 0x0010;
 
-    // TODO - Update Timers
     return 16;
 }
 
@@ -2919,7 +2916,6 @@ fn execute_0xdf(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
 
     cpu.pc = 0x0018;
 
-    // TODO - Update Timers
     return 16;
 }
 
@@ -2970,7 +2966,6 @@ fn execute_0xe7(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
 
     cpu.pc = 0x0020;
 
-    // TODO - Update Timers
     return 16;
 }
 
@@ -2986,7 +2981,6 @@ fn execute_0xe8(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
 
     cpu.reset_sub_flag();
     cpu.reset_zero_flag();
-    // TODO - Update Timers
 
     // Negative number
     if bit::test_most_significant_bit(added_byte) {
@@ -3060,7 +3054,6 @@ fn execute_0xef(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
 
     cpu.pc = 0x0028;
 
-    // TODO - Update Timers
     return 16;
 }
 
@@ -3128,7 +3121,6 @@ fn execute_0xf7(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
 
     cpu.pc = 0x0030;
 
-    // TODO - Update Timers
     return 16;
 }
 
@@ -3144,7 +3136,6 @@ fn execute_0xf8(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
 
     cpu.reset_sub_flag();
     cpu.reset_zero_flag();
-    // TODO - Update Timers
 
     // Negative number
     if bit::test_most_significant_bit(added_byte) {
@@ -3230,6 +3221,5 @@ fn execute_0xff(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
 
     cpu.pc = 0x0038;
 
-    // TODO - Update Timers
     return 16;
 }
