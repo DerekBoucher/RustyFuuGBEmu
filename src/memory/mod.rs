@@ -186,7 +186,39 @@ impl Memory {
                     self.sprite_attributes[i] = self.read((val as usize) << 8 | i).unwrap();
                 }
             }
+            io_registers::TIMER_CTRL_ADDR => {
+                self.io_registers[addr - 0xFF00] = val;
+            }
+            io_registers::JOYPAD_ADDR => {
+                self.handle_joypad_translation(val);
+            }
             _ => self.io_registers[addr - 0xFF00] = val,
+        }
+    }
+
+    fn handle_joypad_translation(&mut self, val: u8) {
+        let action_read = !((val & (1 << 5)) > 0);
+        let direction_read = !((val & (1 << 4)) > 0);
+
+        if !action_read && !direction_read {
+            return;
+        }
+
+        let joypad_state = val & 0xF0;
+        let result: u8;
+
+        let joypad_buffer: u8 = 0xFF; // TODO - Need to be declared at the gameboy level for controller from keyboard
+
+        if action_read {
+            result = joypad_state | (joypad_buffer & 0x0F);
+            self.io_registers[io_registers::JOYPAD_ADDR - 0xFF00] = result;
+            return;
+        }
+
+        if direction_read {
+            result = joypad_state | ((joypad_buffer >> 4) & 0x0F);
+            self.io_registers[io_registers::JOYPAD_ADDR - 0xFF00] = result;
+            return;
         }
     }
 
@@ -250,7 +282,6 @@ impl Memory {
         self.io_registers[0xFF6A - offset] = 0xFF;
         self.io_registers[0xFF6B - offset] = 0xFF;
         self.io_registers[0xFF70 - offset] = 0xFF;
-        self.io_registers[0xFFFF - offset] = 0x00;
     }
 
     fn read(&self, addr: usize) -> Option<u8> {

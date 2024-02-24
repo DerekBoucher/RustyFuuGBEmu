@@ -105,7 +105,7 @@ impl Gameboy {
         }
 
         'main: loop {
-            let cycles_this_update: u32 = 0;
+            let mut cycles_this_update: u32 = 0;
 
             while cycles_this_update < CPU_CYCLES_PER_FRAME {
                 if Gameboy::should_close(&close_receiver) {
@@ -135,11 +135,16 @@ impl Gameboy {
                     cycles = cpu.execute_next_opcode(&mut memory);
                 }
 
+                cycles_this_update += cycles;
+
                 memory.update_dma_transfer_cycles(cycles);
                 timers.update(cycles, &mut memory, &mut cpu);
                 ppu.update_graphics(cycles, &mut memory, &mut cpu);
                 cpu.process_interrupts(&mut memory, &mut timers);
+                // TODO - Add APU / Sound processing here
             }
+
+            // TODO - PPU / OpenGL Render calls here
         }
 
         log::debug!("gb thread closed");
