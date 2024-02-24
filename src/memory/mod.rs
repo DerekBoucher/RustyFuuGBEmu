@@ -1,13 +1,9 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
-
 #[path = "memory_test.rs"]
 #[cfg(test)]
 mod test;
 
 use crate::cartridge;
 use crate::interface;
-use core::panic;
 use std::fmt::Debug;
 
 /// Struct emulating the DMG Gameboy's memory behaviour.
@@ -52,15 +48,11 @@ pub struct Memory {
     /// Occupies a single byte of memory at location 0xFFFF.
     interrupt_enable_register: u8,
 
-    /// Counter used to keep track of when the divider register timer
-    /// should be incremented. The divider register is incremented whenever this
-    /// counter reaches 256.
-    divider_register_tick_counter: u32,
+    /// Flag indicating whether a DMA transfer is in progress.
+    oam_dma_transfer_in_progress: bool,
 
-    /// Similar to the divider register tick counter, this counter is used to determine when
-    /// to increment the timer register. The timer register is incremented whenever this ticker
-    /// is less than or equal to 0.
-    timer_tick_counter: i32,
+    /// Number of cycles completed during a DMA transfer.
+    oam_dma_transfer_cycles_completed: u32,
 }
 
 /// Module containing important addresses for
@@ -101,9 +93,10 @@ pub mod io_registers {
     pub const LCD_SCX_ADDR: usize = 0xFF43;
     pub const LCD_LY_ADDR: usize = 0xFF44;
     pub const LCD_LYC_ADDR: usize = 0xFF45;
+    pub const OAM_DMA_TRANSFER_ADDR: usize = 0xFF46;
+    pub const LCD_PALETTE_ADDR: usize = 0xFF47;
     pub const LCD_WINY_ADDR: usize = 0xFF4A;
     pub const LCD_WINX_ADDR: usize = 0xFF4B;
-    pub const LCD_PALETTE_ADDR: usize = 0xFF47;
     pub const BOOT_ROM_DISABLE_ADDR: usize = 0xFF50;
 }
 
@@ -140,8 +133,8 @@ impl Memory {
             io_registers: [0x00; 0x80],
             hi_ram: [0x00; 0x7F],
             interrupt_enable_register: 0x00,
-            divider_register_tick_counter: 0,
-            timer_tick_counter: 0,
+            oam_dma_transfer_cycles_completed: 0,
+            oam_dma_transfer_in_progress: false,
         }
     }
 
@@ -156,13 +149,77 @@ impl Memory {
             io_registers: [0x00; 0x80],
             hi_ram: [0x00; 0x7F],
             interrupt_enable_register: 0x00,
-            divider_register_tick_counter: 0,
-            timer_tick_counter: 0,
+            oam_dma_transfer_cycles_completed: 0,
+            oam_dma_transfer_in_progress: false,
         }
     }
 
     fn boot_rom_enabled(&self) -> bool {
         return self.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] == 0x00;
+    }
+
+    fn update_dma_transfer_cycles(&mut self, cycles: u32) {
+        if !self.oam_dma_transfer_in_progress {
+            self.oam_dma_transfer_cycles_completed = 0;
+            return;
+        }
+
+        self.oam_dma_transfer_cycles_completed += cycles;
+        if self.oam_dma_transfer_cycles_completed >= 160 {
+            log::trace!("OAM DMA transfer completed");
+            self.oam_dma_transfer_in_progress = false;
+            self.oam_dma_transfer_cycles_completed = 0;
+        }
+    }
+
+    fn write_io_registers(&mut self, addr: usize, val: u8) {
+        match addr {
+            io_registers::OAM_DMA_TRANSFER_ADDR => {
+                log::trace!("OAM DMA transfer initiated");
+                self.oam_dma_transfer_in_progress = true;
+
+                if val > 0xF1 {
+                    panic!("Invalid DMA transfer source address");
+                }
+
+                for i in 0..0xA0 {
+                    self.sprite_attributes[i] = self.read((val as usize) << 8 | i).unwrap();
+                }
+            }
+            io_registers::TIMER_CTRL_ADDR => {
+                self.io_registers[addr - 0xFF00] = val;
+            }
+            io_registers::JOYPAD_ADDR => {
+                self.handle_joypad_translation(val);
+            }
+            _ => self.io_registers[addr - 0xFF00] = val,
+        }
+    }
+
+    fn handle_joypad_translation(&mut self, val: u8) {
+        let action_read = !((val & (1 << 5)) > 0);
+        let direction_read = !((val & (1 << 4)) > 0);
+
+        if !action_read && !direction_read {
+            return;
+        }
+
+        let joypad_state = val & 0xF0;
+        let result: u8;
+
+        let joypad_buffer: u8 = 0xFF; // TODO - Need to be declared at the gameboy level for controller from keyboard
+
+        if action_read {
+            result = joypad_state | (joypad_buffer & 0x0F);
+            self.io_registers[io_registers::JOYPAD_ADDR - 0xFF00] = result;
+            return;
+        }
+
+        if direction_read {
+            result = joypad_state | ((joypad_buffer >> 4) & 0x0F);
+            self.io_registers[io_registers::JOYPAD_ADDR - 0xFF00] = result;
+            return;
+        }
     }
 
     pub fn set_post_boot_rom_state(&mut self) {
@@ -225,52 +282,21 @@ impl Memory {
         self.io_registers[0xFF6A - offset] = 0xFF;
         self.io_registers[0xFF6B - offset] = 0xFF;
         self.io_registers[0xFF70 - offset] = 0xFF;
-        self.io_registers[0xFFFF - offset] = 0x00;
-    }
-
-    pub fn update_timers(&mut self, cycles: u32) {
-        let timer_control_register = self.io_registers[io_registers::TIMER_CTRL_ADDR - 0xFF00];
-
-        self.divider_register_tick_counter += cycles;
-        if self.divider_register_tick_counter >= 256 {
-            self.divider_register_tick_counter -= 256;
-            let incremented_div_timer =
-                self.io_registers[io_registers::TIMER_DIV_ADDR - 0xFF00].wrapping_add(1);
-            self.io_registers[io_registers::TIMER_DIV_ADDR - 0xFF00] = incremented_div_timer;
-            log::debug!(
-                "Divider register incremented to {:X}",
-                incremented_div_timer
-            );
-        }
-
-        if timer_control_register & (1 << 2) > 0 {
-            self.timer_tick_counter -= cycles as i32;
-
-            while self.timer_tick_counter <= 0 {
-                self.timer_tick_counter += match timer_control_register & 0x03 {
-                    0 => 1024,
-                    1 => 16,
-                    2 => 64,
-                    3 => 256,
-                    _ => panic!("Invalid timer control register value"),
-                } as i32;
-
-                let timer_register = self.io_registers[io_registers::TIMER_COUNTER_ADDR - 0xFF00];
-                if timer_register == 0xFF {
-                    self.io_registers[io_registers::TIMER_COUNTER_ADDR - 0xFF00] =
-                        self.io_registers[io_registers::TIMER_MOD_ADDR - 0xFF00];
-
-                    log::debug!("Timer interrupt requested");
-                    break;
-                }
-
-                self.io_registers[io_registers::TIMER_COUNTER_ADDR - 0xFF00] =
-                    timer_register.wrapping_add(1);
-            }
-        }
     }
 
     fn read(&self, addr: usize) -> Option<u8> {
+        log::trace!("Reading from memory address {:X}", addr);
+
+        if self.oam_dma_transfer_in_progress {
+            // Only High RAM is accessible during an oam dma transfer.
+            if addr >= 0xFF80 && addr < 0xFFFF {
+                return Some(self.hi_ram[addr - 0xFF80].clone());
+            }
+
+            // Else, return dummy data
+            return Some(0xFF);
+        }
+
         // If boot rom is enabled, the data should come from it.
         if addr < 0x100 && self.boot_rom_enabled() {
             return Some(Memory::BOOT_ROM[addr].clone());
@@ -330,6 +356,7 @@ impl Memory {
     }
 
     fn write(&mut self, addr: usize, val: u8) {
+        log::trace!("Writing to memory address {:X} value {:X}", addr, val);
         // Cartridge ROM
         if addr < 0x8000 {
             self.cartridge.write(addr, val)
@@ -361,13 +388,14 @@ impl Memory {
         }
 
         // OAM / Sprite attributes
+        // Not writable directly, needs to be performed via a OAM DMA transfer.
         if addr >= 0xFE00 && addr < 0xFF00 {
-            self.sprite_attributes[addr - 0xFE00] = val;
+            return;
         }
 
         // IO Registers
         if addr >= 0xFF00 && addr < 0xFF80 {
-            self.io_registers[addr - 0xFF00] = val;
+            self.write_io_registers(addr, val);
         }
 
         // High RAM
@@ -403,11 +431,11 @@ impl interface::Memory for Memory {
         return self.dump();
     }
 
-    fn update_timers(&mut self, cycles: u32) {
-        self.update_timers(cycles);
-    }
-
     fn set_post_boot_rom_state(&mut self) {
         self.set_post_boot_rom_state();
+    }
+
+    fn update_dma_transfer_cycles(&mut self, cycles: u32) {
+        self.update_dma_transfer_cycles(cycles);
     }
 }

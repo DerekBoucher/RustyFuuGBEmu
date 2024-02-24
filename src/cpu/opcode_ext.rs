@@ -1056,27 +1056,27 @@ impl ExtendedOpcode {
     }
 }
 
-fn execute_0x00(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x00(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_left(register::ID::B);
 }
 
-fn execute_0x01(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x01(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_left(register::ID::C);
 }
 
-fn execute_0x02(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x02(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_left(register::ID::D);
 }
 
-fn execute_0x03(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x03(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_left(register::ID::E);
 }
 
-fn execute_0x04(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x04(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_left(register::ID::H);
 }
 
-fn execute_0x05(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x05(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_left(register::ID::L);
 }
 
@@ -1084,31 +1084,31 @@ fn execute_0x06(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_memory_left(memory, usize::from(cpu.hl.word()));
 }
 
-fn execute_0x07(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x07(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_left(register::ID::A);
 }
 
-fn execute_0x08(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x08(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_right(register::ID::B);
 }
 
-fn execute_0x09(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x09(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_right(register::ID::C);
 }
 
-fn execute_0x0a(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x0a(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_right(register::ID::D);
 }
 
-fn execute_0x0b(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x0b(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_right(register::ID::E);
 }
 
-fn execute_0x0c(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x0c(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_right(register::ID::H);
 }
 
-fn execute_0x0d(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x0d(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_right(register::ID::L);
 }
 
@@ -1116,31 +1116,31 @@ fn execute_0x0e(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_memory_right(memory, usize::from(cpu.hl.word()));
 }
 
-fn execute_0x0f(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x0f(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_right(register::ID::A);
 }
 
-fn execute_0x10(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x10(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_left_carry(register::ID::B);
 }
 
-fn execute_0x11(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x11(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_left_carry(register::ID::C);
 }
 
-fn execute_0x12(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x12(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_left_carry(register::ID::D);
 }
 
-fn execute_0x13(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x13(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_left_carry(register::ID::E);
 }
 
-fn execute_0x14(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x14(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_left_carry(register::ID::H);
 }
 
-fn execute_0x15(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x15(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_left_carry(register::ID::L);
 }
 
@@ -1148,31 +1148,31 @@ fn execute_0x16(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_memory_left_carry(memory, usize::from(cpu.hl.word()));
 }
 
-fn execute_0x17(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x17(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_left_carry(register::ID::A);
 }
 
-fn execute_0x18(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x18(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_right_carry(register::ID::B);
 }
 
-fn execute_0x19(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x19(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_right_carry(register::ID::C);
 }
 
-fn execute_0x1a(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x1a(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_right_carry(register::ID::D);
 }
 
-fn execute_0x1b(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x1b(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_right_carry(register::ID::E);
 }
 
-fn execute_0x1c(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x1c(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_right_carry(register::ID::H);
 }
 
-fn execute_0x1d(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x1d(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_right_carry(register::ID::L);
 }
 
@@ -1180,31 +1180,31 @@ fn execute_0x1e(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_memory_right_carry(memory, usize::from(cpu.hl.word()));
 }
 
-fn execute_0x1f(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x1f(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.rotate_8bit_register_right_carry(register::ID::A);
 }
 
-fn execute_0x20(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x20(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_left_8bit_register_into_carry(register::ID::B);
 }
 
-fn execute_0x21(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x21(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_left_8bit_register_into_carry(register::ID::C);
 }
 
-fn execute_0x22(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x22(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_left_8bit_register_into_carry(register::ID::D);
 }
 
-fn execute_0x23(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x23(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_left_8bit_register_into_carry(register::ID::E);
 }
 
-fn execute_0x24(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x24(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_left_8bit_register_into_carry(register::ID::H);
 }
 
-fn execute_0x25(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x25(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_left_8bit_register_into_carry(register::ID::L);
 }
 
@@ -1212,31 +1212,31 @@ fn execute_0x26(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.shift_left_8bit_memory_into_carry(memory, usize::from(cpu.hl.word()));
 }
 
-fn execute_0x27(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x27(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_left_8bit_register_into_carry(register::ID::A);
 }
 
-fn execute_0x28(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x28(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_right_8bit_register_into_carry(register::ID::B);
 }
 
-fn execute_0x29(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x29(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_right_8bit_register_into_carry(register::ID::C);
 }
 
-fn execute_0x2a(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x2a(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_right_8bit_register_into_carry(register::ID::D);
 }
 
-fn execute_0x2b(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x2b(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_right_8bit_register_into_carry(register::ID::E);
 }
 
-fn execute_0x2c(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x2c(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_right_8bit_register_into_carry(register::ID::H);
 }
 
-fn execute_0x2d(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x2d(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_right_8bit_register_into_carry(register::ID::L);
 }
 
@@ -1244,31 +1244,31 @@ fn execute_0x2e(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.shift_right_8bit_memory_into_carry(memory, usize::from(cpu.hl.word()));
 }
 
-fn execute_0x2f(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x2f(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_right_8bit_register_into_carry(register::ID::A);
 }
 
-fn execute_0x30(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x30(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.swap_8bit_register(register::ID::B);
 }
 
-fn execute_0x31(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x31(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.swap_8bit_register(register::ID::C);
 }
 
-fn execute_0x32(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x32(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.swap_8bit_register(register::ID::D);
 }
 
-fn execute_0x33(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x33(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.swap_8bit_register(register::ID::E);
 }
 
-fn execute_0x34(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x34(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.swap_8bit_register(register::ID::H);
 }
 
-fn execute_0x35(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x35(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.swap_8bit_register(register::ID::L);
 }
 
@@ -1276,31 +1276,31 @@ fn execute_0x36(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.swap_8bit_memory(memory, usize::from(cpu.hl.word()));
 }
 
-fn execute_0x37(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x37(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.swap_8bit_register(register::ID::A);
 }
 
-fn execute_0x38(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x38(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_right_8bit_register(register::ID::B);
 }
 
-fn execute_0x39(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x39(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_right_8bit_register(register::ID::C);
 }
 
-fn execute_0x3a(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x3a(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_right_8bit_register(register::ID::D);
 }
 
-fn execute_0x3b(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x3b(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_right_8bit_register(register::ID::E);
 }
 
-fn execute_0x3c(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x3c(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_right_8bit_register(register::ID::H);
 }
 
-fn execute_0x3d(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x3d(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_right_8bit_register(register::ID::L);
 }
 
@@ -1308,31 +1308,31 @@ fn execute_0x3e(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.shift_right_8bit_memory(memory, usize::from(cpu.hl.word()));
 }
 
-fn execute_0x3f(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x3f(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.shift_right_8bit_register(register::ID::A);
 }
 
-fn execute_0x40(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x40(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::B, 0);
 }
 
-fn execute_0x41(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x41(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::C, 0);
 }
 
-fn execute_0x42(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x42(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::D, 0);
 }
 
-fn execute_0x43(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x43(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::E, 0);
 }
 
-fn execute_0x44(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x44(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::H, 0);
 }
 
-fn execute_0x45(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x45(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::L, 0);
 }
 
@@ -1340,31 +1340,31 @@ fn execute_0x46(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 0);
 }
 
-fn execute_0x47(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x47(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::A, 0);
 }
 
-fn execute_0x48(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x48(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::B, 1);
 }
 
-fn execute_0x49(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x49(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::C, 1);
 }
 
-fn execute_0x4a(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x4a(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::D, 1);
 }
 
-fn execute_0x4b(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x4b(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::E, 1);
 }
 
-fn execute_0x4c(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x4c(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::H, 1);
 }
 
-fn execute_0x4d(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x4d(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::L, 1);
 }
 
@@ -1372,31 +1372,31 @@ fn execute_0x4e(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 1);
 }
 
-fn execute_0x4f(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x4f(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::A, 1);
 }
 
-fn execute_0x50(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x50(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::B, 2);
 }
 
-fn execute_0x51(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x51(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::C, 2);
 }
 
-fn execute_0x52(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x52(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::D, 2);
 }
 
-fn execute_0x53(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x53(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::E, 2);
 }
 
-fn execute_0x54(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x54(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::H, 2);
 }
 
-fn execute_0x55(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x55(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::L, 2);
 }
 
@@ -1404,31 +1404,31 @@ fn execute_0x56(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 2);
 }
 
-fn execute_0x57(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x57(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::A, 2);
 }
 
-fn execute_0x58(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x58(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::B, 3);
 }
 
-fn execute_0x59(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x59(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::C, 3);
 }
 
-fn execute_0x5a(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x5a(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::D, 3);
 }
 
-fn execute_0x5b(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x5b(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::E, 3);
 }
 
-fn execute_0x5c(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x5c(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::H, 3);
 }
 
-fn execute_0x5d(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x5d(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::L, 3);
 }
 
@@ -1436,31 +1436,31 @@ fn execute_0x5e(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 3);
 }
 
-fn execute_0x5f(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x5f(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::A, 3);
 }
 
-fn execute_0x60(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x60(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::B, 4);
 }
 
-fn execute_0x61(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x61(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::C, 4);
 }
 
-fn execute_0x62(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x62(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::D, 4);
 }
 
-fn execute_0x63(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x63(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::E, 4);
 }
 
-fn execute_0x64(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x64(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::H, 4);
 }
 
-fn execute_0x65(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x65(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::L, 4);
 }
 
@@ -1468,31 +1468,31 @@ fn execute_0x66(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 4);
 }
 
-fn execute_0x67(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x67(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::A, 4);
 }
 
-fn execute_0x68(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x68(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::B, 5);
 }
 
-fn execute_0x69(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x69(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::C, 5);
 }
 
-fn execute_0x6a(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x6a(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::D, 5);
 }
 
-fn execute_0x6b(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x6b(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::E, 5);
 }
 
-fn execute_0x6c(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x6c(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::H, 5);
 }
 
-fn execute_0x6d(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x6d(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::L, 5);
 }
 
@@ -1500,31 +1500,31 @@ fn execute_0x6e(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 5);
 }
 
-fn execute_0x6f(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x6f(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::A, 5);
 }
 
-fn execute_0x70(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x70(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::B, 6);
 }
 
-fn execute_0x71(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x71(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::C, 6);
 }
 
-fn execute_0x72(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x72(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::D, 6);
 }
 
-fn execute_0x73(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x73(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::E, 6);
 }
 
-fn execute_0x74(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x74(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::H, 6);
 }
 
-fn execute_0x75(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x75(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::L, 6);
 }
 
@@ -1532,31 +1532,31 @@ fn execute_0x76(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 6);
 }
 
-fn execute_0x77(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x77(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::A, 6);
 }
 
-fn execute_0x78(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x78(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::B, 7);
 }
 
-fn execute_0x79(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x79(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::C, 7);
 }
 
-fn execute_0x7a(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x7a(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::D, 7);
 }
 
-fn execute_0x7b(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x7b(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::E, 7);
 }
 
-fn execute_0x7c(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x7c(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::H, 7);
 }
 
-fn execute_0x7d(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x7d(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::L, 7);
 }
 
@@ -1564,31 +1564,31 @@ fn execute_0x7e(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 7);
 }
 
-fn execute_0x7f(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x7f(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.test_bit(register::ID::A, 7);
 }
 
-fn execute_0x80(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x80(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::B, 0);
 }
 
-fn execute_0x81(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x81(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::C, 0);
 }
 
-fn execute_0x82(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x82(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::D, 0);
 }
 
-fn execute_0x83(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x83(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::E, 0);
 }
 
-fn execute_0x84(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x84(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::H, 0);
 }
 
-fn execute_0x85(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x85(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::L, 0);
 }
 
@@ -1596,31 +1596,31 @@ fn execute_0x86(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 0);
 }
 
-fn execute_0x87(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x87(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::A, 0);
 }
 
-fn execute_0x88(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x88(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::B, 1);
 }
 
-fn execute_0x89(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x89(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::C, 1);
 }
 
-fn execute_0x8a(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x8a(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::D, 1);
 }
 
-fn execute_0x8b(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x8b(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::E, 1);
 }
 
-fn execute_0x8c(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x8c(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::H, 1);
 }
 
-fn execute_0x8d(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x8d(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::L, 1);
 }
 
@@ -1628,31 +1628,31 @@ fn execute_0x8e(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 1);
 }
 
-fn execute_0x8f(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x8f(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::A, 1);
 }
 
-fn execute_0x90(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x90(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::B, 2);
 }
 
-fn execute_0x91(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x91(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::C, 2);
 }
 
-fn execute_0x92(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x92(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::D, 2);
 }
 
-fn execute_0x93(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x93(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::E, 2);
 }
 
-fn execute_0x94(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x94(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::H, 2);
 }
 
-fn execute_0x95(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x95(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::L, 2);
 }
 
@@ -1660,31 +1660,31 @@ fn execute_0x96(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 2);
 }
 
-fn execute_0x97(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x97(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::A, 2);
 }
 
-fn execute_0x98(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x98(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::B, 3);
 }
 
-fn execute_0x99(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x99(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::C, 3);
 }
 
-fn execute_0x9a(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x9a(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::D, 3);
 }
 
-fn execute_0x9b(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x9b(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::E, 3);
 }
 
-fn execute_0x9c(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x9c(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::H, 3);
 }
 
-fn execute_0x9d(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x9d(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::L, 3);
 }
 
@@ -1692,31 +1692,31 @@ fn execute_0x9e(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 3);
 }
 
-fn execute_0x9f(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0x9f(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::A, 3);
 }
 
-fn execute_0xa0(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xa0(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::B, 4);
 }
 
-fn execute_0xa1(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xa1(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::C, 4);
 }
 
-fn execute_0xa2(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xa2(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::D, 4);
 }
 
-fn execute_0xa3(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xa3(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::E, 4);
 }
 
-fn execute_0xa4(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xa4(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::H, 4);
 }
 
-fn execute_0xa5(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xa5(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::L, 4);
 }
 
@@ -1724,31 +1724,31 @@ fn execute_0xa6(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 4);
 }
 
-fn execute_0xa7(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xa7(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::A, 4);
 }
 
-fn execute_0xa8(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xa8(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::B, 5);
 }
 
-fn execute_0xa9(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xa9(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::C, 5);
 }
 
-fn execute_0xaa(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xaa(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::D, 5);
 }
 
-fn execute_0xab(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xab(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::E, 5);
 }
 
-fn execute_0xac(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xac(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::H, 5);
 }
 
-fn execute_0xad(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xad(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::L, 5);
 }
 
@@ -1756,31 +1756,31 @@ fn execute_0xae(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 5);
 }
 
-fn execute_0xaf(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xaf(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::A, 5);
 }
 
-fn execute_0xb0(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xb0(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::B, 6);
 }
 
-fn execute_0xb1(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xb1(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::C, 6);
 }
 
-fn execute_0xb2(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xb2(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::D, 6);
 }
 
-fn execute_0xb3(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xb3(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::E, 6);
 }
 
-fn execute_0xb4(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xb4(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::H, 6);
 }
 
-fn execute_0xb5(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xb5(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::L, 6);
 }
 
@@ -1788,31 +1788,31 @@ fn execute_0xb6(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 6);
 }
 
-fn execute_0xb7(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xb7(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::A, 6);
 }
 
-fn execute_0xb8(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xb8(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::B, 7);
 }
 
-fn execute_0xb9(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xb9(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::C, 7);
 }
 
-fn execute_0xba(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xba(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::D, 7);
 }
 
-fn execute_0xbb(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xbb(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::E, 7);
 }
 
-fn execute_0xbc(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xbc(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::H, 7);
 }
 
-fn execute_0xbd(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xbd(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::L, 7);
 }
 
@@ -1820,31 +1820,31 @@ fn execute_0xbe(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 7);
 }
 
-fn execute_0xbf(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xbf(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.reset_bit(register::ID::A, 7);
 }
 
-fn execute_0xc0(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xc0(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::B, 0);
 }
 
-fn execute_0xc1(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xc1(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::C, 0);
 }
 
-fn execute_0xc2(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xc2(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::D, 0);
 }
 
-fn execute_0xc3(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xc3(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::E, 0);
 }
 
-fn execute_0xc4(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xc4(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::H, 0);
 }
 
-fn execute_0xc5(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xc5(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::L, 0);
 }
 
@@ -1852,31 +1852,31 @@ fn execute_0xc6(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 0);
 }
 
-fn execute_0xc7(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xc7(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::A, 0);
 }
 
-fn execute_0xc8(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xc8(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::B, 1);
 }
 
-fn execute_0xc9(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xc9(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::C, 1);
 }
 
-fn execute_0xca(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xca(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::D, 1);
 }
 
-fn execute_0xcb(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xcb(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::E, 1);
 }
 
-fn execute_0xcc(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xcc(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::H, 1);
 }
 
-fn execute_0xcd(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xcd(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::L, 1);
 }
 
@@ -1884,31 +1884,31 @@ fn execute_0xce(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 1);
 }
 
-fn execute_0xcf(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xcf(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::A, 1);
 }
 
-fn execute_0xd0(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xd0(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::B, 2);
 }
 
-fn execute_0xd1(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xd1(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::C, 2);
 }
 
-fn execute_0xd2(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xd2(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::D, 2);
 }
 
-fn execute_0xd3(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xd3(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::E, 2);
 }
 
-fn execute_0xd4(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xd4(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::H, 2);
 }
 
-fn execute_0xd5(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xd5(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::L, 2);
 }
 
@@ -1916,31 +1916,31 @@ fn execute_0xd6(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 2);
 }
 
-fn execute_0xd7(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xd7(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::A, 2);
 }
 
-fn execute_0xd8(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xd8(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::B, 3);
 }
 
-fn execute_0xd9(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xd9(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::C, 3);
 }
 
-fn execute_0xda(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xda(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::D, 3);
 }
 
-fn execute_0xdb(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xdb(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::E, 3);
 }
 
-fn execute_0xdc(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xdc(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::H, 3);
 }
 
-fn execute_0xdd(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xdd(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::L, 3);
 }
 
@@ -1948,31 +1948,31 @@ fn execute_0xde(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 3);
 }
 
-fn execute_0xdf(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xdf(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::A, 3);
 }
 
-fn execute_0xe0(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xe0(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::B, 4);
 }
 
-fn execute_0xe1(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xe1(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::C, 4);
 }
 
-fn execute_0xe2(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xe2(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::D, 4);
 }
 
-fn execute_0xe3(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xe3(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::E, 4);
 }
 
-fn execute_0xe4(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xe4(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::H, 4);
 }
 
-fn execute_0xe5(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xe5(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::L, 4);
 }
 
@@ -1980,31 +1980,31 @@ fn execute_0xe6(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 4);
 }
 
-fn execute_0xe7(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xe7(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::A, 4);
 }
 
-fn execute_0xe8(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xe8(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::B, 5);
 }
 
-fn execute_0xe9(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xe9(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::C, 5);
 }
 
-fn execute_0xea(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xea(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::D, 5);
 }
 
-fn execute_0xeb(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xeb(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::E, 5);
 }
 
-fn execute_0xec(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xec(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::H, 5);
 }
 
-fn execute_0xed(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xed(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::L, 5);
 }
 
@@ -2012,31 +2012,31 @@ fn execute_0xee(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 5);
 }
 
-fn execute_0xef(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xef(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::A, 5);
 }
 
-fn execute_0xf0(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xf0(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::B, 6);
 }
 
-fn execute_0xf1(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xf1(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::C, 6);
 }
 
-fn execute_0xf2(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xf2(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::D, 6);
 }
 
-fn execute_0xf3(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xf3(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::E, 6);
 }
 
-fn execute_0xf4(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xf4(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::H, 6);
 }
 
-fn execute_0xf5(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xf5(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::L, 6);
 }
 
@@ -2044,31 +2044,31 @@ fn execute_0xf6(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 6);
 }
 
-fn execute_0xf7(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xf7(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::A, 6);
 }
 
-fn execute_0xf8(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xf8(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::B, 7);
 }
 
-fn execute_0xf9(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xf9(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::C, 7);
 }
 
-fn execute_0xfa(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xfa(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::D, 7);
 }
 
-fn execute_0xfb(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xfb(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::E, 7);
 }
 
-fn execute_0xfc(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xfc(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::H, 7);
 }
 
-fn execute_0xfd(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xfd(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::L, 7);
 }
 
@@ -2076,6 +2076,6 @@ fn execute_0xfe(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 7);
 }
 
-fn execute_0xff(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+fn execute_0xff(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     return cpu.set_bit(register::ID::A, 7);
 }

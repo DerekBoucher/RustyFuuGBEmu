@@ -1,37 +1,67 @@
 use crate::cpu::opcode::Opcode;
 use crate::cpu::opcode_ext::ExtendedOpcode;
 use crate::cpu::test::TestCase;
-use crate::cpu::LR35902;
+use crate::cpu::{self, LR35902};
 use crate::interface::mock;
 
 #[test]
 fn _0x00() {
-    let test_cases: Vec<TestCase> = vec![TestCase {
-        initial_state: || -> (LR35902, mock::Memory) {
-            let mut cpu = LR35902::new();
-            cpu.bc.hi = 0x80;
-            let memory = mock::Memory::new(vec![
-                Opcode::ExtendedOpCode_0xCB.into(),
-                ExtendedOpcode::RotateBLeft_0x00.into(),
-            ]);
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            initial_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.bc.hi = 0x80;
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateBLeft_0x00.into(),
+                ]);
 
-            return (cpu, memory);
-        },
-        expected_state: || -> (LR35902, mock::Memory) {
-            let mut cpu = LR35902::new();
-            cpu.bc.hi = 0x01;
-            cpu.set_carry_flag();
-            cpu.pc = 0x0002;
-            let memory = mock::Memory::new(vec![
-                Opcode::ExtendedOpCode_0xCB.into(),
-                ExtendedOpcode::RotateBLeft_0x00.into(),
-            ]);
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.bc.hi = 0x01;
+                cpu.set_carry_flag();
+                cpu.pc = 0x0002;
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateBLeft_0x00.into(),
+                ]);
 
-            return (cpu, memory);
+                return (cpu, memory);
+            },
+            expected_cycles: 8,
+            disable_pc_check: false,
         },
-        expected_cycles: 8,
-        disable_pc_check: false,
-    }];
+        TestCase {
+            initial_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.bc.hi = 0x00;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateBLeft_0x00.into(),
+                ]);
+
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.bc.hi = 0x00;
+                cpu.set_zero_flag();
+                cpu.pc = 0x0002;
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateBLeft_0x00.into(),
+                ]);
+
+                return (cpu, memory);
+            },
+            expected_cycles: 8,
+            disable_pc_check: false,
+        },
+    ];
 
     for (i, tc) in test_cases.iter().enumerate() {
         tc.run(i);
@@ -210,34 +240,121 @@ fn _0x05() {
 
 #[test]
 fn _0x06() {
-    let test_cases: Vec<TestCase> = vec![TestCase {
-        initial_state: || -> (LR35902, mock::Memory) {
-            let mut cpu = LR35902::new();
-            cpu.hl.set_word(0x0002);
-            let memory = mock::Memory::new(vec![
-                Opcode::ExtendedOpCode_0xCB.into(),
-                ExtendedOpcode::RotateMemoryHLLeft_0x06.into(),
-                0x80,
-            ]);
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            initial_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.hl.set_word(0x0002);
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateMemoryHLLeft_0x06.into(),
+                    0x80,
+                ]);
 
-            return (cpu, memory);
-        },
-        expected_state: || -> (LR35902, mock::Memory) {
-            let mut cpu = LR35902::new();
-            cpu.hl.set_word(0x0002);
-            cpu.set_carry_flag();
-            cpu.pc = 0x0002;
-            let memory = mock::Memory::new(vec![
-                Opcode::ExtendedOpCode_0xCB.into(),
-                ExtendedOpcode::RotateMemoryHLLeft_0x06.into(),
-                0x01,
-            ]);
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.hl.set_word(0x0002);
+                cpu.set_carry_flag();
+                cpu.pc = 0x0002;
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateMemoryHLLeft_0x06.into(),
+                    0x01,
+                ]);
 
-            return (cpu, memory);
+                return (cpu, memory);
+            },
+            expected_cycles: 16,
+            disable_pc_check: false,
         },
-        expected_cycles: 16,
-        disable_pc_check: false,
-    }];
+        TestCase {
+            initial_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.hl.set_word(0x0002);
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateMemoryHLLeft_0x06.into(),
+                    0x01,
+                ]);
+
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.hl.set_word(0x0002);
+                cpu.pc = 0x0002;
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateMemoryHLLeft_0x06.into(),
+                    0x02,
+                ]);
+
+                return (cpu, memory);
+            },
+            expected_cycles: 16,
+            disable_pc_check: false,
+        },
+        TestCase {
+            initial_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.hl.set_word(0x0002);
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateMemoryHLLeft_0x06.into(),
+                    0xFF,
+                ]);
+
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.hl.set_word(0x0002);
+                cpu.pc = 0x0002;
+                cpu.set_carry_flag();
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateMemoryHLLeft_0x06.into(),
+                    0xFF,
+                ]);
+
+                return (cpu, memory);
+            },
+            expected_cycles: 16,
+            disable_pc_check: false,
+        },
+        TestCase {
+            initial_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.hl.set_word(0x0002);
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateMemoryHLLeft_0x06.into(),
+                    0x00,
+                ]);
+
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.hl.set_word(0x0002);
+                cpu.pc = 0x0002;
+                cpu.set_zero_flag();
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateMemoryHLLeft_0x06.into(),
+                    0x00,
+                ]);
+
+                return (cpu, memory);
+            },
+            expected_cycles: 16,
+            disable_pc_check: false,
+        },
+    ];
 
     for (i, tc) in test_cases.iter().enumerate() {
         tc.run(i);
@@ -280,32 +397,62 @@ fn _0x07() {
 
 #[test]
 fn _0x08() {
-    let test_cases: Vec<TestCase> = vec![TestCase {
-        initial_state: || -> (LR35902, mock::Memory) {
-            let mut cpu = LR35902::new();
-            cpu.bc.hi = 0x01;
-            let memory = mock::Memory::new(vec![
-                Opcode::ExtendedOpCode_0xCB.into(),
-                ExtendedOpcode::RotateBRight_0x08.into(),
-            ]);
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            initial_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.bc.hi = 0x01;
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateBRight_0x08.into(),
+                ]);
 
-            return (cpu, memory);
-        },
-        expected_state: || -> (LR35902, mock::Memory) {
-            let mut cpu = LR35902::new();
-            cpu.bc.hi = 0x80;
-            cpu.set_carry_flag();
-            cpu.pc = 0x0002;
-            let memory = mock::Memory::new(vec![
-                Opcode::ExtendedOpCode_0xCB.into(),
-                ExtendedOpcode::RotateBRight_0x08.into(),
-            ]);
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.bc.hi = 0x80;
+                cpu.set_carry_flag();
+                cpu.pc = 0x0002;
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateBRight_0x08.into(),
+                ]);
 
-            return (cpu, memory);
+                return (cpu, memory);
+            },
+            expected_cycles: 8,
+            disable_pc_check: false,
         },
-        expected_cycles: 8,
-        disable_pc_check: false,
-    }];
+        TestCase {
+            initial_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.bc.hi = 0x00;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateBRight_0x08.into(),
+                ]);
+
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.bc.hi = 0x00;
+                cpu.set_zero_flag();
+                cpu.pc = 0x0002;
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateBRight_0x08.into(),
+                ]);
+
+                return (cpu, memory);
+            },
+            expected_cycles: 8,
+            disable_pc_check: false,
+        },
+    ];
 
     for (i, tc) in test_cases.iter().enumerate() {
         tc.run(i);
@@ -484,34 +631,66 @@ fn _0x0d() {
 
 #[test]
 fn _0x0e() {
-    let test_cases: Vec<TestCase> = vec![TestCase {
-        initial_state: || -> (LR35902, mock::Memory) {
-            let mut cpu = LR35902::new();
-            cpu.hl.set_word(0x0002);
-            let memory = mock::Memory::new(vec![
-                Opcode::ExtendedOpCode_0xCB.into(),
-                ExtendedOpcode::RotateMemoryHLRight_0x0E.into(),
-                0x01,
-            ]);
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            initial_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.hl.set_word(0x0002);
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateMemoryHLRight_0x0E.into(),
+                    0x01,
+                ]);
 
-            return (cpu, memory);
-        },
-        expected_state: || -> (LR35902, mock::Memory) {
-            let mut cpu = LR35902::new();
-            cpu.hl.set_word(0x0002);
-            cpu.set_carry_flag();
-            cpu.pc = 0x0002;
-            let memory = mock::Memory::new(vec![
-                Opcode::ExtendedOpCode_0xCB.into(),
-                ExtendedOpcode::RotateMemoryHLRight_0x0E.into(),
-                0x80,
-            ]);
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.hl.set_word(0x0002);
+                cpu.set_carry_flag();
+                cpu.pc = 0x0002;
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateMemoryHLRight_0x0E.into(),
+                    0x80,
+                ]);
 
-            return (cpu, memory);
+                return (cpu, memory);
+            },
+            expected_cycles: 16,
+            disable_pc_check: false,
         },
-        expected_cycles: 16,
-        disable_pc_check: false,
-    }];
+        TestCase {
+            initial_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.hl.set_word(0x0002);
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateMemoryHLRight_0x0E.into(),
+                    0x00,
+                ]);
+
+                return (cpu, memory);
+            },
+            expected_state: || -> (LR35902, mock::Memory) {
+                let mut cpu = LR35902::new();
+                cpu.hl.set_word(0x0002);
+                cpu.set_zero_flag();
+                cpu.pc = 0x0002;
+                let memory = mock::Memory::new(vec![
+                    Opcode::ExtendedOpCode_0xCB.into(),
+                    ExtendedOpcode::RotateMemoryHLRight_0x0E.into(),
+                    0x00,
+                ]);
+
+                return (cpu, memory);
+            },
+            expected_cycles: 16,
+            disable_pc_check: false,
+        },
+    ];
 
     for (i, tc) in test_cases.iter().enumerate() {
         tc.run(i);
@@ -559,6 +738,8 @@ fn _0x10() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.bc.hi = 0x80;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateBLeftWithCarry_0x10.into(),
@@ -570,6 +751,7 @@ fn _0x10() {
                 let mut cpu = LR35902::new();
                 cpu.bc.hi = 0x00;
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -622,6 +804,8 @@ fn _0x11() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.bc.lo = 0x80;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateCLeftWithCarry_0x11.into(),
@@ -633,6 +817,7 @@ fn _0x11() {
                 let mut cpu = LR35902::new();
                 cpu.bc.lo = 0x00;
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -685,6 +870,8 @@ fn _0x12() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.de.hi = 0x80;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateDLeftWithCarry_0x12.into(),
@@ -696,6 +883,7 @@ fn _0x12() {
                 let mut cpu = LR35902::new();
                 cpu.de.hi = 0x00;
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -748,6 +936,8 @@ fn _0x13() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.de.lo = 0x80;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateELeftWithCarry_0x13.into(),
@@ -759,6 +949,7 @@ fn _0x13() {
                 let mut cpu = LR35902::new();
                 cpu.de.lo = 0x00;
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -811,6 +1002,8 @@ fn _0x14() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.hl.hi = 0x80;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateHLeftWithCarry_0x14.into(),
@@ -822,6 +1015,7 @@ fn _0x14() {
                 let mut cpu = LR35902::new();
                 cpu.hl.hi = 0x00;
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -874,6 +1068,8 @@ fn _0x15() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.hl.lo = 0x80;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateLLeftWithCarry_0x15.into(),
@@ -885,6 +1081,7 @@ fn _0x15() {
                 let mut cpu = LR35902::new();
                 cpu.hl.lo = 0x00;
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -937,6 +1134,8 @@ fn _0x16() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.hl.set_word(0x0002);
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateMemoryHLLeftWithCarry_0x16.into(),
@@ -949,6 +1148,7 @@ fn _0x16() {
                 let mut cpu = LR35902::new();
                 cpu.hl.set_word(0x0002);
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -1004,6 +1204,8 @@ fn _0x17() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.af.hi = 0x80;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateALeftWithCarry_0x17.into(),
@@ -1015,6 +1217,7 @@ fn _0x17() {
                 let mut cpu = LR35902::new();
                 cpu.af.hi = 0x00;
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -1067,6 +1270,8 @@ fn _0x18() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.bc.hi = 0x01;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateBRightWithCarry_0x18.into(),
@@ -1078,6 +1283,7 @@ fn _0x18() {
                 let mut cpu = LR35902::new();
                 cpu.bc.hi = 0x00;
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -1130,6 +1336,8 @@ fn _0x19() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.bc.lo = 0x01;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateCRightWithCarry_0x19.into(),
@@ -1141,6 +1349,7 @@ fn _0x19() {
                 let mut cpu = LR35902::new();
                 cpu.bc.hi = 0x00;
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -1193,6 +1402,8 @@ fn _0x1a() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.de.hi = 0x01;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateDRightWithCarry_0x1A.into(),
@@ -1204,6 +1415,7 @@ fn _0x1a() {
                 let mut cpu = LR35902::new();
                 cpu.de.hi = 0x00;
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -1256,6 +1468,8 @@ fn _0x1b() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.de.lo = 0x01;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateERightWithCarry_0x1B.into(),
@@ -1267,6 +1481,7 @@ fn _0x1b() {
                 let mut cpu = LR35902::new();
                 cpu.de.lo = 0x00;
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -1319,6 +1534,8 @@ fn _0x1c() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.hl.hi = 0x01;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateHRightWithCarry_0x1C.into(),
@@ -1330,6 +1547,7 @@ fn _0x1c() {
                 let mut cpu = LR35902::new();
                 cpu.hl.hi = 0x00;
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -1346,6 +1564,7 @@ fn _0x1c() {
                 let mut cpu = LR35902::new();
                 cpu.hl.hi = 0x01;
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateHRightWithCarry_0x1C.into(),
@@ -1382,6 +1601,8 @@ fn _0x1d() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.hl.lo = 0x01;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateLRightWithCarry_0x1D.into(),
@@ -1393,6 +1614,7 @@ fn _0x1d() {
                 let mut cpu = LR35902::new();
                 cpu.hl.lo = 0x00;
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -1445,6 +1667,8 @@ fn _0x1e() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.hl.set_word(0x0002);
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateMemoryHLRightWithCarry_0x1E.into(),
@@ -1457,6 +1681,7 @@ fn _0x1e() {
                 let mut cpu = LR35902::new();
                 cpu.hl.set_word(0x0002);
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -1512,6 +1737,8 @@ fn _0x1f() {
             initial_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
                 cpu.af.hi = 0x01;
+                cpu.set_half_carry_flag();
+                cpu.set_sub_flag();
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::RotateARightWithCarry_0x1F.into(),
@@ -1523,6 +1750,7 @@ fn _0x1f() {
                 let mut cpu = LR35902::new();
                 cpu.af.hi = 0x00;
                 cpu.set_carry_flag();
+                cpu.set_zero_flag();
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -2354,7 +2582,7 @@ fn _0x28() {
             },
             expected_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
-                cpu.bc.hi = 0x40;
+                cpu.bc.hi = 0xC0;
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -2446,7 +2674,7 @@ fn _0x29() {
             },
             expected_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
-                cpu.bc.lo = 0x40;
+                cpu.bc.lo = 0xC0;
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -2538,7 +2766,7 @@ fn _0x2a() {
             },
             expected_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
-                cpu.de.hi = 0x40;
+                cpu.de.hi = 0xC0;
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -2630,7 +2858,7 @@ fn _0x2b() {
             },
             expected_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
-                cpu.de.lo = 0x40;
+                cpu.de.lo = 0xC0;
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -2722,7 +2950,7 @@ fn _0x2c() {
             },
             expected_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
-                cpu.hl.hi = 0x40;
+                cpu.hl.hi = 0xC0;
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -2814,7 +3042,7 @@ fn _0x2d() {
             },
             expected_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
-                cpu.hl.lo = 0x40;
+                cpu.hl.lo = 0xC0;
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
@@ -2914,7 +3142,7 @@ fn _0x2e() {
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),
                     ExtendedOpcode::ShiftRightMemoryHLIntoCarry_0x2E.into(),
-                    0x40,
+                    0xC0,
                 ]);
 
                 return (cpu, memory);
@@ -3004,7 +3232,7 @@ fn _0x2f() {
             },
             expected_state: || -> (LR35902, mock::Memory) {
                 let mut cpu = LR35902::new();
-                cpu.af.hi = 0x40;
+                cpu.af.hi = 0xC0;
                 cpu.pc = 0x0002;
                 let memory = mock::Memory::new(vec![
                     Opcode::ExtendedOpCode_0xCB.into(),

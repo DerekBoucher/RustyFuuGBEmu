@@ -4,6 +4,7 @@ mod gameboy;
 mod interface;
 mod memory;
 mod ppu;
+mod timers;
 mod ui;
 
 use clap::Parser;
@@ -34,12 +35,13 @@ fn main() {
     let mut memory = memory::Memory::new(cartridge::default());
     let ppu = ppu::Ppu::new();
     let gameboy = gameboy::Gameboy::new();
+    let timers = timers::Timers::new();
     if args.skip_boot_rom {
         gameboy.skip_boot_rom(&mut cpu, &mut memory);
     }
 
     let mut ui = ui::Ui::new(egui_glium_client, events_loop.create_proxy());
-    let mut gb_controller = gameboy.start(cpu, memory, ppu);
+    let mut gb_controller = gameboy.start(cpu, memory, ppu, timers);
 
     events_loop.run(move |ev, _, control_flow| {
         let next_frame_time =

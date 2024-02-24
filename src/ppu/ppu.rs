@@ -1,9 +1,12 @@
 use crate::{
-    interface,
+    interface::{self, Interrupt},
     memory::{self, io_registers},
-    ppu::*,
+    ppu::stat,
+    ppu::{stat::StatUpdater, *},
 };
 use std::collections::HashMap;
+
+const LCD_ENABLE_MASK: u8 = 1 << 7;
 
 #[path = "ppu_test.rs"]
 #[cfg(test)]
@@ -13,13 +16,16 @@ impl Ppu {
     pub fn new() -> Self {
         Ppu {
             pixels: [[Color::White; SCREEN_WIDTH]; SCREEN_HEIGHT],
-            draw_counter: 0,
+            scanline_counter: 0,
         }
     }
 
-    pub fn step(&mut self, cycles: u32, memory: &mut impl interface::Memory) {}
-
-    fn set_lcdc_status(&mut self, memory: &mut impl interface::Memory) {
+    fn update_graphics(
+        &mut self,
+        cycles: u32,
+        memory: &mut impl interface::Memory,
+        cpu: &mut impl interface::CPU,
+    ) {
         let lcdc = match memory.read(io_registers::LCD_CONTROL_ADDR) {
             Some(value) => value,
             None => {
@@ -27,6 +33,105 @@ impl Ppu {
                 return;
             }
         };
+
+        let stat = match memory.read(io_registers::LCD_STAT_ADDR) {
+            Some(value) => value,
+            None => {
+                log::error!("failed to read stat register");
+                return;
+            }
+        };
+
+        let current_scanline = match memory.read(io_registers::LCD_LY_ADDR) {
+            Some(value) => value,
+            None => {
+                log::error!("failed to read LY register");
+                return;
+            }
+        };
+
+        let ly = match memory.read(io_registers::LCD_LY_ADDR) {
+            Some(value) => value,
+            None => {
+                log::error!("failed to read LY register");
+                return;
+            }
+        };
+
+        let lyc = match memory.read(io_registers::LCD_LYC_ADDR) {
+            Some(value) => value,
+            None => {
+                log::error!("failed to read LYC register");
+                return;
+            }
+        };
+
+        self.set_lcdc_status(lcdc, stat, current_scanline, ly, lyc, memory, cpu);
+
+        if lcdc & LCD_ENABLE_MASK == 0 {
+            return;
+        }
+
+        self.scanline_counter -= cycles as i32;
+
+        if self.scanline_counter <= 0 {
+            self.scanline_counter += stat::MAX_SCANLINE_COUNT;
+
+            if current_scanline < 144 {
+                // TODO: Render tiles and sprites
+
+                memory.write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
+                return;
+            }
+
+            // V-Blank period
+            if current_scanline >= 144 && current_scanline < 154 {
+                cpu.request_interrupt(memory, Interrupt::VBlank);
+                memory.write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
+                return;
+            }
+
+            // Else, this means we've been through an entire frame cycle,
+            // reset the LY register to 0.
+            memory.write(io_registers::LCD_LY_ADDR, 0x00);
+        }
+    }
+
+    fn set_lcdc_status(
+        &mut self,
+        lcdc: u8,
+        stat: u8,
+        current_scanline: u8,
+        ly: u8,
+        lyc: u8,
+        memory: &mut impl interface::Memory,
+        cpu: &mut impl interface::CPU,
+    ) {
+        if lcdc & LCD_ENABLE_MASK == 0 {
+            self.scanline_counter = stat::MAX_SCANLINE_COUNT;
+
+            // Reset the LY register
+            memory.write(io_registers::LCD_LY_ADDR, 0x00);
+
+            // Reset the STAT register to 1111 1100
+            memory.write(io_registers::LCD_STAT_ADDR, stat & !stat::MODE_MASK);
+
+            // Exit pre-emptively, since LCD is disabled
+            return;
+        }
+
+        let (new_stat, requires_interrupt) = StatUpdater::new(stat)
+            .process_vblank(current_scanline)
+            .process_oam_search(self.scanline_counter)
+            .process_pixel_transfer(self.scanline_counter)
+            .process_hblank()
+            .process_ly_lyc(ly, lyc)
+            .build();
+
+        memory.write(io_registers::LCD_STAT_ADDR, new_stat);
+        if requires_interrupt {
+            cpu.request_interrupt(memory, Interrupt::LCDC);
+        }
     }
 
     // Tiles on GB are represented in VRAM as 16 bytes. They are located in the address range
@@ -157,16 +262,13 @@ impl interface::PPU for Ppu {
         *self = Ppu::new();
     }
 
-    fn step(&mut self, cycles: u32, memory: &mut impl interface::Memory) {
-        self.step(cycles, memory)
-    }
-
-    fn set_lcdc_status(&mut self, memory: &mut impl interface::Memory) {
-        self.set_lcdc_status(memory)
-    }
-
-    fn render_tiles(&mut self, memory: &impl interface::Memory) {
-        self.render_tiles(memory)
+    fn update_graphics(
+        &mut self,
+        cycles: u32,
+        memory: &mut impl interface::Memory,
+        cpu: &mut impl interface::CPU,
+    ) {
+        self.update_graphics(cycles, memory, cpu)
     }
 }
 

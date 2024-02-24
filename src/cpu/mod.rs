@@ -1,6 +1,3 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
-
 //! Module containing all logic relevant to the emulation of the original
 //! Gameboy's CPU (Sharp LR35902)
 mod bit;
@@ -14,7 +11,7 @@ mod test;
 use crate::interface;
 
 #[cfg(feature = "serial_debug")]
-use memory::io_registers;
+use crate::memory::io_registers;
 
 use opcode::Opcode;
 use register::{ID, ID16};
@@ -61,6 +58,18 @@ const CARRY_FLAG_MASK: u8 = 1 << 4;
 
 pub const CPU_CYCLES_PER_FRAME: u32 = 4194304 / 60;
 
+const V_BLANK_INTERRUPT_MASK: u8 = 1 << 0;
+const LCDC_INTERRUPT_MASK: u8 = 1 << 1;
+const TIMER_OVERFLOW_INTERRUPT_MASK: u8 = 1 << 2;
+const SERIAL_IO_INTERRUPT_MASK: u8 = 1 << 3;
+const CONTROLLER_IO_INTERRUPT_MASK: u8 = 1 << 4;
+
+const V_BLANK_INTERRUPT_VECTOR: u16 = 0x0040;
+const LCDC_INTERRUPT_VECTOR: u16 = 0x0048;
+const TIMER_OVERFLOW_INTERRUPT_VECTOR: u16 = 0x0050;
+const SERIAL_IO_INTERRUPT_VECTOR: u16 = 0x0058;
+const CONTROLLER_IO_INTERRUPT_VECTOR: u16 = 0x0060;
+
 impl PartialEq for LR35902 {
     fn eq(&self, other: &Self) -> bool {
         self.pc == other.pc
@@ -77,6 +86,14 @@ impl PartialEq for LR35902 {
 }
 
 impl interface::CPU for LR35902 {
+    fn halt(&mut self, memory: &mut impl interface::Memory) {
+        self.halt(memory);
+    }
+
+    fn is_halted(&self) -> bool {
+        return self.is_halted();
+    }
+
     fn reset(&mut self) {
         *self = LR35902::new();
     }
@@ -87,6 +104,22 @@ impl interface::CPU for LR35902 {
 
     fn set_post_boot_rom_state(&mut self) {
         self.set_post_boot_rom_state();
+    }
+
+    fn process_interrupts(
+        &mut self,
+        memory: &mut impl interface::Memory,
+        timers: &mut impl interface::Timers,
+    ) {
+        self.process_interrupts(memory, timers);
+    }
+
+    fn request_interrupt(
+        &mut self,
+        memory: &mut impl interface::Memory,
+        interrupt: interface::Interrupt,
+    ) {
+        self.request_interrupt(memory, interrupt);
     }
 }
 
@@ -123,6 +156,45 @@ impl LR35902 {
         return op.execute(self, memory);
     }
 
+    fn is_halted(&self) -> bool {
+        return self.halted;
+    }
+
+    fn halt(&mut self, memory: &mut impl interface::Memory) {
+        if self.bugged_halt {
+            self.bugged_halt = false;
+            return;
+        }
+
+        let interrupt_enable_register = memory.read(INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
+        let interrupt_flag_register = memory.read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
+
+        if interrupt_enable_register & interrupt_flag_register & V_BLANK_INTERRUPT_MASK > 0 {
+            self.halted = false;
+            return;
+        }
+
+        if interrupt_enable_register & interrupt_flag_register & LCDC_INTERRUPT_MASK > 0 {
+            self.halted = false;
+            return;
+        }
+
+        if interrupt_enable_register & interrupt_flag_register & TIMER_OVERFLOW_INTERRUPT_MASK > 0 {
+            self.halted = false;
+            return;
+        }
+
+        if interrupt_enable_register & interrupt_flag_register & SERIAL_IO_INTERRUPT_MASK > 0 {
+            self.halted = false;
+            return;
+        }
+
+        if interrupt_enable_register & interrupt_flag_register & CONTROLLER_IO_INTERRUPT_MASK > 0 {
+            self.halted = false;
+            return;
+        }
+    }
+
     pub fn set_post_boot_rom_state(&mut self) {
         self.af.set_word(0x0108);
         self.bc.set_word(0x0013);
@@ -130,6 +202,110 @@ impl LR35902 {
         self.hl.set_word(0x014D);
         self.pc = 0x0100;
         self.sp = 0xFFFE;
+    }
+
+    pub fn request_interrupt(
+        &mut self,
+        memory: &mut impl interface::Memory,
+        interrupt: interface::Interrupt,
+    ) {
+        let interrupt_flag_register = memory.read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
+
+        match interrupt {
+            interface::Interrupt::VBlank => {
+                memory.write(
+                    INTERRUPT_FLAG_REGISTER_ADDR,
+                    interrupt_flag_register | V_BLANK_INTERRUPT_MASK,
+                );
+            }
+            interface::Interrupt::LCDC => {
+                memory.write(
+                    INTERRUPT_FLAG_REGISTER_ADDR,
+                    interrupt_flag_register | LCDC_INTERRUPT_MASK,
+                );
+            }
+            interface::Interrupt::TimerOverflow => {
+                memory.write(
+                    INTERRUPT_FLAG_REGISTER_ADDR,
+                    interrupt_flag_register | TIMER_OVERFLOW_INTERRUPT_MASK,
+                );
+            }
+            interface::Interrupt::Serial => {
+                memory.write(
+                    INTERRUPT_FLAG_REGISTER_ADDR,
+                    interrupt_flag_register | SERIAL_IO_INTERRUPT_MASK,
+                );
+            }
+            interface::Interrupt::Joypad => {
+                memory.write(
+                    INTERRUPT_FLAG_REGISTER_ADDR,
+                    interrupt_flag_register | CONTROLLER_IO_INTERRUPT_MASK,
+                );
+            }
+        }
+    }
+
+    pub fn process_interrupts(
+        &mut self,
+        memory: &mut impl interface::Memory,
+        timers: &mut impl interface::Timers,
+    ) {
+        if !self.interrupt_master_enable || self.halted {
+            return;
+        }
+
+        let interrupt_enable_register = memory.read(INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
+        let interrupt_flag_register = memory.read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
+
+        if (interrupt_flag_register & V_BLANK_INTERRUPT_MASK > 0)
+            && (interrupt_enable_register & V_BLANK_INTERRUPT_MASK > 0)
+        {
+            self.interrupt_master_enable = false;
+            self.push_16bit_register_on_stack(ID16::PC, memory);
+            self.pc = V_BLANK_INTERRUPT_VECTOR;
+            timers.update(8, memory, self);
+            return;
+        }
+
+        if (interrupt_flag_register & LCDC_INTERRUPT_MASK > 0)
+            && (interrupt_enable_register & LCDC_INTERRUPT_MASK > 0)
+        {
+            self.interrupt_master_enable = false;
+            self.push_16bit_register_on_stack(ID16::PC, memory);
+            self.pc = LCDC_INTERRUPT_VECTOR;
+            timers.update(8, memory, self);
+            return;
+        }
+
+        if (interrupt_flag_register & TIMER_OVERFLOW_INTERRUPT_MASK > 0)
+            && (interrupt_enable_register & TIMER_OVERFLOW_INTERRUPT_MASK > 0)
+        {
+            self.interrupt_master_enable = false;
+            self.push_16bit_register_on_stack(ID16::PC, memory);
+            self.pc = TIMER_OVERFLOW_INTERRUPT_VECTOR;
+            timers.update(8, memory, self);
+            return;
+        }
+
+        if (interrupt_flag_register & SERIAL_IO_INTERRUPT_MASK > 0)
+            && (interrupt_enable_register & SERIAL_IO_INTERRUPT_MASK > 0)
+        {
+            self.interrupt_master_enable = false;
+            self.push_16bit_register_on_stack(ID16::PC, memory);
+            self.pc = SERIAL_IO_INTERRUPT_VECTOR;
+            timers.update(8, memory, self);
+            return;
+        }
+
+        if (interrupt_flag_register & CONTROLLER_IO_INTERRUPT_MASK > 0)
+            && (interrupt_enable_register & CONTROLLER_IO_INTERRUPT_MASK > 0)
+        {
+            self.interrupt_master_enable = false;
+            self.push_16bit_register_on_stack(ID16::PC, memory);
+            self.pc = CONTROLLER_IO_INTERRUPT_VECTOR;
+            timers.update(8, memory, self);
+            return;
+        }
     }
 
     fn reset_half_carry_flag(&mut self) {
@@ -658,7 +834,7 @@ impl LR35902 {
                 self.hl.hi = hi_byte;
             }
             ID16::AF => {
-                self.af.lo = lo_byte;
+                self.af.lo = 0xF0 & lo_byte;
                 self.af.hi = hi_byte;
             }
             ID16::SP => panic!("not supported"),
@@ -784,6 +960,15 @@ impl LR35902 {
 
         byte = byte.rotate_left(1);
 
+        if byte == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.reset_half_carry_flag();
+        self.reset_sub_flag();
+
         self.write_register(&reg_id, byte);
 
         return 4;
@@ -803,6 +988,15 @@ impl LR35902 {
 
         byte = byte.rotate_left(1);
 
+        if byte == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.reset_sub_flag();
+        self.reset_half_carry_flag();
+
         memory.write(addr, byte);
 
         return 12;
@@ -818,6 +1012,15 @@ impl LR35902 {
         }
 
         byte = byte.rotate_right(1);
+
+        if byte == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.reset_half_carry_flag();
+        self.reset_sub_flag();
 
         self.write_register(&reg_id, byte);
 
@@ -841,6 +1044,15 @@ impl LR35902 {
         }
 
         byte = byte.rotate_right(1);
+
+        if byte == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.reset_sub_flag();
+        self.reset_half_carry_flag();
 
         memory.write(addr, byte);
 
@@ -913,6 +1125,15 @@ impl LR35902 {
 
         byte = (byte << 1) | old_carry;
 
+        if byte == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.reset_sub_flag();
+        self.reset_half_carry_flag();
+
         self.write_register(&reg_id, byte);
 
         return 4;
@@ -935,13 +1156,22 @@ impl LR35902 {
             false => 0,
         };
 
-        if (msb) > 0 {
+        if (byte & (1 << 7)) > 0 {
             self.set_carry_flag();
         } else {
             self.reset_carry_flag();
         }
 
         byte = (byte << 1) | old_carry;
+
+        if byte == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.reset_sub_flag();
+        self.reset_half_carry_flag();
 
         memory.write(addr, byte);
 
@@ -965,6 +1195,15 @@ impl LR35902 {
         }
 
         byte = (byte >> 1) | old_carry;
+
+        if byte == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.reset_half_carry_flag();
+        self.reset_sub_flag();
 
         self.write_register(&reg_id, byte);
 
@@ -995,6 +1234,15 @@ impl LR35902 {
         }
 
         byte = (old_carry << 7) | (byte >> 1);
+
+        if byte == 0x00 {
+            self.set_zero_flag();
+        } else {
+            self.reset_zero_flag();
+        }
+
+        self.reset_half_carry_flag();
+        self.reset_sub_flag();
 
         memory.write(addr, byte);
 
@@ -1061,13 +1309,15 @@ impl LR35902 {
     fn shift_right_8bit_register_into_carry(&mut self, reg_id: register::ID) -> u32 {
         let mut byte = self.read_register(&reg_id);
 
+        let old_msb = byte & 0x80;
+
         if (byte & 0x01) > 0 {
             self.set_carry_flag();
         } else {
             self.reset_carry_flag();
         }
 
-        byte = byte >> 1;
+        byte = (byte >> 1) | old_msb;
 
         if byte == 0x00 {
             self.set_zero_flag();
@@ -1093,13 +1343,15 @@ impl LR35902 {
             None => panic!("TODO"),
         };
 
+        let old_msb = byte & 0x80;
+
         if (byte & 0x01) > 0 {
             self.set_carry_flag();
         } else {
             self.reset_carry_flag();
         }
 
-        byte = byte >> 1;
+        byte = (byte >> 1) | old_msb;
 
         if byte == 0x00 {
             self.set_zero_flag();

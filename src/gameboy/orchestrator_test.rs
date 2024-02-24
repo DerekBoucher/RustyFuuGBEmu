@@ -18,7 +18,7 @@ fn close() -> Result<(), TestFailureError> {
     ctrl.close();
 
     match close_receiver.recv_timeout(std::time::Duration::from_secs(1)) {
-        Ok(msg) => Ok(()),
+        Ok(_) => Ok(()),
         Err(err) => Err(TestFailureError {
             description: err.to_string(),
         }),
@@ -33,7 +33,7 @@ fn pause() -> Result<(), TestFailureError> {
     assert!(ctrl.paused);
 
     match pause_receiver.recv_timeout(std::time::Duration::from_secs(1)) {
-        Ok(msg) => Ok(()),
+        Ok(_) => Ok(()),
         Err(err) => Err(TestFailureError {
             description: err.to_string(),
         }),

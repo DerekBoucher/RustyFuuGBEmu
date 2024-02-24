@@ -1620,3 +1620,262 @@ fn push_16bit_register_on_stack() {
         assert_eq!(memory.data[0x000E], 0xFF);
     }
 }
+
+#[test]
+fn process_interrupts() {
+    struct TestCase {
+        description: &'static str,
+        setup: fn() -> (LR35902, mock::Memory, mock::Timer),
+        assert: fn(&LR35902, &mock::Memory, &mock::Timer),
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            setup: || -> (LR35902, mock::Memory, mock::Timer) {
+                let mut cpu = LR35902::new();
+                cpu.set_post_boot_rom_state();
+                let mut data: Vec<u8> = vec![0x00; 0x10000];
+                data[cpu::INTERRUPT_ENABLE_REGISTER_ADDR] = cpu::V_BLANK_INTERRUPT_MASK;
+                data[cpu::INTERRUPT_FLAG_REGISTER_ADDR] = cpu::V_BLANK_INTERRUPT_MASK;
+                let memory = mock::Memory::new(data);
+                return (cpu, memory, mock::Timer::new());
+            },
+            assert: |cpu, _, _| {
+                assert_eq!(cpu.pc, 0x0100);
+                assert_eq!(cpu.sp, 0xFFFE);
+                assert!(!cpu.interrupt_master_enable);
+            },
+            description:
+                "interrupt master enable flag is disabled -> should not process any interrupts",
+        },
+        TestCase {
+            setup: || -> (LR35902, mock::Memory, mock::Timer) {
+                let mut cpu = LR35902::new();
+                cpu.set_post_boot_rom_state();
+                cpu.interrupt_master_enable = true;
+                let data: Vec<u8> = vec![0x00; 0x10000];
+                let memory = mock::Memory::new(data);
+                return (cpu, memory, mock::Timer::new());
+            },
+            assert: |cpu, _, _| {
+                assert_eq!(cpu.pc, 0x0100);
+                assert_eq!(cpu.sp, 0xFFFE);
+                assert!(cpu.interrupt_master_enable);
+            },
+            description: "no interrupt flags enabled -> should not process any interrupts",
+        },
+        TestCase {
+            setup: || -> (LR35902, mock::Memory, mock::Timer) {
+                let mut cpu = LR35902::new();
+                cpu.set_post_boot_rom_state();
+                cpu.interrupt_master_enable = true;
+                let mut data: Vec<u8> = vec![0x00; 0x10000];
+                data[cpu::INTERRUPT_FLAG_REGISTER_ADDR] = cpu::V_BLANK_INTERRUPT_MASK;
+                let memory = mock::Memory::new(data);
+                return (cpu, memory, mock::Timer::new());
+            },
+            assert: |cpu, _, _| {
+                assert_eq!(cpu.pc, 0x0100);
+                assert_eq!(cpu.sp, 0xFFFE);
+                assert!(cpu.interrupt_master_enable);
+            },
+            description: "v blank flag set but enable off -> should not process any interrupts",
+        },
+        TestCase {
+            setup: || -> (LR35902, mock::Memory, mock::Timer) {
+                let mut cpu = LR35902::new();
+                cpu.set_post_boot_rom_state();
+                cpu.interrupt_master_enable = true;
+                let mut data: Vec<u8> = vec![0x00; 0x10000];
+                data[cpu::INTERRUPT_ENABLE_REGISTER_ADDR] = cpu::V_BLANK_INTERRUPT_MASK;
+                data[cpu::INTERRUPT_FLAG_REGISTER_ADDR] = cpu::V_BLANK_INTERRUPT_MASK;
+                let memory = mock::Memory::new(data);
+                return (cpu, memory, mock::Timer::new());
+            },
+            assert: |cpu, memory, _| {
+                assert_eq!(cpu.pc, cpu::V_BLANK_INTERRUPT_VECTOR);
+                assert_eq!(cpu.sp, 0xFFFC);
+                assert_eq!(memory.data[0xFFFE], 0x00);
+                assert_eq!(memory.data[0xFFFD], 0x01);
+                assert!(!cpu.interrupt_master_enable);
+            },
+            description: "v blank flag set and enable set -> should process v-blank interrupt",
+        },
+        TestCase {
+            setup: || -> (LR35902, mock::Memory, mock::Timer) {
+                let mut cpu = LR35902::new();
+                cpu.set_post_boot_rom_state();
+                cpu.interrupt_master_enable = true;
+                let mut data: Vec<u8> = vec![0x00; 0x10000];
+                data[cpu::INTERRUPT_FLAG_REGISTER_ADDR] = cpu::LCDC_INTERRUPT_MASK;
+                let memory = mock::Memory::new(data);
+                return (cpu, memory, mock::Timer::new());
+            },
+            assert: |cpu, _, _| {
+                assert_eq!(cpu.pc, 0x0100);
+                assert_eq!(cpu.sp, 0xFFFE);
+                assert!(cpu.interrupt_master_enable);
+            },
+            description: "LCDC flag set but enable off -> should not process any interrupts",
+        },
+        TestCase {
+            setup: || -> (LR35902, mock::Memory, mock::Timer) {
+                let mut cpu = LR35902::new();
+                cpu.set_post_boot_rom_state();
+                cpu.interrupt_master_enable = true;
+                let mut data: Vec<u8> = vec![0x00; 0x10000];
+                data[cpu::INTERRUPT_ENABLE_REGISTER_ADDR] = cpu::LCDC_INTERRUPT_MASK;
+                data[cpu::INTERRUPT_FLAG_REGISTER_ADDR] = cpu::LCDC_INTERRUPT_MASK;
+                let memory = mock::Memory::new(data);
+                return (cpu, memory, mock::Timer::new());
+            },
+            assert: |cpu, memory, _| {
+                assert_eq!(cpu.pc, cpu::LCDC_INTERRUPT_VECTOR);
+                assert_eq!(cpu.sp, 0xFFFC);
+                assert_eq!(memory.data[0xFFFE], 0x00);
+                assert_eq!(memory.data[0xFFFD], 0x01);
+                assert!(!cpu.interrupt_master_enable);
+            },
+            description: "LCDC flag set and enable set -> should process LCDC interrupt",
+        },
+        TestCase {
+            setup: || -> (LR35902, mock::Memory, mock::Timer) {
+                let mut cpu = LR35902::new();
+                cpu.set_post_boot_rom_state();
+                cpu.interrupt_master_enable = true;
+                let mut data: Vec<u8> = vec![0x00; 0x10000];
+                data[cpu::INTERRUPT_FLAG_REGISTER_ADDR] = cpu::TIMER_OVERFLOW_INTERRUPT_MASK;
+                let memory = mock::Memory::new(data);
+                return (cpu, memory, mock::Timer::new());
+            },
+            assert: |cpu, _, _| {
+                assert_eq!(cpu.pc, 0x0100);
+                assert_eq!(cpu.sp, 0xFFFE);
+                assert!(cpu.interrupt_master_enable);
+            },
+            description: "timer flag set but enable off -> should not process any interrupts",
+        },
+        TestCase {
+            setup: || -> (LR35902, mock::Memory, mock::Timer) {
+                let mut cpu = LR35902::new();
+                cpu.set_post_boot_rom_state();
+                cpu.interrupt_master_enable = true;
+                let mut data: Vec<u8> = vec![0x00; 0x10000];
+                data[cpu::INTERRUPT_ENABLE_REGISTER_ADDR] = cpu::TIMER_OVERFLOW_INTERRUPT_MASK;
+                data[cpu::INTERRUPT_FLAG_REGISTER_ADDR] = cpu::TIMER_OVERFLOW_INTERRUPT_MASK;
+                let memory = mock::Memory::new(data);
+                return (cpu, memory, mock::Timer::new());
+            },
+            assert: |cpu, memory, _| {
+                assert_eq!(cpu.pc, cpu::TIMER_OVERFLOW_INTERRUPT_VECTOR);
+                assert_eq!(cpu.sp, 0xFFFC);
+                assert_eq!(memory.data[0xFFFE], 0x00);
+                assert_eq!(memory.data[0xFFFD], 0x01);
+                assert!(!cpu.interrupt_master_enable);
+            },
+            description: "timer flag set and enable set -> should process timer overflow interrupt",
+        },
+        TestCase {
+            setup: || -> (LR35902, mock::Memory, mock::Timer) {
+                let mut cpu = LR35902::new();
+                cpu.set_post_boot_rom_state();
+                cpu.interrupt_master_enable = true;
+                let mut data: Vec<u8> = vec![0x00; 0x10000];
+                data[cpu::INTERRUPT_FLAG_REGISTER_ADDR] = cpu::SERIAL_IO_INTERRUPT_MASK;
+                let memory = mock::Memory::new(data);
+                return (cpu, memory, mock::Timer::new());
+            },
+            assert: |cpu, _, _| {
+                assert_eq!(cpu.pc, 0x0100);
+                assert_eq!(cpu.sp, 0xFFFE);
+                assert!(cpu.interrupt_master_enable);
+            },
+            description:
+                "serial transfer flag set but enable off -> should not process any interrupts",
+        },
+        TestCase {
+            setup: || -> (LR35902, mock::Memory, mock::Timer) {
+                let mut cpu = LR35902::new();
+                cpu.set_post_boot_rom_state();
+                cpu.interrupt_master_enable = true;
+                let mut data: Vec<u8> = vec![0x00; 0x10000];
+                data[cpu::INTERRUPT_ENABLE_REGISTER_ADDR] = cpu::SERIAL_IO_INTERRUPT_MASK;
+                data[cpu::INTERRUPT_FLAG_REGISTER_ADDR] = cpu::SERIAL_IO_INTERRUPT_MASK;
+                let memory = mock::Memory::new(data);
+                return (cpu, memory, mock::Timer::new());
+            },
+            assert: |cpu, memory, _| {
+                assert_eq!(cpu.pc, cpu::SERIAL_IO_INTERRUPT_VECTOR);
+                assert_eq!(cpu.sp, 0xFFFC);
+                assert_eq!(memory.data[0xFFFE], 0x00);
+                assert_eq!(memory.data[0xFFFD], 0x01);
+                assert!(!cpu.interrupt_master_enable);
+            },
+            description:
+                "serial transfer flag set and enable set -> should process serial IO interrupt",
+        },
+        TestCase {
+            setup: || -> (LR35902, mock::Memory, mock::Timer) {
+                let mut cpu = LR35902::new();
+                cpu.set_post_boot_rom_state();
+                cpu.interrupt_master_enable = true;
+                let mut data: Vec<u8> = vec![0x00; 0x10000];
+                data[cpu::INTERRUPT_FLAG_REGISTER_ADDR] = cpu::CONTROLLER_IO_INTERRUPT_MASK;
+                let memory = mock::Memory::new(data);
+                return (cpu, memory, mock::Timer::new());
+            },
+            assert: |cpu, _, _| {
+                assert_eq!(cpu.pc, 0x0100);
+                assert_eq!(cpu.sp, 0xFFFE);
+                assert!(cpu.interrupt_master_enable);
+            },
+            description: "joypad flag set but enable off -> should not process any interrupts",
+        },
+        TestCase {
+            setup: || -> (LR35902, mock::Memory, mock::Timer) {
+                let mut cpu = LR35902::new();
+                cpu.set_post_boot_rom_state();
+                cpu.interrupt_master_enable = true;
+                let mut data: Vec<u8> = vec![0x00; 0x10000];
+                data[cpu::INTERRUPT_ENABLE_REGISTER_ADDR] = cpu::CONTROLLER_IO_INTERRUPT_MASK;
+                data[cpu::INTERRUPT_FLAG_REGISTER_ADDR] = cpu::CONTROLLER_IO_INTERRUPT_MASK;
+                let memory = mock::Memory::new(data);
+                return (cpu, memory, mock::Timer::new());
+            },
+            assert: |cpu, memory, _| {
+                assert_eq!(cpu.pc, cpu::CONTROLLER_IO_INTERRUPT_VECTOR);
+                assert_eq!(cpu.sp, 0xFFFC);
+                assert_eq!(memory.data[0xFFFE], 0x00);
+                assert_eq!(memory.data[0xFFFD], 0x01);
+                assert!(!cpu.interrupt_master_enable);
+            },
+            description: "joypad flag set and enable set -> should process joypad interrupt",
+        },
+        TestCase {
+            setup: || -> (LR35902, mock::Memory, mock::Timer) {
+                let mut cpu = LR35902::new();
+                cpu.set_post_boot_rom_state();
+                cpu.interrupt_master_enable = true;
+                cpu.halted = true;
+                let mut data: Vec<u8> = vec![0x00; 0x10000];
+                data[cpu::INTERRUPT_ENABLE_REGISTER_ADDR] = cpu::CONTROLLER_IO_INTERRUPT_MASK;
+                data[cpu::INTERRUPT_FLAG_REGISTER_ADDR] = cpu::CONTROLLER_IO_INTERRUPT_MASK;
+                let memory = mock::Memory::new(data);
+                return (cpu, memory, mock::Timer::new());
+            },
+            assert: |cpu, _, _| {
+                assert_eq!(cpu.pc, 0x0100);
+                assert_eq!(cpu.sp, 0xFFFE);
+                assert!(cpu.interrupt_master_enable);
+            },
+            description: "when cpu is halted -> should not process any interrupts",
+        },
+    ];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        println!("Testcase #{}: {}", i, tc.description);
+        let (mut cpu, mut memory, mut timer) = (tc.setup)();
+        cpu.process_interrupts(&mut memory, &mut timer);
+        (tc.assert)(&cpu, &memory, &timer);
+    }
+}

@@ -29,8 +29,6 @@ impl Memory {
     pub fn dump(&self) -> Vec<u8> {
         self.data.clone()
     }
-
-    fn update_timers(&mut self, _cycles: u32) {}
 }
 
 impl interface::Memory for Memory {
@@ -49,11 +47,9 @@ impl interface::Memory for Memory {
         return self.dump();
     }
 
-    fn update_timers(&mut self, cycles: u32) {
-        self.update_timers(cycles);
-    }
-
     fn set_post_boot_rom_state(&mut self) {}
+
+    fn update_dma_transfer_cycles(&mut self, cycles: u32) {}
 }
 
 impl PartialEq for Memory {
@@ -87,5 +83,37 @@ impl interface::Cartridge for Cartridge {
 
     fn as_any(&self) -> &dyn Any {
         self
+    }
+}
+
+// Timers
+// ----------------------------------------------------
+
+#[derive(Debug)]
+pub struct Timer {
+    divider_tick_counter: u32,
+    timer_tick_counter: i32,
+}
+
+impl Timer {
+    pub fn new() -> Self {
+        Timer {
+            divider_tick_counter: 0,
+            timer_tick_counter: 0,
+        }
+    }
+}
+
+impl interface::Timers for Timer {
+    fn update(
+        &mut self,
+        cycles: u32,
+        _memory: &mut impl interface::Memory,
+        _cpu: &mut impl interface::CPU,
+    ) {
+    }
+
+    fn reset(&mut self) {
+        *self = Timer::new();
     }
 }
