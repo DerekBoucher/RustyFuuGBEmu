@@ -86,6 +86,14 @@ impl PartialEq for LR35902 {
 }
 
 impl interface::CPU for LR35902 {
+    fn halt(&mut self, memory: &mut impl interface::Memory) {
+        self.halt(memory);
+    }
+
+    fn is_halted(&self) -> bool {
+        return self.is_halted();
+    }
+
     fn reset(&mut self) {
         *self = LR35902::new();
     }
@@ -148,6 +156,45 @@ impl LR35902 {
         return op.execute(self, memory);
     }
 
+    fn is_halted(&self) -> bool {
+        return self.halted;
+    }
+
+    fn halt(&mut self, memory: &mut impl interface::Memory) {
+        if self.bugged_halt {
+            self.bugged_halt = false;
+            return;
+        }
+
+        let interrupt_enable_register = memory.read(INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
+        let interrupt_flag_register = memory.read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
+
+        if interrupt_enable_register & interrupt_flag_register & V_BLANK_INTERRUPT_MASK > 0 {
+            self.halted = false;
+            return;
+        }
+
+        if interrupt_enable_register & interrupt_flag_register & LCDC_INTERRUPT_MASK > 0 {
+            self.halted = false;
+            return;
+        }
+
+        if interrupt_enable_register & interrupt_flag_register & TIMER_OVERFLOW_INTERRUPT_MASK > 0 {
+            self.halted = false;
+            return;
+        }
+
+        if interrupt_enable_register & interrupt_flag_register & SERIAL_IO_INTERRUPT_MASK > 0 {
+            self.halted = false;
+            return;
+        }
+
+        if interrupt_enable_register & interrupt_flag_register & CONTROLLER_IO_INTERRUPT_MASK > 0 {
+            self.halted = false;
+            return;
+        }
+    }
+
     pub fn set_post_boot_rom_state(&mut self) {
         self.af.set_word(0x0108);
         self.bc.set_word(0x0013);
@@ -177,7 +224,7 @@ impl LR35902 {
                     interrupt_flag_register | LCDC_INTERRUPT_MASK,
                 );
             }
-            interface::Interrupt::Timer => {
+            interface::Interrupt::TimerOverflow => {
                 memory.write(
                     INTERRUPT_FLAG_REGISTER_ADDR,
                     interrupt_flag_register | TIMER_OVERFLOW_INTERRUPT_MASK,

@@ -1,5 +1,6 @@
 use crate::interface;
 use crate::memory::io_registers;
+const TIMER_CONTROL_ENABLED_MASK: u8 = 1 << 2;
 
 #[derive(Debug)]
 pub struct Timers {
@@ -47,7 +48,7 @@ impl Timers {
             );
         }
 
-        if timer_control_register & (1 << 2) > 0 {
+        if timer_control_register & TIMER_CONTROL_ENABLED_MASK > 0 {
             self.timer_tick_counter -= cycles as i32;
 
             while self.timer_tick_counter <= 0 {
@@ -64,7 +65,7 @@ impl Timers {
                     let timer_mod = memory.read(io_registers::TIMER_MOD_ADDR).unwrap();
                     memory.write(io_registers::TIMER_COUNTER_ADDR, timer_mod);
 
-                    cpu.request_interrupt(memory, interface::Interrupt::Timer);
+                    cpu.request_interrupt(memory, interface::Interrupt::TimerOverflow);
                     log::trace!("Timer interrupt requested");
                     break;
                 }

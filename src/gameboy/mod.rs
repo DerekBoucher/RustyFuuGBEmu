@@ -127,7 +127,13 @@ impl Gameboy {
                     None => {}
                 }
 
-                let cycles = cpu.execute_next_opcode(&mut memory);
+                let cycles: u32;
+                if cpu.is_halted() {
+                    cycles = 4;
+                    cpu.halt(&mut memory);
+                } else {
+                    cycles = cpu.execute_next_opcode(&mut memory);
+                }
 
                 timers.update(cycles, &mut memory, &mut cpu);
                 ppu.update_graphics(cycles, &mut memory, &mut cpu);
