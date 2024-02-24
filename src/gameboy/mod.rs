@@ -135,6 +135,7 @@ impl Gameboy {
                     cycles = cpu.execute_next_opcode(&mut memory);
                 }
 
+                memory.update_dma_transfer_cycles(cycles);
                 timers.update(cycles, &mut memory, &mut cpu);
                 ppu.update_graphics(cycles, &mut memory, &mut cpu);
                 cpu.process_interrupts(&mut memory, &mut timers);

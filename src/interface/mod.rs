@@ -13,6 +13,7 @@ pub trait Memory: Debug + Send {
     fn write(&mut self, addr: usize, val: u8);
     fn dump(&self) -> Vec<u8>;
     fn set_post_boot_rom_state(&mut self);
+    fn update_dma_transfer_cycles(&mut self, cycles: u32);
 }
 
 /// Timer trait which serves as an interface to the various timer implementations

@@ -29,8 +29,6 @@ impl Memory {
     pub fn dump(&self) -> Vec<u8> {
         self.data.clone()
     }
-
-    fn update_timers(&mut self, _cycles: u32) {}
 }
 
 impl interface::Memory for Memory {
@@ -50,6 +48,8 @@ impl interface::Memory for Memory {
     }
 
     fn set_post_boot_rom_state(&mut self) {}
+
+    fn update_dma_transfer_cycles(&mut self, cycles: u32) {}
 }
 
 impl PartialEq for Memory {

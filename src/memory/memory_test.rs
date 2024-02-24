@@ -152,6 +152,31 @@ fn read() {
                 assert!(read_result.is_none());
             }
         },
+        TestCase{
+            description: String::from("reading from a memory while the oam dma transfer is in progress, should return 0xFF dummy data"),
+            init_fn: || -> Memory {
+                let mut mem = Memory::new(mock::Cartridge::new(vec![0x0; 0x10000]));
+                mem.oam_dma_transfer_in_progress = true;
+                return mem;
+            },
+            assert_fn: |memory| {
+                let read_result = memory.read(0x0000);
+                assert_eq!(read_result.unwrap(), 0xFF);
+            }
+        },
+        TestCase{
+            description: String::from("reading from a HI RAM while the oam dma transfer is in progress, should still return the data in the HI RAM"),
+            init_fn: || -> Memory {
+                let mut mem = Memory::new(mock::Cartridge::new(vec![0x0; 0x10000]));
+                mem.hi_ram[0x00] = 0x17;
+                mem.oam_dma_transfer_in_progress = true;
+                return mem;
+            },
+            assert_fn: |memory| {
+                let read_result = memory.read(0xFF80);
+                assert_eq!(read_result.unwrap(), 0x17);
+            }
+        },
     ];
 
     for tc in test_cases {
@@ -232,22 +257,31 @@ fn write() {
         },
         TestCase {
             description: String::from(
-                "writing to region 0xFE00 - 0xFF00 -> should write to sprites attributes",
+                "writing to region 0xFE00 - 0xFF00 -> should not result in any writes",
             ),
             init_fn: || -> Memory { Memory::new(mock::Cartridge::new(vec![0x0; 0x10000])) },
             assert_fn: |mut memory| {
                 memory.write(0xFE00, 0x17);
-                assert_eq!(memory.sprite_attributes[0x0000], 0x17);
+                assert_eq!(memory.sprite_attributes[0x0000], 0x00);
             },
         },
         TestCase {
             description: String::from(
-                "writing to region 0xFF00 - 0xFF80 -> should write to io registers",
+                "writing to the oam dma transfer register -> should begin dma transfer and put expected data in the sprites attributes",
             ),
-            init_fn: || -> Memory { Memory::new(mock::Cartridge::new(vec![0x0; 0x10000])) },
+            init_fn: || -> Memory {
+                let mut cart_data: Vec<u8> = vec![0x0; 0x10000];
+                for i in 0x1800..0x18A0 {
+                    cart_data[i] = 0xFF;
+                }
+                return Memory::new(mock::Cartridge::new(cart_data));
+            },
             assert_fn: |mut memory| {
-                memory.write(0xFF00, 0x17);
-                assert_eq!(memory.io_registers[0x0000], 0x17);
+                memory.write(io_registers::OAM_DMA_TRANSFER_ADDR, 0x18);
+                assert!(memory.oam_dma_transfer_in_progress);
+                for i in 0..0xA0 {
+                    assert_eq!(memory.sprite_attributes[i], 0xFF);
+                }
             },
         },
         TestCase {
@@ -275,6 +309,70 @@ fn write() {
     for tc in test_cases {
         println!("{}", tc.description);
         let memory = (tc.init_fn)();
+        (tc.assert_fn)(memory);
+    }
+}
+
+#[test]
+fn update_dma_transfer_cycles() {
+    struct TestCase {
+        description: String,
+        init_fn: fn() -> Memory,
+        cycles: u32,
+        assert_fn: fn(Memory),
+    }
+
+    let test_cases: Vec<TestCase> = vec![
+        TestCase {
+            description: String::from(
+                "dma transfer in progress, 4 cycles passed -> should not update the dma transfer in progress flag",
+            ),
+            init_fn: || -> Memory {
+                let mut mem = Memory::new(mock::Cartridge::new(vec![0x0; 0x10000]));
+                mem.oam_dma_transfer_in_progress = true;
+                return mem;
+            },
+            cycles: 4,
+            assert_fn: |mut memory| {
+                assert!(memory.oam_dma_transfer_in_progress);
+            },
+        },
+        TestCase {
+            description: String::from(
+                "dma transfer in progress, 160 cycles passed -> should set the dma transfer in progress flag to false",
+            ),
+            init_fn: || -> Memory {
+                let mut mem = Memory::new(mock::Cartridge::new(vec![0x0; 0x10000]));
+                mem.oam_dma_transfer_in_progress = true;
+                return mem;
+            },
+            cycles: 160,
+            assert_fn: |mut memory| {
+                assert!(!memory.oam_dma_transfer_in_progress);
+            },
+        },
+        TestCase {
+            description: String::from(
+                "dma transfer not in progress, 160 cycles passed -> should reset the dma transfer cycles to 0",
+            ),
+            init_fn: || -> Memory {
+                let mut mem = Memory::new(mock::Cartridge::new(vec![0x0; 0x10000]));
+                mem.oam_dma_transfer_in_progress = false;
+                mem.oam_dma_transfer_cycles_completed = 160;
+                return mem;
+            },
+            cycles: 160,
+            assert_fn: |mut memory| {
+                assert!(!memory.oam_dma_transfer_in_progress);
+                assert_eq!(memory.oam_dma_transfer_cycles_completed, 0);
+            },
+        },
+    ];
+
+    for (i, tc) in test_cases.iter().enumerate() {
+        println!("Test case #{}: {}", i, tc.description);
+        let mut memory = (tc.init_fn)();
+        memory.update_dma_transfer_cycles(tc.cycles);
         (tc.assert_fn)(memory);
     }
 }
