@@ -16,6 +16,9 @@ pub struct Orchestrator {
     pause_sender: channel::Sender<()>,
     ack_receiver: channel::Receiver<()>,
     rom_data_sender: channel::Sender<Vec<u8>>,
+    frame_data_receiver: channel::Receiver<
+        [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
+    >,
     paused: bool,
 }
 
@@ -58,8 +61,14 @@ impl Gameboy {
         ppu: impl interface::PPU + 'static,
         timers: impl interface::Timers + 'static,
     ) -> Orchestrator {
-        let (orchestrator, close_receiver, pause_receiver, ack_sender, rom_data_receiver) =
-            Orchestrator::new();
+        let (
+            orchestrator,
+            close_receiver,
+            pause_receiver,
+            ack_sender,
+            rom_data_receiver,
+            frame_data_sender,
+        ) = Orchestrator::new();
 
         std::thread::spawn(move || {
             self.run(
@@ -67,6 +76,7 @@ impl Gameboy {
                 pause_receiver,
                 ack_sender,
                 rom_data_receiver,
+                frame_data_sender,
                 cpu,
                 memory,
                 ppu,
@@ -82,6 +92,9 @@ impl Gameboy {
         pause_receiver: channel::Receiver<()>,
         ack_sender: channel::Sender<()>,
         rom_data_receiver: channel::Receiver<Vec<u8>>,
+        frame_data_sender: channel::Sender<
+            [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
+        >,
 
         mut cpu: impl interface::CPU,
         mut memory: impl interface::Memory,
@@ -144,7 +157,29 @@ impl Gameboy {
                 // TODO - Add APU / Sound processing here
             }
 
-            // TODO - PPU / OpenGL Render calls here
+            select! {
+                // Ask main thread to render the frame.
+                // Since the frame_data channel is bounded with a capacity of 1, we can
+                // also rely on this thread blocking until the main thread renders, which in
+                // turn allows the main thread to control the FPS of the emulator.
+                send(frame_data_sender, ppu.get_frame_data()) -> _ => {}
+
+                recv(close_receiver) -> _ => {
+                    break 'main;
+                }
+
+                recv(pause_receiver) -> _ => {
+                    log::debug!("gb emulation paused");
+                    pause_receiver.recv().unwrap();
+                    log::debug!("gb emulation resumed");
+                }
+
+                recv(rom_data_receiver) -> rom_data => {
+                    self.load_rom(rom_data.unwrap(), &mut cpu, &mut memory, &mut ppu, &mut timers);
+                    log::debug!("ROM cartridge loaded!");
+                    continue 'main;
+                }
+            }
         }
 
         log::debug!("gb thread closed");

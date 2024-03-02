@@ -47,7 +47,7 @@ fn main() {
 
     program_loop.run(move |program_event, _, control_flow| {
         let next_frame_time =
-            std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
+            std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667); // Achieves 60fps
 
         *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
 
@@ -74,7 +74,12 @@ fn main() {
             Event::RedrawRequested(_) => {
                 ui.render(control_flow, &display, &mut gb_orchestrator);
             }
-            _ => {}
+            _ => match gb_orchestrator.render_requested() {
+                Some(_) => {
+                    log::trace!("render requested from gb thread")
+                }
+                None => {}
+            },
         }
     });
 }
