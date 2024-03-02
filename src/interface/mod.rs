@@ -36,6 +36,7 @@ pub trait Cartridge: Any + Debug + Send {
 pub trait PPU: Debug + Send {
     fn reset(&mut self);
     fn update_graphics(&mut self, cycles: u32, memory: &mut impl Memory, cpu: &mut impl CPU);
+    fn get_frame_data(&self) -> [[Pixel; NATIVE_SCREEN_WIDTH]; NATIVE_SCREEN_HEIGHT];
 }
 
 /// CPU trait that lets implementors of the LR35902 Sharp processing unit expose the necessary API
@@ -56,3 +57,25 @@ pub enum Interrupt {
     Serial,
     Joypad,
 }
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Pixel {
+    White,
+    LightGray,
+    DarkGray,
+    Black,
+}
+
+impl Pixel {
+    pub fn to_rgb(&self) -> (u8, u8, u8) {
+        match self {
+            Self::White => (255, 255, 255),
+            Self::Black => (0, 0, 0),
+            Self::LightGray => (169, 169, 169),
+            Self::DarkGray => (211, 211, 211),
+        }
+    }
+}
+
+pub const NATIVE_SCREEN_WIDTH: usize = 160;
+pub const NATIVE_SCREEN_HEIGHT: usize = 144;

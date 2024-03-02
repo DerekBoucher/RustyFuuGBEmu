@@ -1547,12 +1547,15 @@ impl LR35902 {
 
     #[cfg(feature = "serial_debug")]
     fn serial_debug_output(memory: &mut impl interface::Memory) {
+        use std::io::{self, Write};
+
         match memory.read(io_registers::SERIAL_TRANSFER_CONTROL_ADDR) {
             Some(byte) => {
                 if byte == 0x81 {
                     match memory.read(io_registers::SERIAL_TRANSFER_DATA_ADDR) {
                         Some(byte) => {
                             print!("{}", byte as char);
+                            io::stdout().flush().unwrap();
                             memory.write(io_registers::SERIAL_TRANSFER_CONTROL_ADDR, 0x00);
                         }
                         None => {}

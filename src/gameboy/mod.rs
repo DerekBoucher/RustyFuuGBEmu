@@ -1,7 +1,7 @@
+use crate::cartridge;
 use crate::cpu::CPU_CYCLES_PER_FRAME;
 use crate::interface;
-use crate::{cartridge, timers};
-use crossbeam::channel::{self};
+use crossbeam::channel;
 use crossbeam::select;
 
 mod orchestrator;

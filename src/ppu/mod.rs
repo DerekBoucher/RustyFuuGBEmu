@@ -1,20 +1,10 @@
-mod color;
+use crate::interface;
+
 mod ppu;
 mod stat;
 
-const SCREEN_WIDTH: usize = 160;
-const SCREEN_HEIGHT: usize = 144;
-
 #[derive(Debug)]
 pub struct Ppu {
-    pixels: [[Color; SCREEN_WIDTH]; SCREEN_HEIGHT],
+    pixels: [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
     scanline_counter: i32,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Color {
-    White,
-    LightGray,
-    DarkGray,
-    Black,
 }
