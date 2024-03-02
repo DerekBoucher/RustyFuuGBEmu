@@ -22,7 +22,7 @@ impl Register {
 #[derive(Debug)]
 pub enum ID {
     A,
-    F,
+    _F,
     B,
     C,
     D,

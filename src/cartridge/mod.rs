@@ -44,10 +44,10 @@ pub mod rom_size_id {
 
 mod ram_size_id {
     pub const NO_RAM: u8 = 0x00;
-    pub const ONE_BANK: u8 = 0x02;
+    pub const _ONE_BANK: u8 = 0x02;
     pub const FOUR_BANKS: u8 = 0x03;
-    pub const HEX_BANKS: u8 = 0x04;
-    pub const OCTA_BANKS: u8 = 0x05;
+    pub const _HEX_BANKS: u8 = 0x04;
+    pub const _OCTA_BANKS: u8 = 0x05;
 }
 
 mod mbc_id {

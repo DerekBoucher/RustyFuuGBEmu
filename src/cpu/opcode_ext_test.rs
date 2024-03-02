@@ -1,7 +1,7 @@
 use crate::cpu::opcode::Opcode;
 use crate::cpu::opcode_ext::ExtendedOpcode;
 use crate::cpu::test::TestCase;
-use crate::cpu::{self, LR35902};
+use crate::cpu::LR35902;
 use crate::interface::mock;
 
 #[test]

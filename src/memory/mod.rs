@@ -30,7 +30,7 @@ pub struct Memory {
     /// Exact replica of contents of memory from 0xC000 ~ 0xDDFF.
     /// Not quite sure what the use of this is.
     /// Occupies memory locations 0xE000 ~ 0xFDFF.
-    echo_ram: [u8; 0x1E00],
+    _echo_ram: [u8; 0x1E00],
 
     /// Sprite data.
     /// Occupies memory locations 0xFE00 ~ 0xFE9F.
@@ -83,7 +83,7 @@ pub mod io_registers {
     pub const AUDIO_CH4_VOLUME_ADDR: usize = 0xFF21;
     pub const AUDIO_CH4_FREQ_ADDR: usize = 0xFF22;
     pub const AUDIO_CH4_CTRL_ADDR: usize = 0xFF23;
-    pub const AUDIO_WAV_PATTERN_RAM_START_ADDR: usize = 0xFF30;
+    pub const _AUDIO_WAV_PATTERN_RAM_START_ADDR: usize = 0xFF30;
     pub const AUDIO_GLOBAL_CTRL_ADDR: usize = 0xFF26;
     pub const AUDIO_GLOBAL_PANNING_ADDR: usize = 0xFF25;
     pub const AUDIO_GLOBAL_VOLUME_ADDR: usize = 0xFF24;
@@ -128,7 +128,7 @@ impl Memory {
             video_ram: [0x00; 0x2000],
             work_ram0: [0x00; 0x1000],
             work_ram1: [0x00; 0x1000],
-            echo_ram: [0x00; 0x1E00],
+            _echo_ram: [0x00; 0x1E00],
             sprite_attributes: [0x00; 0xA0],
             io_registers: [0x00; 0x80],
             hi_ram: [0x00; 0x7F],
@@ -140,11 +140,11 @@ impl Memory {
 
     pub fn default() -> Self {
         Self {
-            cartridge: cartridge::new(vec![]),
+            cartridge: cartridge::default(),
             video_ram: [0x00; 0x2000],
             work_ram0: [0x00; 0x1000],
             work_ram1: [0x00; 0x1000],
-            echo_ram: [0x00; 0x1E00],
+            _echo_ram: [0x00; 0x1E00],
             sprite_attributes: [0x00; 0xA0],
             io_registers: [0x00; 0x80],
             hi_ram: [0x00; 0x7F],

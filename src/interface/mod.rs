@@ -54,8 +54,8 @@ pub enum Interrupt {
     VBlank,
     LCDC,
     TimerOverflow,
-    Serial,
-    Joypad,
+    _Serial,
+    _Joypad,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -67,7 +67,7 @@ pub enum Pixel {
 }
 
 impl Pixel {
-    pub fn to_rgb(&self) -> (u8, u8, u8) {
+    pub fn _to_rgb(&self) -> (u8, u8, u8) {
         match self {
             Self::White => (255, 255, 255),
             Self::Black => (0, 0, 0),

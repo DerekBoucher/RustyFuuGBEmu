@@ -333,7 +333,7 @@ fn update_dma_transfer_cycles() {
                 return mem;
             },
             cycles: 4,
-            assert_fn: |mut memory| {
+            assert_fn: |memory| {
                 assert!(memory.oam_dma_transfer_in_progress);
             },
         },
@@ -347,7 +347,7 @@ fn update_dma_transfer_cycles() {
                 return mem;
             },
             cycles: 160,
-            assert_fn: |mut memory| {
+            assert_fn: |memory| {
                 assert!(!memory.oam_dma_transfer_in_progress);
             },
         },
@@ -362,7 +362,7 @@ fn update_dma_transfer_cycles() {
                 return mem;
             },
             cycles: 160,
-            assert_fn: |mut memory| {
+            assert_fn: |memory| {
                 assert!(!memory.oam_dma_transfer_in_progress);
                 assert_eq!(memory.oam_dma_transfer_cycles_completed, 0);
             },

@@ -230,13 +230,13 @@ impl LR35902 {
                     interrupt_flag_register | TIMER_OVERFLOW_INTERRUPT_MASK,
                 );
             }
-            interface::Interrupt::Serial => {
+            interface::Interrupt::_Serial => {
                 memory.write(
                     INTERRUPT_FLAG_REGISTER_ADDR,
                     interrupt_flag_register | SERIAL_IO_INTERRUPT_MASK,
                 );
             }
-            interface::Interrupt::Joypad => {
+            interface::Interrupt::_Joypad => {
                 memory.write(
                     INTERRUPT_FLAG_REGISTER_ADDR,
                     interrupt_flag_register | CONTROLLER_IO_INTERRUPT_MASK,
@@ -1062,7 +1062,7 @@ impl LR35902 {
     fn read_register(&self, reg_id: &register::ID) -> u8 {
         match reg_id {
             ID::A => self.af.hi,
-            ID::F => self.af.lo,
+            ID::_F => self.af.lo,
             ID::B => self.bc.hi,
             ID::C => self.bc.lo,
             ID::D => self.de.hi,
@@ -1075,7 +1075,7 @@ impl LR35902 {
     fn write_register(&mut self, reg_id: &register::ID, value: u8) {
         match reg_id {
             ID::A => self.af.hi = value,
-            ID::F => self.af.lo = value,
+            ID::_F => self.af.lo = value,
             ID::B => self.bc.hi = value,
             ID::C => self.bc.lo = value,
             ID::D => self.de.hi = value,
@@ -1156,7 +1156,7 @@ impl LR35902 {
             false => 0,
         };
 
-        if (byte & (1 << 7)) > 0 {
+        if (msb) > 0 {
             self.set_carry_flag();
         } else {
             self.reset_carry_flag();
