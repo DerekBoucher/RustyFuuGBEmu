@@ -59,7 +59,7 @@ impl Ui {
         target.finish().unwrap();
     }
 
-    pub fn process_events(&mut self, event: WindowEvent<'_>, display: &Display) {
+    pub fn process_window_event(&mut self, event: WindowEvent<'_>, display: &Display) {
         let event_response = self.egui_glium_client.on_event(&event);
 
         if event_response.repaint {

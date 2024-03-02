@@ -8,6 +8,7 @@ mod timers;
 mod ui;
 
 use clap::Parser;
+use gameboy::Orchestrator;
 use glium::glutin;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::EventLoop;
@@ -28,62 +29,50 @@ fn main() {
     log::info!("Starting RustyFuuGBemu");
     let args = Args::parse();
 
-    let (events_loop, display) = init_glium();
-    let egui_glium_client = egui_glium::EguiGlium::new(&display, &events_loop);
+    let (program_loop, display) = init_glium();
+    let egui_glium_client = egui_glium::EguiGlium::new(&display, &program_loop);
 
     let mut cpu = cpu::LR35902::new();
     let mut memory = memory::Memory::new(cartridge::default());
     let ppu = ppu::Ppu::new();
-    let gameboy = gameboy::Gameboy::new();
     let timers = timers::Timers::new();
+    let gameboy = gameboy::Gameboy::new();
+
     if args.skip_boot_rom {
         gameboy.skip_boot_rom(&mut cpu, &mut memory);
     }
 
-    let mut ui = ui::Ui::new(egui_glium_client, events_loop.create_proxy());
-    let mut gb_controller = gameboy.start(cpu, memory, ppu, timers);
+    let mut ui = ui::Ui::new(egui_glium_client, program_loop.create_proxy());
+    let mut gb_orchestrator = gameboy.start(cpu, memory, ppu, timers);
 
-    events_loop.run(move |ev, _, control_flow| {
+    program_loop.run(move |program_event, _, control_flow| {
         let next_frame_time =
             std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
 
         *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
 
-        match ev {
-            Event::WindowEvent { event, .. } => match event {
+        match program_event {
+            Event::WindowEvent {
+                event: window_event,
+                ..
+            } => match window_event {
                 WindowEvent::CloseRequested => {
-                    *control_flow = glutin::event_loop::ControlFlow::Exit;
-                    gb_controller.close();
-                     match gb_controller.join() {
-                        Ok(_) => (),
-                        Err(err) => match err {
-                            crossbeam::channel::RecvTimeoutError::Timeout => log::error!("gb thread deadlocked -> join operation did not complete on time"),
-                            crossbeam::channel::RecvTimeoutError::Disconnected => log::error!("lost connection to gb thread while waiting for a join"),
-                        }
-                    }
-                   return;
+                    handle_app_close(control_flow, &mut gb_orchestrator);
+                    return;
                 }
 
-                _ => ui.process_events(event, &display),
+                _ => ui.process_window_event(window_event, &display),
             },
-            Event::UserEvent(ui_event) => match ui_event {
+            Event::UserEvent(custom_event) => match custom_event {
                 ui::events::UiEvent::CloseWindow => {
-                    *control_flow = glutin::event_loop::ControlFlow::Exit;
-                    gb_controller.close();
-                    match gb_controller.join() {
-                        Ok(_) => (),
-                        Err(err) => match err {
-                            crossbeam::channel::RecvTimeoutError::Timeout => log::error!("gb thread deadlocked -> join operation did not complete on time"),
-                            crossbeam::channel::RecvTimeoutError::Disconnected => log::error!("lost connection to gb thread while waiting for a join"),
-                        }
-                    }
+                    handle_app_close(control_flow, &mut gb_orchestrator);
                     return;
                 }
             },
             Event::NewEvents(_) => {}
             Event::MainEventsCleared => {}
             Event::RedrawRequested(_) => {
-                ui.render(control_flow, &display, &mut gb_controller);
+                ui.render(control_flow, &display, &mut gb_orchestrator);
             }
             _ => {}
         }
@@ -101,4 +90,23 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
     let display = glium::Display::new(wb, cb, &events_loop).unwrap();
 
     return (events_loop, display);
+}
+
+fn handle_app_close(
+    control_flow: &mut glutin::event_loop::ControlFlow,
+    gb_controller: &mut Orchestrator,
+) {
+    *control_flow = glutin::event_loop::ControlFlow::Exit;
+    gb_controller.close();
+    match gb_controller.join() {
+        Ok(_) => (),
+        Err(err) => match err {
+            crossbeam::channel::RecvTimeoutError::Timeout => {
+                log::error!("gb thread deadlocked -> join operation did not complete on time")
+            }
+            crossbeam::channel::RecvTimeoutError::Disconnected => {
+                log::error!("lost connection to gb thread while waiting for a join")
+            }
+        },
+    }
 }
