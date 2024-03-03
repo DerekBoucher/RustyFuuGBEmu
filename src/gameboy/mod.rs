@@ -7,7 +7,6 @@ use crossbeam::select;
 mod orchestrator;
 
 pub struct Gameboy {
-    // require_render: bool,
     cartridge_inserted: bool,
 }
 

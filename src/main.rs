@@ -4,15 +4,18 @@ mod gameboy;
 mod interface;
 mod memory;
 mod ppu;
+mod renderer;
 mod timers;
 mod ui;
 
 use clap::Parser;
 use gameboy::Orchestrator;
-use glium::glutin;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::EventLoop;
 use glium::Display;
+use glium::{glutin, Surface};
+
+const SCALE_FACTOR: i32 = 5;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -31,6 +34,7 @@ fn main() {
 
     let (program_loop, display) = init_glium();
     let egui_glium_client = egui_glium::EguiGlium::new(&display, &program_loop);
+    let opengl_renderer = renderer::OpenGL::new(&display);
 
     let mut cpu = cpu::LR35902::new();
     let mut memory = memory::Memory::default();
@@ -72,14 +76,19 @@ fn main() {
             Event::NewEvents(_) => {}
             Event::MainEventsCleared => {}
             Event::RedrawRequested(_) => {
-                ui.render(control_flow, &display, &mut gb_orchestrator);
-            }
-            _ => match gb_orchestrator.render_requested() {
-                Some(_) => {
-                    log::trace!("render requested from gb thread")
+                let mut frame = display.draw();
+                frame.clear_color(1.0, 1.0, 1.0, 1.0);
+                opengl_renderer.render(&mut frame);
+                ui.draw(control_flow, &display, &mut frame, &mut gb_orchestrator);
+
+                match gb_orchestrator.render_requested() {
+                    Some(_) => (),
+                    None => (),
                 }
-                None => {}
-            },
+
+                frame.finish().unwrap();
+            }
+            _ => {}
         }
     });
 }
@@ -89,8 +98,12 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
         glium::glutin::event_loop::EventLoopBuilder::<ui::events::UiEvent>::with_user_event()
             .build();
     let wb = glium::glutin::window::WindowBuilder::new()
-        .with_inner_size(glium::glutin::dpi::LogicalSize::new(1024.0, 768.0))
-        .with_title("RustyFuuGBemu");
+        .with_inner_size(glium::glutin::dpi::LogicalSize::new(
+            (interface::NATIVE_SCREEN_WIDTH as i32) * SCALE_FACTOR,
+            (interface::NATIVE_SCREEN_HEIGHT as i32) * SCALE_FACTOR,
+        ))
+        .with_title("RustyFuuGBemu")
+        .with_resizable(false);
     let cb = glium::glutin::ContextBuilder::new();
     let display = glium::Display::new(wb, cb, &events_loop).unwrap();
 
