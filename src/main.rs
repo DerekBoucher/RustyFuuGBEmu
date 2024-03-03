@@ -62,7 +62,6 @@ fn main() {
             } => match window_event {
                 WindowEvent::CloseRequested => {
                     handle_app_close(control_flow, &mut gb_orchestrator);
-                    return;
                 }
 
                 _ => ui.process_window_event(window_event, &display),
@@ -70,7 +69,6 @@ fn main() {
             Event::UserEvent(custom_event) => match custom_event {
                 ui::events::UiEvent::CloseWindow => {
                     handle_app_close(control_flow, &mut gb_orchestrator);
-                    return;
                 }
             },
             Event::NewEvents(_) => {}
@@ -80,15 +78,16 @@ fn main() {
                 frame.clear_color(1.0, 1.0, 1.0, 1.0);
                 opengl_renderer.render(&mut frame);
                 ui.draw(control_flow, &display, &mut frame, &mut gb_orchestrator);
-
-                match gb_orchestrator.render_requested() {
-                    Some(_) => (),
-                    None => (),
-                }
-
                 frame.finish().unwrap();
             }
             _ => {}
+        }
+
+        match gb_orchestrator.render_requested() {
+            Some(_) => {
+                display.gl_window().window().request_redraw();
+            }
+            None => (),
         }
     });
 }
