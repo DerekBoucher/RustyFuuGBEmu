@@ -33,11 +33,9 @@ fn new() {
     ];
 
     for tc in test_cases {
-        let mbc1 = MBC1::new(vec![]);
-
         let implementation = cartridge::new((tc.init_fn)());
         match implementation.as_any().downcast_ref::<MBC1>() {
-            Some(mbc1) => {}
+            Some(_) => {}
             None => panic!("returned cartridge implementation was not a MBC1!"),
         };
     }
@@ -289,7 +287,7 @@ fn read() {
                 run_fn: || {
                     let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
                     cart_data[cartridge::header::RAM_SIZE_ADDR] =
-                        cartridge::ram_size_id::ONE_BANK;
+                        cartridge::ram_size_id::_ONE_BANK;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1;
                     let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_bank_select_register = 0x0;
@@ -308,7 +306,7 @@ fn read() {
                 run_fn: || {
                     let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
                     cart_data[cartridge::header::RAM_SIZE_ADDR] =
-                        cartridge::ram_size_id::ONE_BANK;
+                        cartridge::ram_size_id::_ONE_BANK;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
                     let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_bank_select_register = 0x0;
@@ -327,7 +325,7 @@ fn read() {
                 run_fn: || {
                     let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
                     cart_data[cartridge::header::RAM_SIZE_ADDR] =
-                        cartridge::ram_size_id::ONE_BANK;
+                        cartridge::ram_size_id::_ONE_BANK;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
                     let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_bank_select_register = 0x0;
@@ -565,7 +563,7 @@ fn write() {
                 ),
                 run_fn: || {
                     let mut cart_data: Vec<u8> = vec![0x00; 0x4000];
-                    cart_data[cartridge::header::RAM_SIZE_ADDR] = cartridge::ram_size_id::ONE_BANK;
+                    cart_data[cartridge::header::RAM_SIZE_ADDR] = cartridge::ram_size_id::_ONE_BANK;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
                     let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_enabled = true;

@@ -1,13 +1,16 @@
 use crate::gameboy;
-use egui::Context;
+
 use glium::glutin::event::WindowEvent;
 use glium::glutin::event_loop::ControlFlow;
 use glium::glutin::event_loop::EventLoopProxy;
 use glium::Display;
-use glium::Surface as _;
+use glium::Frame;
 use std::fs;
 
 pub mod events;
+
+pub const TOP_MENUBAR_HEIGHT: f32 = 20.0;
+pub const SCALE_FACTOR: i32 = 5;
 
 pub struct Ui {
     egui_glium_client: egui_glium::EguiGlium,
@@ -25,14 +28,33 @@ impl Ui {
         }
     }
 
-    pub fn render(
+    pub fn draw(
         &mut self,
         control_flow: &mut ControlFlow,
         display: &Display,
+        frame: &mut Frame,
         gb_controller: &mut gameboy::Orchestrator,
     ) {
-        let egui_redraw_timer = self.egui_glium_client.run(&display, |egui_ctx| {
-            Ui::draw(egui_ctx, gb_controller, &self.ui_event_loop_proxy);
+        let egui_redraw_timer = self.egui_glium_client.run(display, |egui_ctx| {
+            egui::TopBottomPanel::top("top_panel")
+                .exact_height(TOP_MENUBAR_HEIGHT)
+                .show(egui_ctx, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.menu_button("File", |ui| {
+                            if ui.button("Load ROM").clicked() {
+                                Ui::load_rom_from_file_dialog(gb_controller);
+                                ui.close_menu();
+                            }
+
+                            if ui.button("Exit").clicked() {
+                                self.ui_event_loop_proxy
+                                    .send_event(events::UiEvent::CloseWindow)
+                                    .unwrap();
+                                ui.close_menu();
+                            }
+                        });
+                    });
+                });
         });
 
         let time_until_next_redraw = std::time::Instant::now().checked_add(egui_redraw_timer);
@@ -46,49 +68,15 @@ impl Ui {
             *control_flow = ControlFlow::Wait;
         }
 
-        let mut target = display.draw();
-        let color = egui::Rgba::from_rgb(1.0, 1.0, 1.0);
-        target.clear_color(color[0], color[1], color[2], color[3]);
-
-        // draw things behind egui here
-
-        self.egui_glium_client.paint(&display, &mut target);
-
-        // draw things on top of egui here
-
-        target.finish().unwrap();
+        self.egui_glium_client.paint(display, frame);
     }
 
-    pub fn process_events(&mut self, event: WindowEvent<'_>, display: &Display) {
+    pub fn process_window_event(&mut self, event: WindowEvent<'_>, display: &Display) {
         let event_response = self.egui_glium_client.on_event(&event);
 
         if event_response.repaint {
             display.gl_window().window().request_redraw();
         }
-    }
-
-    fn draw(
-        egui_ctx: &Context,
-        gb_controller: &mut gameboy::Orchestrator,
-        ui_event_loop_proxy: &EventLoopProxy<events::UiEvent>,
-    ) {
-        egui::TopBottomPanel::top("top_panel").show(egui_ctx, |ui| {
-            ui.menu_button("File", |ui| {
-                if ui.button("Load ROM").clicked() {
-                    gb_controller.pause();
-                    Ui::load_rom_from_file_dialog(gb_controller);
-                    ui.close_menu();
-                    gb_controller.resume();
-                }
-
-                if ui.button("Exit").clicked() {
-                    ui_event_loop_proxy
-                        .send_event(events::UiEvent::CloseWindow)
-                        .unwrap();
-                    ui.close_menu();
-                }
-            })
-        });
     }
 
     fn load_rom_from_file_dialog(gb_controller: &mut gameboy::Orchestrator) {

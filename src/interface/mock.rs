@@ -49,7 +49,7 @@ impl interface::Memory for Memory {
 
     fn set_post_boot_rom_state(&mut self) {}
 
-    fn update_dma_transfer_cycles(&mut self, cycles: u32) {}
+    fn update_dma_transfer_cycles(&mut self, _cycles: u32) {}
 }
 
 impl PartialEq for Memory {
@@ -91,15 +91,15 @@ impl interface::Cartridge for Cartridge {
 
 #[derive(Debug)]
 pub struct Timer {
-    divider_tick_counter: u32,
-    timer_tick_counter: i32,
+    _divider_tick_counter: u32,
+    _timer_tick_counter: i32,
 }
 
 impl Timer {
     pub fn new() -> Self {
         Timer {
-            divider_tick_counter: 0,
-            timer_tick_counter: 0,
+            _divider_tick_counter: 0,
+            _timer_tick_counter: 0,
         }
     }
 }
@@ -107,7 +107,7 @@ impl Timer {
 impl interface::Timers for Timer {
     fn update(
         &mut self,
-        cycles: u32,
+        _cycles: u32,
         _memory: &mut impl interface::Memory,
         _cpu: &mut impl interface::CPU,
     ) {

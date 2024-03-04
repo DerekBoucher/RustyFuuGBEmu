@@ -4,9 +4,10 @@ use crate::{
     ppu::stat,
     ppu::{stat::StatUpdater, *},
 };
-use std::collections::HashMap;
 
-const LCD_ENABLE_MASK: u8 = 1 << 7;
+const LCDC_ENABLE_MASK: u8 = 1 << 7;
+const LCDC_BG_WINDOW_ENABLE_MASK: u8 = 1 << 0;
+const LCDC_OBJ_ENABLE_MASK: u8 = 1 << 1;
 
 #[path = "ppu_test.rs"]
 #[cfg(test)]
@@ -15,7 +16,8 @@ mod test;
 impl Ppu {
     pub fn new() -> Self {
         Ppu {
-            pixels: [[Color::White; SCREEN_WIDTH]; SCREEN_HEIGHT],
+            pixels: [[interface::Pixel::White; interface::NATIVE_SCREEN_WIDTH];
+                interface::NATIVE_SCREEN_HEIGHT],
             scanline_counter: 0,
         }
     }
@@ -68,7 +70,7 @@ impl Ppu {
 
         self.set_lcdc_status(lcdc, stat, current_scanline, ly, lyc, memory, cpu);
 
-        if lcdc & LCD_ENABLE_MASK == 0 {
+        if lcdc & LCDC_ENABLE_MASK == 0 {
             return;
         }
 
@@ -78,8 +80,7 @@ impl Ppu {
             self.scanline_counter += stat::MAX_SCANLINE_COUNT;
 
             if current_scanline < 144 {
-                // TODO: Render tiles and sprites
-
+                self.draw_scaline(lcdc, memory);
                 memory.write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
                 return;
             }
@@ -97,6 +98,16 @@ impl Ppu {
         }
     }
 
+    fn draw_scaline(&mut self, lcdc: u8, memory: &mut impl interface::Memory) {
+        if lcdc & LCDC_BG_WINDOW_ENABLE_MASK > 0 {
+            self.render_tiles(memory);
+        }
+
+        if lcdc & LCDC_OBJ_ENABLE_MASK > 0 {
+            // TODO -render sprites
+        }
+    }
+
     fn set_lcdc_status(
         &mut self,
         lcdc: u8,
@@ -107,7 +118,7 @@ impl Ppu {
         memory: &mut impl interface::Memory,
         cpu: &mut impl interface::CPU,
     ) {
-        if lcdc & LCD_ENABLE_MASK == 0 {
+        if lcdc & LCDC_ENABLE_MASK == 0 {
             self.scanline_counter = stat::MAX_SCANLINE_COUNT;
 
             // Reset the LY register
@@ -148,6 +159,10 @@ impl Ppu {
     // Window tiles have precedence over background tiles, when enabled.
     fn render_tiles(&mut self, memory: &impl interface::Memory) {
         let current_scanline = memory.read(memory::io_registers::LCD_LY_ADDR).unwrap();
+        if current_scanline > 144 {
+            return;
+        }
+
         let lcdc = memory.read(memory::io_registers::LCD_CONTROL_ADDR).unwrap();
         let scroll_x = memory.read(memory::io_registers::LCD_SCX_ADDR).unwrap();
         let scroll_y = memory.read(memory::io_registers::LCD_SCY_ADDR).unwrap();
@@ -157,6 +172,13 @@ impl Ppu {
             .wrapping_sub(7); // TODO: Explain the sub 7
         let win_y = memory.read(memory::io_registers::LCD_WINY_ADDR).unwrap();
         let color_palette = memory.read(memory::io_registers::LCD_PALETTE_ADDR).unwrap();
+
+        // Depending on the current color palette that is in the PALETTE register,
+        // these encoding translate to different colors / shades of gray.
+        let palette_00 = (color_palette) & 0b11;
+        let palette_01 = (color_palette >> 2) & 0b11;
+        let palette_10 = (color_palette >> 4) & 0b11;
+        let palette_11 = (color_palette >> 6) & 0b11;
 
         // Base address for the tile data in VRAM.
         // This area of memory contains the actual pixel color encodings to render tiles.
@@ -184,21 +206,21 @@ impl Ppu {
         // Since the tile map is made up of a 32x32 grid of tiles, this value is determined by
         // dividing the current pixel's y position by 8 -> gives us the byte offset within a tile, and then
         // multiplying by 32 -> to advance the memory pointer to the correct row of tiles within the 32 rows.
-        let tile_row: usize = (pixel_y.wrapping_div(8).wrapping_mul(32)).into();
+        let tile_row: usize = (pixel_y as usize) / 8 * 32;
 
         // Main loop through each 160 pixels of the current scanline we are rendering
-        for pixel in 0..SCREEN_WIDTH as u8 {
-            let mut pixel_x: u8 = pixel.wrapping_add(scroll_x);
+        for pixel_iter in 0..interface::NATIVE_SCREEN_WIDTH as u8 {
+            let mut pixel_x: u8 = pixel_iter.wrapping_add(scroll_x);
 
-            if window_enabled(lcdc) && (pixel >= win_x) {
-                pixel_x = pixel.wrapping_sub(win_x);
+            if window_enabled(lcdc) && (pixel_iter >= win_x) {
+                pixel_x = pixel_iter.wrapping_sub(win_x);
             }
 
             let tile_column: usize = (pixel_x / 8).into();
             let tile_id_address: usize = tile_map_ptr + tile_column + tile_row;
-            let mut tile_id: usize = memory.read(tile_id_address).unwrap().into();
+            let mut tile_id = memory.read(tile_id_address).unwrap();
             let tile_line_offset: usize = ((pixel_y % 8) * 2).into();
-            let mut tile_data_address: usize = tile_data_ptr + (tile_id * 16);
+            let mut tile_data_address: usize = tile_data_ptr + (tile_id as usize * 16);
 
             if !uses_unsigned_id && (tile_id & 0x80) > 0 {
                 tile_id = !tile_id;
@@ -211,7 +233,7 @@ impl Ppu {
                 .read(tile_data_address + tile_line_offset + 1)
                 .unwrap();
 
-            let current_bit_position: usize = 7 - ((pixel as usize + scroll_x as usize) % 8);
+            let current_bit_position: usize = 7 - ((pixel_iter as usize + scroll_x as usize) % 8);
 
             let mut pixel_color_encoding: u8 = 0x00;
 
@@ -227,32 +249,32 @@ impl Ppu {
                 pixel_color_encoding |= 0b01;
             }
 
-            // Depending on the current color palette that is in the PALETTE register,
-            // these encoding translate to different colors / shades of gray.
-            let palette_00 = (color_palette) & 0b11;
-            let palette_01 = (color_palette >> 2) & 0b11;
-            let palette_10 = (color_palette >> 4) & 0b11;
-            let palette_11 = (color_palette >> 6) & 0b11;
-
-            let mut palette_map: HashMap<u8, u8> = HashMap::new();
-            palette_map.insert(0b00, palette_00);
-            palette_map.insert(0b01, palette_01);
-            palette_map.insert(0b10, palette_10);
-            palette_map.insert(0b11, palette_11);
-
-            let pixel_color: Color;
-            match palette_map.get(&pixel_color_encoding).unwrap() {
-                0b00 => pixel_color = Color::White,
-                0b01 => pixel_color = Color::LightGray,
-                0b10 => pixel_color = Color::DarkGray,
-                0b11 => pixel_color = Color::Black,
+            // The pixel value first needs to be mapped to the color palette
+            // defined in the PALETTE register.
+            let translated_color: u8 = match pixel_color_encoding {
+                0b00 => palette_00,
+                0b01 => palette_01,
+                0b10 => palette_10,
+                0b11 => palette_11,
                 _ => panic!(
                     "invalid color encoding when rendering scanline: {}",
                     pixel_color_encoding
                 ),
-            }
+            };
 
-            self.pixels[current_scanline as usize][pixel as usize] = pixel_color;
+            // Only then can we properly determine the actual pixel color to render.
+            let pixel_color = match translated_color {
+                0b00 => interface::Pixel::White,
+                0b01 => interface::Pixel::LightGray,
+                0b10 => interface::Pixel::DarkGray,
+                0b11 => interface::Pixel::Black,
+                _ => panic!(
+                    "invalid color encoding when rendering scanline: {}",
+                    pixel_color_encoding
+                ),
+            };
+
+            self.pixels[current_scanline as usize][pixel_iter as usize] = pixel_color;
         }
     }
 }
@@ -260,6 +282,12 @@ impl Ppu {
 impl interface::PPU for Ppu {
     fn reset(&mut self) {
         *self = Ppu::new();
+    }
+
+    fn get_frame_data(
+        &self,
+    ) -> [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT] {
+        return self.pixels.clone();
     }
 
     fn update_graphics(

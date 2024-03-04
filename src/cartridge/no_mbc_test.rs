@@ -6,14 +6,10 @@ fn new() {
     let mut cart_data: Vec<u8> = vec![0x00; 0x8000];
     let cart_data2 = cart_data.clone();
     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::ROM_ONLY;
-    let rom_only = NoMBC {
-        data: cart_data,
-        ram_bank: [0x0; 0x2000],
-    };
 
     let implementation = cartridge::new(cart_data2);
     match implementation.as_any().downcast_ref::<NoMBC>() {
-        Some(rom_only) => {}
+        Some(_) => {}
         None => panic!("returned cartridge implementation was not a RomOnly!"),
     };
 }

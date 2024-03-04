@@ -1,6 +1,7 @@
+use crate::interface;
 use crate::interface::mock;
 use crate::memory;
-use crate::ppu::{self, Color, SCREEN_WIDTH};
+use crate::ppu;
 
 #[test]
 fn render_tiles() {
@@ -34,13 +35,14 @@ fn render_tiles() {
 
     ppu.render_tiles(&memory);
 
-    let mut expected_scanline: [Color; SCREEN_WIDTH] = [Color::White; SCREEN_WIDTH];
-    for pixel in 0..SCREEN_WIDTH {
+    let mut expected_scanline: [interface::Pixel; interface::NATIVE_SCREEN_WIDTH] =
+        [interface::Pixel::White; interface::NATIVE_SCREEN_WIDTH];
+    for pixel in 0..interface::NATIVE_SCREEN_WIDTH {
         match pixel % 4 {
-            0 => expected_scanline[pixel] = Color::White,
-            1 => expected_scanline[pixel] = Color::LightGray,
-            2 => expected_scanline[pixel] = Color::DarkGray,
-            3 => expected_scanline[pixel] = Color::Black,
+            0 => expected_scanline[pixel] = interface::Pixel::White,
+            1 => expected_scanline[pixel] = interface::Pixel::LightGray,
+            2 => expected_scanline[pixel] = interface::Pixel::DarkGray,
+            3 => expected_scanline[pixel] = interface::Pixel::Black,
             _ => {}
         }
     }
