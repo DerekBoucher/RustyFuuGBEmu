@@ -67,12 +67,12 @@ pub enum Pixel {
 }
 
 impl Pixel {
-    pub fn _to_rgb(&self) -> (u8, u8, u8) {
+    pub fn to_rgb(&self) -> (f32, f32, f32) {
         match self {
-            Self::White => (255, 255, 255),
-            Self::Black => (0, 0, 0),
-            Self::LightGray => (169, 169, 169),
-            Self::DarkGray => (211, 211, 211),
+            Self::White => (1.0, 1.0, 1.0),
+            Self::Black => (0.0, 0.0, 0.0),
+            Self::LightGray => (0.75, 0.75, 0.75),
+            Self::DarkGray => (0.83, 0.83, 0.83),
         }
     }
 }

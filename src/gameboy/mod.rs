@@ -180,7 +180,12 @@ impl Gameboy {
                 }
                 State::EXITING => {
                     log::debug!("gb thread exited");
-                    ack_sender.send(()).unwrap();
+                    match ack_sender.send(()) {
+                        Ok(_) => {}
+                        Err(err) => {
+                            log::error!("ack_sender channel closed before sending ack: {:?}", err,);
+                        }
+                    }
                     return;
                 }
             }

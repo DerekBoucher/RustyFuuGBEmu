@@ -159,6 +159,10 @@ impl Ppu {
     // Window tiles have precedence over background tiles, when enabled.
     fn render_tiles(&mut self, memory: &impl interface::Memory) {
         let current_scanline = memory.read(memory::io_registers::LCD_LY_ADDR).unwrap();
+        if current_scanline > 144 {
+            return;
+        }
+
         let lcdc = memory.read(memory::io_registers::LCD_CONTROL_ADDR).unwrap();
         let scroll_x = memory.read(memory::io_registers::LCD_SCX_ADDR).unwrap();
         let scroll_y = memory.read(memory::io_registers::LCD_SCY_ADDR).unwrap();
@@ -202,21 +206,21 @@ impl Ppu {
         // Since the tile map is made up of a 32x32 grid of tiles, this value is determined by
         // dividing the current pixel's y position by 8 -> gives us the byte offset within a tile, and then
         // multiplying by 32 -> to advance the memory pointer to the correct row of tiles within the 32 rows.
-        let tile_row: usize = (pixel_y.wrapping_div(8).wrapping_mul(32)).into();
+        let tile_row: usize = (pixel_y as usize) / 8 * 32;
 
         // Main loop through each 160 pixels of the current scanline we are rendering
-        for pixel in 0..interface::NATIVE_SCREEN_WIDTH as u8 {
-            let mut pixel_x: u8 = pixel.wrapping_add(scroll_x);
+        for pixel_iter in 0..interface::NATIVE_SCREEN_WIDTH as u8 {
+            let mut pixel_x: u8 = pixel_iter.wrapping_add(scroll_x);
 
-            if window_enabled(lcdc) && (pixel >= win_x) {
-                pixel_x = pixel.wrapping_sub(win_x);
+            if window_enabled(lcdc) && (pixel_iter >= win_x) {
+                pixel_x = pixel_iter.wrapping_sub(win_x);
             }
 
             let tile_column: usize = (pixel_x / 8).into();
             let tile_id_address: usize = tile_map_ptr + tile_column + tile_row;
-            let mut tile_id: usize = memory.read(tile_id_address).unwrap().into();
+            let mut tile_id = memory.read(tile_id_address).unwrap();
             let tile_line_offset: usize = ((pixel_y % 8) * 2).into();
-            let mut tile_data_address: usize = tile_data_ptr + (tile_id * 16);
+            let mut tile_data_address: usize = tile_data_ptr + (tile_id as usize * 16);
 
             if !uses_unsigned_id && (tile_id & 0x80) > 0 {
                 tile_id = !tile_id;
@@ -229,7 +233,7 @@ impl Ppu {
                 .read(tile_data_address + tile_line_offset + 1)
                 .unwrap();
 
-            let current_bit_position: usize = 7 - ((pixel as usize + scroll_x as usize) % 8);
+            let current_bit_position: usize = 7 - ((pixel_iter as usize + scroll_x as usize) % 8);
 
             let mut pixel_color_encoding: u8 = 0x00;
 
@@ -270,7 +274,7 @@ impl Ppu {
                 ),
             };
 
-            self.pixels[current_scanline as usize][pixel as usize] = pixel_color;
+            self.pixels[current_scanline as usize][pixel_iter as usize] = pixel_color;
         }
     }
 }

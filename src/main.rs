@@ -12,6 +12,8 @@ use clap::Parser;
 use gameboy::Orchestrator;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::EventLoop;
+use glium::glutin::platform::unix::WindowBuilderExtUnix;
+use glium::glutin::window::Theme;
 use glium::Display;
 use glium::{glutin, Surface};
 
@@ -34,7 +36,7 @@ fn main() {
 
     let (program_loop, display) = init_glium();
     let egui_glium_client = egui_glium::EguiGlium::new(&display, &program_loop);
-    let opengl_renderer = renderer::OpenGL::new(&display);
+    let mut opengl_renderer = renderer::OpenGL::new(&display);
 
     let mut cpu = cpu::LR35902::new();
     let mut memory = memory::Memory::default();
@@ -84,7 +86,8 @@ fn main() {
         }
 
         match gb_orchestrator.render_requested() {
-            Some(_) => {
+            Some(frame_data) => {
+                opengl_renderer.update_frame(&display, frame_data);
                 display.gl_window().window().request_redraw();
             }
             None => (),
@@ -102,6 +105,7 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
             (interface::NATIVE_SCREEN_HEIGHT as i32) * SCALE_FACTOR,
         ))
         .with_title("RustyFuuGBemu")
+        .with_wayland_csd_theme(Theme::Dark)
         .with_resizable(false);
     let cb = glium::glutin::ContextBuilder::new();
     let display = glium::Display::new(wb, cb, &events_loop).unwrap();

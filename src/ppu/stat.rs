@@ -47,6 +47,10 @@ impl StatUpdater {
     }
 
     pub fn process_vblank(mut self, current_scanline: u8) -> Self {
+        if self.state_change_already_occured {
+            return self;
+        }
+
         if current_scanline >= V_BLANK_BOUNDARY {
             self.state_change_already_occured = true;
             self.new_stat |= StatMode::VBlank as u8;
