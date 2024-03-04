@@ -9,6 +9,9 @@ use std::fs;
 
 pub mod events;
 
+pub const TOP_MENUBAR_HEIGHT: f32 = 20.0;
+pub const SCALE_FACTOR: i32 = 5;
+
 pub struct Ui {
     egui_glium_client: egui_glium::EguiGlium,
     ui_event_loop_proxy: EventLoopProxy<events::UiEvent>,
@@ -33,21 +36,25 @@ impl Ui {
         gb_controller: &mut gameboy::Orchestrator,
     ) {
         let egui_redraw_timer = self.egui_glium_client.run(display, |egui_ctx| {
-            egui::TopBottomPanel::top("top_panel").show(egui_ctx, |ui| {
-                ui.menu_button("File", |ui| {
-                    if ui.button("Load ROM").clicked() {
-                        Ui::load_rom_from_file_dialog(gb_controller);
-                        ui.close_menu();
-                    }
+            egui::TopBottomPanel::top("top_panel")
+                .exact_height(TOP_MENUBAR_HEIGHT)
+                .show(egui_ctx, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.menu_button("File", |ui| {
+                            if ui.button("Load ROM").clicked() {
+                                Ui::load_rom_from_file_dialog(gb_controller);
+                                ui.close_menu();
+                            }
 
-                    if ui.button("Exit").clicked() {
-                        self.ui_event_loop_proxy
-                            .send_event(events::UiEvent::CloseWindow)
-                            .unwrap();
-                        ui.close_menu();
-                    }
-                })
-            });
+                            if ui.button("Exit").clicked() {
+                                self.ui_event_loop_proxy
+                                    .send_event(events::UiEvent::CloseWindow)
+                                    .unwrap();
+                                ui.close_menu();
+                            }
+                        });
+                    });
+                });
         });
 
         let time_until_next_redraw = std::time::Instant::now().checked_add(egui_redraw_timer);

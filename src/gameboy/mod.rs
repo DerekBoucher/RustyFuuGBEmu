@@ -10,7 +10,6 @@ mod orchestrator;
 enum State {
     INITIALIZING,
     COMPUTING,
-    PAUSED,
     RENDERING,
     EXITING,
 }
@@ -20,7 +19,7 @@ impl State {
         log::trace!("State transition: {:?} -> {:?}", self, new_state);
         match self {
             State::INITIALIZING => match new_state {
-                State::PAUSED | State::RENDERING => {
+                State::RENDERING => {
                     panic!("Invalid state transition: INITIALIZING -> {:?}", new_state)
                 }
                 _ => *self = new_state,
@@ -31,14 +30,8 @@ impl State {
                 }
                 _ => *self = new_state,
             },
-            State::PAUSED => match new_state {
-                State::INITIALIZING => {
-                    panic!("Invalid state transition: PAUSED -> {:?}", new_state)
-                }
-                _ => *self = new_state,
-            },
             State::RENDERING => match new_state {
-                State::INITIALIZING | State::PAUSED => {
+                State::INITIALIZING => {
                     panic!("Invalid state transition: RENDERING -> {:?}", new_state)
                 }
                 _ => *self = new_state,
@@ -54,13 +47,11 @@ pub struct Gameboy {
 
 pub struct Orchestrator {
     close_sender: channel::Sender<()>,
-    pause_sender: channel::Sender<()>,
     ack_receiver: channel::Receiver<()>,
     rom_data_sender: channel::Sender<Vec<u8>>,
     frame_data_receiver: channel::Receiver<
         [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
     >,
-    paused: bool,
 }
 
 impl Gameboy {
@@ -100,19 +91,12 @@ impl Gameboy {
         ppu: impl interface::PPU + 'static,
         timers: impl interface::Timers + 'static,
     ) -> Orchestrator {
-        let (
-            orchestrator,
-            close_receiver,
-            pause_receiver,
-            ack_sender,
-            rom_data_receiver,
-            frame_data_sender,
-        ) = Orchestrator::new();
+        let (orchestrator, close_receiver, ack_sender, rom_data_receiver, frame_data_sender) =
+            Orchestrator::new();
 
         std::thread::spawn(move || {
             self.run(
                 close_receiver,
-                pause_receiver,
                 ack_sender,
                 rom_data_receiver,
                 frame_data_sender,
@@ -129,7 +113,6 @@ impl Gameboy {
     fn run(
         &mut self,
         close_receiver: channel::Receiver<()>,
-        pause_receiver: channel::Receiver<()>,
         ack_sender: channel::Sender<()>,
         rom_data_receiver: channel::Receiver<Vec<u8>>,
         frame_data_sender: channel::Sender<
@@ -160,15 +143,8 @@ impl Gameboy {
                         &mut ppu,
                         &mut timers,
                         &close_receiver,
-                        &pause_receiver,
                         &rom_data_receiver,
                     );
-                }
-                State::PAUSED => {
-                    log::debug!("emulation paused");
-                    pause_receiver.recv().unwrap();
-                    log::debug!("emulation resumed");
-                    self.state.transition(State::COMPUTING);
                 }
                 State::RENDERING => {
                     // Ask main thread to render the frame.
@@ -221,7 +197,6 @@ impl Gameboy {
         ppu: &mut impl interface::PPU,
         timers: &mut impl interface::Timers,
         close_receiver: &channel::Receiver<()>,
-        pause_receiver: &channel::Receiver<()>,
         rom_data_receiver: &channel::Receiver<Vec<u8>>,
     ) {
         let mut cycles_this_update: u32 = 0;
@@ -229,11 +204,6 @@ impl Gameboy {
             select! {
                 recv(close_receiver) -> _ => {
                     self.state.transition(State::EXITING);
-                    return;
-                }
-
-                recv(pause_receiver) -> _ => {
-                    self.state.transition(State::PAUSED);
                     return;
                 }
 

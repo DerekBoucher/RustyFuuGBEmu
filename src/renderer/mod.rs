@@ -3,6 +3,7 @@ use glium::{implement_vertex, Surface};
 extern crate glium;
 
 mod shaders;
+use crate::ui;
 
 #[derive(Copy, Clone)]
 struct Vertex {
@@ -13,6 +14,7 @@ implement_vertex!(Vertex, position, color);
 
 const X_DIV: f32 = 2.0 / interface::NATIVE_SCREEN_WIDTH as f32;
 const Y_DIV: f32 = 2.0 / interface::NATIVE_SCREEN_HEIGHT as f32;
+const TOP_MENUBAR_COMPENSATION: f32 = 2.0 / (ui::TOP_MENUBAR_HEIGHT * ui::SCALE_FACTOR as f32);
 const VERTICES_PER_PIXEL: usize = 6;
 const VERTEX_COUNT: usize =
     interface::NATIVE_SCREEN_HEIGHT * interface::NATIVE_SCREEN_WIDTH * VERTICES_PER_PIXEL;
@@ -35,27 +37,45 @@ impl OpenGL {
         let mut y = 0.0;
         while i < VERTEX_COUNT {
             position_vertices[i] = Vertex {
-                position: [-1.0 + (X_DIV * x), 1.0 - (Y_DIV * y)],
+                position: [
+                    -1.0 + (X_DIV * x),
+                    (1.0 - TOP_MENUBAR_COMPENSATION - (Y_DIV * y)),
+                ],
                 color: [1.0, 1.0, 1.0],
             };
             position_vertices[i + 1] = Vertex {
-                position: [-1.0 + ((X_DIV * x) + X_DIV), 1.0 - (Y_DIV * y)],
+                position: [
+                    -1.0 + ((X_DIV * x) + X_DIV),
+                    (1.0 - TOP_MENUBAR_COMPENSATION - (Y_DIV * y)),
+                ],
                 color: [1.0, 1.0, 1.0],
             };
             position_vertices[i + 2] = Vertex {
-                position: [-1.0 + (X_DIV * x), 1.0 - ((Y_DIV * y) - Y_DIV)],
+                position: [
+                    -1.0 + (X_DIV * x),
+                    1.0 - TOP_MENUBAR_COMPENSATION - ((Y_DIV * y) - Y_DIV),
+                ],
                 color: [1.0, 1.0, 1.0],
             };
             position_vertices[i + 3] = Vertex {
-                position: [-1.0 + ((X_DIV * x) + X_DIV), 1.0 - (Y_DIV * y)],
+                position: [
+                    -1.0 + ((X_DIV * x) + X_DIV),
+                    (1.0 - TOP_MENUBAR_COMPENSATION - (Y_DIV * y)),
+                ],
                 color: [1.0, 1.0, 1.0],
             };
             position_vertices[i + 4] = Vertex {
-                position: [-1.0 + (X_DIV * x), 1.0 - ((Y_DIV * y) - Y_DIV)],
+                position: [
+                    -1.0 + (X_DIV * x),
+                    1.0 - TOP_MENUBAR_COMPENSATION - ((Y_DIV * y) - Y_DIV),
+                ],
                 color: [1.0, 1.0, 1.0],
             };
             position_vertices[i + 5] = Vertex {
-                position: [-1.0 + ((X_DIV * x) + X_DIV), 1.0 - ((Y_DIV * y) - Y_DIV)],
+                position: [
+                    -1.0 + ((X_DIV * x) + X_DIV),
+                    1.0 - TOP_MENUBAR_COMPENSATION - ((Y_DIV * y) - Y_DIV),
+                ],
                 color: [1.0, 1.0, 1.0],
             };
 

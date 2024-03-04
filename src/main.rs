@@ -9,6 +9,7 @@ mod timers;
 mod ui;
 
 use clap::Parser;
+use env_logger::Env;
 use gameboy::Orchestrator;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::EventLoop;
@@ -16,8 +17,6 @@ use glium::glutin::platform::unix::WindowBuilderExtUnix;
 use glium::glutin::window::Theme;
 use glium::Display;
 use glium::{glutin, Surface};
-
-const SCALE_FACTOR: i32 = 5;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -30,7 +29,9 @@ struct Args {
 }
 
 fn main() {
-    env_logger::init();
+    let env = Env::default().filter_or("RUST_LOG", "debug");
+    env_logger::init_from_env(env);
+
     log::info!("Starting RustyFuuGBemu");
     let args = Args::parse();
 
@@ -101,8 +102,9 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
             .build();
     let wb = glium::glutin::window::WindowBuilder::new()
         .with_inner_size(glium::glutin::dpi::LogicalSize::new(
-            (interface::NATIVE_SCREEN_WIDTH as i32) * SCALE_FACTOR,
-            (interface::NATIVE_SCREEN_HEIGHT as i32) * SCALE_FACTOR,
+            (interface::NATIVE_SCREEN_WIDTH as i32) * ui::SCALE_FACTOR,
+            ((interface::NATIVE_SCREEN_HEIGHT as i32) * ui::SCALE_FACTOR)
+                + ui::TOP_MENUBAR_HEIGHT as i32,
         ))
         .with_title("RustyFuuGBemu")
         .with_wayland_csd_theme(Theme::Dark)

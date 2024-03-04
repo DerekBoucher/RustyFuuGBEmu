@@ -12,7 +12,6 @@ impl Orchestrator {
     pub fn new() -> (
         Self,
         channel::Receiver<()>,      // close_receiver used by GB thread
-        channel::Receiver<()>,      // pause_receiver used by GB thread
         channel::Sender<()>,        // ack_sender used by GB thread to join
         channel::Receiver<Vec<u8>>, // rom_data_receiver used by GB thread
         channel::Sender<
@@ -21,7 +20,6 @@ impl Orchestrator {
         >,
     ) {
         let (close_sender, close_receiver) = channel::unbounded();
-        let (pause_sender, pause_receiver) = channel::bounded(1);
         let (ack_sender, ack_receiver) = channel::unbounded();
         let (rom_data_sender, rom_data_receiver) = channel::bounded::<Vec<u8>>(1);
         let (frame_data_sender, frame_data_receiver) = channel::bounded::<
@@ -31,15 +29,11 @@ impl Orchestrator {
         (
             Self {
                 close_sender,
-                pause_sender,
                 ack_receiver,
                 rom_data_sender,
                 frame_data_receiver,
-
-                paused: false,
             },
             close_receiver,
-            pause_receiver,
             ack_sender,
             rom_data_receiver,
             frame_data_sender,
@@ -52,26 +46,6 @@ impl Orchestrator {
 
     pub fn join(&self) -> Result<(), RecvTimeoutError> {
         self.ack_receiver.recv_timeout(Duration::from_secs(5))
-    }
-
-    pub fn pause(&mut self) {
-        if self.paused {
-            log::debug!("gb emulation already paused");
-            return;
-        }
-
-        self.paused = true;
-        self.pause_sender.send(()).unwrap();
-    }
-
-    pub fn resume(&mut self) {
-        if !self.paused {
-            log::debug!("gb emulation already running");
-            return;
-        }
-
-        self.paused = false;
-        self.pause_sender.send(()).unwrap();
     }
 
     pub fn load_rom(&self, rom_data: Vec<u8>) {
