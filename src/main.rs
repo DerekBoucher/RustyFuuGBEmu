@@ -108,7 +108,7 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
         ))
         .with_title("RustyFuuGBemu")
         .with_wayland_csd_theme(Theme::Dark)
-        .with_resizable(false);
+        .with_resizable(true);
     let cb = glium::glutin::ContextBuilder::new();
     let display = glium::Display::new(wb, cb, &events_loop).unwrap();
 
