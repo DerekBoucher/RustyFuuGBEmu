@@ -43,6 +43,7 @@ impl State {
 
 pub struct Gameboy {
     state: State,
+    skip_boot_rom: bool,
 }
 
 pub struct Orchestrator {
@@ -52,12 +53,14 @@ pub struct Orchestrator {
     frame_data_receiver: channel::Receiver<
         [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
     >,
+    skip_boot_rom_sender: channel::Sender<bool>,
 }
 
 impl Gameboy {
-    pub fn new() -> Self {
+    pub fn new(skip_boot_rom: bool) -> Self {
         return Self {
             state: State::INITIALIZING,
+            skip_boot_rom,
         };
     }
 
@@ -73,15 +76,11 @@ impl Gameboy {
         ppu.reset();
         timers.reset();
         memory.reset(cartridge::new(rom_data));
-    }
 
-    pub fn skip_boot_rom(
-        &self,
-        cpu: &mut impl interface::CPU,
-        memory: &mut impl interface::Memory,
-    ) {
-        cpu.set_post_boot_rom_state();
-        memory.set_post_boot_rom_state();
+        if self.skip_boot_rom {
+            cpu.set_post_boot_rom_state();
+            memory.set_post_boot_rom_state();
+        }
     }
 
     pub fn start(
@@ -91,8 +90,14 @@ impl Gameboy {
         ppu: impl interface::PPU + 'static,
         timers: impl interface::Timers + 'static,
     ) -> Orchestrator {
-        let (orchestrator, close_receiver, ack_sender, rom_data_receiver, frame_data_sender) =
-            Orchestrator::new();
+        let (
+            orchestrator,
+            close_receiver,
+            ack_sender,
+            rom_data_receiver,
+            frame_data_sender,
+            skip_boot_rom_recv,
+        ) = Orchestrator::new();
 
         std::thread::spawn(move || {
             self.run(
@@ -100,6 +105,7 @@ impl Gameboy {
                 ack_sender,
                 rom_data_receiver,
                 frame_data_sender,
+                skip_boot_rom_recv,
                 cpu,
                 memory,
                 ppu,
@@ -118,6 +124,7 @@ impl Gameboy {
         frame_data_sender: channel::Sender<
             [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
         >,
+        skip_boot_rom_recv: channel::Receiver<bool>,
 
         mut cpu: impl interface::CPU,
         mut memory: impl interface::Memory,
@@ -130,6 +137,7 @@ impl Gameboy {
                     self.handle_initializing(
                         &close_receiver,
                         &rom_data_receiver,
+                        &skip_boot_rom_recv,
                         &mut cpu,
                         &mut memory,
                         &mut ppu,
@@ -144,6 +152,7 @@ impl Gameboy {
                         &mut timers,
                         &close_receiver,
                         &rom_data_receiver,
+                        &skip_boot_rom_recv,
                     );
                 }
                 State::RENDERING => {
@@ -172,6 +181,7 @@ impl Gameboy {
         &mut self,
         close_receiver: &channel::Receiver<()>,
         rom_data_receiver: &channel::Receiver<Vec<u8>>,
+        skip_boot_rom_receiver: &channel::Receiver<bool>,
         cpu: &mut impl interface::CPU,
         memory: &mut impl interface::Memory,
         ppu: &mut impl interface::PPU,
@@ -180,6 +190,10 @@ impl Gameboy {
         select! {
             recv(close_receiver) -> _ => {
                 self.state.transition(State::EXITING);
+            }
+
+            recv(skip_boot_rom_receiver) -> skip_boot_rom => {
+                self.skip_boot_rom = skip_boot_rom.unwrap();
             }
 
             recv(rom_data_receiver) -> rom_data => {
@@ -198,6 +212,7 @@ impl Gameboy {
         timers: &mut impl interface::Timers,
         close_receiver: &channel::Receiver<()>,
         rom_data_receiver: &channel::Receiver<Vec<u8>>,
+        skip_boot_rom_receiver: &channel::Receiver<bool>,
     ) {
         let mut cycles_this_update: u32 = 0;
         while cycles_this_update < CPU_CYCLES_PER_FRAME {
@@ -205,6 +220,10 @@ impl Gameboy {
                 recv(close_receiver) -> _ => {
                     self.state.transition(State::EXITING);
                     return;
+                }
+
+                recv(skip_boot_rom_receiver) -> skip_boot_rom => {
+                    self.skip_boot_rom = skip_boot_rom.unwrap();
                 }
 
                 recv(rom_data_receiver) -> rom_data => {

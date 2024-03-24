@@ -15,16 +15,19 @@ pub const SCALE_FACTOR: i32 = 5;
 pub struct Ui {
     egui_glium_client: egui_glium::EguiGlium,
     ui_event_loop_proxy: EventLoopProxy<events::UiEvent>,
+    skip_boot_rom: bool,
 }
 
 impl Ui {
     pub fn new(
         egui_glium_client: egui_glium::EguiGlium,
         event_loop_proxy: EventLoopProxy<events::UiEvent>,
+        skip_boot_rom: bool,
     ) -> Self {
         Self {
             egui_glium_client,
             ui_event_loop_proxy: event_loop_proxy,
+            skip_boot_rom,
         }
     }
 
@@ -53,6 +56,15 @@ impl Ui {
                                 ui.close_menu();
                             }
                         });
+
+                        ui.menu_button("Settings", |ui| {
+                            if ui
+                                .checkbox(&mut self.skip_boot_rom, "Skip Boot ROM")
+                                .clicked()
+                            {
+                                gb_controller.set_skip_boot_rom(self.skip_boot_rom);
+                            }
+                        })
                     });
                 });
         });
