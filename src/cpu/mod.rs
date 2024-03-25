@@ -3,7 +3,7 @@
 mod bit;
 mod opcode;
 mod opcode_ext;
-mod register;
+pub mod register;
 
 #[cfg(test)]
 mod test;
@@ -1062,7 +1062,7 @@ impl LR35902 {
     fn read_register(&self, reg_id: &register::ID) -> u8 {
         match reg_id {
             ID::A => self.af.hi,
-            ID::_F => self.af.lo,
+            ID::F => self.af.lo,
             ID::B => self.bc.hi,
             ID::C => self.bc.lo,
             ID::D => self.de.hi,
@@ -1075,7 +1075,7 @@ impl LR35902 {
     fn write_register(&mut self, reg_id: &register::ID, value: u8) {
         match reg_id {
             ID::A => self.af.hi = value,
-            ID::_F => self.af.lo = value,
+            ID::F => self.af.lo = value,
             ID::B => self.bc.hi = value,
             ID::C => self.bc.lo = value,
             ID::D => self.de.hi = value,

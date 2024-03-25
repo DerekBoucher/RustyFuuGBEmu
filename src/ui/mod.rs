@@ -8,6 +8,7 @@ use glium::Frame;
 use std::fs;
 
 pub mod events;
+pub mod trace;
 
 pub const TOP_MENUBAR_HEIGHT: f32 = 20.0;
 pub const SCALE_FACTOR: i32 = 5;
@@ -16,6 +17,7 @@ pub struct Ui {
     egui_glium_client: egui_glium::EguiGlium,
     ui_event_loop_proxy: EventLoopProxy<events::UiEvent>,
     skip_boot_rom: bool,
+    trace_tool: trace::Tool,
 }
 
 impl Ui {
@@ -23,11 +25,13 @@ impl Ui {
         egui_glium_client: egui_glium::EguiGlium,
         event_loop_proxy: EventLoopProxy<events::UiEvent>,
         skip_boot_rom: bool,
+        trace_tool: trace::Tool,
     ) -> Self {
         Self {
             egui_glium_client,
             ui_event_loop_proxy: event_loop_proxy,
             skip_boot_rom,
+            trace_tool,
         }
     }
 
@@ -64,9 +68,18 @@ impl Ui {
                             {
                                 gb_controller.set_skip_boot_rom(self.skip_boot_rom);
                             }
-                        })
+                        });
+
+                        ui.menu_button("Debugging", |ui| {
+                            if ui.button("Trace Tool").clicked() {
+                                self.trace_tool.open();
+                                ui.close_menu();
+                            }
+                        });
                     });
                 });
+
+            self.trace_tool.draw(egui_ctx);
         });
 
         let time_until_next_redraw = std::time::Instant::now().checked_add(egui_redraw_timer);

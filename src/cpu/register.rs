@@ -19,16 +19,31 @@ impl Register {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ID {
     A,
-    _F,
+    F,
     B,
     C,
     D,
     E,
     H,
     L,
+}
+
+impl std::fmt::Display for ID {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ID::A => write!(f, "A"),
+            ID::F => write!(f, "F"),
+            ID::B => write!(f, "B"),
+            ID::C => write!(f, "C"),
+            ID::D => write!(f, "D"),
+            ID::E => write!(f, "E"),
+            ID::H => write!(f, "H"),
+            ID::L => write!(f, "L"),
+        }
+    }
 }
 
 #[derive(Debug)]

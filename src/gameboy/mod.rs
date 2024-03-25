@@ -1,6 +1,7 @@
 use crate::cartridge;
 use crate::cpu::CPU_CYCLES_PER_FRAME;
 use crate::interface;
+use crate::ui::trace;
 use crossbeam::channel;
 use crossbeam::select;
 
@@ -89,6 +90,7 @@ impl Gameboy {
         memory: impl interface::Memory + 'static,
         ppu: impl interface::PPU + 'static,
         timers: impl interface::Timers + 'static,
+        trace_tx: channel::Sender<trace::Trace>,
     ) -> Orchestrator {
         let (
             orchestrator,
@@ -106,6 +108,7 @@ impl Gameboy {
                 rom_data_receiver,
                 frame_data_sender,
                 skip_boot_rom_recv,
+                trace_tx,
                 cpu,
                 memory,
                 ppu,
@@ -125,6 +128,7 @@ impl Gameboy {
             [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
         >,
         skip_boot_rom_recv: channel::Receiver<bool>,
+        trace_tx: channel::Sender<trace::Trace>,
 
         mut cpu: impl interface::CPU,
         mut memory: impl interface::Memory,
