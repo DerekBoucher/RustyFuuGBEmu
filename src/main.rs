@@ -41,16 +41,16 @@ fn main() {
 
     let cpu = cpu::LR35902::new();
     let memory = memory::Memory::default();
-    let ppu = ppu::Ppu::new();
+    let ppu = ppu::PPU::new();
     let timers = timers::Timers::new();
-    let gameboy = gameboy::Gameboy::new(args.skip_boot_rom);
+    let gameboy = gameboy::Gameboy::new(cpu, memory, ppu, timers, args.skip_boot_rom);
 
     let mut ui = ui::Ui::new(
         egui_glium_client,
         program_loop.create_proxy(),
         args.skip_boot_rom,
     );
-    let mut gb_orchestrator = gameboy.start(cpu, memory, ppu, timers);
+    let mut gb_orchestrator = gameboy.start();
 
     program_loop.run(move |program_event, _, control_flow| {
         let next_frame_time =

@@ -4,7 +4,7 @@ mod ppu;
 mod stat;
 
 #[derive(Debug)]
-pub struct Ppu {
+pub struct PPU {
     pixels: [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
     scanline_counter: i32,
 }

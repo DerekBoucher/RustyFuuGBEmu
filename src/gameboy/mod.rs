@@ -1,6 +1,14 @@
 use crate::cartridge;
+use crate::cpu;
 use crate::cpu::CPU_CYCLES_PER_FRAME;
 use crate::interface;
+use crate::interface::Memory;
+use crate::interface::Timers;
+use crate::interface::CPU;
+use crate::interface::PPU;
+use crate::memory;
+use crate::ppu;
+use crate::timers;
 use crossbeam::channel;
 use crossbeam::select;
 
@@ -44,6 +52,10 @@ impl State {
 pub struct Gameboy {
     state: State,
     skip_boot_rom: bool,
+    cpu: cpu::LR35902,
+    memory: memory::Memory,
+    ppu: ppu::PPU,
+    timers: timers::Timers,
 }
 
 pub struct Orchestrator {
@@ -57,39 +69,36 @@ pub struct Orchestrator {
 }
 
 impl Gameboy {
-    pub fn new(skip_boot_rom: bool) -> Self {
+    pub fn new(
+        cpu: cpu::LR35902,
+        memory: memory::Memory,
+        ppu: ppu::PPU,
+        timers: timers::Timers,
+        skip_boot_rom: bool,
+    ) -> Self {
         return Self {
             state: State::INITIALIZING,
+            cpu,
+            memory,
+            ppu,
+            timers,
             skip_boot_rom,
         };
     }
 
-    fn load_rom(
-        &mut self,
-        rom_data: Vec<u8>,
-        cpu: &mut impl interface::CPU,
-        memory: &mut impl interface::Memory,
-        ppu: &mut impl interface::PPU,
-        timers: &mut impl interface::Timers,
-    ) {
-        cpu.reset();
-        ppu.reset();
-        timers.reset();
-        memory.reset(cartridge::new(rom_data));
+    fn load_rom(&mut self, rom_data: Vec<u8>) {
+        self.cpu.reset();
+        self.ppu.reset();
+        self.timers.reset();
+        self.memory.reset(cartridge::new(rom_data));
 
         if self.skip_boot_rom {
-            cpu.set_post_boot_rom_state();
-            memory.set_post_boot_rom_state();
+            self.cpu.set_post_boot_rom_state();
+            self.memory.set_post_boot_rom_state();
         }
     }
 
-    pub fn start(
-        mut self,
-        cpu: impl interface::CPU + 'static,
-        memory: impl interface::Memory + 'static,
-        ppu: impl interface::PPU + 'static,
-        timers: impl interface::Timers + 'static,
-    ) -> Orchestrator {
+    pub fn start(mut self) -> Orchestrator {
         let (
             orchestrator,
             close_receiver,
@@ -106,10 +115,6 @@ impl Gameboy {
                 rom_data_receiver,
                 frame_data_sender,
                 skip_boot_rom_recv,
-                cpu,
-                memory,
-                ppu,
-                timers,
             )
         });
 
@@ -125,11 +130,6 @@ impl Gameboy {
             [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
         >,
         skip_boot_rom_recv: channel::Receiver<bool>,
-
-        mut cpu: impl interface::CPU,
-        mut memory: impl interface::Memory,
-        mut ppu: impl interface::PPU,
-        mut timers: impl interface::Timers,
     ) {
         loop {
             match self.state {
@@ -138,29 +138,17 @@ impl Gameboy {
                         &close_receiver,
                         &rom_data_receiver,
                         &skip_boot_rom_recv,
-                        &mut cpu,
-                        &mut memory,
-                        &mut ppu,
-                        &mut timers,
                     );
                 }
                 State::COMPUTING => {
-                    self.handle_computing(
-                        &mut cpu,
-                        &mut memory,
-                        &mut ppu,
-                        &mut timers,
-                        &close_receiver,
-                        &rom_data_receiver,
-                        &skip_boot_rom_recv,
-                    );
+                    self.handle_computing(&close_receiver, &rom_data_receiver, &skip_boot_rom_recv);
                 }
                 State::RENDERING => {
                     // Ask main thread to render the frame.
                     // Since the frame_data channel is bounded with a capacity of 1, we can
                     // also rely on this thread blocking until the main thread renders, which in
-                    // turn allows the main thread to control the FPS of the emulator.
-                    frame_data_sender.send(ppu.get_frame_data()).unwrap();
+                    // turn allows the main thread to control the FPS of the emulation.
+                    frame_data_sender.send(self.ppu.get_frame_data()).unwrap();
                     self.state.transition(State::COMPUTING);
                 }
                 State::EXITING => {
@@ -182,10 +170,6 @@ impl Gameboy {
         close_receiver: &channel::Receiver<()>,
         rom_data_receiver: &channel::Receiver<Vec<u8>>,
         skip_boot_rom_receiver: &channel::Receiver<bool>,
-        cpu: &mut impl interface::CPU,
-        memory: &mut impl interface::Memory,
-        ppu: &mut impl interface::PPU,
-        timers: &mut impl interface::Timers,
     ) {
         select! {
             recv(close_receiver) -> _ => {
@@ -197,7 +181,7 @@ impl Gameboy {
             }
 
             recv(rom_data_receiver) -> rom_data => {
-                self.load_rom(rom_data.unwrap(), cpu, memory, ppu, timers);
+                self.load_rom(rom_data.unwrap());
                 log::debug!("ROM cartridge loaded!");
                 self.state.transition(State::COMPUTING);
             }
@@ -206,10 +190,6 @@ impl Gameboy {
 
     fn handle_computing(
         &mut self,
-        cpu: &mut impl interface::CPU,
-        memory: &mut impl interface::Memory,
-        ppu: &mut impl interface::PPU,
-        timers: &mut impl interface::Timers,
         close_receiver: &channel::Receiver<()>,
         rom_data_receiver: &channel::Receiver<Vec<u8>>,
         skip_boot_rom_receiver: &channel::Receiver<bool>,
@@ -227,26 +207,26 @@ impl Gameboy {
                 }
 
                 recv(rom_data_receiver) -> rom_data => {
-                    self.load_rom(rom_data.unwrap(), cpu, memory, ppu, timers);
+                    self.load_rom(rom_data.unwrap());
                     log::debug!("ROM cartridge loaded!");
                     continue;
                 }
 
                 default => {
                     let cycles: u32;
-                    if cpu.is_halted() {
+                    if self.cpu.is_halted() {
                         cycles = 4;
-                        cpu.halt(memory);
+                        self.cpu.halt(&mut self.memory);
                     } else {
-                        cycles = cpu.execute_next_opcode(memory);
+                        cycles = self.cpu.execute_next_opcode(&mut self.memory);
                     }
 
                     cycles_this_update += cycles;
 
-                    memory.update_dma_transfer_cycles(cycles);
-                    timers.update(cycles, memory, cpu);
-                    ppu.update_graphics(cycles, memory, cpu);
-                    cpu.process_interrupts(memory, timers);
+                    self.memory.update_dma_transfer_cycles(cycles);
+                    self.timers.update(cycles, &mut self.memory, &mut self.cpu);
+                    self.ppu.update_graphics(cycles, &mut self.memory, &mut self.cpu);
+                    self.cpu.process_interrupts(&mut self.memory,&mut self.timers);
                 }
             }
         }
