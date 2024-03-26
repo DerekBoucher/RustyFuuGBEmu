@@ -5,7 +5,7 @@ use crate::ppu;
 
 #[test]
 fn render_tiles() {
-    let mut ppu = ppu::Ppu::new();
+    let mut ppu = ppu::PPU::new();
 
     // Setup the VRAM data
     let mut data: Vec<u8> = vec![0x00; 0x10000];

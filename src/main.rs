@@ -41,9 +41,9 @@ fn main() {
 
     let cpu = cpu::LR35902::new();
     let memory = memory::Memory::default();
-    let ppu = ppu::Ppu::new();
+    let ppu = ppu::PPU::new();
     let timers = timers::Timers::new();
-    let gameboy = gameboy::Gameboy::new(args.skip_boot_rom);
+    let gameboy = gameboy::Gameboy::new(cpu, memory, ppu, timers, args.skip_boot_rom);
 
     let (trace_tool, trace_tx) = ui::trace::Tool::new();
 
@@ -53,7 +53,7 @@ fn main() {
         args.skip_boot_rom,
         trace_tool,
     );
-    let mut gb_orchestrator = gameboy.start(cpu, memory, ppu, timers, trace_tx);
+    let mut gb_orchestrator = gameboy.start();
 
     program_loop.run(move |program_event, _, control_flow| {
         let next_frame_time =
