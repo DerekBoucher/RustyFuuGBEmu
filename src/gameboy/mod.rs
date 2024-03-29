@@ -88,7 +88,7 @@ impl Gameboy {
     }
 
     fn load_rom(&mut self, rom_data: Vec<u8>) {
-        self.cpu = LR35902::new();
+        self.cpu.reset();
         self.ppu = ppu::PPU::new();
         self.timers = timers::Timers::new();
         self.memory = memory::Memory::new(cartridge::new(rom_data));

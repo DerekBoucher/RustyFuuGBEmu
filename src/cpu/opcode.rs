@@ -13,6 +13,7 @@ use super::bit::two_compliment_byte;
 
 #[allow(non_camel_case_types)]
 #[repr(u8)]
+#[derive(Clone)]
 pub enum Opcode {
     Nop_0x00,
     LdImm16IntoBC_0x01,

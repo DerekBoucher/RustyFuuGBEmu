@@ -1,10 +1,13 @@
 use crate::cpu::register;
+use crossbeam::channel;
 
 pub struct Tool {
     pub open: bool,
     logs: String,
     is_tracing: bool,
-    trace_recv: crossbeam::channel::Receiver<Trace>,
+    cpu_rx: channel::Receiver<CPUTrace>,
+    mem_rx: channel::Receiver<MemoryTrace>,
+    trace_sig_tx: channel::Sender<TraceSignal>,
     options: TraceOptions,
     address: u16,
     register: register::ID,
@@ -21,11 +24,41 @@ struct TraceOptions {
     register_tracing: bool,
 }
 
-pub struct Trace {
+pub struct TraceSignal {
+    pub trace_id: uuid::Uuid,
+    pub signal: Signal,
+}
+
+pub struct CPUTrace {
+    pub trace_id: uuid::Uuid,
     pub op_code: u8,
-    pub op_code_name: String,
+    pub pc: u16,
+    pub sp: u16,
+    pub a: u8,
+    pub f: u8,
+    pub b: u8,
+    pub c: u8,
+    pub d: u8,
+    pub e: u8,
+    pub h: u8,
+    pub l: u8,
+}
+
+pub enum Signal {
+    Start,
+    Stop,
+}
+
+pub struct MemoryTrace {
+    pub trace_id: uuid::Uuid,
     pub address: u16,
-    pub value: Option<u8>,
+    pub data: u8,
+    pub operation: MemoryOperation,
+}
+
+pub enum MemoryOperation {
+    Read,
+    Write,
 }
 
 #[derive(Debug, PartialEq)]
@@ -60,15 +93,24 @@ impl std::fmt::Display for StopCondition {
 }
 
 impl Tool {
-    pub fn new() -> (Self, crossbeam::channel::Sender<Trace>) {
-        let (tx, rx) = crossbeam::channel::unbounded::<Trace>();
+    pub fn new() -> (
+        Self,
+        channel::Sender<CPUTrace>,
+        channel::Sender<MemoryTrace>,
+        channel::Receiver<TraceSignal>,
+    ) {
+        let (cpu_tx, cpu_rx) = channel::unbounded::<CPUTrace>();
+        let (mem_tx, mem_rx) = channel::unbounded::<MemoryTrace>();
+        let (trace_sig_tx, trace_sig_rx) = channel::unbounded::<TraceSignal>();
         (
             Self {
                 open: false,
                 address: 0x0000,
                 register: register::ID::A,
                 logs: String::new(),
-                trace_recv: rx,
+                cpu_rx,
+                mem_rx,
+                trace_sig_tx,
                 is_tracing: false,
                 options: TraceOptions {
                     address_tracing: false,
@@ -80,7 +122,9 @@ impl Tool {
                 stop_register_written: register::ID::A,
                 stop_register_read: register::ID::A,
             },
-            tx,
+            cpu_tx,
+            mem_tx,
+            trace_sig_rx,
         )
     }
 
@@ -89,7 +133,7 @@ impl Tool {
             .default_size(egui::vec2(500.0, 500.0))
             .resizable(true)
             .constrain(true)
-            .scroll2([true, true])
+            .vscroll(false)
             .open(&mut self.open)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
@@ -189,22 +233,55 @@ impl Tool {
                             };
 
                             if ui.button(trace_button_label).clicked() {
-                                self.is_tracing = true;
+                                self.is_tracing = !self.is_tracing;
+
+                                match self.trace_sig_tx.send(TraceSignal {
+                                    trace_id: uuid::Uuid::new_v4(),
+                                    signal: match self.is_tracing {
+                                        true => Signal::Start,
+                                        false => Signal::Stop,
+                                    },
+                                }) {
+                                    Ok(_) => {}
+                                    Err(err) => {
+                                        log::error!("Error sending trace signal: {:?}", err);
+                                    }
+                                }
+
+                                if self.is_tracing && self.logs != "" {
+                                    self.logs.clear();
+                                }
                             }
                         },
                     );
                 });
 
-                ui.add(
-                    egui::TextEdit::multiline(&mut self.logs)
-                        .desired_width(f32::INFINITY)
-                        .text_color(egui::Color32::WHITE)
-                        .interactive(false)
-                        .desired_rows(30),
-                );
+                egui::ScrollArea::vertical()
+                    .stick_to_bottom(true)
+                    .vscroll(true)
+                    .max_height(400.0)
+                    .show(ui, |ui| {
+                        ui.add(
+                            egui::TextEdit::multiline(&mut self.logs)
+                                .desired_width(f32::INFINITY)
+                                .text_color(egui::Color32::WHITE)
+                                .interactive(false)
+                                .desired_rows(25),
+                        );
+                    });
 
                 ui.add_space(5.0);
             });
+
+        if self.is_tracing {
+            match self.cpu_rx.try_recv() {
+                Ok(trace) => {
+                    self.logs.push_str(format!("CPU: [a: 0x{:02X}, b: 0x{:02X}, c: 0x{:02X}, d: 0x{:02X}, e: 0x{:02X}, h: 0x{:02X}, l: 0x{:02X}, f: 0x{:02X}, pc: 0x{:04X}, sp: 0x{:04X}, op_code: 0x{:02X}]\n",
+                        trace.a, trace.b, trace.c, trace.d, trace.e, trace.h, trace.l, trace.f, trace.pc, trace.sp, trace.op_code).as_str());
+                }
+                Err(_) => {}
+            }
+        }
     }
 
     fn register_picker(id: String, ui: &mut egui::Ui, reg: &mut register::ID) {
