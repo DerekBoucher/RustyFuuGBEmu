@@ -280,10 +280,6 @@ impl PPU {
 }
 
 impl interface::PPU for PPU {
-    fn reset(&mut self) {
-        *self = PPU::new();
-    }
-
     fn get_frame_data(
         &self,
     ) -> [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT] {

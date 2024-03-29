@@ -53,6 +53,7 @@ fn main() {
         args.skip_boot_rom,
         trace_tool,
     );
+
     let mut gb_orchestrator = gameboy.start();
 
     program_loop.run(move |program_event, _, control_flow| {

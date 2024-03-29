@@ -88,8 +88,4 @@ impl interface::Timers for Timers {
     ) {
         self.update(cycles, memory, cpu);
     }
-
-    fn reset(&mut self) {
-        *self = Timers::new();
-    }
 }

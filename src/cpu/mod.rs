@@ -94,10 +94,6 @@ impl interface::CPU for LR35902 {
         return self.is_halted();
     }
 
-    fn reset(&mut self) {
-        *self = LR35902::new();
-    }
-
     fn execute_next_opcode(&mut self, memory: &mut impl interface::Memory) -> u32 {
         return self.execute_next_opcode(memory);
     }

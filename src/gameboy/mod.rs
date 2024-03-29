@@ -1,6 +1,7 @@
 use crate::cartridge;
 use crate::cpu;
 use crate::cpu::CPU_CYCLES_PER_FRAME;
+use crate::cpu::LR35902;
 use crate::interface;
 use crate::interface::Memory;
 use crate::interface::Timers;
@@ -87,10 +88,10 @@ impl Gameboy {
     }
 
     fn load_rom(&mut self, rom_data: Vec<u8>) {
-        self.cpu.reset();
-        self.ppu.reset();
-        self.timers.reset();
-        self.memory.reset(cartridge::new(rom_data));
+        self.cpu = LR35902::new();
+        self.ppu = ppu::PPU::new();
+        self.timers = timers::Timers::new();
+        self.memory = memory::Memory::new(cartridge::new(rom_data));
 
         if self.skip_boot_rom {
             self.cpu.set_post_boot_rom_state();
@@ -134,22 +135,13 @@ impl Gameboy {
         loop {
             match self.state {
                 State::INITIALIZING => {
-                    self.handle_initializing(
-                        &close_receiver,
-                        &rom_data_receiver,
-                        &skip_boot_rom_recv,
-                    );
+                    self.initialize(&close_receiver, &rom_data_receiver, &skip_boot_rom_recv);
                 }
                 State::COMPUTING => {
-                    self.handle_computing(&close_receiver, &rom_data_receiver, &skip_boot_rom_recv);
+                    self.compute(&close_receiver, &rom_data_receiver, &skip_boot_rom_recv);
                 }
                 State::RENDERING => {
-                    // Ask main thread to render the frame.
-                    // Since the frame_data channel is bounded with a capacity of 1, we can
-                    // also rely on this thread blocking until the main thread renders, which in
-                    // turn allows the main thread to control the FPS of the emulation.
-                    frame_data_sender.send(self.ppu.get_frame_data()).unwrap();
-                    self.state.transition(State::COMPUTING);
+                    self.render(&frame_data_sender);
                 }
                 State::EXITING => {
                     log::debug!("gb thread exited");
@@ -165,7 +157,7 @@ impl Gameboy {
         }
     }
 
-    fn handle_initializing(
+    fn initialize(
         &mut self,
         close_receiver: &channel::Receiver<()>,
         rom_data_receiver: &channel::Receiver<Vec<u8>>,
@@ -188,7 +180,7 @@ impl Gameboy {
         }
     }
 
-    fn handle_computing(
+    fn compute(
         &mut self,
         close_receiver: &channel::Receiver<()>,
         rom_data_receiver: &channel::Receiver<Vec<u8>>,
@@ -231,5 +223,19 @@ impl Gameboy {
             }
         }
         self.state.transition(State::RENDERING);
+    }
+
+    fn render(
+        &mut self,
+        frame_data_sender: &channel::Sender<
+            [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
+        >,
+    ) {
+        // Ask main thread to render the frame.
+        // Since the frame_data channel is bounded with a capacity of 1, we can
+        // also rely on this thread blocking until the main thread renders, which in
+        // turn allows the main thread to control the FPS of the emulation.
+        frame_data_sender.send(self.ppu.get_frame_data()).unwrap();
+        self.state.transition(State::COMPUTING);
     }
 }

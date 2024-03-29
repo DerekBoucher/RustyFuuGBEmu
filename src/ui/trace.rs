@@ -1,5 +1,3 @@
-use egui::FontFamily;
-
 use crate::cpu::register;
 
 pub struct Tool {

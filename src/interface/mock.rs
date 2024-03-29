@@ -14,10 +14,6 @@ impl Memory {
         Memory { data: vec }
     }
 
-    fn reset(&mut self) {
-        self.data = vec![0x00; self.data.len()];
-    }
-
     fn read(&self, addr: usize) -> Option<u8> {
         Some(self.data[addr].clone())
     }
@@ -32,10 +28,6 @@ impl Memory {
 }
 
 impl interface::Memory for Memory {
-    fn reset(&mut self, _cartridge: Box<dyn interface::Cartridge>) {
-        self.reset()
-    }
-
     fn read(&self, addr: usize) -> Option<u8> {
         return self.read(addr);
     }
@@ -111,9 +103,5 @@ impl interface::Timers for Timer {
         _memory: &mut impl interface::Memory,
         _cpu: &mut impl interface::CPU,
     ) {
-    }
-
-    fn reset(&mut self) {
-        *self = Timer::new();
     }
 }
