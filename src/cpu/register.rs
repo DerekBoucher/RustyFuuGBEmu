@@ -46,7 +46,7 @@ impl std::fmt::Display for ID {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub enum ID16 {
     AF,
     BC,

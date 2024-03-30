@@ -1,5 +1,8 @@
+use std::collections::HashMap;
+
 use crate::cartridge;
 use crate::cpu;
+use crate::cpu::events::Event;
 use crate::cpu::CPU_CYCLES_PER_FRAME;
 use crate::interface;
 use crate::interface::Memory;
@@ -7,6 +10,7 @@ use crate::interface::Timers;
 use crate::interface::CPU;
 use crate::interface::PPU;
 use crate::memory;
+use crate::observables;
 use crate::ppu;
 use crate::timers;
 use crossbeam::channel;
@@ -56,6 +60,7 @@ pub struct Gameboy {
     memory: memory::Memory,
     ppu: ppu::PPU,
     timers: timers::Timers,
+    subscribers: HashMap<Event, Vec<observables::Subscriber<()>>>,
 }
 
 pub struct Orchestrator {
@@ -66,6 +71,8 @@ pub struct Orchestrator {
         [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
     >,
     skip_boot_rom_sender: channel::Sender<bool>,
+    subscribe_tx: channel::Sender<(Event, observables::Subscriber<()>)>,
+    unsubscribe_tx: channel::Sender<(Event, uuid::Uuid)>,
 }
 
 impl Gameboy {
@@ -83,6 +90,7 @@ impl Gameboy {
             ppu,
             timers,
             skip_boot_rom,
+            subscribers: HashMap::new(),
         };
     }
 
@@ -106,6 +114,8 @@ impl Gameboy {
             rom_data_receiver,
             frame_data_sender,
             skip_boot_rom_recv,
+            subscribe_rx,
+            unsubscribe_rx,
         ) = Orchestrator::new();
 
         std::thread::spawn(move || {
@@ -115,6 +125,8 @@ impl Gameboy {
                 rom_data_receiver,
                 frame_data_sender,
                 skip_boot_rom_recv,
+                subscribe_rx,
+                unsubscribe_rx,
             )
         });
 
@@ -130,6 +142,8 @@ impl Gameboy {
             [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
         >,
         skip_boot_rom_recv: channel::Receiver<bool>,
+        subscribe_rx: channel::Receiver<(Event, observables::Subscriber<()>)>,
+        unsubscribe_rx: channel::Receiver<(Event, uuid::Uuid)>,
     ) {
         loop {
             match self.state {
@@ -137,7 +151,13 @@ impl Gameboy {
                     self.initialize(&close_receiver, &rom_data_receiver, &skip_boot_rom_recv);
                 }
                 State::COMPUTING => {
-                    self.compute(&close_receiver, &rom_data_receiver, &skip_boot_rom_recv);
+                    self.compute(
+                        &close_receiver,
+                        &rom_data_receiver,
+                        &skip_boot_rom_recv,
+                        &subscribe_rx,
+                        &unsubscribe_rx,
+                    );
                 }
                 State::RENDERING => {
                     self.render(&frame_data_sender);
@@ -184,6 +204,8 @@ impl Gameboy {
         close_receiver: &channel::Receiver<()>,
         rom_data_receiver: &channel::Receiver<Vec<u8>>,
         skip_boot_rom_receiver: &channel::Receiver<bool>,
+        subscribe_rx: &channel::Receiver<(Event, observables::Subscriber<()>)>,
+        unsubscribe_rx: &channel::Receiver<(Event, uuid::Uuid)>,
     ) {
         let mut cycles_this_update: u32 = 0;
         while cycles_this_update < CPU_CYCLES_PER_FRAME {
@@ -201,6 +223,21 @@ impl Gameboy {
                     self.load_rom(rom_data.unwrap());
                     log::debug!("ROM cartridge loaded!");
                     continue;
+                }
+
+                recv(subscribe_rx) -> subscriber => {
+                    let (event, subscriber) = subscriber.unwrap();
+                    self.subscribers
+                        .entry(event)
+                        .or_insert_with(Vec::new)
+                        .push(subscriber);
+                }
+
+                recv(unsubscribe_rx) -> subscriber_id => {
+                    let (event, subscriber_id) = subscriber_id.unwrap();
+                    if let Some(subscribers) = self.subscribers.get_mut(&event) {
+                        subscribers.retain(|subscriber| subscriber.id != subscriber_id);
+                    }
                 }
 
                 default => {

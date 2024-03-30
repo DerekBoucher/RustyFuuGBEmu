@@ -3,6 +3,7 @@ mod cpu;
 mod gameboy;
 mod interface;
 mod memory;
+mod observables;
 mod ppu;
 mod renderer;
 mod timers;
@@ -39,7 +40,7 @@ fn main() {
     let egui_glium_client = egui_glium::EguiGlium::new(&display, &program_loop);
     let mut opengl_renderer = renderer::OpenGL::new(&display);
 
-    let (trace_tool, cpu_tx, _mem_tx, trace_sig_rx) = ui::trace::Tool::new();
+    let trace_tool = ui::trace::Tool::new();
     let mut ui = ui::Ui::new(
         egui_glium_client,
         program_loop.create_proxy(),
@@ -47,9 +48,7 @@ fn main() {
         trace_tool,
     );
 
-    let mut cpu = cpu::LR35902::new();
-    cpu.set_trace_tx(cpu_tx);
-    cpu.set_trace_sig_rx(trace_sig_rx);
+    let cpu = cpu::LR35902::new();
     let memory = memory::Memory::default();
     let ppu = ppu::PPU::new();
     let timers = timers::Timers::new();

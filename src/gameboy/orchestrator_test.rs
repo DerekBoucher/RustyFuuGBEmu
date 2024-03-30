@@ -13,7 +13,7 @@ impl std::fmt::Display for TestFailureError {
 
 #[test]
 fn close() -> Result<(), TestFailureError> {
-    let (ctrl, close_receiver, _, _, _, _) = Orchestrator::new();
+    let (ctrl, close_receiver, _, _, _, _, _, _) = Orchestrator::new();
 
     ctrl.close();
 
@@ -27,7 +27,7 @@ fn close() -> Result<(), TestFailureError> {
 
 #[test]
 fn load_rom() -> Result<(), TestFailureError> {
-    let (ctrl, _, _, rom_receiver, _, _) = Orchestrator::new();
+    let (ctrl, _, _, rom_receiver, _, _, _, _) = Orchestrator::new();
 
     let data: Vec<u8> = vec![0x01, 0x02, 0x03];
 
@@ -46,7 +46,7 @@ fn load_rom() -> Result<(), TestFailureError> {
 
 #[test]
 fn join() -> Result<(), TestFailureError> {
-    let (ctrl, _, ack_sender, _, _, _) = Orchestrator::new();
+    let (ctrl, _, ack_sender, _, _, _, _, _) = Orchestrator::new();
 
     let send_result = match ack_sender.send(()) {
         Ok(()) => Ok(()),

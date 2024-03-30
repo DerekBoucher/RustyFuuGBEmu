@@ -1,4 +1,4 @@
-use crate::interface;
+use crate::{cpu::events::Event, interface, observables};
 
 use super::Orchestrator;
 use crossbeam::channel::{self, RecvTimeoutError};
@@ -19,6 +19,8 @@ impl Orchestrator {
             [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
         >,
         channel::Receiver<bool>,
+        channel::Receiver<(Event, observables::Subscriber<()>)>,
+        channel::Receiver<(Event, uuid::Uuid)>,
     ) {
         let (close_sender, close_receiver) = channel::unbounded();
         let (ack_sender, ack_receiver) = channel::unbounded();
@@ -27,6 +29,9 @@ impl Orchestrator {
             [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
         >(1);
         let (skip_boot_rom_sender, skip_boot_rom_recv) = channel::bounded::<bool>(1);
+        let (subscribe_tx, subscribe_rx) =
+            channel::unbounded::<(Event, observables::Subscriber<()>)>();
+        let (unsubscribe_tx, unsubscribe_rx) = channel::unbounded::<(Event, uuid::Uuid)>();
 
         (
             Self {
@@ -35,12 +40,16 @@ impl Orchestrator {
                 rom_data_sender,
                 frame_data_receiver,
                 skip_boot_rom_sender,
+                subscribe_tx,
+                unsubscribe_tx,
             },
             close_receiver,
             ack_sender,
             rom_data_receiver,
             frame_data_sender,
             skip_boot_rom_recv,
+            subscribe_rx,
+            unsubscribe_rx,
         )
     }
 

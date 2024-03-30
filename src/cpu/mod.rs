@@ -1,29 +1,27 @@
 //! Module containing all logic relevant to the emulation of the original
 //! Gameboy's CPU (Sharp LR35902)
 mod bit;
+pub mod events;
 mod opcode;
 mod opcode_ext;
 pub mod register;
-
-extern crate uuid;
-
 #[cfg(test)]
 mod test;
 
-use crate::{
-    interface,
-    ui::trace::{CPUTrace, Signal, TraceSignal},
-};
+extern crate uuid;
+use crate::{interface, observables};
+use egui::epaint::ahash::{HashMap, HashMapExt};
+use opcode::Opcode;
+use register::{ID, ID16};
 
 #[cfg(feature = "serial_debug")]
 use crate::memory::io_registers;
 
-use opcode::Opcode;
-use register::{ID, ID16};
+use self::events::Event;
 
 /// Represents a byte addressable word register found
 /// inside the Sharp LR35902
-#[derive(Debug)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
 struct Register {
     hi: u8,
     lo: u8,
@@ -42,9 +40,8 @@ pub struct LR35902 {
     interrupt_master_enable: bool,
     halted: bool,
     bugged_halt: bool,
-    trace_tx: Option<crossbeam::channel::Sender<CPUTrace>>,
-    trace_sig_rx: Option<crossbeam::channel::Receiver<TraceSignal>>,
-    trace_id: Option<uuid::Uuid>,
+
+    subscribers: HashMap<Event, Vec<observables::Subscriber<()>>>,
 }
 
 const INTERRUPT_ENABLE_REGISTER_ADDR: usize = 0xFFFF;
@@ -155,9 +152,8 @@ impl LR35902 {
             interrupt_master_enable: false,
             halted: false,
             bugged_halt: false,
-            trace_tx: None,
-            trace_sig_rx: None,
-            trace_id: None,
+
+            subscribers: HashMap::<Event, Vec<observables::Subscriber<()>>>::new(),
         }
     }
 
@@ -172,15 +168,6 @@ impl LR35902 {
         self.interrupt_master_enable = false;
         self.halted = false;
         self.bugged_halt = false;
-        self.trace_id = None;
-    }
-
-    pub fn set_trace_tx(&mut self, trace_tx: crossbeam::channel::Sender<CPUTrace>) {
-        self.trace_tx = Some(trace_tx);
-    }
-
-    pub fn set_trace_sig_rx(&mut self, trace_sig_rx: crossbeam::channel::Receiver<TraceSignal>) {
-        self.trace_sig_rx = Some(trace_sig_rx);
     }
 
     pub fn execute_next_opcode(&mut self, memory: &mut impl interface::Memory) -> u32 {
@@ -191,48 +178,6 @@ impl LR35902 {
                 {:?}", self
             ),
         };
-
-        match self.trace_sig_rx {
-            None => {}
-            Some(ref sig_rx) => match sig_rx.try_recv() {
-                Ok(sig) => match sig.signal {
-                    Signal::Stop => {
-                        self.trace_id = None;
-                    }
-                    Signal::Start => {
-                        self.trace_id = Some(sig.trace_id);
-                    }
-                },
-                Err(_) => {}
-            },
-        }
-
-        if self.trace_id.is_some() {
-            match self.trace_tx {
-                Some(ref tx) => {
-                    match tx.send(CPUTrace {
-                        trace_id: self.trace_id.unwrap(),
-                        op_code: op.clone().into(),
-                        pc: self.pc,
-                        sp: self.sp,
-                        a: self.af.hi,
-                        f: self.af.lo,
-                        b: self.bc.hi,
-                        c: self.bc.lo,
-                        d: self.de.hi,
-                        e: self.de.lo,
-                        h: self.hl.hi,
-                        l: self.hl.lo,
-                    }) {
-                        Ok(_) => {}
-                        Err(e) => {
-                            log::trace!("error sending trace event: {:?}", e);
-                        }
-                    };
-                }
-                None => {}
-            }
-        }
 
         self.pc = self.pc.wrapping_add(1);
 
