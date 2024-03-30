@@ -1,7 +1,6 @@
 use crate::cartridge;
 use crate::cpu;
 use crate::cpu::CPU_CYCLES_PER_FRAME;
-use crate::cpu::LR35902;
 use crate::interface;
 use crate::interface::Memory;
 use crate::interface::Timers;

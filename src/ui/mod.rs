@@ -79,6 +79,7 @@ impl Ui {
                     });
                 });
 
+            // Custom UI widgets here
             self.trace_tool.draw(egui_ctx);
         });
 

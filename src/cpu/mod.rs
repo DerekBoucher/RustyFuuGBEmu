@@ -20,7 +20,6 @@ use crate::memory::io_registers;
 
 use opcode::Opcode;
 use register::{ID, ID16};
-use std::fmt::Debug;
 
 /// Represents a byte addressable word register found
 /// inside the Sharp LR35902
@@ -32,7 +31,6 @@ struct Register {
 
 /// Struct representing the Sharp LR35902 CPU found inside the original
 /// DMG Gameboy hardware
-#[derive(Debug)]
 pub struct LR35902 {
     af: Register,
     bc: Register,
@@ -90,6 +88,23 @@ impl PartialEq for LR35902 {
             && self.interrupt_master_enable == other.interrupt_master_enable
             && self.halted == other.halted
             && self.bugged_halt == other.bugged_halt
+    }
+}
+
+impl std::fmt::Debug for LR35902 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LR35902")
+            .field("af", &self.af)
+            .field("bc", &self.bc)
+            .field("de", &self.de)
+            .field("hl", &self.hl)
+            .field("sp", &self.sp)
+            .field("pc", &self.pc)
+            .field("paused", &self.paused)
+            .field("interrupt_master_enable", &self.interrupt_master_enable)
+            .field("halted", &self.halted)
+            .field("bugged_halt", &self.bugged_halt)
+            .finish()
     }
 }
 

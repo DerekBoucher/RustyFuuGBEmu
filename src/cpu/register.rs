@@ -19,7 +19,7 @@ impl Register {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum ID {
     A,
     F,
