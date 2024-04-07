@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crate::cartridge;
 use crate::cpu;
 use crate::cpu::events::Event;
+use crate::cpu::events::Trace;
 use crate::cpu::CPU_CYCLES_PER_FRAME;
 use crate::interface;
 use crate::interface::Memory;
@@ -71,7 +72,7 @@ pub struct Orchestrator {
         [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
     >,
     skip_boot_rom_sender: channel::Sender<bool>,
-    subscribe_tx: channel::Sender<(Event, observables::Subscriber<()>)>,
+    subscribe_tx: channel::Sender<(Event, observables::Subscriber<Trace>)>,
     unsubscribe_tx: channel::Sender<(Event, uuid::Uuid)>,
 }
 
@@ -142,7 +143,7 @@ impl Gameboy {
             [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
         >,
         skip_boot_rom_recv: channel::Receiver<bool>,
-        subscribe_rx: channel::Receiver<(Event, observables::Subscriber<()>)>,
+        subscribe_rx: channel::Receiver<(Event, observables::Subscriber<Trace>)>,
         unsubscribe_rx: channel::Receiver<(Event, uuid::Uuid)>,
     ) {
         loop {
@@ -204,7 +205,7 @@ impl Gameboy {
         close_receiver: &channel::Receiver<()>,
         rom_data_receiver: &channel::Receiver<Vec<u8>>,
         skip_boot_rom_receiver: &channel::Receiver<bool>,
-        subscribe_rx: &channel::Receiver<(Event, observables::Subscriber<()>)>,
+        subscribe_rx: &channel::Receiver<(Event, observables::Subscriber<Trace>)>,
         unsubscribe_rx: &channel::Receiver<(Event, uuid::Uuid)>,
     ) {
         let mut cycles_this_update: u32 = 0;
@@ -227,17 +228,12 @@ impl Gameboy {
 
                 recv(subscribe_rx) -> subscriber => {
                     let (event, subscriber) = subscriber.unwrap();
-                    self.subscribers
-                        .entry(event)
-                        .or_insert_with(Vec::new)
-                        .push(subscriber);
+                    self.cpu.subscribe(event, subscriber);
                 }
 
                 recv(unsubscribe_rx) -> subscriber_id => {
                     let (event, subscriber_id) = subscriber_id.unwrap();
-                    if let Some(subscribers) = self.subscribers.get_mut(&event) {
-                        subscribers.retain(|subscriber| subscriber.id != subscriber_id);
-                    }
+                    self.cpu.unsubscribe(event, subscriber_id);
                 }
 
                 default => {

@@ -1,4 +1,8 @@
-use crate::{cpu::events::Event, interface, observables};
+use crate::{
+    cpu::events::{Event, Trace},
+    interface,
+    observables::{self, Subscriber},
+};
 
 use super::Orchestrator;
 use crossbeam::channel::{self, RecvTimeoutError};
@@ -19,7 +23,7 @@ impl Orchestrator {
             [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
         >,
         channel::Receiver<bool>,
-        channel::Receiver<(Event, observables::Subscriber<()>)>,
+        channel::Receiver<(Event, observables::Subscriber<Trace>)>,
         channel::Receiver<(Event, uuid::Uuid)>,
     ) {
         let (close_sender, close_receiver) = channel::unbounded();
@@ -30,7 +34,7 @@ impl Orchestrator {
         >(1);
         let (skip_boot_rom_sender, skip_boot_rom_recv) = channel::bounded::<bool>(1);
         let (subscribe_tx, subscribe_rx) =
-            channel::unbounded::<(Event, observables::Subscriber<()>)>();
+            channel::unbounded::<(Event, observables::Subscriber<Trace>)>();
         let (unsubscribe_tx, unsubscribe_rx) = channel::unbounded::<(Event, uuid::Uuid)>();
 
         (
@@ -78,5 +82,23 @@ impl Orchestrator {
             Err(channel::TryRecvError::Empty) => None,
             _ => None,
         }
+    }
+
+    pub fn subscribe(&self, tx: channel::Sender<Trace>, event: Event) -> uuid::Uuid {
+        let sub_id = uuid::Uuid::new_v4();
+        self.subscribe_tx
+            .send((
+                event,
+                Subscriber {
+                    tx,
+                    id: sub_id.clone(),
+                },
+            ))
+            .unwrap();
+        return sub_id;
+    }
+
+    pub fn unsubscribe(&self, event: Event, sub_id: uuid::Uuid) {
+        self.unsubscribe_tx.send((event, sub_id.clone())).unwrap();
     }
 }

@@ -80,7 +80,7 @@ impl Ui {
                 });
 
             // Custom UI widgets here
-            self.trace_tool.draw(egui_ctx);
+            self.trace_tool.draw(egui_ctx, gb_controller);
         });
 
         let time_until_next_redraw = std::time::Instant::now().checked_add(egui_redraw_timer);

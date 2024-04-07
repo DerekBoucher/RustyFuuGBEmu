@@ -9,7 +9,10 @@ pub mod register;
 mod test;
 
 extern crate uuid;
-use crate::{interface, observables};
+use crate::{
+    interface,
+    observables::{self, Subscriber},
+};
 use egui::epaint::ahash::{HashMap, HashMapExt};
 use opcode::Opcode;
 use register::{ID, ID16};
@@ -17,7 +20,7 @@ use register::{ID, ID16};
 #[cfg(feature = "serial_debug")]
 use crate::memory::io_registers;
 
-use self::events::Event;
+use self::events::{Event, Trace};
 
 /// Represents a byte addressable word register found
 /// inside the Sharp LR35902
@@ -41,7 +44,7 @@ pub struct LR35902 {
     halted: bool,
     bugged_halt: bool,
 
-    subscribers: HashMap<Event, Vec<observables::Subscriber<()>>>,
+    subscribers: HashMap<Event, Vec<observables::Subscriber<Trace>>>,
 }
 
 const INTERRUPT_ENABLE_REGISTER_ADDR: usize = 0xFFFF;
@@ -153,7 +156,7 @@ impl LR35902 {
             halted: false,
             bugged_halt: false,
 
-            subscribers: HashMap::<Event, Vec<observables::Subscriber<()>>>::new(),
+            subscribers: HashMap::<Event, Vec<observables::Subscriber<Trace>>>::new(),
         }
     }
 
@@ -168,6 +171,20 @@ impl LR35902 {
         self.interrupt_master_enable = false;
         self.halted = false;
         self.bugged_halt = false;
+    }
+
+    pub fn subscribe(&mut self, event: Event, subscriber: Subscriber<Trace>) {
+        self.subscribers
+            .entry(event)
+            .or_insert(vec![])
+            .push(subscriber);
+    }
+
+    pub fn unsubscribe(&mut self, event: Event, subscriber_id: uuid::Uuid) {
+        self.subscribers
+            .entry(event)
+            .or_insert(vec![])
+            .retain(|sub| return sub.id != subscriber_id)
     }
 
     pub fn execute_next_opcode(&mut self, memory: &mut impl interface::Memory) -> u32 {

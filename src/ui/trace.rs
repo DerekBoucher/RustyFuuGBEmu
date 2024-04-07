@@ -1,4 +1,10 @@
-use crate::cpu::register;
+use crate::{
+    cpu::{
+        events::{Event, RegisterAccess, Trace},
+        register,
+    },
+    gameboy,
+};
 
 pub struct Tool {
     pub open: bool,
@@ -13,6 +19,8 @@ pub struct Tool {
     stop_address_read: u16,
     stop_register_written: register::ID,
     stop_register_read: register::ID,
+
+    trace_rx: Option<(uuid::Uuid, crossbeam::channel::Receiver<Trace>)>,
 }
 
 struct TraceOptions {
@@ -78,10 +86,11 @@ impl Tool {
             stop_address_read: 0x0000,
             stop_register_written: register::ID::A,
             stop_register_read: register::ID::A,
+            trace_rx: None,
         }
     }
 
-    pub fn draw(&mut self, ctx: &egui::Context) {
+    pub fn draw(&mut self, ctx: &egui::Context, gb_orchestrator: &gameboy::Orchestrator) {
         egui::Window::new("Trace Tool")
             .default_size(egui::vec2(500.0, 500.0))
             .resizable(true)
@@ -190,6 +199,24 @@ impl Tool {
 
                                 if self.is_tracing && self.logs != "" {
                                     self.logs.clear();
+                                }
+
+                                let sub_event =
+                                    Event::Register(RegisterAccess::Read(self.register.clone()));
+
+                                if self.is_tracing {
+                                    let (tx, rx) = crossbeam::channel::unbounded::<Trace>();
+
+                                    let sub_id = gb_orchestrator.subscribe(tx, sub_event);
+                                    self.trace_rx = Some((sub_id, rx));
+                                } else {
+                                    match &self.trace_rx {
+                                        Some(sub) => {
+                                            gb_orchestrator.unsubscribe(sub_event, sub.0.clone());
+                                        }
+                                        None => {}
+                                    }
+                                    self.trace_rx = None;
                                 }
                             }
                         },
