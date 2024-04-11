@@ -10,6 +10,10 @@ use crate::cpu::opcode_ext::*;
 use crate::interface;
 
 use super::bit::two_compliment_byte;
+use super::events::Event;
+use super::events::MemoryAccess;
+use super::events::RegisterAccess;
+use super::register::ID;
 
 #[allow(non_camel_case_types)]
 #[repr(u8)]
@@ -1072,7 +1076,16 @@ fn execute_0x00(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
 
 fn execute_0x01(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     cpu.bc.lo = match memory.read(usize::from(cpu.pc)) {
-        Some(byte) => byte,
+        Some(byte) => {
+            let mem_event = Event::Memory(MemoryAccess::Read(cpu.pc));
+            let event = Event::Register(RegisterAccess::Write(ID::C, byte));
+            let mut trace = cpu.get_trace();
+            trace.opcode = Opcode::LdImm16IntoBC_0x01.into();
+            trace.cpu_cycles = 12;
+            cpu.notify(event, trace.clone());
+            cpu.notify(mem_event, trace.clone());
+            byte
+        },
         None => panic!(
             "opcode load imm 16 into BC failed to fetch lo byte. Dumping cpu state...\n{:?}",
             cpu
@@ -1082,8 +1095,17 @@ fn execute_0x01(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     cpu.bc.hi = match memory.read(usize::from(cpu.pc)) {
-        Some(byte) => byte,
-        None => panic!(
+         Some(byte) => {
+            let reg_event = Event::Register(RegisterAccess::Write(ID::B, byte));
+            let mem_event = Event::Memory(MemoryAccess::Read(cpu.pc));
+            let mut trace = cpu.get_trace();
+            trace.opcode = Opcode::LdImm16IntoBC_0x01.into();
+            trace.cpu_cycles = 12;
+            cpu.notify(reg_event, trace.clone());
+            cpu.notify(mem_event, trace.clone());
+            byte
+        },
+       None => panic!(
             "opcode load imm 16 into BC failed to fetch hi byte. Dumping cpu state...\n{:?}",
             cpu,
 
@@ -1097,12 +1119,27 @@ fn execute_0x01(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
 
 fn execute_0x02(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     memory.write(usize::from(cpu.bc.word()), cpu.af.hi);
+        
+    let mem_event = Event::Memory(MemoryAccess::Write(cpu.bc.word(), cpu.af.hi));
+    let mut trace = cpu.get_trace();
+    trace.opcode = Opcode::LdAIntoMemoryBC_0x02.into();
+    trace.cpu_cycles = 8;
+    cpu.notify(mem_event, trace.clone());
 
     8
 }
 
 fn execute_0x03(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     cpu.bc.set_word(cpu.bc.word().wrapping_add(1));
+    let mut trace = cpu.get_trace();
+    trace.opcode = Opcode::IncBC_0x03.into();
+    trace.cpu_cycles = 8;
+
+    let hi_event = Event::Register(RegisterAccess::Write(ID::B, cpu.bc.hi));
+    cpu.notify(hi_event, trace.clone());
+
+    let lo_event = Event::Register(RegisterAccess::Write(ID::C, cpu.bc.lo));
+    cpu.notify(lo_event, trace.clone());
 
     8
 }
@@ -1110,18 +1147,39 @@ fn execute_0x03(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
 fn execute_0x04(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     cpu.increment_8_bit_register(register::ID::B);
 
+    let event = Event::Register(RegisterAccess::Write(ID::B, cpu.bc.hi));
+    let mut trace = cpu.get_trace();
+    trace.opcode = Opcode::IncB_0x04.into();
+    trace.cpu_cycles = 4;
+    cpu.notify(event, trace.clone());
+
     4
 }
 
 fn execute_0x05(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     cpu.decrement_8_bit_register(register::ID::B);
 
+    let event = Event::Register(RegisterAccess::Write(ID::B, cpu.bc.hi));
+    let mut trace = cpu.get_trace();
+    trace.opcode = Opcode::DecB_0x05.into();
+    trace.cpu_cycles = 4;
+    cpu.notify(event, trace.clone());
+
     4
 }
 
 fn execute_0x06(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     let byte = match memory.read(usize::from(cpu.pc)) {
-        Some(byte) => byte,
+        Some(byte) => {
+            let mem_event = Event::Memory(MemoryAccess::Read(cpu.pc));
+            let event = Event::Register(RegisterAccess::Write(ID::B, byte));
+            let mut trace = cpu.get_trace();
+            trace.opcode = Opcode::LdImm8IntoB_0x06.into();
+            trace.cpu_cycles = 8;
+            cpu.notify(event, trace.clone());
+            cpu.notify(mem_event, trace.clone());
+            byte
+        },
         None => panic!(
             "opcode load imm 8 into B failed to fetch byte in memory. Dumping cpu state...\n{:?}",
             cpu,
@@ -1146,16 +1204,33 @@ fn execute_0x07(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
 
     cpu.af.hi = cpu.af.hi.rotate_left(1);
 
+
     cpu.reset_half_carry_flag();
     cpu.reset_sub_flag();
     cpu.reset_zero_flag();
+
+    let event = Event::Register(RegisterAccess::Write(ID::A, cpu.af.hi));
+    let mut trace = cpu.get_trace();
+    trace.opcode = Opcode::RotateLeftIntoA_0x07.into();
+    trace.cpu_cycles = 4;
+    cpu.notify(event, trace.clone());
 
     4
 }
 
 fn execute_0x08(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
+    let mut trace = cpu.get_trace();
+    trace.opcode = Opcode::LdSpInto16ImmAddress_0x08.into();
+    trace.cpu_cycles = 20;
+
     let lo_address_byte = match memory.read(usize::from(cpu.pc)) {
-        Some(byte) => byte,
+        Some(byte) => {
+            let mem_event = Event::Memory(MemoryAccess::Read(cpu.pc));
+            let event = Event::Register(RegisterAccess::Write(ID::C, byte));
+            cpu.notify(event, trace.clone());
+            cpu.notify(mem_event, trace.clone());
+            byte
+        },
         None => panic!(
             "opcode 0x08 failed to load lo address byte from memory. Dumping cpu state...\n{:?}",
             cpu,
@@ -1165,7 +1240,13 @@ fn execute_0x08(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let hi_address_byte = match memory.read(usize::from(cpu.pc)) {
-        Some(byte) => byte,
+        Some(byte) => {
+            let mem_event = Event::Memory(MemoryAccess::Read(cpu.pc));
+            let event = Event::Register(RegisterAccess::Write(ID::B, byte));
+            cpu.notify(event, trace.clone());
+            cpu.notify(mem_event, trace.clone());
+            byte
+        },
         None => panic!(
             "opcode 0x08 failed to load hi address byte from memory. Dumping cpu state...\n{:?}",
             cpu,

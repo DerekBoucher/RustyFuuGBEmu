@@ -1,6 +1,6 @@
 use crate::{
     cpu::{
-        events::{Event, RegisterAccess, Trace},
+        events::{Event, MemoryAccess, RegisterAccess, Trace},
         register,
     },
     gameboy,
@@ -13,60 +13,14 @@ pub struct Tool {
     options: TraceOptions,
     address: u16,
     register: register::ID,
-    stop_condition: StopCondition,
 
-    stop_address_written: u16,
-    stop_address_read: u16,
-    stop_register_written: register::ID,
-    stop_register_read: register::ID,
-
-    trace_rx: Option<(uuid::Uuid, crossbeam::channel::Receiver<Trace>)>,
+    register_trace_rx: Option<(uuid::Uuid, crossbeam::channel::Receiver<Trace>)>,
+    memory_trace_rx: Option<(uuid::Uuid, crossbeam::channel::Receiver<Trace>)>,
 }
 
 struct TraceOptions {
     address_tracing: bool,
     register_tracing: bool,
-}
-
-pub enum Signal {
-    Start,
-    Stop,
-}
-
-pub enum MemoryOperation {
-    Read,
-    Write,
-}
-
-#[derive(Debug, PartialEq)]
-enum StopCondition {
-    None,
-    AddressWritten,
-    AddressRead,
-    RegisterWritten,
-    RegisterRead,
-}
-
-impl std::fmt::Display for StopCondition {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::None => {
-                write!(f, "None")
-            }
-            Self::AddressRead => {
-                write!(f, "Address read")
-            }
-            Self::AddressWritten => {
-                write!(f, "Address written")
-            }
-            Self::RegisterRead => {
-                write!(f, "Register read")
-            }
-            Self::RegisterWritten => {
-                write!(f, "Register written")
-            }
-        }
-    }
 }
 
 impl Tool {
@@ -81,12 +35,8 @@ impl Tool {
                 address_tracing: false,
                 register_tracing: false,
             },
-            stop_condition: StopCondition::None,
-            stop_address_written: 0x0000,
-            stop_address_read: 0x0000,
-            stop_register_written: register::ID::A,
-            stop_register_read: register::ID::A,
-            trace_rx: None,
+            register_trace_rx: None,
+            memory_trace_rx: None,
         }
     }
 
@@ -99,91 +49,20 @@ impl Tool {
             .open(&mut self.open)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
+                    ui.set_enabled(!self.is_tracing);
                     ui.checkbox(&mut self.options.address_tracing, "Trace Address");
                     ui.set_enabled(self.options.address_tracing);
                     Tool::address_picker(ui, &mut self.address);
                 });
 
                 ui.horizontal(|ui| {
+                    ui.set_enabled(!self.is_tracing);
                     ui.checkbox(&mut self.options.register_tracing, "Trace Register");
                     ui.set_enabled(self.options.register_tracing);
                     Tool::register_picker("reg_picker_1".to_string(), ui, &mut self.register)
                 });
 
                 ui.separator();
-
-                ui.horizontal(|ui| {
-                    ui.label("Stop condition: ");
-                    egui::ComboBox::from_id_source("Hash2")
-                        .selected_text(format!("{}", self.stop_condition))
-                        .show_ui(ui, |ui| {
-                            ui.selectable_value(
-                                &mut self.stop_condition,
-                                StopCondition::None,
-                                "None",
-                            );
-                            ui.selectable_value(
-                                &mut self.stop_condition,
-                                StopCondition::AddressRead,
-                                "Address Read",
-                            );
-                            ui.selectable_value(
-                                &mut self.stop_condition,
-                                StopCondition::AddressWritten,
-                                "Address Written",
-                            );
-                            ui.selectable_value(
-                                &mut self.stop_condition,
-                                StopCondition::RegisterRead,
-                                "Register Read",
-                            );
-                            ui.selectable_value(
-                                &mut self.stop_condition,
-                                StopCondition::RegisterWritten,
-                                "Register Written",
-                            );
-                        });
-
-                    ui.add_enabled_ui(self.stop_condition != StopCondition::None, |ui| {
-                        ui.separator();
-
-                        match self.stop_condition {
-                            StopCondition::AddressRead => {
-                                ui.horizontal(|ui| {
-                                    ui.label("Address: ");
-                                    Tool::address_picker(ui, &mut self.stop_address_read);
-                                });
-                            }
-                            StopCondition::AddressWritten => {
-                                ui.horizontal(|ui| {
-                                    ui.label("Address: ");
-                                    Tool::address_picker(ui, &mut self.stop_address_written)
-                                });
-                            }
-                            StopCondition::RegisterRead => {
-                                ui.horizontal(|ui| {
-                                    ui.label("Register: ");
-                                    Tool::register_picker(
-                                        "id".to_string(),
-                                        ui,
-                                        &mut self.stop_register_read,
-                                    );
-                                });
-                            }
-                            StopCondition::RegisterWritten => {
-                                ui.horizontal(|ui| {
-                                    ui.label("Register: ");
-                                    Tool::register_picker(
-                                        "id".to_string(),
-                                        ui,
-                                        &mut self.stop_register_written,
-                                    );
-                                });
-                            }
-                            _ => {}
-                        }
-                    });
-                });
 
                 ui.horizontal(|ui| {
                     ui.add_enabled_ui(
@@ -201,22 +80,47 @@ impl Tool {
                                     self.logs.clear();
                                 }
 
-                                let sub_event =
+                                let register_sub_event =
                                     Event::Register(RegisterAccess::Read(self.register.clone()));
 
-                                if self.is_tracing {
-                                    let (tx, rx) = crossbeam::channel::unbounded::<Trace>();
+                                let memory_sub_event =
+                                    Event::Memory(MemoryAccess::Read(self.address));
 
-                                    let sub_id = gb_orchestrator.subscribe(tx, sub_event);
-                                    self.trace_rx = Some((sub_id, rx));
+                                if self.is_tracing {
+                                    if self.options.register_tracing {
+                                        let (reg_tx, reg_rx) =
+                                            crossbeam::channel::unbounded::<Trace>();
+
+                                        let sub_id =
+                                            gb_orchestrator.subscribe(reg_tx, register_sub_event);
+                                        self.register_trace_rx = Some((sub_id, reg_rx));
+                                    }
+
+                                    if self.options.address_tracing {
+                                        let (mem_tx, mem_rx) =
+                                            crossbeam::channel::unbounded::<Trace>();
+
+                                        let sub_id =
+                                            gb_orchestrator.subscribe(mem_tx, memory_sub_event);
+                                        self.memory_trace_rx = Some((sub_id, mem_rx));
+                                    }
                                 } else {
-                                    match &self.trace_rx {
+                                    match &self.register_trace_rx {
                                         Some(sub) => {
-                                            gb_orchestrator.unsubscribe(sub_event, sub.0.clone());
+                                            gb_orchestrator
+                                                .unsubscribe(register_sub_event, sub.0.clone());
                                         }
                                         None => {}
                                     }
-                                    self.trace_rx = None;
+                                    self.register_trace_rx = None;
+
+                                    match &self.memory_trace_rx {
+                                        Some(sub) => {
+                                            gb_orchestrator
+                                                .unsubscribe(memory_sub_event, sub.0.clone());
+                                        }
+                                        None => {}
+                                    }
                                 }
                             }
                         },
@@ -239,6 +143,26 @@ impl Tool {
 
                 ui.add_space(5.0);
             });
+
+        match &self.register_trace_rx {
+            Some(sub) => {
+                while let Ok(trace) = sub.1.try_recv() {
+                    self.logs.push_str(&format!("pc: {}, sp: {}, a: {}, f: {}, b: {}, c: {}, d: {}, e: {}, h: {}, l: {}, op_code: {}, cpu_cycles: {}", trace.pc, trace.sp,
+                trace.a, trace.f, trace.b, trace.c, trace.d, trace.e, trace.h, trace.l, trace.opcode, trace.cpu_cycles));
+                }
+            }
+            None => {}
+        }
+
+        match &self.memory_trace_rx {
+            Some(sub) => {
+                while let Ok(trace) = sub.1.try_recv() {
+                    self.logs.push_str(&format!("pc: {}, sp: {}, a: {}, f: {}, b: {}, c: {}, d: {}, e: {}, h: {}, l: {}, op_code: {}, cpu_cycles: {}", trace.pc, trace.sp,
+                trace.a, trace.f, trace.b, trace.c, trace.d, trace.e, trace.h, trace.l, trace.opcode, trace.cpu_cycles));
+                }
+            }
+            None => {}
+        }
     }
 
     fn register_picker(id: String, ui: &mut egui::Ui, reg: &mut register::ID) {

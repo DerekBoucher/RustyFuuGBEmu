@@ -21,7 +21,7 @@ const REGISTER_ACCESS_UNUSED: RegisterAccess = RegisterAccess::Unused;
 pub enum MemoryAccess {
     Unused,
     None,
-    Read(u16, u8),
+    Read(u16),
     Write(u16, u8),
 }
 const MEMORY_ACCESS_UNUSED: MemoryAccess = MemoryAccess::Unused;

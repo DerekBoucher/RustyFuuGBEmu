@@ -173,6 +173,27 @@ impl LR35902 {
         self.bugged_halt = false;
     }
 
+    pub fn get_trace(&self) -> Trace {
+        let mut trace = Trace::new();
+        trace.a = self.af.hi;
+        trace.f = self.af.lo;
+        trace.b = self.bc.hi;
+        trace.c = self.bc.lo;
+        trace.d = self.de.hi;
+        trace.e = self.de.lo;
+        trace.h = self.hl.hi;
+        trace.l = self.hl.lo;
+        trace.pc = self.pc;
+        trace.sp = self.sp;
+        return trace;
+    }
+
+    pub fn notify(&mut self, event: Event, trace: Trace) {
+        for sub in self.subscribers.entry(event).or_default().iter() {
+            sub.tx.send(trace.clone()).unwrap();
+        }
+    }
+
     pub fn subscribe(&mut self, event: Event, subscriber: Subscriber<Trace>) {
         self.subscribers
             .entry(event)
