@@ -39,18 +39,18 @@ fn main() {
     let egui_glium_client = egui_glium::EguiGlium::new(&display, &program_loop);
     let mut opengl_renderer = renderer::OpenGL::new(&display);
 
-    let mut cpu = cpu::LR35902::new();
-    let mut memory = memory::Memory::default();
-    let ppu = ppu::Ppu::new();
+    let cpu = cpu::LR35902::new();
+    let memory = memory::Memory::default();
+    let ppu = ppu::PPU::new();
     let timers = timers::Timers::new();
-    let gameboy = gameboy::Gameboy::new();
+    let gameboy = gameboy::Gameboy::new(cpu, memory, ppu, timers, args.skip_boot_rom);
 
-    if args.skip_boot_rom {
-        gameboy.skip_boot_rom(&mut cpu, &mut memory);
-    }
-
-    let mut ui = ui::Ui::new(egui_glium_client, program_loop.create_proxy());
-    let mut gb_orchestrator = gameboy.start(cpu, memory, ppu, timers);
+    let mut ui = ui::Ui::new(
+        egui_glium_client,
+        program_loop.create_proxy(),
+        args.skip_boot_rom,
+    );
+    let mut gb_orchestrator = gameboy.start();
 
     program_loop.run(move |program_event, _, control_flow| {
         let next_frame_time =
@@ -108,7 +108,7 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
         ))
         .with_title("RustyFuuGBemu")
         .with_wayland_csd_theme(Theme::Dark)
-        .with_resizable(false);
+        .with_resizable(true);
     let cb = glium::glutin::ContextBuilder::new();
     let display = glium::Display::new(wb, cb, &events_loop).unwrap();
 

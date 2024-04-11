@@ -13,9 +13,9 @@ const LCDC_OBJ_ENABLE_MASK: u8 = 1 << 1;
 #[cfg(test)]
 mod test;
 
-impl Ppu {
+impl PPU {
     pub fn new() -> Self {
-        Ppu {
+        PPU {
             pixels: [[interface::Pixel::White; interface::NATIVE_SCREEN_WIDTH];
                 interface::NATIVE_SCREEN_HEIGHT],
             scanline_counter: 0,
@@ -279,9 +279,9 @@ impl Ppu {
     }
 }
 
-impl interface::PPU for Ppu {
+impl interface::PPU for PPU {
     fn reset(&mut self) {
-        *self = Ppu::new();
+        *self = PPU::new();
     }
 
     fn get_frame_data(
