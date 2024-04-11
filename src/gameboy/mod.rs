@@ -134,14 +134,10 @@ impl Gameboy {
         loop {
             match self.state {
                 State::INITIALIZING => {
-                    self.handle_initializing(
-                        &close_receiver,
-                        &rom_data_receiver,
-                        &skip_boot_rom_recv,
-                    );
+                    self.initialize(&close_receiver, &rom_data_receiver, &skip_boot_rom_recv);
                 }
                 State::COMPUTING => {
-                    self.handle_computing(&close_receiver, &rom_data_receiver, &skip_boot_rom_recv);
+                    self.compute(&close_receiver, &rom_data_receiver, &skip_boot_rom_recv);
                 }
                 State::RENDERING => {
                     // Ask main thread to render the frame.
@@ -165,7 +161,7 @@ impl Gameboy {
         }
     }
 
-    fn handle_initializing(
+    fn initialize(
         &mut self,
         close_receiver: &channel::Receiver<()>,
         rom_data_receiver: &channel::Receiver<Vec<u8>>,
@@ -188,7 +184,7 @@ impl Gameboy {
         }
     }
 
-    fn handle_computing(
+    fn compute(
         &mut self,
         close_receiver: &channel::Receiver<()>,
         rom_data_receiver: &channel::Receiver<Vec<u8>>,
