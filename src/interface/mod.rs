@@ -11,9 +11,9 @@ pub trait Memory: Debug + Send {
     fn reset(&mut self, cartridge: Box<dyn Cartridge>);
     fn read(&self, addr: usize) -> Option<u8>;
     fn write(&mut self, addr: usize, val: u8);
-    fn dump(&self) -> Vec<u8>;
-    fn set_post_boot_rom_state(&mut self);
     fn update_dma_transfer_cycles(&mut self, cycles: u32);
+    fn dma_read(&self, addr: usize) -> Option<u8>;
+    fn dma_write(&mut self, addr: usize, val: u8);
 }
 
 /// Timer trait which serves as an interface to the various timer implementations
