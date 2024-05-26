@@ -42,9 +42,6 @@ pub trait PPU: Debug + Send {
 /// CPU trait that lets implementors of the LR35902 Sharp processing unit expose the necessary API
 pub trait CPU: Debug + Send {
     fn reset(&mut self);
-    fn execute_next_opcode(&mut self, memory: &mut impl Memory) -> u32;
-    fn set_post_boot_rom_state(&mut self);
-    fn process_interrupts(&mut self, memory: &mut impl Memory, timers: &mut impl Timers);
     fn request_interrupt(&mut self, memory: &mut impl Memory, interrupt: Interrupt);
     fn is_halted(&self) -> bool;
     fn halt(&mut self, memory: &mut impl Memory);
