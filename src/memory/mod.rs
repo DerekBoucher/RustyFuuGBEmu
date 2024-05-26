@@ -6,7 +6,7 @@ use crate::cartridge;
 use crate::interface;
 use std::fmt::Debug;
 
-const OAM_TRANSFER_CYCLES: u32 = 160 * 4;
+const OAM_TRANSFER_CYCLES: u32 = 160;
 
 /// Struct emulating the DMG Gameboy's memory behaviour.
 /// This struct controls the access behaviour whenever the CPU

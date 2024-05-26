@@ -156,8 +156,8 @@ impl LR35902 {
             self.bugged_halt = false;
         }
 
-        #[cfg(feature = "serial_debug")]
-        LR35902::serial_debug_output(memory);
+        // #[cfg(feature = "serial_debug")]
+        // LR35902::serial_debug_output(memory);
 
         return op.execute(self, memory);
     }

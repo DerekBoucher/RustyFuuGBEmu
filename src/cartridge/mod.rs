@@ -26,20 +26,6 @@ pub mod rom_size_id {
     /// Byte identifier for cartridges that are 1MiB in size.
     /// Any value greater than this ID also means ROM sizes > 1MiB.
     pub const ONE_MEGABYTE: u8 = 0x05;
-
-    pub fn get_bank_mask(bank_id: u8) -> u8 {
-        match bank_id {
-            0x00 => return 0x1,
-            0x01 => return 0x3,
-            0x02 => return 0x7,
-            0x03 => return 0xF,
-            0x04 => return 0x1F,
-            0x05 => return 0x3F,
-            0x06 => return 0x7F,
-            0x07 => return 0xFF,
-            _ => return 0xFF,
-        }
-    }
 }
 
 mod ram_size_id {
