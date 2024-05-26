@@ -99,22 +99,6 @@ impl interface::CPU for LR35902 {
         *self = LR35902::new();
     }
 
-    fn execute_next_opcode(&mut self, memory: &mut impl interface::Memory) -> u32 {
-        return self.execute_next_opcode(memory);
-    }
-
-    fn set_post_boot_rom_state(&mut self) {
-        self.set_post_boot_rom_state();
-    }
-
-    fn process_interrupts(
-        &mut self,
-        memory: &mut impl interface::Memory,
-        timers: &mut impl interface::Timers,
-    ) {
-        self.process_interrupts(memory, timers);
-    }
-
     fn request_interrupt(
         &mut self,
         memory: &mut impl interface::Memory,
@@ -156,8 +140,8 @@ impl LR35902 {
             self.bugged_halt = false;
         }
 
-        // #[cfg(feature = "serial_debug")]
-        // LR35902::serial_debug_output(memory);
+        #[cfg(feature = "serial_debug")]
+        LR35902::serial_debug_output(memory);
 
         return op.execute(self, memory);
     }
