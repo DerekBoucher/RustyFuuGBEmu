@@ -82,11 +82,11 @@ fn read() {
             },
             TestCase {
                 description: String::from(
-                    "read from bank 0x20 w/ bank switching when ram bank register is 1",
+                    "read from bank 0x10 w/ bank switching when ram bank register is 1",
                 ),
                 run_fn: || {
-                    let mut cart_data: Vec<u8> = vec![0x0; 0x21 * 0x4000];
-                    cart_data[0x20 * 0x4000] = 0x7F;
+                    let mut cart_data: Vec<u8> = vec![0x0; 0x11 * 0x4000];
+                    cart_data[0x10 * 0x4000] = 0x7F;
                     cart_data[cartridge::header::ROM_SIZE_ADDR] =
                         cartridge::rom_size_id::ONE_MEGABYTE;
                     let mut mbc1 = MBC1::new(cart_data);
@@ -101,11 +101,11 @@ fn read() {
             },
             TestCase {
                 description: String::from(
-                    "read from bank 0x40 w/ bank switching when ram bank register is 2",
+                    "read from bank 0x20 w/ bank switching when ram bank register is 2",
                 ),
                 run_fn: || {
-                    let mut cart_data: Vec<u8> = vec![0x0; 0x41 * 0x4000];
-                    cart_data[0x40 * 0x4000] = 0x7F;
+                    let mut cart_data: Vec<u8> = vec![0x0; 0x21 * 0x4000];
+                    cart_data[0x20 * 0x4000] = 0x7F;
                     cart_data[cartridge::header::ROM_SIZE_ADDR] =
                         cartridge::rom_size_id::ONE_MEGABYTE;
                     let mut mbc1 = MBC1::new(cart_data);
@@ -120,11 +120,11 @@ fn read() {
             },
             TestCase {
                 description: String::from(
-                    "read from bank 0x60 w/ bank switching when ram bank register is 3",
+                    "read from bank 0x30 w/ bank switching when ram bank register is 3",
                 ),
                 run_fn: || {
-                    let mut cart_data: Vec<u8> = vec![0x0; 0x61 * 0x4000];
-                    cart_data[0x60 * 0x4000] = 0x7F;
+                    let mut cart_data: Vec<u8> = vec![0x0; 0x31 * 0x4000];
+                    cart_data[0x30 * 0x4000] = 0x7F;
                     cart_data[cartridge::header::ROM_SIZE_ADDR] =
                         cartridge::rom_size_id::ONE_MEGABYTE;
                     let mut mbc1 = MBC1::new(cart_data);

@@ -43,13 +43,16 @@ impl interface::Memory for Memory {
     fn write(&mut self, addr: usize, val: u8) {
         self.write(addr, val);
     }
-    fn dump(&self) -> Vec<u8> {
-        return self.dump();
-    }
-
-    fn set_post_boot_rom_state(&mut self) {}
 
     fn update_dma_transfer_cycles(&mut self, _cycles: u32) {}
+
+    fn dma_read(&self, addr: usize) -> Option<u8> {
+        return self.read(addr);
+    }
+
+    fn dma_write(&mut self, addr: usize, val: u8) {
+        self.write(addr, val);
+    }
 }
 
 impl PartialEq for Memory {

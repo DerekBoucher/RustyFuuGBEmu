@@ -13,10 +13,11 @@ use std::any::Any;
 pub struct MBC1 {
     rom: Vec<u8>,
     ram_enabled: bool,
-    rom_bank_select_register: u8,
-    ram_bank_select_register: u8,
+    rom_bank_select_register: usize,
+    ram_bank_select_register: usize,
     banking_mode: bool,
     ram_banks: [[u8; 0x2000]; 4],
+    rom_bank_count: usize,
 }
 
 /// Constructor for MBC1
@@ -25,6 +26,22 @@ impl MBC1 {
     pub const RAM_BANKING_MODE: bool = true;
 
     pub fn new(data: Vec<u8>) -> Box<Self> {
+        let rom_bank_count = match data[cartridge::header::ROM_SIZE_ADDR] {
+            0x00 => 2,
+            0x01 => 4,
+            0x02 => 8,
+            0x03 => 16,
+            0x04 => 32,
+            0x05 => 64,
+            0x06 => 128,
+            0x07 => 256,
+            0x08 => 512,
+            0x52 => 72,
+            0x53 => 80,
+            0x54 => 96,
+            _ => panic!("unsupported rom bank count"),
+        };
+
         Box::new(MBC1 {
             rom: data,
             ram_enabled: false,
@@ -32,6 +49,7 @@ impl MBC1 {
             ram_bank_select_register: 0x00,
             banking_mode: false,
             ram_banks: [[0x00; 0x2000]; 4],
+            rom_bank_count,
         })
     }
 
@@ -60,9 +78,16 @@ impl interface::Cartridge for MBC1 {
             if self.rom[cartridge::header::ROM_SIZE_ADDR] >= cartridge::rom_size_id::ONE_MEGABYTE
                 && self.banking_mode == MBC1::RAM_BANKING_MODE
             {
-                // TODO: MBC1M Multicart implementation: https://gbdev.io/pandocs/MBC1.html#00003fff--rom-bank-x0-read-only
-                let bank_number: usize = usize::from((self.ram_bank_select_register & 0x3) << 5);
-                let translated_addr: usize = (0x4000 * bank_number) + addr;
+                let translated_addr: usize;
+
+                match self.ram_bank_select_register {
+                    0x00 => translated_addr = addr,
+                    0x01 => translated_addr = addr + (0x10 * 0x4000),
+                    0x02 => translated_addr = addr + (0x20 * 0x4000),
+                    0x03 => translated_addr = addr + (0x30 * 0x4000),
+                    _ => translated_addr = addr,
+                }
+
                 return Some(self.rom[translated_addr].clone());
             }
 
@@ -72,19 +97,18 @@ impl interface::Cartridge for MBC1 {
         // ROM Banks 0x01 - 0x7F. See https://gbdev.io/pandocs/MBC1.html#40007fff--rom-bank-01-7f-read-only for more details.
         if addr >= 0x4000 && addr < 0x8000 {
             let mut translated_addr = addr - 0x4000;
-            let mut bank_number: usize = usize::from(self.rom_bank_select_register);
-            if bank_number == 0x0 {
-                bank_number += 1;
+            let mut bank_number: usize = self.rom_bank_select_register;
+
+            if self.rom[cartridge::header::ROM_SIZE_ADDR] >= cartridge::rom_size_id::ONE_MEGABYTE {
+                bank_number |= self.ram_bank_select_register << 5;
             }
 
-            if self.banking_mode == MBC1::RAM_BANKING_MODE
-                && self.rom[cartridge::header::ROM_SIZE_ADDR]
-                    >= cartridge::rom_size_id::ONE_MEGABYTE
-            {
-                bank_number |= usize::from(self.ram_bank_select_register << 5);
+            match bank_number {
+                0x00 | 0x20 | 0x40 | 0x60 => bank_number += 1,
+                _ => {}
             }
 
-            translated_addr += usize::from(bank_number * 0x4000);
+            translated_addr += bank_number * 0x4000;
             return Some(self.rom[translated_addr].clone());
         }
 
@@ -95,13 +119,10 @@ impl interface::Cartridge for MBC1 {
             }
 
             let translated_addr: usize = addr - 0xA000;
-            let mut bank_number: usize = 0x0;
 
-            if self.rom[cartridge::header::RAM_SIZE_ADDR] >= cartridge::ram_size_id::FOUR_BANKS {
-                bank_number = usize::from(self.ram_bank_select_register & 0b00000011);
-            }
-
-            return Some(self.ram_banks[bank_number][translated_addr].clone());
+            return Some(
+                self.ram_banks[self.ram_bank_select_register & 0b11][translated_addr].clone(),
+            );
         }
 
         None
@@ -119,16 +140,26 @@ impl interface::Cartridge for MBC1 {
         }
 
         if addr >= 0x2000 && addr < 0x4000 {
-            self.rom_bank_select_register = (val & 0x1F)
-                & cartridge::rom_size_id::get_bank_mask(self.rom[cartridge::header::ROM_SIZE_ADDR]);
+            self.rom_bank_select_register = (val & 0x1F).into();
+            if self.rom_bank_select_register == 0x00
+                || self.rom_bank_select_register == 0x20
+                || self.rom_bank_select_register == 0x40
+                || self.rom_bank_select_register == 0x60
+            {
+                self.rom_bank_select_register += 0x01;
+            }
+
+            if self.rom_bank_select_register > self.rom_bank_count {
+                self.rom_bank_select_register &= self.rom_bank_count - 1;
+            }
         }
 
         if addr >= 0x4000 && addr < 0x6000 {
-            self.ram_bank_select_register = val & 0x3;
+            self.ram_bank_select_register = (val & 0x3).into();
         }
 
         if addr >= 0x6000 && addr < 0x8000 {
-            if val & 0x1 == 0x0 {
+            if val & 0x1 == 0x00 {
                 self.banking_mode = MBC1::SIMPLE_BANKING_MODE;
                 return;
             }

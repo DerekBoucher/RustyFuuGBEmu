@@ -8,6 +8,7 @@ use crate::cpu;
 use crate::cpu::LR35902;
 use crate::cpu::opcode_ext::*;
 use crate::interface;
+use crate::memory::io_registers::TIMER_DIV_ADDR;
 
 use super::bit::two_compliment_byte;
 
@@ -1256,8 +1257,12 @@ fn execute_0x0f(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
     4
 }
 
-fn execute_0x10(cpu: &mut LR35902, _: &mut impl interface::Memory) -> u32 {
+fn execute_0x10(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     cpu.paused = true;
+
+    // This opcode resets the DIV timer register
+    // https://gbdev.io/pandocs/Timer_and_Divider_Registers.html#ff04--div-divider-register
+    memory.write(TIMER_DIV_ADDR, 0x00);
 
     4
 }
@@ -1803,7 +1808,7 @@ fn execute_0x36(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     let byte = match memory.read(usize::from(cpu.pc)) {
         Some(byte) => byte,
         None => panic!(
-            "opcode load imm 8 into Memoryy pointed to by HL failed to fetch byte in memory. Dumping cpu state...\n{:?}",
+            "opcode load imm 8 into Memory pointed to by HL failed to fetch byte in memory. Dumping cpu state...\n{:?}",
             cpu,
         ),
     };
@@ -2302,7 +2307,7 @@ fn execute_0x76(cpu: &mut LR35902, memory: &mut impl interface::Memory) -> u32 {
     let interrupt_enable_register = memory.read(cpu::INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
     let interrupt_flag_register = memory.read(cpu::INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
 
-    if (interrupt_enable_register & interrupt_flag_register & 0x1F) == 0x00 {
+    if !((interrupt_enable_register & interrupt_flag_register & 0x1F) > 0x00) {
         cpu.halted = true;
     }
 

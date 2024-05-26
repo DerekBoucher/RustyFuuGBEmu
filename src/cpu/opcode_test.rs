@@ -3,6 +3,7 @@ use crate::cpu::opcode::Opcode;
 use crate::cpu::test::TestCase;
 use crate::cpu::LR35902;
 use crate::interface::mock;
+use crate::memory::io_registers;
 use std::vec;
 
 #[test]
@@ -617,12 +618,18 @@ fn _0x10() {
     let test_cases: Vec<TestCase> = vec![TestCase {
         initial_state: || -> (LR35902, mock::Memory) {
             let cpu = LR35902::new();
-            let memory = mock::Memory::new(vec![Opcode::Stop_0x10.into()]);
+            let mut mem_data: Vec<u8> = vec![0x00; 0x10000];
+            mem_data[0x00] = Opcode::Stop_0x10.into();
+            mem_data[io_registers::TIMER_DIV_ADDR] = 0xFF; // <- the timer value should be reset when STOP is executed
+            let memory = mock::Memory::new(mem_data);
             return (cpu, memory);
         },
         expected_state: || -> (LR35902, mock::Memory) {
             let mut cpu = LR35902::new();
-            let memory = mock::Memory::new(vec![Opcode::Stop_0x10.into()]);
+            let mut mem_data: Vec<u8> = vec![0x00; 0x10000];
+            mem_data[0x00] = Opcode::Stop_0x10.into();
+            mem_data[io_registers::TIMER_DIV_ADDR] = 0x00; // <- the timer value should be reset
+            let memory = mock::Memory::new(mem_data);
             cpu.pc = 0x0001;
             cpu.paused = true;
             return (cpu, memory);

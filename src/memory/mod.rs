@@ -6,6 +6,8 @@ use crate::cartridge;
 use crate::interface;
 use std::fmt::Debug;
 
+const OAM_TRANSFER_CYCLES: u32 = 160;
+
 /// Struct emulating the DMG Gameboy's memory behaviour.
 /// This struct controls the access behaviour whenever the CPU
 /// makes reads or writes to the memory.
@@ -165,7 +167,7 @@ impl Memory {
         }
 
         self.oam_dma_transfer_cycles_completed += cycles;
-        if self.oam_dma_transfer_cycles_completed >= 160 {
+        if self.oam_dma_transfer_cycles_completed >= OAM_TRANSFER_CYCLES {
             log::trace!("OAM DMA transfer completed");
             self.oam_dma_transfer_in_progress = false;
             self.oam_dma_transfer_cycles_completed = 0;
@@ -329,12 +331,16 @@ impl Memory {
 
         // Echo RAM
         if addr >= 0xE000 && addr < 0xFE00 {
-            return self.read((addr - 0xE000) + 0xC000);
+            return self.read((addr - 0xE000) + 0xC000).clone();
         }
 
         // OAM / Sprite attributes
-        if addr >= 0xFE00 && addr < 0xFF00 {
+        if addr >= 0xFE00 && addr < 0xFEA0 {
             return Some(self.sprite_attributes[addr - 0xFE00].clone());
+        }
+
+        if addr >= 0xFEA0 && addr < 0xFF00 {
+            return Some(0xFF);
         }
 
         // IO Registers
@@ -357,6 +363,16 @@ impl Memory {
 
     fn write(&mut self, addr: usize, val: u8) {
         log::trace!("Writing to memory address {:X} value {:X}", addr, val);
+
+        if self.oam_dma_transfer_in_progress {
+            // Only High RAM is accessible during an oam dma transfer.
+            if addr >= 0xFF80 && addr < 0xFFFF {
+                self.hi_ram[addr - 0xFF80] = val;
+            }
+
+            return;
+        }
+
         // Cartridge ROM
         if addr < 0x8000 {
             self.cartridge.write(addr, val)
@@ -408,10 +424,6 @@ impl Memory {
             self.interrupt_enable_register = val;
         }
     }
-
-    fn dump(&self) -> Vec<u8> {
-        return vec![]; // TODO
-    }
 }
 
 impl interface::Memory for Memory {
@@ -427,15 +439,45 @@ impl interface::Memory for Memory {
         self.write(addr, val);
     }
 
-    fn dump(&self) -> Vec<u8> {
-        return self.dump();
-    }
-
-    fn set_post_boot_rom_state(&mut self) {
-        self.set_post_boot_rom_state();
-    }
-
     fn update_dma_transfer_cycles(&mut self, cycles: u32) {
         self.update_dma_transfer_cycles(cycles);
+    }
+
+    fn dma_read(&self, addr: usize) -> Option<u8> {
+        if addr >= 0x8000 && addr < 0xA000 {
+            return Some(self.video_ram[addr - 0x8000].clone());
+        }
+
+        if addr >= 0xFF00 && addr < 0xFF80 {
+            return Some(self.io_registers[addr - 0xFF00].clone());
+        }
+
+        if addr >= 0xFF80 && addr < 0xFFFF {
+            return Some(self.hi_ram[addr - 0xFF80].clone());
+        }
+
+        if addr == 0xFFFF {
+            return Some(self.interrupt_enable_register.clone());
+        }
+
+        return None;
+    }
+
+    fn dma_write(&mut self, addr: usize, val: u8) {
+        if addr >= 0x8000 && addr < 0xA000 {
+            self.video_ram[addr - 0x8000] = val;
+        }
+
+        if addr >= 0xFF00 && addr < 0xFF80 {
+            self.io_registers[addr - 0xFF00] = val;
+        }
+
+        if addr >= 0xFF80 && addr < 0xFFFF {
+            self.hi_ram[addr - 0xFF80] = val;
+        }
+
+        if addr == 0xFFFF {
+            self.interrupt_enable_register = val;
+        }
     }
 }

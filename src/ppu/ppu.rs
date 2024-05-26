@@ -28,7 +28,7 @@ impl PPU {
         memory: &mut impl interface::Memory,
         cpu: &mut impl interface::CPU,
     ) {
-        let lcdc = match memory.read(io_registers::LCD_CONTROL_ADDR) {
+        let lcdc = match memory.dma_read(io_registers::LCD_CONTROL_ADDR) {
             Some(value) => value,
             None => {
                 log::error!("failed to read lcdc register");
@@ -36,7 +36,7 @@ impl PPU {
             }
         };
 
-        let stat = match memory.read(io_registers::LCD_STAT_ADDR) {
+        let stat = match memory.dma_read(io_registers::LCD_STAT_ADDR) {
             Some(value) => value,
             None => {
                 log::error!("failed to read stat register");
@@ -44,7 +44,7 @@ impl PPU {
             }
         };
 
-        let current_scanline = match memory.read(io_registers::LCD_LY_ADDR) {
+        let current_scanline = match memory.dma_read(io_registers::LCD_LY_ADDR) {
             Some(value) => value,
             None => {
                 log::error!("failed to read LY register");
@@ -52,7 +52,7 @@ impl PPU {
             }
         };
 
-        let ly = match memory.read(io_registers::LCD_LY_ADDR) {
+        let ly = match memory.dma_read(io_registers::LCD_LY_ADDR) {
             Some(value) => value,
             None => {
                 log::error!("failed to read LY register");
@@ -60,7 +60,7 @@ impl PPU {
             }
         };
 
-        let lyc = match memory.read(io_registers::LCD_LYC_ADDR) {
+        let lyc = match memory.dma_read(io_registers::LCD_LYC_ADDR) {
             Some(value) => value,
             None => {
                 log::error!("failed to read LYC register");
@@ -81,20 +81,20 @@ impl PPU {
 
             if current_scanline < 144 {
                 self.draw_scaline(lcdc, memory);
-                memory.write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
+                memory.dma_write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
                 return;
             }
 
             // V-Blank period
             if current_scanline >= 144 && current_scanline < 154 {
                 cpu.request_interrupt(memory, Interrupt::VBlank);
-                memory.write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
+                memory.dma_write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
                 return;
             }
 
             // Else, this means we've been through an entire frame cycle,
             // reset the LY register to 0.
-            memory.write(io_registers::LCD_LY_ADDR, 0x00);
+            memory.dma_write(io_registers::LCD_LY_ADDR, 0x00);
         }
     }
 
@@ -122,10 +122,10 @@ impl PPU {
             self.scanline_counter = stat::MAX_SCANLINE_COUNT;
 
             // Reset the LY register
-            memory.write(io_registers::LCD_LY_ADDR, 0x00);
+            memory.dma_write(io_registers::LCD_LY_ADDR, 0x00);
 
             // Reset the STAT register to 1111 1100
-            memory.write(io_registers::LCD_STAT_ADDR, stat & !stat::MODE_MASK);
+            memory.dma_write(io_registers::LCD_STAT_ADDR, stat & !stat::MODE_MASK);
 
             // Exit pre-emptively, since LCD is disabled
             return;
@@ -139,7 +139,7 @@ impl PPU {
             .process_ly_lyc(ly, lyc)
             .build();
 
-        memory.write(io_registers::LCD_STAT_ADDR, new_stat);
+        memory.dma_write(io_registers::LCD_STAT_ADDR, new_stat);
         if requires_interrupt {
             cpu.request_interrupt(memory, Interrupt::LCDC);
         }
@@ -158,20 +158,26 @@ impl PPU {
     // Background tiles make up the background environment, and typically have lower precedence then the window tiles.
     // Window tiles have precedence over background tiles, when enabled.
     fn render_tiles(&mut self, memory: &impl interface::Memory) {
-        let current_scanline = memory.read(memory::io_registers::LCD_LY_ADDR).unwrap();
+        let current_scanline = memory.dma_read(memory::io_registers::LCD_LY_ADDR).unwrap();
         if current_scanline > 144 {
             return;
         }
 
-        let lcdc = memory.read(memory::io_registers::LCD_CONTROL_ADDR).unwrap();
-        let scroll_x = memory.read(memory::io_registers::LCD_SCX_ADDR).unwrap();
-        let scroll_y = memory.read(memory::io_registers::LCD_SCY_ADDR).unwrap();
+        let lcdc = memory
+            .dma_read(memory::io_registers::LCD_CONTROL_ADDR)
+            .unwrap();
+        let scroll_x = memory.dma_read(memory::io_registers::LCD_SCX_ADDR).unwrap();
+        let scroll_y = memory.dma_read(memory::io_registers::LCD_SCY_ADDR).unwrap();
         let win_x = memory
-            .read(memory::io_registers::LCD_WINX_ADDR)
+            .dma_read(memory::io_registers::LCD_WINX_ADDR)
             .unwrap()
             .wrapping_sub(7); // TODO: Explain the sub 7
-        let win_y = memory.read(memory::io_registers::LCD_WINY_ADDR).unwrap();
-        let color_palette = memory.read(memory::io_registers::LCD_PALETTE_ADDR).unwrap();
+        let win_y = memory
+            .dma_read(memory::io_registers::LCD_WINY_ADDR)
+            .unwrap();
+        let color_palette = memory
+            .dma_read(memory::io_registers::LCD_PALETTE_ADDR)
+            .unwrap();
 
         // Depending on the current color palette that is in the PALETTE register,
         // these encoding translate to different colors / shades of gray.
@@ -218,7 +224,7 @@ impl PPU {
 
             let tile_column: usize = (pixel_x / 8).into();
             let tile_id_address: usize = tile_map_ptr + tile_column + tile_row;
-            let mut tile_id = memory.read(tile_id_address).unwrap();
+            let mut tile_id = memory.dma_read(tile_id_address).unwrap();
             let tile_line_offset: usize = ((pixel_y % 8) * 2).into();
             let mut tile_data_address: usize = tile_data_ptr + (tile_id as usize * 16);
 
@@ -228,9 +234,11 @@ impl PPU {
                 tile_data_address = tile_data_ptr - (tile_id as usize * 16);
             }
 
-            let data1 = memory.read(tile_data_address + tile_line_offset).unwrap();
+            let data1 = memory
+                .dma_read(tile_data_address + tile_line_offset)
+                .unwrap();
             let data2 = memory
-                .read(tile_data_address + tile_line_offset + 1)
+                .dma_read(tile_data_address + tile_line_offset + 1)
                 .unwrap();
 
             let current_bit_position: usize = 7 - ((pixel_iter as usize + scroll_x as usize) % 8);

@@ -56,7 +56,8 @@ const HALF_CARRY_FLAG_MASK: u8 = 1 << 5;
 /// Bit mask for the carry flag
 const CARRY_FLAG_MASK: u8 = 1 << 4;
 
-pub const CPU_CYCLES_PER_FRAME: u32 = 4194304 / 60;
+pub const CPU_FREQUENCY: u32 = 4194304;
+pub const CPU_CYCLES_PER_FRAME: u32 = CPU_FREQUENCY / 60;
 
 const V_BLANK_INTERRUPT_MASK: u8 = 1 << 0;
 const LCDC_INTERRUPT_MASK: u8 = 1 << 1;
@@ -150,8 +151,13 @@ impl LR35902 {
 
         self.pc = self.pc.wrapping_add(1);
 
-        #[cfg(feature = "serial_debug")]
-        LR35902::serial_debug_output(memory);
+        if self.bugged_halt {
+            self.pc = self.pc.wrapping_sub(1);
+            self.bugged_halt = false;
+        }
+
+        // #[cfg(feature = "serial_debug")]
+        // LR35902::serial_debug_output(memory);
 
         return op.execute(self, memory);
     }
@@ -166,30 +172,40 @@ impl LR35902 {
             return;
         }
 
-        let interrupt_enable_register = memory.read(INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
-        let interrupt_flag_register = memory.read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
+        let interrupt_enable_register = memory.dma_read(INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
+        let interrupt_flag_register = memory.dma_read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
 
-        if interrupt_enable_register & interrupt_flag_register & V_BLANK_INTERRUPT_MASK > 0 {
+        if (interrupt_enable_register & V_BLANK_INTERRUPT_MASK) > 0
+            && (interrupt_flag_register & V_BLANK_INTERRUPT_MASK) > 0
+        {
             self.halted = false;
             return;
         }
 
-        if interrupt_enable_register & interrupt_flag_register & LCDC_INTERRUPT_MASK > 0 {
+        if (interrupt_enable_register & LCDC_INTERRUPT_MASK) > 0
+            && (interrupt_flag_register & LCDC_INTERRUPT_MASK) > 0
+        {
             self.halted = false;
             return;
         }
 
-        if interrupt_enable_register & interrupt_flag_register & TIMER_OVERFLOW_INTERRUPT_MASK > 0 {
+        if (interrupt_enable_register & TIMER_OVERFLOW_INTERRUPT_MASK) > 0
+            && (interrupt_flag_register & TIMER_OVERFLOW_INTERRUPT_MASK) > 0
+        {
             self.halted = false;
             return;
         }
 
-        if interrupt_enable_register & interrupt_flag_register & SERIAL_IO_INTERRUPT_MASK > 0 {
+        if (interrupt_enable_register & SERIAL_IO_INTERRUPT_MASK) > 0
+            && (interrupt_flag_register & SERIAL_IO_INTERRUPT_MASK) > 0
+        {
             self.halted = false;
             return;
         }
 
-        if interrupt_enable_register & interrupt_flag_register & CONTROLLER_IO_INTERRUPT_MASK > 0 {
+        if (interrupt_enable_register & CONTROLLER_IO_INTERRUPT_MASK) > 0
+            && (interrupt_flag_register & CONTROLLER_IO_INTERRUPT_MASK) > 0
+        {
             self.halted = false;
             return;
         }
@@ -219,25 +235,25 @@ impl LR35902 {
                 );
             }
             interface::Interrupt::LCDC => {
-                memory.write(
+                memory.dma_write(
                     INTERRUPT_FLAG_REGISTER_ADDR,
                     interrupt_flag_register | LCDC_INTERRUPT_MASK,
                 );
             }
             interface::Interrupt::TimerOverflow => {
-                memory.write(
+                memory.dma_write(
                     INTERRUPT_FLAG_REGISTER_ADDR,
                     interrupt_flag_register | TIMER_OVERFLOW_INTERRUPT_MASK,
                 );
             }
             interface::Interrupt::_Serial => {
-                memory.write(
+                memory.dma_write(
                     INTERRUPT_FLAG_REGISTER_ADDR,
                     interrupt_flag_register | SERIAL_IO_INTERRUPT_MASK,
                 );
             }
             interface::Interrupt::_Joypad => {
-                memory.write(
+                memory.dma_write(
                     INTERRUPT_FLAG_REGISTER_ADDR,
                     interrupt_flag_register | CONTROLLER_IO_INTERRUPT_MASK,
                 );
@@ -254,8 +270,8 @@ impl LR35902 {
             return;
         }
 
-        let interrupt_enable_register = memory.read(INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
-        let interrupt_flag_register = memory.read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
+        let interrupt_enable_register = memory.dma_read(INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
+        let mut interrupt_flag_register = memory.dma_read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
 
         if (interrupt_flag_register & V_BLANK_INTERRUPT_MASK > 0)
             && (interrupt_enable_register & V_BLANK_INTERRUPT_MASK > 0)
@@ -264,48 +280,53 @@ impl LR35902 {
             self.push_16bit_register_on_stack(ID16::PC, memory);
             self.pc = V_BLANK_INTERRUPT_VECTOR;
             timers.update(8, memory, self);
-            return;
-        }
 
-        if (interrupt_flag_register & LCDC_INTERRUPT_MASK > 0)
+            // Mark interrupt as processed
+            interrupt_flag_register &= !V_BLANK_INTERRUPT_MASK;
+        } else if (interrupt_flag_register & LCDC_INTERRUPT_MASK > 0)
             && (interrupt_enable_register & LCDC_INTERRUPT_MASK > 0)
         {
             self.interrupt_master_enable = false;
             self.push_16bit_register_on_stack(ID16::PC, memory);
             self.pc = LCDC_INTERRUPT_VECTOR;
             timers.update(8, memory, self);
-            return;
-        }
 
-        if (interrupt_flag_register & TIMER_OVERFLOW_INTERRUPT_MASK > 0)
+            // Mark interrupt as processed
+            interrupt_flag_register &= !LCDC_INTERRUPT_MASK;
+        } else if (interrupt_flag_register & TIMER_OVERFLOW_INTERRUPT_MASK > 0)
             && (interrupt_enable_register & TIMER_OVERFLOW_INTERRUPT_MASK > 0)
         {
             self.interrupt_master_enable = false;
             self.push_16bit_register_on_stack(ID16::PC, memory);
             self.pc = TIMER_OVERFLOW_INTERRUPT_VECTOR;
             timers.update(8, memory, self);
-            return;
-        }
 
-        if (interrupt_flag_register & SERIAL_IO_INTERRUPT_MASK > 0)
+            // Mark interrupt as processed
+            interrupt_flag_register &= !TIMER_OVERFLOW_INTERRUPT_MASK;
+        } else if (interrupt_flag_register & SERIAL_IO_INTERRUPT_MASK > 0)
             && (interrupt_enable_register & SERIAL_IO_INTERRUPT_MASK > 0)
         {
             self.interrupt_master_enable = false;
             self.push_16bit_register_on_stack(ID16::PC, memory);
             self.pc = SERIAL_IO_INTERRUPT_VECTOR;
             timers.update(8, memory, self);
-            return;
-        }
 
-        if (interrupt_flag_register & CONTROLLER_IO_INTERRUPT_MASK > 0)
+            // Mark interrupt as processed
+            interrupt_flag_register &= !SERIAL_IO_INTERRUPT_MASK;
+        } else if (interrupt_flag_register & CONTROLLER_IO_INTERRUPT_MASK > 0)
             && (interrupt_enable_register & CONTROLLER_IO_INTERRUPT_MASK > 0)
         {
             self.interrupt_master_enable = false;
             self.push_16bit_register_on_stack(ID16::PC, memory);
             self.pc = CONTROLLER_IO_INTERRUPT_VECTOR;
             timers.update(8, memory, self);
-            return;
+
+            // Mark interrupt as processed
+            interrupt_flag_register &= !CONTROLLER_IO_INTERRUPT_MASK;
         }
+
+        // Write the modified IF back to memory
+        memory.dma_write(INTERRUPT_FLAG_REGISTER_ADDR, interrupt_flag_register);
     }
 
     fn reset_half_carry_flag(&mut self) {
