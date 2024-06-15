@@ -183,8 +183,15 @@ impl Memory {
                     self.sprite_attributes[i] = self.read((val as usize) << 8 | i).unwrap();
                 }
             }
+            io_registers::TIMER_COUNTER_ADDR => {
+                self.io_registers[addr - 0xFF00] = val;
+            }
             io_registers::TIMER_CTRL_ADDR => {
                 self.io_registers[addr - 0xFF00] = val;
+            }
+            // Writing any value to the TIMER DIV register resets it to 0.
+            io_registers::TIMER_DIV_ADDR => {
+                self.io_registers[addr - 0xFF00] = 0x00;
             }
             io_registers::JOYPAD_ADDR => {
                 self.handle_joypad_translation(val);

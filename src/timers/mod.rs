@@ -41,7 +41,7 @@ impl Timers {
         };
 
         self.divider_tick_counter += cycles as i32;
-        if self.divider_tick_counter >= CYCLES_PER_DIVIDER_TICK {
+        while self.divider_tick_counter >= CYCLES_PER_DIVIDER_TICK {
             self.divider_tick_counter -= CYCLES_PER_DIVIDER_TICK;
             let incremented_div_timer = memory
                 .dma_read(io_registers::TIMER_DIV_ADDR)
@@ -57,29 +57,31 @@ impl Timers {
         if timer_control_register & TIMER_CONTROL_ENABLED_MASK > 0 {
             self.timer_tick_counter -= cycles as i32;
 
-            while self.timer_tick_counter <= 0 {
-                self.timer_tick_counter += match timer_control_register & 0x03 {
-                    0 => CPU_FREQUENCY / TIMER_FREQUENCY_00,
-                    1 => CPU_FREQUENCY / TIMER_FREQUENCY_01,
-                    2 => CPU_FREQUENCY / TIMER_FREQUENCY_10,
-                    3 => CPU_FREQUENCY / TIMER_FREQUENCY_11,
-                    _ => panic!("Invalid timer control register value"),
-                } as i32;
+            let timer_frequency = match timer_control_register & 0x03 {
+                0 => TIMER_FREQUENCY_00,
+                1 => TIMER_FREQUENCY_01,
+                2 => TIMER_FREQUENCY_10,
+                3 => TIMER_FREQUENCY_11,
+                _ => panic!("Invalid timer control register value"),
+            };
 
-                let timer_register = memory.dma_read(io_registers::TIMER_COUNTER_ADDR).unwrap();
-                if timer_register == 0xFF {
+            while self.timer_tick_counter >= timer_frequency as i32 {
+                self.timer_tick_counter -= timer_frequency as i32;
+
+                let timer_register = memory
+                    .dma_read(io_registers::TIMER_COUNTER_ADDR)
+                    .unwrap()
+                    .wrapping_add(1);
+
+                if timer_register == 0x00 {
                     let timer_mod = memory.dma_read(io_registers::TIMER_MOD_ADDR).unwrap();
                     memory.dma_write(io_registers::TIMER_COUNTER_ADDR, timer_mod);
 
                     cpu.request_interrupt(memory, cpu::Interrupt::TimerOverflow);
                     log::trace!("Timer interrupt requested");
-                    break;
                 }
 
-                memory.dma_write(
-                    io_registers::TIMER_COUNTER_ADDR,
-                    timer_register.wrapping_add(1),
-                );
+                memory.dma_write(io_registers::TIMER_COUNTER_ADDR, timer_register);
             }
         }
     }

@@ -23,7 +23,7 @@ struct Args {
     #[arg(short, long)]
     rom_path: Option<String>,
 
-    #[arg(short, long, default_value_t = false)]
+    #[arg(short, long, default_value_t = true)]
     skip_boot_rom: bool,
 }
 
