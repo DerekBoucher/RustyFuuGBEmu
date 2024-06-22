@@ -22,15 +22,6 @@ pub trait Timers: Debug + Send {
     fn reset(&mut self);
 }
 
-/// Cartridge trait which serves as an interface to the various
-/// types of memory bank controllers that Gameboy cartridges
-/// can contain.
-pub trait Cartridge: Any + Debug + Send {
-    fn as_any(&self) -> &dyn Any;
-    fn read(&self, addr: usize) -> Option<u8>;
-    fn write(&mut self, addr: usize, val: u8);
-}
-
 /// PPU (a.k.a. Pixel Processing Unit) trait which serves as an interface for
 /// the implementations that prepare pixel data when a new frame is to be drawn.
 pub trait PPU: Debug + Send {
