@@ -90,25 +90,6 @@ impl PartialEq for LR35902 {
     }
 }
 
-//impl interface::CPU for LR35902 {
-//    fn halt(&mut self, memory: &mut memory::Memory) {
-//        self.halt(memory);
-//    }
-//
-//    fn is_halted(&self) -> bool {
-//        return self.is_halted();
-//    }
-//
-//
-//    fn request_interrupt(
-//        &mut self,
-//        memory: &mut memory::Memory,
-//        interrupt: Interrupt,
-//    ) {
-//        self.request_interrupt(memory, interrupt);
-//    }
-//}
-
 impl LR35902 {
     pub fn new() -> Self {
         Self {

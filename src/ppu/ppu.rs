@@ -295,22 +295,6 @@ impl PPU {
     }
 }
 
-//impl ppu::PPU for PPU {
-//    fn reset(&mut self) {
-//        *self = PPU::new();
-//    }
-//
-//
-//    fn update_graphics(
-//        &mut self,
-//        cycles: u32,
-//        memory: &mut impl ppu::Memory,
-//        cpu: &mut impl ppu::CPU,
-//    ) {
-//        self.update_graphics(cycles, memory, cpu)
-//    }
-//}
-
 // If the 4th bit (starting from the right, 0 based) of the LCDC register is '1', then the
 // background and window tile data are located at the base address of 0x8000 and the addressing uses an unsigned 8-bit integer.
 // If the bit is '0', then the base address is 0x9000, and the addressing should use a signed 8-bit integer.

@@ -7,7 +7,7 @@ const OAM_TRANSFER_CYCLES: u32 = 160;
 /// This struct controls the access behaviour whenever the CPU
 /// makes reads or writes to the memory.
 #[derive(Debug)]
-pub struct Memory { 
+pub struct Memory {
     /// Cartridge data.
     /// Mapped into memory locations 0x0000 - 0x7FFF.
     cartridge: Box<dyn cartridge::Interface>,
@@ -50,7 +50,6 @@ pub struct Memory {
 
     /// Number of cycles completed during a DMA transfer.
     oam_dma_transfer_cycles_completed: u32,
-
 }
 
 /// Module containing important addresses for
@@ -470,56 +469,3 @@ impl Memory {
         *self = Memory::new(cartridge);
     }
 }
-
-//impl interface::Memory for Memory {
-//
-//    fn read(&self, addr: usize) -> Option<u8> {
-//        return self.read(addr);
-//    }
-//
-//    fn write(&mut self, addr: usize, val: u8) {
-//        self.write(addr, val);
-//    }
-//
-//    fn update_dma_transfer_cycles(&mut self, cycles: u32) {
-//        self.update_dma_transfer_cycles(cycles);
-//    }
-//
-//    fn dma_read(&self, addr: usize) -> Option<u8> {
-//        if addr >= 0x8000 && addr < 0xA000 {
-//            return Some(self.video_ram[addr - 0x8000].clone());
-//        }
-//
-//        if addr >= 0xFF00 && addr < 0xFF80 {
-//            return Some(self.io_registers[addr - 0xFF00].clone());
-//        }
-//
-//        if addr >= 0xFF80 && addr < 0xFFFF {
-//            return Some(self.hi_ram[addr - 0xFF80].clone());
-//        }
-//
-//        if addr == 0xFFFF {
-//            return Some(self.interrupt_enable_register.clone());
-//        }
-//
-//        return None;
-//    }
-//
-//    fn dma_write(&mut self, addr: usize, val: u8) {
-//        if addr >= 0x8000 && addr < 0xA000 {
-//            self.video_ram[addr - 0x8000] = val;
-//        }
-//
-//        if addr >= 0xFF00 && addr < 0xFF80 {
-//            self.io_registers[addr - 0xFF00] = val;
-//        }
-//
-//        if addr >= 0xFF80 && addr < 0xFFFF {
-//            self.hi_ram[addr - 0xFF80] = val;
-//        }
-//
-//        if addr == 0xFFFF {
-//            self.interrupt_enable_register = val;
-//        }
-//    }
-//}

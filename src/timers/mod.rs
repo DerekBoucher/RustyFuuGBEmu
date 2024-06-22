@@ -33,7 +33,7 @@ impl Timers {
         *self = Timers::new();
     }
 
-    pub fn update(&mut self, cycles: u32, memory: &mut memory::Memory, cpu: &mut cpu::LR35902) {
+    pub fn update<'a>(&mut self, cycles: u32, memory: &mut memory::Memory, cpu: &mut cpu::LR35902) {
         let timer_control_register = match memory.dma_read(io_registers::TIMER_CTRL_ADDR) {
             Some(val) => val,
             None => panic!("Timer control register not found"),

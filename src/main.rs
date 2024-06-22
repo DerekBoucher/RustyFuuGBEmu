@@ -1,5 +1,6 @@
 mod cartridge;
 mod cpu;
+mod events;
 mod gameboy;
 mod memory;
 mod ppu;
@@ -43,6 +44,9 @@ fn main() {
     let ppu = ppu::PPU::new();
     let timers = timers::Timers::new();
     let gameboy = gameboy::Gameboy::new(cpu, memory, ppu, timers, args.skip_boot_rom);
+
+    // Initialize the event bus.
+    events::init();
 
     let mut ui = ui::Ui::new(
         egui_glium_client,
