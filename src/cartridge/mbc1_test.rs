@@ -1,45 +1,5 @@
 use crate::cartridge;
 use crate::cartridge::mbc1::MBC1;
-use crate::interface::Cartridge;
-
-#[test]
-fn new() {
-    struct TestCase {
-        init_fn: fn() -> Vec<u8>,
-    }
-
-    let test_cases: Vec<TestCase> = vec![
-        TestCase {
-            init_fn: || -> Vec<u8> {
-                let mut cart_data: Vec<u8> = vec![0x00; 0x8000];
-                cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1;
-                return cart_data;
-            },
-        },
-        TestCase {
-            init_fn: || -> Vec<u8> {
-                let mut cart_data: Vec<u8> = vec![0x00; 0x8000];
-                cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
-                return cart_data;
-            },
-        },
-        TestCase {
-            init_fn: || -> Vec<u8> {
-                let mut cart_data: Vec<u8> = vec![0x00; 0x8000];
-                cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM_BATTERY;
-                return cart_data;
-            },
-        },
-    ];
-
-    for tc in test_cases {
-        let implementation = cartridge::new((tc.init_fn)());
-        match implementation.as_any().downcast_ref::<MBC1>() {
-            Some(_) => {}
-            None => panic!("returned cartridge implementation was not a MBC1!"),
-        };
-    }
-}
 
 #[test]
 fn read() {

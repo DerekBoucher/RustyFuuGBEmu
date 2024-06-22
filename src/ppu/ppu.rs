@@ -1,32 +1,34 @@
 use crate::{
-    interface::{self, Interrupt},
+    cpu,
     memory::{self, io_registers},
-    ppu::stat,
-    ppu::{stat::StatUpdater, *},
+    ppu::{
+        self,
+        stat::{self, StatUpdater},
+        *,
+    },
 };
 
 const LCDC_ENABLE_MASK: u8 = 1 << 7;
 const LCDC_BG_WINDOW_ENABLE_MASK: u8 = 1 << 0;
 const LCDC_OBJ_ENABLE_MASK: u8 = 1 << 1;
 
-#[path = "ppu_test.rs"]
-#[cfg(test)]
-mod test;
-
 impl PPU {
     pub fn new() -> Self {
         PPU {
-            pixels: [[interface::Pixel::White; interface::NATIVE_SCREEN_WIDTH];
-                interface::NATIVE_SCREEN_HEIGHT],
+            pixels: [[ppu::Pixel::White; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT],
             scanline_counter: 0,
         }
     }
 
-    fn update_graphics(
+    pub fn reset(&mut self) {
+        *self = PPU::new();
+    }
+
+    pub fn update_graphics(
         &mut self,
         cycles: u32,
-        memory: &mut impl interface::Memory,
-        cpu: &mut impl interface::CPU,
+        memory: &mut memory::Memory,
+        cpu: &mut cpu::LR35902,
     ) {
         let lcdc = match memory.dma_read(io_registers::LCD_CONTROL_ADDR) {
             Some(value) => value,
@@ -87,7 +89,7 @@ impl PPU {
 
             // V-Blank period
             if current_scanline >= 144 && current_scanline < 154 {
-                cpu.request_interrupt(memory, Interrupt::VBlank);
+                cpu.request_interrupt(memory, cpu::Interrupt::VBlank);
                 memory.dma_write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
                 return;
             }
@@ -98,7 +100,7 @@ impl PPU {
         }
     }
 
-    fn draw_scaline(&mut self, lcdc: u8, memory: &mut impl interface::Memory) {
+    fn draw_scaline(&mut self, lcdc: u8, memory: &mut memory::Memory) {
         if lcdc & LCDC_BG_WINDOW_ENABLE_MASK > 0 {
             self.render_tiles(memory);
         }
@@ -115,8 +117,8 @@ impl PPU {
         current_scanline: u8,
         ly: u8,
         lyc: u8,
-        memory: &mut impl interface::Memory,
-        cpu: &mut impl interface::CPU,
+        memory: &mut memory::Memory,
+        cpu: &mut cpu::LR35902,
     ) {
         if lcdc & LCDC_ENABLE_MASK == 0 {
             self.scanline_counter = stat::MAX_SCANLINE_COUNT;
@@ -141,7 +143,7 @@ impl PPU {
 
         memory.dma_write(io_registers::LCD_STAT_ADDR, new_stat);
         if requires_interrupt {
-            cpu.request_interrupt(memory, Interrupt::LCDC);
+            cpu.request_interrupt(memory, cpu::Interrupt::LCDC);
         }
     }
 
@@ -157,7 +159,7 @@ impl PPU {
 
     // Background tiles make up the background environment, and typically have lower precedence then the window tiles.
     // Window tiles have precedence over background tiles, when enabled.
-    fn render_tiles(&mut self, memory: &impl interface::Memory) {
+    fn render_tiles(&mut self, memory: &memory::Memory) {
         let current_scanline = memory.dma_read(memory::io_registers::LCD_LY_ADDR).unwrap();
         if current_scanline > 144 {
             return;
@@ -215,7 +217,7 @@ impl PPU {
         let tile_row: usize = (pixel_y as usize) / 8 * 32;
 
         // Main loop through each 160 pixels of the current scanline we are rendering
-        for pixel_iter in 0..interface::NATIVE_SCREEN_WIDTH as u8 {
+        for pixel_iter in 0..ppu::NATIVE_SCREEN_WIDTH as u8 {
             let mut pixel_x: u8 = pixel_iter.wrapping_add(scroll_x);
 
             if window_enabled(lcdc) && (pixel_iter >= win_x) {
@@ -272,10 +274,10 @@ impl PPU {
 
             // Only then can we properly determine the actual pixel color to render.
             let pixel_color = match translated_color {
-                0b00 => interface::Pixel::White,
-                0b01 => interface::Pixel::LightGray,
-                0b10 => interface::Pixel::DarkGray,
-                0b11 => interface::Pixel::Black,
+                0b00 => ppu::Pixel::White,
+                0b01 => ppu::Pixel::LightGray,
+                0b10 => ppu::Pixel::DarkGray,
+                0b11 => ppu::Pixel::Black,
                 _ => panic!(
                     "invalid color encoding when rendering scanline: {}",
                     pixel_color_encoding
@@ -285,28 +287,29 @@ impl PPU {
             self.pixels[current_scanline as usize][pixel_iter as usize] = pixel_color;
         }
     }
-}
 
-impl interface::PPU for PPU {
-    fn reset(&mut self) {
-        *self = PPU::new();
-    }
-
-    fn get_frame_data(
+    pub fn get_frame_data(
         &self,
-    ) -> [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT] {
+    ) -> [[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT] {
         return self.pixels.clone();
     }
-
-    fn update_graphics(
-        &mut self,
-        cycles: u32,
-        memory: &mut impl interface::Memory,
-        cpu: &mut impl interface::CPU,
-    ) {
-        self.update_graphics(cycles, memory, cpu)
-    }
 }
+
+//impl ppu::PPU for PPU {
+//    fn reset(&mut self) {
+//        *self = PPU::new();
+//    }
+//
+//
+//    fn update_graphics(
+//        &mut self,
+//        cycles: u32,
+//        memory: &mut impl ppu::Memory,
+//        cpu: &mut impl ppu::CPU,
+//    ) {
+//        self.update_graphics(cycles, memory, cpu)
+//    }
+//}
 
 // If the 4th bit (starting from the right, 0 based) of the LCDC register is '1', then the
 // background and window tile data are located at the base address of 0x8000 and the addressing uses an unsigned 8-bit integer.

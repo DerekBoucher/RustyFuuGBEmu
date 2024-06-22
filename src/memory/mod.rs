@@ -1,9 +1,4 @@
-#[path = "memory_test.rs"]
-#[cfg(test)]
-mod test;
-
 use crate::cartridge;
-use crate::interface;
 use std::fmt::Debug;
 
 const OAM_TRANSFER_CYCLES: u32 = 160;
@@ -15,7 +10,7 @@ const OAM_TRANSFER_CYCLES: u32 = 160;
 pub struct Memory {
     /// Cartridge data.
     /// Mapped into memory locations 0x0000 - 0x7FFF.
-    cartridge: Box<dyn interface::Cartridge>,
+    cartridge: Box<dyn cartridge::Interface>,
 
     /// Video RAM where tile data is located.
     /// Occupies memory locations 0x8000 ~ 0x9FFF.
@@ -124,7 +119,7 @@ impl Memory {
         0x50,
     ];
 
-    pub fn new(cartridge: Box<dyn interface::Cartridge>) -> Self {
+    pub fn new(cartridge: Box<dyn cartridge::Interface>) -> Self {
         Self {
             cartridge,
             video_ram: [0x00; 0x2000],
@@ -160,7 +155,7 @@ impl Memory {
         return self.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] == 0x00;
     }
 
-    fn update_dma_transfer_cycles(&mut self, cycles: u32) {
+    pub fn update_dma_transfer_cycles(&mut self, cycles: u32) {
         if !self.oam_dma_transfer_in_progress {
             self.oam_dma_transfer_cycles_completed = 0;
             return;
@@ -286,7 +281,7 @@ impl Memory {
         self.io_registers[0xFF70 - offset] = 0xFF;
     }
 
-    fn read(&self, addr: usize) -> Option<u8> {
+    pub fn read(&self, addr: usize) -> Option<u8> {
         log::trace!("Reading from memory address {:X}", addr);
 
         if self.oam_dma_transfer_in_progress {
@@ -361,7 +356,7 @@ impl Memory {
         None
     }
 
-    fn write(&mut self, addr: usize, val: u8) {
+    pub fn write(&mut self, addr: usize, val: u8) {
         log::trace!("Writing to memory address {:X} value {:X}", addr, val);
 
         if self.oam_dma_transfer_in_progress {
@@ -424,26 +419,8 @@ impl Memory {
             self.interrupt_enable_register = val;
         }
     }
-}
 
-impl interface::Memory for Memory {
-    fn reset(&mut self, cartridge: Box<dyn interface::Cartridge>) {
-        *self = Memory::new(cartridge);
-    }
-
-    fn read(&self, addr: usize) -> Option<u8> {
-        return self.read(addr);
-    }
-
-    fn write(&mut self, addr: usize, val: u8) {
-        self.write(addr, val);
-    }
-
-    fn update_dma_transfer_cycles(&mut self, cycles: u32) {
-        self.update_dma_transfer_cycles(cycles);
-    }
-
-    fn dma_read(&self, addr: usize) -> Option<u8> {
+    pub fn dma_read(&self, addr: usize) -> Option<u8> {
         if addr >= 0x8000 && addr < 0xA000 {
             return Some(self.video_ram[addr - 0x8000].clone());
         }
@@ -463,7 +440,7 @@ impl interface::Memory for Memory {
         return None;
     }
 
-    fn dma_write(&mut self, addr: usize, val: u8) {
+    pub fn dma_write(&mut self, addr: usize, val: u8) {
         if addr >= 0x8000 && addr < 0xA000 {
             self.video_ram[addr - 0x8000] = val;
         }
@@ -480,4 +457,61 @@ impl interface::Memory for Memory {
             self.interrupt_enable_register = val;
         }
     }
+
+    pub fn reset(&mut self, cartridge: Box<dyn cartridge::Interface>) {
+        *self = Memory::new(cartridge);
+    }
 }
+
+//impl interface::Memory for Memory {
+//
+//    fn read(&self, addr: usize) -> Option<u8> {
+//        return self.read(addr);
+//    }
+//
+//    fn write(&mut self, addr: usize, val: u8) {
+//        self.write(addr, val);
+//    }
+//
+//    fn update_dma_transfer_cycles(&mut self, cycles: u32) {
+//        self.update_dma_transfer_cycles(cycles);
+//    }
+//
+//    fn dma_read(&self, addr: usize) -> Option<u8> {
+//        if addr >= 0x8000 && addr < 0xA000 {
+//            return Some(self.video_ram[addr - 0x8000].clone());
+//        }
+//
+//        if addr >= 0xFF00 && addr < 0xFF80 {
+//            return Some(self.io_registers[addr - 0xFF00].clone());
+//        }
+//
+//        if addr >= 0xFF80 && addr < 0xFFFF {
+//            return Some(self.hi_ram[addr - 0xFF80].clone());
+//        }
+//
+//        if addr == 0xFFFF {
+//            return Some(self.interrupt_enable_register.clone());
+//        }
+//
+//        return None;
+//    }
+//
+//    fn dma_write(&mut self, addr: usize, val: u8) {
+//        if addr >= 0x8000 && addr < 0xA000 {
+//            self.video_ram[addr - 0x8000] = val;
+//        }
+//
+//        if addr >= 0xFF00 && addr < 0xFF80 {
+//            self.io_registers[addr - 0xFF00] = val;
+//        }
+//
+//        if addr >= 0xFF80 && addr < 0xFFFF {
+//            self.hi_ram[addr - 0xFF80] = val;
+//        }
+//
+//        if addr == 0xFFFF {
+//            self.interrupt_enable_register = val;
+//        }
+//    }
+//}

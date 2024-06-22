@@ -2,19 +2,6 @@ use crate::cartridge;
 use crate::cartridge::NoMBC;
 
 #[test]
-fn new() {
-    let mut cart_data: Vec<u8> = vec![0x00; 0x8000];
-    let cart_data2 = cart_data.clone();
-    cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::ROM_ONLY;
-
-    let implementation = cartridge::new(cart_data2);
-    match implementation.as_any().downcast_ref::<NoMBC>() {
-        Some(_) => {}
-        None => panic!("returned cartridge implementation was not a RomOnly!"),
-    };
-}
-
-#[test]
 fn read() {
     let mut cart_data: Vec<u8> = vec![0x00; 0x8000];
     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::ROM_ONLY;

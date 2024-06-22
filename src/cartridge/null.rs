@@ -1,14 +1,10 @@
-use crate::interface;
+use crate::cartridge;
 
 /// Placeholder cartridge for when no cartridge is inserted.
 #[derive(Debug)]
 pub struct NullCartridge;
 
-impl interface::Cartridge for NullCartridge {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-
+impl cartridge::Interface for NullCartridge {
     fn read(&self, _addr: usize) -> Option<u8> {
         log::error!("Tried to read from null cartridge");
 

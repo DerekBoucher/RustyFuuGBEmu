@@ -1,8 +1,8 @@
-use crate::interface;
 use glium::{implement_vertex, Surface};
 extern crate glium;
 
 mod shaders;
+use crate::ppu;
 use crate::ui;
 
 #[derive(Copy, Clone)]
@@ -12,12 +12,12 @@ struct Vertex {
 }
 implement_vertex!(Vertex, position, color);
 
-const X_DIV: f32 = 2.0 / interface::NATIVE_SCREEN_WIDTH as f32;
-const Y_DIV: f32 = 2.0 / interface::NATIVE_SCREEN_HEIGHT as f32;
+const X_DIV: f32 = 2.0 / ppu::NATIVE_SCREEN_WIDTH as f32;
+const Y_DIV: f32 = 2.0 / ppu::NATIVE_SCREEN_HEIGHT as f32;
 const TOP_MENUBAR_COMPENSATION: f32 = 2.0 / (ui::TOP_MENUBAR_HEIGHT * ui::SCALE_FACTOR as f32);
 const VERTICES_PER_PIXEL: usize = 6;
 const VERTEX_COUNT: usize =
-    interface::NATIVE_SCREEN_HEIGHT * interface::NATIVE_SCREEN_WIDTH * VERTICES_PER_PIXEL;
+    ppu::NATIVE_SCREEN_HEIGHT * ppu::NATIVE_SCREEN_WIDTH * VERTICES_PER_PIXEL;
 
 pub struct OpenGL {
     program: glium::Program,
@@ -80,7 +80,7 @@ impl OpenGL {
             };
 
             x += 1.0;
-            if x >= interface::NATIVE_SCREEN_WIDTH as f32 {
+            if x >= ppu::NATIVE_SCREEN_WIDTH as f32 {
                 x = 0.0;
                 y += 1.0;
             }
@@ -104,8 +104,7 @@ impl OpenGL {
     pub fn update_frame(
         &mut self,
         display: &glium::backend::glutin::Display,
-        frame_data: [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH];
-            interface::NATIVE_SCREEN_HEIGHT],
+        frame_data: [[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT],
     ) {
         let mut i = 0;
         let mut current_vertices = self.vertex_buffer.read().unwrap();

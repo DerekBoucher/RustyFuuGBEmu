@@ -3,8 +3,6 @@
 mod test;
 
 use crate::cartridge;
-use crate::interface;
-use std::any::Any;
 
 /// MBC1 type of cartridge has a memory bank controller
 /// which swaps out the exposed memory that the cpu sees
@@ -60,12 +58,6 @@ impl MBC1 {
 
         return self.rom[cartridge::header::TYPE_ADDR] == cartridge::mbc_id::MBC1_RAM
             || self.rom[cartridge::header::TYPE_ADDR] == cartridge::mbc_id::MBC1_RAM_BATTERY;
-    }
-}
-
-impl interface::Cartridge for MBC1 {
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 
     fn read(&self, addr: usize) -> Option<u8> {
@@ -182,5 +174,15 @@ impl interface::Cartridge for MBC1 {
 
             self.ram_banks[bank_number][translated_addr] = val;
         }
+    }
+}
+
+impl cartridge::Interface for MBC1 {
+    fn read(&self, addr: usize) -> Option<u8> {
+        self.read(addr)
+    }
+
+    fn write(&mut self, addr: usize, val: u8) {
+        self.write(addr, val);
     }
 }
