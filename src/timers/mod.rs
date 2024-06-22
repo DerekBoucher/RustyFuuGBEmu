@@ -1,7 +1,6 @@
-use crate::cpu;
 use crate::cpu::CPU_FREQUENCY;
-use crate::interface;
 use crate::memory::io_registers;
+use crate::{cpu, memory};
 const TIMER_CONTROL_ENABLED_MASK: u8 = 1 << 2;
 const DIV_TIMER_FREQUENCY: u32 = 16384;
 const CYCLES_PER_DIVIDER_TICK: i32 = (cpu::CPU_FREQUENCY / DIV_TIMER_FREQUENCY) as i32;
@@ -31,12 +30,11 @@ impl Timers {
         }
     }
 
-    fn update(
-        &mut self,
-        cycles: u32,
-        memory: &mut impl interface::Memory,
-        cpu: &mut impl interface::CPU,
-    ) {
+    pub fn reset(&mut self) {
+        *self = Timers::new();
+    }
+
+    pub fn update(&mut self, cycles: u32, memory: &mut memory::Memory, cpu: &mut cpu::LR35902) {
         let timer_control_register = match memory.dma_read(io_registers::TIMER_CTRL_ADDR) {
             Some(val) => val,
             None => panic!("Timer control register not found"),
@@ -73,7 +71,7 @@ impl Timers {
                     let timer_mod = memory.dma_read(io_registers::TIMER_MOD_ADDR).unwrap();
                     memory.dma_write(io_registers::TIMER_COUNTER_ADDR, timer_mod);
 
-                    cpu.request_interrupt(memory, interface::Interrupt::TimerOverflow);
+                    cpu.request_interrupt(memory, cpu::Interrupt::TimerOverflow);
                     log::trace!("Timer interrupt requested");
                     break;
                 }
@@ -84,20 +82,5 @@ impl Timers {
                 );
             }
         }
-    }
-}
-
-impl interface::Timers for Timers {
-    fn update(
-        &mut self,
-        cycles: u32,
-        memory: &mut impl interface::Memory,
-        cpu: &mut impl interface::CPU,
-    ) {
-        self.update(cycles, memory, cpu);
-    }
-
-    fn reset(&mut self) {
-        *self = Timers::new();
     }
 }

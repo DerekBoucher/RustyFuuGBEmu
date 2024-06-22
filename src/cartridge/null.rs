@@ -5,10 +5,6 @@ use crate::cartridge;
 pub struct NullCartridge;
 
 impl cartridge::Interface for NullCartridge {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-
     fn read(&self, _addr: usize) -> Option<u8> {
         log::error!("Tried to read from null cartridge");
 

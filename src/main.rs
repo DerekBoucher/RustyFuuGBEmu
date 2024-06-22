@@ -1,7 +1,6 @@
 mod cartridge;
 mod cpu;
 mod gameboy;
-mod interface;
 mod memory;
 mod ppu;
 mod renderer;
@@ -102,9 +101,8 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
             .build();
     let wb = glium::glutin::window::WindowBuilder::new()
         .with_inner_size(glium::glutin::dpi::LogicalSize::new(
-            (interface::NATIVE_SCREEN_WIDTH as i32) * ui::SCALE_FACTOR,
-            ((interface::NATIVE_SCREEN_HEIGHT as i32) * ui::SCALE_FACTOR)
-                + ui::TOP_MENUBAR_HEIGHT as i32,
+            (ppu::NATIVE_SCREEN_WIDTH as i32) * ui::SCALE_FACTOR,
+            ((ppu::NATIVE_SCREEN_HEIGHT as i32) * ui::SCALE_FACTOR) + ui::TOP_MENUBAR_HEIGHT as i32,
         ))
         .with_title("RustyFuuGBemu")
         .with_wayland_csd_theme(Theme::Dark)

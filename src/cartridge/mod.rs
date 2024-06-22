@@ -12,7 +12,7 @@ use crate::cartridge::no_mbc::NoMBC;
 /// types of memory bank controllers that Gameboy cartridges
 /// can contain.
 pub trait Interface: Any + Debug + Send {
-    fn as_any(&self) -> &dyn Any;
+    //fn as_any(&self) -> &dyn Any;
     fn read(&self, addr: usize) -> Option<u8>;
     fn write(&mut self, addr: usize, val: u8);
 }
@@ -73,6 +73,6 @@ pub fn new(data: Vec<u8>) -> Box<dyn Interface> {
     }
 }
 
-pub fn default() -> Box<dyn interface::Cartridge> {
+pub fn default() -> Box<dyn Interface> {
     return Box::new(null::NullCartridge {});
 }

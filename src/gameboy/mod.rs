@@ -1,11 +1,6 @@
 use crate::cartridge;
 use crate::cpu;
 use crate::cpu::CPU_CYCLES_PER_FRAME;
-use crate::interface;
-use crate::interface::Memory;
-use crate::interface::Timers;
-use crate::interface::CPU;
-use crate::interface::PPU;
 use crate::memory;
 use crate::ppu;
 use crate::timers;
@@ -62,9 +57,8 @@ pub struct Orchestrator {
     close_sender: channel::Sender<()>,
     ack_receiver: channel::Receiver<()>,
     rom_data_sender: channel::Sender<Vec<u8>>,
-    frame_data_receiver: channel::Receiver<
-        [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
-    >,
+    frame_data_receiver:
+        channel::Receiver<[[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT]>,
     skip_boot_rom_sender: channel::Sender<bool>,
 }
 
@@ -127,7 +121,7 @@ impl Gameboy {
         ack_sender: channel::Sender<()>,
         rom_data_receiver: channel::Receiver<Vec<u8>>,
         frame_data_sender: channel::Sender<
-            [[interface::Pixel; interface::NATIVE_SCREEN_WIDTH]; interface::NATIVE_SCREEN_HEIGHT],
+            [[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT],
         >,
         skip_boot_rom_recv: channel::Receiver<bool>,
     ) {

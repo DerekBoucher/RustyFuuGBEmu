@@ -3,7 +3,6 @@
 mod test;
 
 use crate::cartridge;
-use std::any::Any;
 
 /// Rom only type of cartridge has no memory bank
 /// controller. Simplest form of the gameboy cart.
@@ -15,10 +14,6 @@ pub struct NoMBC {
 
 /// Cartridge implementation for the Rom Only type.
 impl cartridge::Interface for NoMBC {
-    fn as_any(&self) -> &dyn Any {
-        self.as_any()
-    }
-
     fn read(&self, addr: usize) -> Option<u8> {
         return self.read(addr);
     }
@@ -35,10 +30,6 @@ impl NoMBC {
             data,
             ram_bank: [0x0; 0x2000],
         })
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 
     fn read(&self, addr: usize) -> Option<u8> {

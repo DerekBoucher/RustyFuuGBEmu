@@ -39,7 +39,7 @@ pub struct StatUpdater {
 impl StatUpdater {
     pub fn new(current_stat: u8) -> Self {
         Self {
-            current_stat: current_stat,
+            current_stat,
             new_stat: current_stat & !MODE_MASK,
             requires_interrupt: false,
             state_change_already_occured: false,
