@@ -7,7 +7,7 @@ const OAM_TRANSFER_CYCLES: u32 = 160;
 /// This struct controls the access behaviour whenever the CPU
 /// makes reads or writes to the memory.
 #[derive(Debug)]
-pub struct Memory {
+pub struct Memory { 
     /// Cartridge data.
     /// Mapped into memory locations 0x0000 - 0x7FFF.
     cartridge: Box<dyn cartridge::Interface>,
@@ -50,6 +50,7 @@ pub struct Memory {
 
     /// Number of cycles completed during a DMA transfer.
     oam_dma_transfer_cycles_completed: u32,
+
 }
 
 /// Module containing important addresses for

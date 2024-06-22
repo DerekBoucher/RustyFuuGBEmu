@@ -1,4 +1,3 @@
-use crate::cpu::CPU_FREQUENCY;
 use crate::memory::io_registers;
 use crate::{cpu, memory};
 const TIMER_CONTROL_ENABLED_MASK: u8 = 1 << 2;
