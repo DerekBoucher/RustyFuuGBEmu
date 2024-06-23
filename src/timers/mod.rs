@@ -68,6 +68,8 @@ impl Timers {
         if self.pending_interrupt {
             cpu.request_interrupt(memory, cpu::Interrupt::TimerOverflow);
             self.pending_interrupt = false;
+            let timer_mod = memory.dma_read(io_registers::TIMER_MOD_ADDR).unwrap();
+            memory.dma_write(io_registers::TIMER_COUNTER_ADDR, timer_mod);
             log::trace!("Timer interrupt requested");
         }
 
@@ -77,7 +79,7 @@ impl Timers {
         };
 
         for _ in 0..cycles / 4 {
-            self.system_clock = self.system_clock.wrapping_add(1) & 0x3FFF;
+            self.system_clock = self.system_clock.wrapping_add(1) & 0xFFFF;
 
             self.current_bit_7 = self.system_clock & (1 << 7) > 0;
             self.current_bit_5 = self.system_clock & (1 << 5) > 0;
@@ -101,8 +103,6 @@ impl Timers {
                     let timer_register = memory.dma_read(io_registers::TIMER_COUNTER_ADDR).unwrap();
 
                     if timer_register == 0xFF {
-                        let timer_mod = memory.dma_read(io_registers::TIMER_MOD_ADDR).unwrap();
-                        memory.dma_write(io_registers::TIMER_COUNTER_ADDR, timer_mod);
                         self.pending_interrupt = true;
                     } else {
                         memory.dma_write(
