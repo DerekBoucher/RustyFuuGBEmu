@@ -229,13 +229,12 @@ impl Gameboy {
                         cycles = 4;
                         self.cpu.halt(&mut self.memory);
                     } else {
-                        cycles = self.cpu.execute_next_opcode(&mut self.memory);
+                        cycles = self.cpu.execute_next_opcode(&mut self.memory, &mut self.timers);
                     }
 
                     cycles_this_update += cycles;
 
                     self.memory.update_dma_transfer_cycles(cycles);
-                    self.timers.update(cycles, &mut self.memory, &mut self.cpu);
                     self.ppu.update_graphics(cycles, &mut self.memory, &mut self.cpu);
                     self.cpu.process_interrupts(&mut self.memory,&mut self.timers);
                 }

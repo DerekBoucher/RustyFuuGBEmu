@@ -5,6 +5,7 @@ use crate::cpu::LR35902;
 use crate::cpu::opcode_ext::*;
 use crate::memory;
 use crate::memory::io_registers::TIMER_DIV_ADDR;
+use crate::timers;
 
 use super::bit::two_compliment_byte;
 
@@ -796,264 +797,264 @@ impl std::convert::Into<u8> for Opcode {
 }
 
 impl Opcode {
-    pub fn execute(&self, cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
+    pub fn execute(&self, cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
         match self {
-            Self::Nop_0x00 => execute_0x00(cpu, memory),
-            Self::LdImm16IntoBC_0x01 => execute_0x01(cpu, memory),
-            Self::LdAIntoMemoryBC_0x02 => execute_0x02(cpu, memory),
-            Self::IncBC_0x03 => execute_0x03(cpu, memory),
-            Self::IncB_0x04 => execute_0x04(cpu, memory),
-            Self::DecB_0x05 => execute_0x05(cpu, memory),
-            Self::LdImm8IntoB_0x06 => execute_0x06(cpu, memory),
-            Self::RotateLeftIntoA_0x07 => execute_0x07(cpu, memory),
-            Self::LdSpInto16ImmAddress_0x08 => execute_0x08(cpu, memory),
-            Self::AddBCintoHL_0x09 => execute_0x09(cpu, memory),
-            Self::LdMemoryBCIntoA_0x0A => execute_0x0a(cpu, memory),
-            Self::DecBC_0x0B => execute_0x0b(cpu, memory),
-            Self::IncC_0x0C => execute_0x0c(cpu, memory),
-            Self::DecC_0x0D => execute_0x0d(cpu, memory),
-            Self::LdImm8IntoC_0x0E => execute_0x0e(cpu, memory),
-            Self::RotateRightIntoA_0x0F => execute_0x0f(cpu, memory),
-            Self::Stop_0x10 => execute_0x10(cpu, memory),
-            Self::LdImm16IntoDE_0x11 => execute_0x11(cpu, memory),
-            Self::LdAIntoMemoryDE_0x12 => execute_0x12(cpu, memory),
-            Self::IncDE_0x13 => execute_0x13(cpu, memory),
-            Self::IncD_0x14 => execute_0x14(cpu, memory),
-            Self::DecD_0x15 => execute_0x15(cpu, memory),
-            Self::LdImm8IntoD_0x16 => execute_0x16(cpu, memory),
-            Self::RotateLeftWithCarryIntoA_0x17 => execute_0x17(cpu, memory),
-            Self::RelativeJump8_0x18 => execute_0x18(cpu, memory),
-            Self::AddDEintoHL_0x19 => execute_0x19(cpu, memory),
-            Self::LdMemoryDEIntoA_0x1A => execute_0x1a(cpu, memory),
-            Self::DecDE_0x1B => execute_0x1b(cpu, memory),
-            Self::IncE_0x1C => execute_0x1c(cpu, memory),
-            Self::DecE_0x1D => execute_0x1d(cpu, memory),
-            Self::LdImm8IntoE_0x1E => execute_0x1e(cpu, memory),
-            Self::RotateRightWithCarryIntoA_0x1F => execute_0x1f(cpu, memory),
-            Self::RelativeJumpNotZero8_0x20 => execute_0x20(cpu, memory),
-            Self::LdImm16IntoHL_0x21 => execute_0x21(cpu, memory),
-            Self::LdAIntoMemoryHLPostInc_0x22 => execute_0x22(cpu, memory),
-            Self::IncHL_0x23 => execute_0x23(cpu, memory),
-            Self::IncH_0x24 => execute_0x24(cpu, memory),
-            Self::DecH_0x25 => execute_0x25(cpu, memory),
-            Self::LdImm8IntoH_0x26 => execute_0x26(cpu, memory),
-            Self::DAA_0x27 => execute_0x27(cpu, memory),
-            Self::RelativeJumpZero8_0x28 => execute_0x28(cpu, memory),
-            Self::AddHLintoHL_0x29 => execute_0x29(cpu, memory),
-            Self::LdMemoryHLIntoAPostInc_0x2A => execute_0x2a(cpu, memory),
-            Self::DecHL_0x2B => execute_0x2b(cpu, memory),
-            Self::IncL_0x2C => execute_0x2c(cpu, memory),
-            Self::DecL_0x2D => execute_0x2d(cpu, memory),
-            Self::LdImm8IntoL_0x2E => execute_0x2e(cpu, memory),
-            Self::ComplimentA_0x2F => execute_0x2f(cpu, memory),
-            Self::RelativeJumpNotCarry8_0x30 => execute_0x30(cpu, memory),
-            Self::LdImm16IntoSP_0x31 => execute_0x31(cpu, memory),
-            Self::LdAIntoMemoryHLPostDec_0x32 => execute_0x32(cpu, memory),
-            Self::IncSP_0x33 => execute_0x33(cpu, memory),
-            Self::IncMemoryHL_0x34 => execute_0x34(cpu, memory),
-            Self::DecMemoryHL_0x35 => execute_0x35(cpu, memory),
-            Self::LdImm8IntoMemoryHL_0x36 => execute_0x36(cpu, memory),
-            Self::SetCarryFlag_0x37 => execute_0x37(cpu, memory),
-            Self::RelativeJumpCarry8_0x38 => execute_0x38(cpu, memory),
-            Self::AddSPintoHL_0x39 => execute_0x39(cpu, memory),
-            Self::LdMemoryHLIntoAPostDec_0x3A => execute_0x3a(cpu, memory),
-            Self::DecSP_0x3B => execute_0x3b(cpu, memory),
-            Self::IncA_0x3C => execute_0x3c(cpu, memory),
-            Self::DecA_0x3D => execute_0x3d(cpu, memory),
-            Self::LdImm8IntoA_0x3E => execute_0x3e(cpu, memory),
-            Self::ComplimentCarryFlag_0x3F => execute_0x3f(cpu, memory),
-            Self::LdBIntoB_0x40 => execute_0x40(cpu, memory),
-            Self::LdCIntoB_0x41 => execute_0x41(cpu, memory),
-            Self::LdDIntoB_0x42 => execute_0x42(cpu, memory),
-            Self::LdEIntoB_0x43 => execute_0x43(cpu, memory),
-            Self::LdHIntoB_0x44 => execute_0x44(cpu, memory),
-            Self::LdLIntoB_0x45 => execute_0x45(cpu, memory),
-            Self::LdMemoryHLIntoB_0x46 => execute_0x46(cpu, memory),
-            Self::LdAIntoB_0x47 => execute_0x47(cpu, memory),
-            Self::LdBIntoC_0x48 => execute_0x48(cpu, memory),
-            Self::LdCIntoC_0x49 => execute_0x49(cpu, memory),
-            Self::LdDIntoC_0x4A => execute_0x4a(cpu, memory),
-            Self::LdEIntoC_0x4B => execute_0x4b(cpu, memory),
-            Self::LdHIntoC_0x4C => execute_0x4c(cpu, memory),
-            Self::LdLIntoC_0x4D => execute_0x4d(cpu, memory),
-            Self::LdMemoryHLIntoC_0x4E => execute_0x4e(cpu, memory),
-            Self::LdAIntoC_0x4F => execute_0x4f(cpu, memory),
-            Self::LdBIntoD_0x50 => execute_0x50(cpu, memory),
-            Self::LdCIntoD_0x51 => execute_0x51(cpu, memory),
-            Self::LdDIntoD_0x52 => execute_0x52(cpu, memory),
-            Self::LdEIntoD_0x53 => execute_0x53(cpu, memory),
-            Self::LdHIntoD_0x54 => execute_0x54(cpu, memory),
-            Self::LdLIntoD_0x55 => execute_0x55(cpu, memory),
-            Self::LdMemoryHLIntoD_0x56 => execute_0x56(cpu, memory),
-            Self::LdAIntoD_0x57 => execute_0x57(cpu, memory),
-            Self::LdBIntoE_0x58 => execute_0x58(cpu, memory),
-            Self::LdCIntoE_0x59 => execute_0x59(cpu, memory),
-            Self::LdDIntoE_0x5A => execute_0x5a(cpu, memory),
-            Self::LdEIntoE_0x5B => execute_0x5b(cpu, memory),
-            Self::LdHIntoE_0x5C => execute_0x5c(cpu, memory),
-            Self::LdLIntoE_0x5D => execute_0x5d(cpu, memory),
-            Self::LdMemoryHLIntoE_0x5E => execute_0x5e(cpu, memory),
-            Self::LdAIntoE_0x5F => execute_0x5f(cpu, memory),
-            Self::LdBIntoH_0x60 => execute_0x60(cpu, memory),
-            Self::LdCIntoH_0x61 => execute_0x61(cpu, memory),
-            Self::LdDIntoH_0x62 => execute_0x62(cpu, memory),
-            Self::LdEIntoH_0x63 => execute_0x63(cpu, memory),
-            Self::LdHIntoH_0x64 => execute_0x64(cpu, memory),
-            Self::LdLIntoH_0x65 => execute_0x65(cpu, memory),
-            Self::LdMemoryHLIntoH_0x66 => execute_0x66(cpu, memory),
-            Self::LdAIntoH_0x67 => execute_0x67(cpu, memory),
-            Self::LdBIntoL_0x68 => execute_0x68(cpu, memory),
-            Self::LdCIntoL_0x69 => execute_0x69(cpu, memory),
-            Self::LdDIntoL_0x6A => execute_0x6a(cpu, memory),
-            Self::LdEIntoL_0x6B => execute_0x6b(cpu, memory),
-            Self::LdHIntoL_0x6C => execute_0x6c(cpu, memory),
-            Self::LdLIntoL_0x6D => execute_0x6d(cpu, memory),
-            Self::LdMemoryHLIntoL_0x6E => execute_0x6e(cpu, memory),
-            Self::LdAIntoL_0x6F => execute_0x6f(cpu, memory),
-            Self::LdBIntoMemoryHL_0x70 => execute_0x70(cpu, memory),
-            Self::LdCIntoMemoryHL_0x71 => execute_0x71(cpu, memory),
-            Self::LdDIntoMemoryHL_0x72 => execute_0x72(cpu, memory),
-            Self::LdEIntoMemoryHL_0x73 => execute_0x73(cpu, memory),
-            Self::LdHIntoMemoryHL_0x74 => execute_0x74(cpu, memory),
-            Self::LdLIntoMemoryHL_0x75 => execute_0x75(cpu, memory),
-            Self::Halt_0x76 => execute_0x76(cpu, memory),
-            Self::LdAIntoMemoryHL_0x77 => execute_0x77(cpu, memory),
-            Self::LdBIntoA_0x78 => execute_0x78(cpu, memory),
-            Self::LdCIntoA_0x79 => execute_0x79(cpu, memory),
-            Self::LdDIntoA_0x7A => execute_0x7a(cpu, memory),
-            Self::LdEIntoA_0x7B => execute_0x7b(cpu, memory),
-            Self::LdHIntoA_0x7C => execute_0x7c(cpu, memory),
-            Self::LdLIntoA_0x7D => execute_0x7d(cpu, memory),
-            Self::LdMemoryHLIntoA_0x7E => execute_0x7e(cpu, memory),
-            Self::LdAIntoA_0x7F => execute_0x7f(cpu, memory),
-            Self::AddBIntoA_0x80 => execute_0x80(cpu, memory),
-            Self::AddCIntoA_0x81 => execute_0x81(cpu, memory),
-            Self::AddDIntoA_0x82 => execute_0x82(cpu, memory),
-            Self::AddEIntoA_0x83 => execute_0x83(cpu, memory),
-            Self::AddHIntoA_0x84 => execute_0x84(cpu, memory),
-            Self::AddLIntoA_0x85 => execute_0x85(cpu, memory),
-            Self::AddMemoryHLIntoA_0x86 => execute_0x86(cpu, memory),
-            Self::AddAIntoA_0x87 => execute_0x87(cpu, memory),
-            Self::AddBIntoAWithCarry_0x88 => execute_0x88(cpu, memory),
-            Self::AddCIntoAWithCarry_0x89 => execute_0x89(cpu, memory),
-            Self::AddDIntoAWithCarry_0x8A => execute_0x8a(cpu, memory),
-            Self::AddEIntoAWithCarry_0x8B => execute_0x8b(cpu, memory),
-            Self::AddHIntoAWithCarry_0x8C => execute_0x8c(cpu, memory),
-            Self::AddLIntoAWithCarry_0x8D => execute_0x8d(cpu, memory),
-            Self::AddMemoryHLIntoAWithCarry_0x8E => execute_0x8e(cpu, memory),
-            Self::AddAIntoAWithCarry_0x8F => execute_0x8f(cpu, memory),
-            Self::SubBFromA_0x90 => execute_0x90(cpu, memory),
-            Self::SubCFromA_0x91 => execute_0x91(cpu, memory),
-            Self::SubDFromA_0x92 => execute_0x92(cpu, memory),
-            Self::SubEFromA_0x93 => execute_0x93(cpu, memory),
-            Self::SubHFromA_0x94 => execute_0x94(cpu, memory),
-            Self::SubLFromA_0x95 => execute_0x95(cpu, memory),
-            Self::SubMemoryHLFromA_0x96 => execute_0x96(cpu, memory),
-            Self::SubAFromA_0x97 => execute_0x97(cpu, memory),
-            Self::SubBFromAWithCarry_0x98 => execute_0x98(cpu, memory),
-            Self::SubCFromAWithCarry_0x99 => execute_0x99(cpu, memory),
-            Self::SubDFromAWithCarry_0x9A => execute_0x9a(cpu, memory),
-            Self::SubEFromAWithCarry_0x9B => execute_0x9b(cpu, memory),
-            Self::SubHFromAWithCarry_0x9C => execute_0x9c(cpu, memory),
-            Self::SubLFromAWithCarry_0x9D => execute_0x9d(cpu, memory),
-            Self::SubMemoryHLFromAWithCarry_0x9E => execute_0x9e(cpu, memory),
-            Self::SubAFromAWithCarry_0x9F => execute_0x9f(cpu, memory),
-            Self::AndBIntoA_0xA0 => execute_0xa0(cpu, memory),
-            Self::AndCIntoA_0xA1 => execute_0xa1(cpu, memory),
-            Self::AndDIntoA_0xA2 => execute_0xa2(cpu, memory),
-            Self::AndEIntoA_0xA3 => execute_0xa3(cpu, memory),
-            Self::AndHIntoA_0xA4 => execute_0xa4(cpu, memory),
-            Self::AndLIntoA_0xA5 => execute_0xa5(cpu, memory),
-            Self::AndMemoryHLIntoA_0xA6 => execute_0xa6(cpu, memory),
-            Self::AndAIntoA_0xA7 => execute_0xa7(cpu, memory),
-            Self::XorBIntoA_0xA8 => execute_0xa8(cpu, memory),
-            Self::XorCIntoA_0xA9 => execute_0xa9(cpu, memory),
-            Self::XorDIntoA_0xAA => execute_0xaa(cpu, memory),
-            Self::XorEIntoA_0xAB => execute_0xab(cpu, memory),
-            Self::XorHIntoA_0xAC => execute_0xac(cpu, memory),
-            Self::XorLIntoA_0xAD => execute_0xad(cpu, memory),
-            Self::XorMemoryHLIntoA_0xAE => execute_0xae(cpu, memory),
-            Self::XorAIntoA_0xAF => execute_0xaf(cpu, memory),
-            Self::OrBIntoA_0xB0 => execute_0xb0(cpu, memory),
-            Self::OrCIntoA_0xB1 => execute_0xb1(cpu, memory),
-            Self::OrDIntoA_0xB2 => execute_0xb2(cpu, memory),
-            Self::OrEIntoA_0xB3 => execute_0xb3(cpu, memory),
-            Self::OrHIntoA_0xB4 => execute_0xb4(cpu, memory),
-            Self::OrLIntoA_0xB5 => execute_0xb5(cpu, memory),
-            Self::OrMemoryHLIntoA_0xB6 => execute_0xb6(cpu, memory),
-            Self::OrAIntoA_0xB7 => execute_0xb7(cpu, memory),
-            Self::CompareBIntoA_0xB8 => execute_0xb8(cpu, memory),
-            Self::CompareCIntoA_0xB9 => execute_0xb9(cpu, memory),
-            Self::CompareDIntoA_0xBA => execute_0xba(cpu, memory),
-            Self::CompareEIntoA_0xBB => execute_0xbb(cpu, memory),
-            Self::CompareHIntoA_0xBC => execute_0xbc(cpu, memory),
-            Self::CompareLIntoA_0xBD => execute_0xbd(cpu, memory),
-            Self::CompareMemoryHLIntoA_0xBE => execute_0xbe(cpu, memory),
-            Self::CompareAIntoA_0xBF => execute_0xbf(cpu, memory),
-            Self::ReturnNotZero_0xC0 => execute_0xc0(cpu, memory),
-            Self::PopBC_0xC1 => execute_0xc1(cpu, memory),
-            Self::JumpAbsoluteNotZero_0xC2 => execute_0xc2(cpu, memory),
-            Self::JumpAbsolute_0xC3 => execute_0xc3(cpu, memory),
-            Self::CallNotZero_0xC4 => execute_0xc4(cpu, memory),
-            Self::PushBC_0xC5 => execute_0xc5(cpu, memory),
-            Self::Add8ImmIntoA_0xC6 => execute_0xc6(cpu, memory),
-            Self::Reset00h_0xC7 => execute_0xc7(cpu, memory),
-            Self::ReturnZero_0xC8 => execute_0xc8(cpu, memory),
-            Self::Return_0xC9 => execute_0xc9(cpu, memory),
-            Self::JumpAbsoluteZero_0xCA => execute_0xca(cpu, memory),
-            Self::ExtendedOpCode_0xCB => execute_0xcb(cpu, memory),
-            Self::CallZero_0xCC => execute_0xcc(cpu, memory),
-            Self::Call_0xCD => execute_0xcd(cpu, memory),
-            Self::Add8ImmIntoAWithCarry_0xCE => execute_0xce(cpu, memory),
-            Self::Reset08h_0xCF => execute_0xcf(cpu, memory),
-            Self::ReturnNotCarry_0xD0 => execute_0xd0(cpu, memory),
-            Self::PopDE_0xD1 => execute_0xd1(cpu, memory),
-            Self::JumpAbsoluteNotCarry_0xD2 => execute_0xd2(cpu, memory),
+            Self::Nop_0x00 => execute_0x00(cpu, memory, timers),
+            Self::LdImm16IntoBC_0x01 => execute_0x01(cpu, memory, timers),
+            Self::LdAIntoMemoryBC_0x02 => execute_0x02(cpu, memory, timers),
+            Self::IncBC_0x03 => execute_0x03(cpu, memory, timers),
+            Self::IncB_0x04 => execute_0x04(cpu, memory, timers),
+            Self::DecB_0x05 => execute_0x05(cpu, memory, timers),
+            Self::LdImm8IntoB_0x06 => execute_0x06(cpu, memory, timers),
+            Self::RotateLeftIntoA_0x07 => execute_0x07(cpu, memory, timers),
+            Self::LdSpInto16ImmAddress_0x08 => execute_0x08(cpu, memory, timers),
+            Self::AddBCintoHL_0x09 => execute_0x09(cpu, memory, timers),
+            Self::LdMemoryBCIntoA_0x0A => execute_0x0a(cpu, memory, timers),
+            Self::DecBC_0x0B => execute_0x0b(cpu, memory, timers),
+            Self::IncC_0x0C => execute_0x0c(cpu, memory, timers),
+            Self::DecC_0x0D => execute_0x0d(cpu, memory, timers),
+            Self::LdImm8IntoC_0x0E => execute_0x0e(cpu, memory, timers),
+            Self::RotateRightIntoA_0x0F => execute_0x0f(cpu, memory, timers),
+            Self::Stop_0x10 => execute_0x10(cpu, memory, timers),
+            Self::LdImm16IntoDE_0x11 => execute_0x11(cpu, memory, timers),
+            Self::LdAIntoMemoryDE_0x12 => execute_0x12(cpu, memory, timers),
+            Self::IncDE_0x13 => execute_0x13(cpu, memory, timers),
+            Self::IncD_0x14 => execute_0x14(cpu, memory, timers),
+            Self::DecD_0x15 => execute_0x15(cpu, memory, timers),
+            Self::LdImm8IntoD_0x16 => execute_0x16(cpu, memory, timers),
+            Self::RotateLeftWithCarryIntoA_0x17 => execute_0x17(cpu, memory, timers),
+            Self::RelativeJump8_0x18 => execute_0x18(cpu, memory, timers),
+            Self::AddDEintoHL_0x19 => execute_0x19(cpu, memory, timers),
+            Self::LdMemoryDEIntoA_0x1A => execute_0x1a(cpu, memory, timers),
+            Self::DecDE_0x1B => execute_0x1b(cpu, memory, timers),
+            Self::IncE_0x1C => execute_0x1c(cpu, memory, timers),
+            Self::DecE_0x1D => execute_0x1d(cpu, memory, timers),
+            Self::LdImm8IntoE_0x1E => execute_0x1e(cpu, memory, timers),
+            Self::RotateRightWithCarryIntoA_0x1F => execute_0x1f(cpu, memory, timers),
+            Self::RelativeJumpNotZero8_0x20 => execute_0x20(cpu, memory, timers),
+            Self::LdImm16IntoHL_0x21 => execute_0x21(cpu, memory, timers),
+            Self::LdAIntoMemoryHLPostInc_0x22 => execute_0x22(cpu, memory, timers),
+            Self::IncHL_0x23 => execute_0x23(cpu, memory, timers),
+            Self::IncH_0x24 => execute_0x24(cpu, memory, timers),
+            Self::DecH_0x25 => execute_0x25(cpu, memory, timers),
+            Self::LdImm8IntoH_0x26 => execute_0x26(cpu, memory, timers),
+            Self::DAA_0x27 => execute_0x27(cpu, memory, timers),
+            Self::RelativeJumpZero8_0x28 => execute_0x28(cpu, memory, timers),
+            Self::AddHLintoHL_0x29 => execute_0x29(cpu, memory, timers),
+            Self::LdMemoryHLIntoAPostInc_0x2A => execute_0x2a(cpu, memory, timers),
+            Self::DecHL_0x2B => execute_0x2b(cpu, memory, timers),
+            Self::IncL_0x2C => execute_0x2c(cpu, memory, timers),
+            Self::DecL_0x2D => execute_0x2d(cpu, memory, timers),
+            Self::LdImm8IntoL_0x2E => execute_0x2e(cpu, memory, timers),
+            Self::ComplimentA_0x2F => execute_0x2f(cpu, memory, timers),
+            Self::RelativeJumpNotCarry8_0x30 => execute_0x30(cpu, memory, timers),
+            Self::LdImm16IntoSP_0x31 => execute_0x31(cpu, memory, timers),
+            Self::LdAIntoMemoryHLPostDec_0x32 => execute_0x32(cpu, memory, timers),
+            Self::IncSP_0x33 => execute_0x33(cpu, memory, timers),
+            Self::IncMemoryHL_0x34 => execute_0x34(cpu, memory, timers),
+            Self::DecMemoryHL_0x35 => execute_0x35(cpu, memory, timers),
+            Self::LdImm8IntoMemoryHL_0x36 => execute_0x36(cpu, memory, timers),
+            Self::SetCarryFlag_0x37 => execute_0x37(cpu, memory, timers),
+            Self::RelativeJumpCarry8_0x38 => execute_0x38(cpu, memory, timers),
+            Self::AddSPintoHL_0x39 => execute_0x39(cpu, memory, timers),
+            Self::LdMemoryHLIntoAPostDec_0x3A => execute_0x3a(cpu, memory, timers),
+            Self::DecSP_0x3B => execute_0x3b(cpu, memory, timers),
+            Self::IncA_0x3C => execute_0x3c(cpu, memory, timers),
+            Self::DecA_0x3D => execute_0x3d(cpu, memory, timers),
+            Self::LdImm8IntoA_0x3E => execute_0x3e(cpu, memory, timers),
+            Self::ComplimentCarryFlag_0x3F => execute_0x3f(cpu, memory, timers),
+            Self::LdBIntoB_0x40 => execute_0x40(cpu, memory, timers),
+            Self::LdCIntoB_0x41 => execute_0x41(cpu, memory, timers),
+            Self::LdDIntoB_0x42 => execute_0x42(cpu, memory, timers),
+            Self::LdEIntoB_0x43 => execute_0x43(cpu, memory, timers),
+            Self::LdHIntoB_0x44 => execute_0x44(cpu, memory, timers),
+            Self::LdLIntoB_0x45 => execute_0x45(cpu, memory, timers),
+            Self::LdMemoryHLIntoB_0x46 => execute_0x46(cpu, memory, timers),
+            Self::LdAIntoB_0x47 => execute_0x47(cpu, memory, timers),
+            Self::LdBIntoC_0x48 => execute_0x48(cpu, memory, timers),
+            Self::LdCIntoC_0x49 => execute_0x49(cpu, memory, timers),
+            Self::LdDIntoC_0x4A => execute_0x4a(cpu, memory, timers),
+            Self::LdEIntoC_0x4B => execute_0x4b(cpu, memory, timers),
+            Self::LdHIntoC_0x4C => execute_0x4c(cpu, memory, timers),
+            Self::LdLIntoC_0x4D => execute_0x4d(cpu, memory, timers),
+            Self::LdMemoryHLIntoC_0x4E => execute_0x4e(cpu, memory, timers),
+            Self::LdAIntoC_0x4F => execute_0x4f(cpu, memory, timers),
+            Self::LdBIntoD_0x50 => execute_0x50(cpu, memory, timers),
+            Self::LdCIntoD_0x51 => execute_0x51(cpu, memory, timers),
+            Self::LdDIntoD_0x52 => execute_0x52(cpu, memory, timers),
+            Self::LdEIntoD_0x53 => execute_0x53(cpu, memory, timers),
+            Self::LdHIntoD_0x54 => execute_0x54(cpu, memory, timers),
+            Self::LdLIntoD_0x55 => execute_0x55(cpu, memory, timers),
+            Self::LdMemoryHLIntoD_0x56 => execute_0x56(cpu, memory, timers),
+            Self::LdAIntoD_0x57 => execute_0x57(cpu, memory, timers),
+            Self::LdBIntoE_0x58 => execute_0x58(cpu, memory, timers),
+            Self::LdCIntoE_0x59 => execute_0x59(cpu, memory, timers),
+            Self::LdDIntoE_0x5A => execute_0x5a(cpu, memory, timers),
+            Self::LdEIntoE_0x5B => execute_0x5b(cpu, memory, timers),
+            Self::LdHIntoE_0x5C => execute_0x5c(cpu, memory, timers),
+            Self::LdLIntoE_0x5D => execute_0x5d(cpu, memory, timers),
+            Self::LdMemoryHLIntoE_0x5E => execute_0x5e(cpu, memory, timers),
+            Self::LdAIntoE_0x5F => execute_0x5f(cpu, memory, timers),
+            Self::LdBIntoH_0x60 => execute_0x60(cpu, memory, timers),
+            Self::LdCIntoH_0x61 => execute_0x61(cpu, memory, timers),
+            Self::LdDIntoH_0x62 => execute_0x62(cpu, memory, timers),
+            Self::LdEIntoH_0x63 => execute_0x63(cpu, memory, timers),
+            Self::LdHIntoH_0x64 => execute_0x64(cpu, memory, timers),
+            Self::LdLIntoH_0x65 => execute_0x65(cpu, memory, timers),
+            Self::LdMemoryHLIntoH_0x66 => execute_0x66(cpu, memory, timers),
+            Self::LdAIntoH_0x67 => execute_0x67(cpu, memory, timers),
+            Self::LdBIntoL_0x68 => execute_0x68(cpu, memory, timers),
+            Self::LdCIntoL_0x69 => execute_0x69(cpu, memory, timers),
+            Self::LdDIntoL_0x6A => execute_0x6a(cpu, memory, timers),
+            Self::LdEIntoL_0x6B => execute_0x6b(cpu, memory, timers),
+            Self::LdHIntoL_0x6C => execute_0x6c(cpu, memory, timers),
+            Self::LdLIntoL_0x6D => execute_0x6d(cpu, memory, timers),
+            Self::LdMemoryHLIntoL_0x6E => execute_0x6e(cpu, memory, timers),
+            Self::LdAIntoL_0x6F => execute_0x6f(cpu, memory, timers),
+            Self::LdBIntoMemoryHL_0x70 => execute_0x70(cpu, memory, timers),
+            Self::LdCIntoMemoryHL_0x71 => execute_0x71(cpu, memory, timers),
+            Self::LdDIntoMemoryHL_0x72 => execute_0x72(cpu, memory, timers),
+            Self::LdEIntoMemoryHL_0x73 => execute_0x73(cpu, memory, timers),
+            Self::LdHIntoMemoryHL_0x74 => execute_0x74(cpu, memory, timers),
+            Self::LdLIntoMemoryHL_0x75 => execute_0x75(cpu, memory, timers),
+            Self::Halt_0x76 => execute_0x76(cpu, memory, timers),
+            Self::LdAIntoMemoryHL_0x77 => execute_0x77(cpu, memory, timers),
+            Self::LdBIntoA_0x78 => execute_0x78(cpu, memory, timers),
+            Self::LdCIntoA_0x79 => execute_0x79(cpu, memory, timers),
+            Self::LdDIntoA_0x7A => execute_0x7a(cpu, memory, timers),
+            Self::LdEIntoA_0x7B => execute_0x7b(cpu, memory, timers),
+            Self::LdHIntoA_0x7C => execute_0x7c(cpu, memory, timers),
+            Self::LdLIntoA_0x7D => execute_0x7d(cpu, memory, timers),
+            Self::LdMemoryHLIntoA_0x7E => execute_0x7e(cpu, memory, timers),
+            Self::LdAIntoA_0x7F => execute_0x7f(cpu, memory, timers),
+            Self::AddBIntoA_0x80 => execute_0x80(cpu, memory, timers),
+            Self::AddCIntoA_0x81 => execute_0x81(cpu, memory, timers),
+            Self::AddDIntoA_0x82 => execute_0x82(cpu, memory, timers),
+            Self::AddEIntoA_0x83 => execute_0x83(cpu, memory, timers),
+            Self::AddHIntoA_0x84 => execute_0x84(cpu, memory, timers),
+            Self::AddLIntoA_0x85 => execute_0x85(cpu, memory, timers),
+            Self::AddMemoryHLIntoA_0x86 => execute_0x86(cpu, memory, timers),
+            Self::AddAIntoA_0x87 => execute_0x87(cpu, memory, timers),
+            Self::AddBIntoAWithCarry_0x88 => execute_0x88(cpu, memory, timers),
+            Self::AddCIntoAWithCarry_0x89 => execute_0x89(cpu, memory, timers),
+            Self::AddDIntoAWithCarry_0x8A => execute_0x8a(cpu, memory, timers),
+            Self::AddEIntoAWithCarry_0x8B => execute_0x8b(cpu, memory, timers),
+            Self::AddHIntoAWithCarry_0x8C => execute_0x8c(cpu, memory, timers),
+            Self::AddLIntoAWithCarry_0x8D => execute_0x8d(cpu, memory, timers),
+            Self::AddMemoryHLIntoAWithCarry_0x8E => execute_0x8e(cpu, memory, timers),
+            Self::AddAIntoAWithCarry_0x8F => execute_0x8f(cpu, memory, timers),
+            Self::SubBFromA_0x90 => execute_0x90(cpu, memory, timers),
+            Self::SubCFromA_0x91 => execute_0x91(cpu, memory, timers),
+            Self::SubDFromA_0x92 => execute_0x92(cpu, memory, timers),
+            Self::SubEFromA_0x93 => execute_0x93(cpu, memory, timers),
+            Self::SubHFromA_0x94 => execute_0x94(cpu, memory, timers),
+            Self::SubLFromA_0x95 => execute_0x95(cpu, memory, timers),
+            Self::SubMemoryHLFromA_0x96 => execute_0x96(cpu, memory, timers),
+            Self::SubAFromA_0x97 => execute_0x97(cpu, memory, timers),
+            Self::SubBFromAWithCarry_0x98 => execute_0x98(cpu, memory, timers),
+            Self::SubCFromAWithCarry_0x99 => execute_0x99(cpu, memory, timers),
+            Self::SubDFromAWithCarry_0x9A => execute_0x9a(cpu, memory, timers),
+            Self::SubEFromAWithCarry_0x9B => execute_0x9b(cpu, memory, timers),
+            Self::SubHFromAWithCarry_0x9C => execute_0x9c(cpu, memory, timers),
+            Self::SubLFromAWithCarry_0x9D => execute_0x9d(cpu, memory, timers),
+            Self::SubMemoryHLFromAWithCarry_0x9E => execute_0x9e(cpu, memory, timers),
+            Self::SubAFromAWithCarry_0x9F => execute_0x9f(cpu, memory, timers),
+            Self::AndBIntoA_0xA0 => execute_0xa0(cpu, memory, timers),
+            Self::AndCIntoA_0xA1 => execute_0xa1(cpu, memory, timers),
+            Self::AndDIntoA_0xA2 => execute_0xa2(cpu, memory, timers),
+            Self::AndEIntoA_0xA3 => execute_0xa3(cpu, memory, timers),
+            Self::AndHIntoA_0xA4 => execute_0xa4(cpu, memory, timers),
+            Self::AndLIntoA_0xA5 => execute_0xa5(cpu, memory, timers),
+            Self::AndMemoryHLIntoA_0xA6 => execute_0xa6(cpu, memory, timers),
+            Self::AndAIntoA_0xA7 => execute_0xa7(cpu, memory, timers),
+            Self::XorBIntoA_0xA8 => execute_0xa8(cpu, memory, timers),
+            Self::XorCIntoA_0xA9 => execute_0xa9(cpu, memory, timers),
+            Self::XorDIntoA_0xAA => execute_0xaa(cpu, memory, timers),
+            Self::XorEIntoA_0xAB => execute_0xab(cpu, memory, timers),
+            Self::XorHIntoA_0xAC => execute_0xac(cpu, memory, timers),
+            Self::XorLIntoA_0xAD => execute_0xad(cpu, memory, timers),
+            Self::XorMemoryHLIntoA_0xAE => execute_0xae(cpu, memory, timers),
+            Self::XorAIntoA_0xAF => execute_0xaf(cpu, memory, timers),
+            Self::OrBIntoA_0xB0 => execute_0xb0(cpu, memory, timers),
+            Self::OrCIntoA_0xB1 => execute_0xb1(cpu, memory, timers),
+            Self::OrDIntoA_0xB2 => execute_0xb2(cpu, memory, timers),
+            Self::OrEIntoA_0xB3 => execute_0xb3(cpu, memory, timers),
+            Self::OrHIntoA_0xB4 => execute_0xb4(cpu, memory, timers),
+            Self::OrLIntoA_0xB5 => execute_0xb5(cpu, memory, timers),
+            Self::OrMemoryHLIntoA_0xB6 => execute_0xb6(cpu, memory, timers),
+            Self::OrAIntoA_0xB7 => execute_0xb7(cpu, memory, timers),
+            Self::CompareBIntoA_0xB8 => execute_0xb8(cpu, memory, timers),
+            Self::CompareCIntoA_0xB9 => execute_0xb9(cpu, memory, timers),
+            Self::CompareDIntoA_0xBA => execute_0xba(cpu, memory, timers),
+            Self::CompareEIntoA_0xBB => execute_0xbb(cpu, memory, timers),
+            Self::CompareHIntoA_0xBC => execute_0xbc(cpu, memory, timers),
+            Self::CompareLIntoA_0xBD => execute_0xbd(cpu, memory, timers),
+            Self::CompareMemoryHLIntoA_0xBE => execute_0xbe(cpu, memory, timers),
+            Self::CompareAIntoA_0xBF => execute_0xbf(cpu, memory, timers),
+            Self::ReturnNotZero_0xC0 => execute_0xc0(cpu, memory, timers),
+            Self::PopBC_0xC1 => execute_0xc1(cpu, memory, timers),
+            Self::JumpAbsoluteNotZero_0xC2 => execute_0xc2(cpu, memory, timers),
+            Self::JumpAbsolute_0xC3 => execute_0xc3(cpu, memory, timers),
+            Self::CallNotZero_0xC4 => execute_0xc4(cpu, memory, timers),
+            Self::PushBC_0xC5 => execute_0xc5(cpu, memory, timers),
+            Self::Add8ImmIntoA_0xC6 => execute_0xc6(cpu, memory, timers),
+            Self::Reset00h_0xC7 => execute_0xc7(cpu, memory, timers),
+            Self::ReturnZero_0xC8 => execute_0xc8(cpu, memory, timers),
+            Self::Return_0xC9 => execute_0xc9(cpu, memory, timers),
+            Self::JumpAbsoluteZero_0xCA => execute_0xca(cpu, memory, timers),
+            Self::ExtendedOpCode_0xCB => execute_0xcb(cpu, memory, timers),
+            Self::CallZero_0xCC => execute_0xcc(cpu, memory, timers),
+            Self::Call_0xCD => execute_0xcd(cpu, memory, timers),
+            Self::Add8ImmIntoAWithCarry_0xCE => execute_0xce(cpu, memory, timers),
+            Self::Reset08h_0xCF => execute_0xcf(cpu, memory, timers),
+            Self::ReturnNotCarry_0xD0 => execute_0xd0(cpu, memory, timers),
+            Self::PopDE_0xD1 => execute_0xd1(cpu, memory, timers),
+            Self::JumpAbsoluteNotCarry_0xD2 => execute_0xd2(cpu, memory, timers),
             Self::Nop_0xD3 => invalid_opcode(),
-            Self::CallNotCarry_0xD4 => execute_0xd4(cpu, memory),
-            Self::PushDE_0xD5 => execute_0xd5(cpu, memory),
-            Self::Sub8ImmFromA_0xD6 => execute_0xd6(cpu, memory),
-            Self::Reset10h_0xD7 => execute_0xd7(cpu, memory),
-            Self::ReturnCarry_0xD8 => execute_0xd8(cpu, memory),
-            Self::ReturnInterruptMasterEnable_0xD9 => execute_0xd9(cpu, memory),
-            Self::JumpAbsoluteCarry_0xDA => execute_0xda(cpu, memory),
+            Self::CallNotCarry_0xD4 => execute_0xd4(cpu, memory, timers),
+            Self::PushDE_0xD5 => execute_0xd5(cpu, memory, timers),
+            Self::Sub8ImmFromA_0xD6 => execute_0xd6(cpu, memory, timers),
+            Self::Reset10h_0xD7 => execute_0xd7(cpu, memory, timers),
+            Self::ReturnCarry_0xD8 => execute_0xd8(cpu, memory, timers),
+            Self::ReturnInterruptMasterEnable_0xD9 => execute_0xd9(cpu, memory, timers),
+            Self::JumpAbsoluteCarry_0xDA => execute_0xda(cpu, memory, timers),
             Self::Nop_0xDB => invalid_opcode(),
-            Self::CallCarry_0xDC => execute_0xdc(cpu, memory),
+            Self::CallCarry_0xDC => execute_0xdc(cpu, memory, timers),
             Self::Nop_0xDD => invalid_opcode(),
-            Self::Sub8ImmFromAWithCarry_0xDE => execute_0xde(cpu, memory),
-            Self::Reset18h_0xDF => execute_0xdf(cpu, memory),
-            Self::LoadAIntoHiMemOffset_0xE0 => execute_0xe0(cpu, memory),
-            Self::PopHL_0xE1 => execute_0xe1(cpu, memory),
-            Self::LoadAIntoHiMemOffsetC_0xE2 => execute_0xe2(cpu, memory),
+            Self::Sub8ImmFromAWithCarry_0xDE => execute_0xde(cpu, memory, timers),
+            Self::Reset18h_0xDF => execute_0xdf(cpu, memory, timers),
+            Self::LoadAIntoHiMemOffset_0xE0 => execute_0xe0(cpu, memory, timers),
+            Self::PopHL_0xE1 => execute_0xe1(cpu, memory, timers),
+            Self::LoadAIntoHiMemOffsetC_0xE2 => execute_0xe2(cpu, memory, timers),
             Self::Nop_0xE3 => invalid_opcode(),
             Self::Nop_0xE4 => invalid_opcode(),
-            Self::PushHL_0xE5 => execute_0xe5(cpu, memory),
-            Self::And8ImmIntoA_0xE6 => execute_0xe6(cpu, memory),
-            Self::Reset20h_0xE7 => execute_0xe7(cpu, memory),
-            Self::AddSigned8ImmIntoSP_0xE8 => execute_0xe8(cpu, memory),
-            Self::JumpMemoryHL_0xE9 => execute_0xe9(cpu, memory),
-            Self::WriteAInto16ImmAddress_0xEA => execute_0xea(cpu, memory),
+            Self::PushHL_0xE5 => execute_0xe5(cpu, memory, timers),
+            Self::And8ImmIntoA_0xE6 => execute_0xe6(cpu, memory, timers),
+            Self::Reset20h_0xE7 => execute_0xe7(cpu, memory, timers),
+            Self::AddSigned8ImmIntoSP_0xE8 => execute_0xe8(cpu, memory, timers),
+            Self::JumpMemoryHL_0xE9 => execute_0xe9(cpu, memory, timers),
+            Self::WriteAInto16ImmAddress_0xEA => execute_0xea(cpu, memory, timers),
             Self::Nop_0xEB => invalid_opcode(),
             Self::Nop_0xEC => invalid_opcode(),
             Self::Nop_0xED => invalid_opcode(),
-            Self::Xor8ImmIntoA_0xEE => execute_0xee(cpu, memory),
-            Self::Reset28h_0xEF => execute_0xef(cpu, memory),
-            Self::LoadHiMemOffsetIntoA_0xF0 => execute_0xf0(cpu, memory),
-            Self::PopAF_0xF1 => execute_0xf1(cpu, memory),
-            Self::LoadMemOffsetCIntoA_0xF2 => execute_0xf2(cpu, memory),
-            Self::DisableInterrupts_0xF3 => execute_0xf3(cpu, memory),
+            Self::Xor8ImmIntoA_0xEE => execute_0xee(cpu, memory, timers),
+            Self::Reset28h_0xEF => execute_0xef(cpu, memory, timers),
+            Self::LoadHiMemOffsetIntoA_0xF0 => execute_0xf0(cpu, memory, timers),
+            Self::PopAF_0xF1 => execute_0xf1(cpu, memory, timers),
+            Self::LoadMemOffsetCIntoA_0xF2 => execute_0xf2(cpu, memory, timers),
+            Self::DisableInterrupts_0xF3 => execute_0xf3(cpu, memory, timers),
             Self::Nop_0xF4 => invalid_opcode(),
-            Self::PushAF_0xF5 => execute_0xf5(cpu, memory),
-            Self::Or8ImmIntoA_0xF6 => execute_0xf6(cpu, memory),
-            Self::Reset30h_0xF7 => execute_0xf7(cpu, memory),
-            Self::LoadSPSigned8ImmIntoHL_0xF8 => execute_0xf8(cpu, memory),
-            Self::LoadHLIntoSP_0xF9 => execute_0xf9(cpu, memory),
-            Self::LoadMemAddrIntoA_0xFA => execute_0xfa(cpu, memory),
-            Self::EnableInterrupts_0xFB => execute_0xfb(cpu, memory),
+            Self::PushAF_0xF5 => execute_0xf5(cpu, memory, timers),
+            Self::Or8ImmIntoA_0xF6 => execute_0xf6(cpu, memory, timers),
+            Self::Reset30h_0xF7 => execute_0xf7(cpu, memory, timers),
+            Self::LoadSPSigned8ImmIntoHL_0xF8 => execute_0xf8(cpu, memory, timers),
+            Self::LoadHLIntoSP_0xF9 => execute_0xf9(cpu, memory, timers),
+            Self::LoadMemAddrIntoA_0xFA => execute_0xfa(cpu, memory, timers),
+            Self::EnableInterrupts_0xFB => execute_0xfb(cpu, memory, timers),
             Self::Nop_0xFC => invalid_opcode(),
             Self::Nop_0xFD => invalid_opcode(),
-            Self::CompareAWith8Imm_0xFE => execute_0xfe(cpu, memory),
-            Self::Reset38h_0xFF => execute_0xff(cpu, memory),
+            Self::CompareAWith8Imm_0xFE => execute_0xfe(cpu, memory, timers),
+            Self::Reset38h_0xFF => execute_0xff(cpu, memory, timers),
         }
     }
 }
@@ -1062,12 +1063,12 @@ fn invalid_opcode() -> u32 {
     panic!("TODO")
 }
 
-fn execute_0x00(_: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x00(_: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     4
 }
 
-fn execute_0x01(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.bc.lo = match memory.read(usize::from(cpu.pc)) {
+fn execute_0x01(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.bc.lo = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load imm 16 into BC failed to fetch lo byte. Dumping cpu state...\n{:?}",
@@ -1077,7 +1078,7 @@ fn execute_0x01(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    cpu.bc.hi = match memory.read(usize::from(cpu.pc)) {
+    cpu.bc.hi = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load imm 16 into BC failed to fetch hi byte. Dumping cpu state...\n{:?}",
@@ -1091,32 +1092,32 @@ fn execute_0x01(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     12
 }
 
-fn execute_0x02(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    memory.write(usize::from(cpu.bc.word()), cpu.af.hi);
+fn execute_0x02(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    memory.write(usize::from(cpu.bc.word()), cpu.af.hi, cpu, timers);
 
     8
 }
 
-fn execute_0x03(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x03(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.bc.set_word(cpu.bc.word().wrapping_add(1));
 
     8
 }
 
-fn execute_0x04(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x04(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.increment_8_bit_register(register::ID::B);
 
     4
 }
 
-fn execute_0x05(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x05(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.decrement_8_bit_register(register::ID::B);
 
     4
 }
 
-fn execute_0x06(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let byte = match memory.read(usize::from(cpu.pc)) {
+fn execute_0x06(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load imm 8 into B failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -1131,7 +1132,7 @@ fn execute_0x06(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x07(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x07(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     let leftmost_bit_a: bool = (cpu.af.hi & (1 << 7)) > 0;
 
     if leftmost_bit_a {
@@ -1149,8 +1150,8 @@ fn execute_0x07(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
     4
 }
 
-fn execute_0x08(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let lo_address_byte = match memory.read(usize::from(cpu.pc)) {
+fn execute_0x08(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let lo_address_byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode 0x08 failed to load lo address byte from memory. Dumping cpu state...\n{:?}",
@@ -1160,7 +1161,7 @@ fn execute_0x08(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    let hi_address_byte = match memory.read(usize::from(cpu.pc)) {
+    let hi_address_byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode 0x08 failed to load hi address byte from memory. Dumping cpu state...\n{:?}",
@@ -1172,21 +1173,21 @@ fn execute_0x08(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
 
     let mut addr = usize::from(u16::from(hi_address_byte) << 8 | u16::from(lo_address_byte));
 
-    memory.write(addr, cpu.sp.to_be_bytes()[1]);
+    memory.write(addr, cpu.sp.to_be_bytes()[1], cpu, timers);
     addr += 1;
-    memory.write(addr, cpu.sp.to_be_bytes()[0]);
+    memory.write(addr, cpu.sp.to_be_bytes()[0], cpu, timers);
 
     20
 }
 
-fn execute_0x09(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x09(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_16_bit_registers(register::ID16::HL, register::ID16::BC);
 
     8
 }
 
-fn execute_0x0a(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let value = match memory.read(usize::from(cpu.bc.word())) {
+fn execute_0x0a(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let value = match memory.read(usize::from(cpu.bc.word()), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode 0x0A failed to load byte from memory pointed to by BC. Dumping cpu state...\n{:?}",
@@ -1199,7 +1200,7 @@ fn execute_0x0a(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x0b(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x0b(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     let new_bc = cpu.bc.word().wrapping_sub(1);
 
     cpu.bc.set_word(new_bc);
@@ -1207,20 +1208,20 @@ fn execute_0x0b(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x0c(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x0c(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.increment_8_bit_register(register::ID::C);
 
     4
 }
 
-fn execute_0x0d(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x0d(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.decrement_8_bit_register(register::ID::C);
 
     4
 }
 
-fn execute_0x0e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let byte = match memory.read(usize::from(cpu.pc)) {
+fn execute_0x0e(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load imm 8 into C failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -1235,7 +1236,7 @@ fn execute_0x0e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x0f(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x0f(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     let rightmost_bit_a: bool = (cpu.af.hi & 1) > 0;
 
     if rightmost_bit_a {
@@ -1253,18 +1254,18 @@ fn execute_0x0f(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
     4
 }
 
-fn execute_0x10(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
+fn execute_0x10(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.paused = true;
 
     // This opcode resets the DIV timer register
     // https://gbdev.io/pandocs/Timer_and_Divider_Registers.html#ff04--div-divider-register
-    memory.write(TIMER_DIV_ADDR, 0x00);
+    memory.write(TIMER_DIV_ADDR, 0x00, cpu, timers);
 
     4
 }
 
-fn execute_0x11(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.de.lo = match memory.read(usize::from(cpu.pc)) {
+fn execute_0x11(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.de.lo = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load imm 16 into DE failed to fetch lo byte. Dumping cpu state...\n{:?}",
@@ -1274,7 +1275,7 @@ fn execute_0x11(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    cpu.de.hi = match memory.read(usize::from(cpu.pc)) {
+    cpu.de.hi = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load imm 16 into DE failed to fetch hi byte. Dumping cpu state...\n{:?}",
@@ -1287,32 +1288,32 @@ fn execute_0x11(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     12
 }
 
-fn execute_0x12(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    memory.write(usize::from(cpu.de.word()), cpu.af.hi);
+fn execute_0x12(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    memory.write(usize::from(cpu.de.word()), cpu.af.hi, cpu, timers);
 
     8
 }
 
-fn execute_0x13(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x13(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.de.set_word(cpu.de.word().wrapping_add(1));
 
     8
 }
 
-fn execute_0x14(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x14(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.increment_8_bit_register(register::ID::D);
 
     4
 }
 
-fn execute_0x15(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x15(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.decrement_8_bit_register(register::ID::D);
 
     4
 }
 
-fn execute_0x16(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let byte = match memory.read(usize::from(cpu.pc)) {
+fn execute_0x16(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load imm 8 into B failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -1327,7 +1328,7 @@ fn execute_0x16(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x17(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x17(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     let leftmost_bit_a: bool = (cpu.af.hi & (1 << 7)) > 0;
     let current_carry_flag = cpu.test_carry_flag();
 
@@ -1350,8 +1351,8 @@ fn execute_0x17(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
     4
 }
 
-fn execute_0x18(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let relative_addr = match memory.read(usize::from(cpu.pc)) {
+fn execute_0x18(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let relative_addr = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode relative 8bit jump failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -1372,14 +1373,14 @@ fn execute_0x18(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     12
 }
 
-fn execute_0x19(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x19(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_16_bit_registers(register::ID16::HL, register::ID16::DE);
 
     8
 }
 
-fn execute_0x1a(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let value = match memory.read(usize::from(cpu.de.word())) {
+fn execute_0x1a(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let value = match memory.read(usize::from(cpu.de.word()), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode 0x1A failed to load byte from memory pointed to by DE. Dumping cpu state...\n{:?}",
@@ -1392,7 +1393,7 @@ fn execute_0x1a(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x1b(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x1b(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     let new_de = cpu.de.word().wrapping_sub(1);
 
     cpu.de.set_word(new_de);
@@ -1400,20 +1401,20 @@ fn execute_0x1b(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x1c(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x1c(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.increment_8_bit_register(register::ID::E);
 
     4
 }
 
-fn execute_0x1d(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x1d(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.decrement_8_bit_register(register::ID::E);
 
     4
 }
 
-fn execute_0x1e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let byte = match memory.read(usize::from(cpu.pc)) {
+fn execute_0x1e(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load imm 8 into C failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -1428,7 +1429,7 @@ fn execute_0x1e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x1f(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x1f(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     let rightmost_bit_a: bool = (cpu.af.hi & 1) > 0;
     let current_carry_flag = cpu.test_carry_flag();
 
@@ -1451,13 +1452,13 @@ fn execute_0x1f(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
     4
 }
 
-fn execute_0x20(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
+fn execute_0x20(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     if cpu.test_zero_flag() {
         cpu.pc = cpu.pc.wrapping_add(1);
         return 8;
     }
 
-    let relative_addr = match memory.read(usize::from(cpu.pc)) {
+    let relative_addr = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode relative 8bit jump failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -1478,8 +1479,8 @@ fn execute_0x20(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     12
 }
 
-fn execute_0x21(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.hl.lo = match memory.read(usize::from(cpu.pc)) {
+fn execute_0x21(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.hl.lo = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load imm 16 into DE failed to fetch lo byte. Dumping cpu state...\n{:?}",
@@ -1489,7 +1490,7 @@ fn execute_0x21(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    cpu.hl.hi = match memory.read(usize::from(cpu.pc)) {
+    cpu.hl.hi = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load imm 16 into DE failed to fetch hi byte. Dumping cpu state...\n{:?}",
@@ -1502,34 +1503,34 @@ fn execute_0x21(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     12
 }
 
-fn execute_0x22(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    memory.write(usize::from(cpu.hl.word()), cpu.af.hi);
+fn execute_0x22(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    memory.write(usize::from(cpu.hl.word()), cpu.af.hi, cpu, timers);
 
     cpu.hl.set_word(cpu.hl.word().wrapping_add(1));
 
     8
 }
 
-fn execute_0x23(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x23(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.hl.set_word(cpu.hl.word().wrapping_add(1));
 
     8
 }
 
-fn execute_0x24(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x24(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.increment_8_bit_register(register::ID::H);
 
     4
 }
 
-fn execute_0x25(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x25(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.decrement_8_bit_register(register::ID::H);
 
     4
 }
 
-fn execute_0x26(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let byte = match memory.read(usize::from(cpu.pc)) {
+fn execute_0x26(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load imm 8 into H failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -1544,7 +1545,7 @@ fn execute_0x26(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x27(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x27(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     let mut a = cpu.af.hi.clone();
 
     if !cpu.test_sub_flag() {
@@ -1579,13 +1580,13 @@ fn execute_0x27(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
     4
 }
 
-fn execute_0x28(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
+fn execute_0x28(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     if !cpu.test_zero_flag() {
         cpu.pc = cpu.pc.wrapping_add(1);
         return 8;
     }
 
-    let relative_addr = match memory.read(usize::from(cpu.pc)) {
+    let relative_addr = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode relative 8bit jump failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -1606,14 +1607,14 @@ fn execute_0x28(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     12
 }
 
-fn execute_0x29(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x29(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_16_bit_registers(register::ID16::HL, register::ID16::HL);
 
     8
 }
 
-fn execute_0x2a(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let value = match memory.read(usize::from(cpu.hl.word())) {
+fn execute_0x2a(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let value = match memory.read(usize::from(cpu.hl.word()), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode 0x2A failed to load byte from memory pointed to by HL. Dumping cpu state...\n{:?}",
@@ -1628,7 +1629,7 @@ fn execute_0x2a(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x2b(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x2b(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     let new_hl = cpu.hl.word().wrapping_sub(1);
 
     cpu.hl.set_word(new_hl);
@@ -1636,20 +1637,20 @@ fn execute_0x2b(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x2c(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x2c(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.increment_8_bit_register(register::ID::L);
 
     4
 }
 
-fn execute_0x2d(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x2d(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.decrement_8_bit_register(register::ID::L);
 
     4
 }
 
-fn execute_0x2e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let byte = match memory.read(usize::from(cpu.pc)) {
+fn execute_0x2e(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load imm 8 into L failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -1664,7 +1665,7 @@ fn execute_0x2e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x2f(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x2f(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.af.hi = cpu.af.hi ^ 0xFF;
 
     cpu.set_sub_flag();
@@ -1673,13 +1674,13 @@ fn execute_0x2f(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
     4
 }
 
-fn execute_0x30(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
+fn execute_0x30(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     if cpu.test_carry_flag() {
         cpu.pc = cpu.pc.wrapping_add(1);
         return 8;
     }
 
-    let relative_addr = match memory.read(usize::from(cpu.pc)) {
+    let relative_addr = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode relative 8bit jump failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -1700,8 +1701,8 @@ fn execute_0x30(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     12
 }
 
-fn execute_0x31(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let lo_byte = match memory.read(usize::from(cpu.pc)) {
+fn execute_0x31(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let lo_byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load imm 16 into SP failed to fetch lo byte. Dumping cpu state...\n{:?}",
@@ -1711,7 +1712,7 @@ fn execute_0x31(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    let hi_byte = match memory.read(usize::from(cpu.pc)) {
+    let hi_byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load imm 16 into SP failed to fetch hi byte. Dumping cpu state...\n{:?}",
@@ -1726,22 +1727,22 @@ fn execute_0x31(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     12
 }
 
-fn execute_0x32(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    memory.write(usize::from(cpu.hl.word()), cpu.af.hi);
+fn execute_0x32(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    memory.write(usize::from(cpu.hl.word()), cpu.af.hi, cpu, timers);
 
     cpu.hl.set_word(cpu.hl.word().wrapping_sub(1));
 
     8
 }
 
-fn execute_0x33(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x33(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sp = cpu.sp.wrapping_add(1);
 
     8
 }
 
-fn execute_0x34(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let mut byte = match memory.read(usize::from(cpu.hl.word())) {
+fn execute_0x34(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let mut byte = match memory.read(usize::from(cpu.hl.word()), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode increment byte at memory pointed to by HL failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -1765,13 +1766,13 @@ fn execute_0x34(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
 
     byte = byte.wrapping_add(1);
 
-    memory.write(usize::from(cpu.hl.word()), byte);
+    memory.write(usize::from(cpu.hl.word()), byte, cpu, timers);
 
     12
 }
 
-fn execute_0x35(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let mut byte = match memory.read(usize::from(cpu.hl.word())) {
+fn execute_0x35(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let mut byte = match memory.read(usize::from(cpu.hl.word()), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode increment byte at memory pointed to by HL failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -1795,13 +1796,13 @@ fn execute_0x35(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
 
     byte = byte.wrapping_sub(1);
 
-    memory.write(usize::from(cpu.hl.word()), byte);
+    memory.write(usize::from(cpu.hl.word()), byte, cpu, timers);
 
     12
 }
 
-fn execute_0x36(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let byte = match memory.read(usize::from(cpu.pc)) {
+fn execute_0x36(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load imm 8 into Memory pointed to by HL failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -1811,12 +1812,12 @@ fn execute_0x36(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    memory.write(usize::from(cpu.hl.word()), byte);
+    memory.write(usize::from(cpu.hl.word()), byte, cpu, timers);
 
     12
 }
 
-fn execute_0x37(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x37(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.reset_sub_flag();
     cpu.reset_half_carry_flag();
     cpu.set_carry_flag();
@@ -1824,13 +1825,13 @@ fn execute_0x37(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
     4
 }
 
-fn execute_0x38(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
+fn execute_0x38(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     if !cpu.test_carry_flag() {
         cpu.pc = cpu.pc.wrapping_add(1);
         return 8;
     }
 
-    let relative_addr = match memory.read(usize::from(cpu.pc)) {
+    let relative_addr = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode relative 8bit jump failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -1851,14 +1852,14 @@ fn execute_0x38(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     12
 }
 
-fn execute_0x39(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x39(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_16_bit_registers(register::ID16::HL, register::ID16::SP);
 
     8
 }
 
-fn execute_0x3a(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let value = match memory.read(usize::from(cpu.hl.word())) {
+fn execute_0x3a(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let value = match memory.read(usize::from(cpu.hl.word()), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode 0x3A failed to load byte from memory pointed to by HL. Dumping cpu state...\n{:?}",
@@ -1873,26 +1874,26 @@ fn execute_0x3a(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x3b(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x3b(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sp = cpu.sp.wrapping_sub(1);
 
     8
 }
 
-fn execute_0x3c(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x3c(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.increment_8_bit_register(register::ID::A);
 
     4
 }
 
-fn execute_0x3d(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x3d(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.decrement_8_bit_register(register::ID::A);
 
     4
 }
 
-fn execute_0x3e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let byte = match memory.read(usize::from(cpu.pc)) {
+fn execute_0x3e(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load imm 8 into A failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -1907,7 +1908,7 @@ fn execute_0x3e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x3f(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x3f(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     if cpu.test_carry_flag() {
         cpu.reset_carry_flag();
     } else {
@@ -1920,44 +1921,44 @@ fn execute_0x3f(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
     4
 }
 
-fn execute_0x40(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x40(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.bc.hi = cpu.bc.hi;
 
     4
 }
 
-fn execute_0x41(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x41(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.bc.hi = cpu.bc.lo;
 
     4
 }
 
-fn execute_0x42(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x42(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.bc.hi = cpu.de.hi;
 
     4
 }
 
-fn execute_0x43(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x43(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.bc.hi = cpu.de.lo;
 
     4
 }
 
-fn execute_0x44(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x44(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.bc.hi = cpu.hl.hi;
 
     4
 }
 
-fn execute_0x45(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x45(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.bc.hi = cpu.hl.lo;
 
     4
 }
 
-fn execute_0x46(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let byte = match memory.read(usize::from(cpu.hl.word())) {
+fn execute_0x46(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let byte = match memory.read(usize::from(cpu.hl.word()), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load memory pointed by HL into B failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -1970,50 +1971,50 @@ fn execute_0x46(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x47(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x47(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.bc.hi = cpu.af.hi;
 
     4
 }
 
-fn execute_0x48(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x48(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.bc.lo = cpu.bc.hi;
 
     4
 }
 
-fn execute_0x49(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x49(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.bc.lo = cpu.bc.lo;
 
     4
 }
 
-fn execute_0x4a(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x4a(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.bc.lo = cpu.de.hi;
 
     4
 }
 
-fn execute_0x4b(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x4b(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.bc.lo = cpu.de.lo;
 
     4
 }
 
-fn execute_0x4c(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x4c(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.bc.lo = cpu.hl.hi;
 
     4
 }
 
-fn execute_0x4d(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x4d(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.bc.lo = cpu.hl.lo;
 
     4
 }
 
-fn execute_0x4e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let byte = match memory.read(usize::from(cpu.hl.word())) {
+fn execute_0x4e(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let byte = match memory.read(usize::from(cpu.hl.word()), cpu, timers) {
         Some(byte) => byte, 
         None => panic!(
             "opcode load memory pointed by HL into C failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -2026,50 +2027,50 @@ fn execute_0x4e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x4f(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x4f(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.bc.lo = cpu.af.hi;
 
     4
 }
 
-fn execute_0x50(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x50(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.de.hi = cpu.bc.hi;
 
     4
 }
 
-fn execute_0x51(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x51(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.de.hi = cpu.bc.lo;
 
     4
 }
 
-fn execute_0x52(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x52(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.de.hi = cpu.de.hi;
 
     4
 }
 
-fn execute_0x53(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x53(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.de.hi = cpu.de.lo;
 
     4
 }
 
-fn execute_0x54(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x54(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.de.hi = cpu.hl.hi;
 
     4
 }
 
-fn execute_0x55(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x55(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.de.hi = cpu.hl.lo;
 
     4
 }
 
-fn execute_0x56(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let byte = match memory.read(usize::from(cpu.hl.word())) {
+fn execute_0x56(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let byte = match memory.read(usize::from(cpu.hl.word()), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load memory pointed by HL into D failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -2082,50 +2083,50 @@ fn execute_0x56(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x57(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x57(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.de.hi = cpu.af.hi;
 
     4
 }
 
-fn execute_0x58(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x58(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.de.lo = cpu.bc.hi;
 
     4
 }
 
-fn execute_0x59(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x59(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.de.lo = cpu.bc.lo;
 
     4
 }
 
-fn execute_0x5a(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x5a(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.de.lo = cpu.de.hi;
 
     4
 }
 
-fn execute_0x5b(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x5b(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.de.lo = cpu.de.lo;
 
     4
 }
 
-fn execute_0x5c(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x5c(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.de.lo = cpu.hl.hi;
 
     4
 }
 
-fn execute_0x5d(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x5d(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.de.lo = cpu.hl.lo;
 
     4
 }
 
-fn execute_0x5e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let byte = match memory.read(usize::from(cpu.hl.word())) {
+fn execute_0x5e(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let byte = match memory.read(usize::from(cpu.hl.word()), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load memory pointed by HL into E failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -2138,50 +2139,50 @@ fn execute_0x5e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x5f(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x5f(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.de.lo = cpu.af.hi;
 
     4
 }
 
-fn execute_0x60(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x60(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.hl.hi = cpu.bc.hi;
 
     4
 }
 
-fn execute_0x61(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x61(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.hl.hi = cpu.bc.lo;
 
     4
 }
 
-fn execute_0x62(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x62(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.hl.hi = cpu.de.hi;
 
     4
 }
 
-fn execute_0x63(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x63(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.hl.hi = cpu.de.lo;
 
     4
 }
 
-fn execute_0x64(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x64(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.hl.hi = cpu.hl.hi;
 
     4
 }
 
-fn execute_0x65(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x65(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.hl.hi = cpu.hl.lo;
 
     4
 }
 
-fn execute_0x66(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let byte = match memory.read(usize::from(cpu.hl.word())) {
+fn execute_0x66(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let byte = match memory.read(usize::from(cpu.hl.word()), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load memory pointed by HL into H failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -2194,50 +2195,50 @@ fn execute_0x66(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x67(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x67(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.hl.hi = cpu.af.hi;
 
     4
 }
 
-fn execute_0x68(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x68(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.hl.lo = cpu.bc.hi;
 
     4
 }
 
-fn execute_0x69(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x69(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.hl.lo = cpu.bc.lo;
 
     4
 }
 
-fn execute_0x6a(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x6a(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.hl.lo = cpu.de.hi;
 
     4
 }
 
-fn execute_0x6b(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x6b(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.hl.lo = cpu.de.lo;
 
     4
 }
 
-fn execute_0x6c(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x6c(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.hl.lo = cpu.hl.hi;
 
     4
 }
 
-fn execute_0x6d(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x6d(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.hl.lo = cpu.hl.lo;
 
     4
 }
 
-fn execute_0x6e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let byte = match memory.read(usize::from(cpu.hl.word())) {
+fn execute_0x6e(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let byte = match memory.read(usize::from(cpu.hl.word()), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load memory pointed by HL into E failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -2250,49 +2251,49 @@ fn execute_0x6e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x6f(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x6f(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.hl.lo = cpu.af.hi;
 
     4
 }
 
-fn execute_0x70(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    memory.write(usize::from(cpu.hl.word()), cpu.bc.hi);
+fn execute_0x70(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    memory.write(usize::from(cpu.hl.word()), cpu.bc.hi, cpu, timers);
 
     8
 }
 
-fn execute_0x71(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    memory.write(usize::from(cpu.hl.word()), cpu.bc.lo);
+fn execute_0x71(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    memory.write(usize::from(cpu.hl.word()), cpu.bc.lo, cpu, timers);
 
     8
 }
 
-fn execute_0x72(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    memory.write(usize::from(cpu.hl.word()), cpu.de.hi);
+fn execute_0x72(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    memory.write(usize::from(cpu.hl.word()), cpu.de.hi, cpu, timers);
 
     8
 }
 
-fn execute_0x73(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    memory.write(usize::from(cpu.hl.word()), cpu.de.lo);
+fn execute_0x73(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    memory.write(usize::from(cpu.hl.word()), cpu.de.lo, cpu, timers);
 
     8
 }
 
-fn execute_0x74(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    memory.write(usize::from(cpu.hl.word()), cpu.hl.hi);
+fn execute_0x74(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    memory.write(usize::from(cpu.hl.word()), cpu.hl.hi, cpu, timers);
 
     8
 }
 
-fn execute_0x75(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    memory.write(usize::from(cpu.hl.word()), cpu.hl.lo);
+fn execute_0x75(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    memory.write(usize::from(cpu.hl.word()), cpu.hl.lo, cpu, timers);
 
     8
 }
 
-fn execute_0x76(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
+fn execute_0x76(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     let clock_cycles = 4;
 
     if cpu.interrupt_master_enable {
@@ -2300,8 +2301,8 @@ fn execute_0x76(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
         return clock_cycles
     }
 
-    let interrupt_enable_register = memory.read(cpu::INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
-    let interrupt_flag_register = memory.read(cpu::INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
+    let interrupt_enable_register = memory.read(cpu::INTERRUPT_ENABLE_REGISTER_ADDR, cpu, timers).unwrap();
+    let interrupt_flag_register = memory.read(cpu::INTERRUPT_FLAG_REGISTER_ADDR, cpu, timers).unwrap();
 
     if !((interrupt_enable_register & interrupt_flag_register & 0x1F) > 0x00) {
         cpu.halted = true;
@@ -2312,50 +2313,50 @@ fn execute_0x76(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     clock_cycles
 }
 
-fn execute_0x77(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    memory.write(usize::from(cpu.hl.word()), cpu.af.hi);
+fn execute_0x77(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    memory.write(usize::from(cpu.hl.word()), cpu.af.hi, cpu, timers);
 
     8
 }
 
-fn execute_0x78(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x78(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.af.hi = cpu.bc.hi;
 
     4
 }
 
-fn execute_0x79(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x79(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.af.hi = cpu.bc.lo;
 
     4
 }
 
-fn execute_0x7a(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x7a(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.af.hi = cpu.de.hi;
 
     4
 }
 
-fn execute_0x7b(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x7b(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.af.hi = cpu.de.lo;
 
     4
 }
 
-fn execute_0x7c(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x7c(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.af.hi = cpu.hl.hi;
 
     4
 }
 
-fn execute_0x7d(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x7d(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.af.hi = cpu.hl.lo;
 
     4
 }
 
-fn execute_0x7e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let byte = match memory.read(usize::from(cpu.hl.word())) {
+fn execute_0x7e(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let byte = match memory.read(usize::from(cpu.hl.word()), cpu, timers) {
         Some(byte) => byte,
         None => panic!(
             "opcode load memory pointed by HL into A failed to fetch byte in memory. Dumping cpu state...\n{:?}",
@@ -2368,560 +2369,560 @@ fn execute_0x7e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     8
 }
 
-fn execute_0x7f(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x7f(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.af.hi = cpu.af.hi;
 
     4
 }
 
-fn execute_0x80(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x80(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_8_bit_registers(register::ID::A, register::ID::B, false);
 
     4
 }
 
-fn execute_0x81(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x81(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_8_bit_registers(register::ID::A, register::ID::C, false);
 
     4
 }
 
-fn execute_0x82(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x82(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_8_bit_registers(register::ID::A, register::ID::D, false);
 
     4
 }
 
-fn execute_0x83(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x83(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_8_bit_registers(register::ID::A, register::ID::E, false);
 
     4
 }
 
-fn execute_0x84(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x84(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_8_bit_registers(register::ID::A, register::ID::H, false);
 
     4
 }
 
-fn execute_0x85(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x85(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_8_bit_registers(register::ID::A, register::ID::L, false);
 
     4
 }
 
-fn execute_0x86(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), false);
+fn execute_0x86(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), false, timers);
 
     8
 }
 
-fn execute_0x87(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x87(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_8_bit_registers(register::ID::A, register::ID::A, false);
 
     4
 }
 
-fn execute_0x88(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x88(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_8_bit_registers(register::ID::A, register::ID::B, true);
 
     4
 }
 
-fn execute_0x89(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x89(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_8_bit_registers(register::ID::A, register::ID::C, true);
 
     4
 }
 
-fn execute_0x8a(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x8a(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_8_bit_registers(register::ID::A, register::ID::D, true);
 
     4
 }
 
-fn execute_0x8b(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x8b(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_8_bit_registers(register::ID::A, register::ID::E, true);
 
     4
 }
 
-fn execute_0x8c(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x8c(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_8_bit_registers(register::ID::A, register::ID::H, true);
 
     4
 }
 
-fn execute_0x8d(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x8d(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_8_bit_registers(register::ID::A, register::ID::L, true);
 
     4
 }
 
-fn execute_0x8e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), true);
+fn execute_0x8e(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), true, timers);
 
     8
 }
 
-fn execute_0x8f(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x8f(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.add_8_bit_registers(register::ID::A, register::ID::A, true);
 
     4
 }
 
-fn execute_0x90(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x90(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sub_8_bit_registers(register::ID::A, register::ID::B, false);
 
     4
 }
 
-fn execute_0x91(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x91(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sub_8_bit_registers(register::ID::A, register::ID::C, false);
 
     4
 }
 
-fn execute_0x92(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x92(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sub_8_bit_registers(register::ID::A, register::ID::D, false);
 
     4
 }
 
-fn execute_0x93(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x93(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sub_8_bit_registers(register::ID::A, register::ID::E, false);
 
     4
 }
 
-fn execute_0x94(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x94(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sub_8_bit_registers(register::ID::A, register::ID::H, false);
 
     4
 }
 
-fn execute_0x95(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x95(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sub_8_bit_registers(register::ID::A, register::ID::L, false);
 
     4
 }
 
-fn execute_0x96(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), false);
+fn execute_0x96(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), false, timers);
 
     8
 }
 
-fn execute_0x97(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x97(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sub_8_bit_registers(register::ID::A, register::ID::A, false);
 
     4
 }
 
-fn execute_0x98(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x98(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sub_8_bit_registers(register::ID::A, register::ID::B, true);
 
     4
 }
 
-fn execute_0x99(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x99(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sub_8_bit_registers(register::ID::A, register::ID::C, true);
 
     4
 }
 
-fn execute_0x9a(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x9a(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sub_8_bit_registers(register::ID::A, register::ID::D, true);
 
     4
 }
 
-fn execute_0x9b(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x9b(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sub_8_bit_registers(register::ID::A, register::ID::E, true);
 
     4
 }
 
-fn execute_0x9c(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x9c(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sub_8_bit_registers(register::ID::A, register::ID::H, true);
 
     4
 }
 
-fn execute_0x9d(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x9d(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sub_8_bit_registers(register::ID::A, register::ID::L, true);
 
     4
 }
 
-fn execute_0x9e(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), true);
+fn execute_0x9e(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), true, timers);
 
     8
 }
 
-fn execute_0x9f(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0x9f(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sub_8_bit_registers(register::ID::A, register::ID::A, true);
 
     4
 }
 
-fn execute_0xa0(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xa0(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.and_8_bit_registers(register::ID::A, register::ID::B);
 
     4
 }
 
-fn execute_0xa1(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xa1(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.and_8_bit_registers(register::ID::A, register::ID::C);
 
     4
 }
 
-fn execute_0xa2(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xa2(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.and_8_bit_registers(register::ID::A, register::ID::D);
 
     4
 }
 
-fn execute_0xa3(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xa3(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.and_8_bit_registers(register::ID::A, register::ID::E);
 
     4
 }
 
-fn execute_0xa4(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xa4(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.and_8_bit_registers(register::ID::A, register::ID::H);
 
     4
 }
 
-fn execute_0xa5(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xa5(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.and_8_bit_registers(register::ID::A, register::ID::L);
 
     4
 }
 
-fn execute_0xa6(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.and_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()));
+fn execute_0xa6(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.and_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), timers);
 
     8
 }
 
-fn execute_0xa7(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xa7(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.and_8_bit_registers(register::ID::A, register::ID::A);
 
     4
 }
 
-fn execute_0xa8(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xa8(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.xor_8_bit_registers(register::ID::A, register::ID::B);
 
     4
 }
 
-fn execute_0xa9(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xa9(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.xor_8_bit_registers(register::ID::A, register::ID::C);
 
     4
 }
 
-fn execute_0xaa(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xaa(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.xor_8_bit_registers(register::ID::A, register::ID::D);
 
     4
 }
 
-fn execute_0xab(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xab(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.xor_8_bit_registers(register::ID::A, register::ID::E);
 
     4
 }
 
-fn execute_0xac(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xac(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.xor_8_bit_registers(register::ID::A, register::ID::H);
 
     4
 }
 
-fn execute_0xad(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xad(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.xor_8_bit_registers(register::ID::A, register::ID::L);
 
     4
 }
 
-fn execute_0xae(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.xor_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()));
+fn execute_0xae(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.xor_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), timers);
 
     8
 }
 
-fn execute_0xaf(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xaf(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.xor_8_bit_registers(register::ID::A, register::ID::A);
 
     4
 }
 
-fn execute_0xb0(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xb0(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.or_8_bit_registers(register::ID::A, register::ID::B);
 
     4
 }
 
-fn execute_0xb1(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xb1(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.or_8_bit_registers(register::ID::A, register::ID::C);
 
     4
 }
 
-fn execute_0xb2(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xb2(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.or_8_bit_registers(register::ID::A, register::ID::D);
 
     4
 }
 
-fn execute_0xb3(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xb3(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.or_8_bit_registers(register::ID::A, register::ID::E);
 
     4
 }
 
-fn execute_0xb4(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xb4(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.or_8_bit_registers(register::ID::A, register::ID::H);
 
     4
 }
 
-fn execute_0xb5(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xb5(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.or_8_bit_registers(register::ID::A, register::ID::L);
 
     4
 }
 
-fn execute_0xb6(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.or_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()));
+fn execute_0xb6(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.or_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), timers);
 
     8
 }
 
-fn execute_0xb7(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xb7(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.or_8_bit_registers(register::ID::A, register::ID::A);
 
     4
 }
 
-fn execute_0xb8(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xb8(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.compare_8_bit_registers(register::ID::A, register::ID::B);
 
     4
 }
 
-fn execute_0xb9(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xb9(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.compare_8_bit_registers(register::ID::A, register::ID::C);
 
     4
 }
 
-fn execute_0xba(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xba(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.compare_8_bit_registers(register::ID::A, register::ID::D);
 
     4
 }
 
-fn execute_0xbb(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xbb(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.compare_8_bit_registers(register::ID::A, register::ID::E);
 
     4
 }
 
-fn execute_0xbc(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xbc(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.compare_8_bit_registers(register::ID::A, register::ID::H);
 
     4
 }
 
-fn execute_0xbd(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xbd(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.compare_8_bit_registers(register::ID::A, register::ID::L);
 
     4
 }
 
-fn execute_0xbe(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.compare_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()));
+fn execute_0xbe(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.compare_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), timers);
 
     8
 }
 
-fn execute_0xbf(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xbf(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.compare_8_bit_registers(register::ID::A, register::ID::A);
 
     4
 }
 
-fn execute_0xc0(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    return cpu.return_from_call_conditional(memory, !cpu.test_zero_flag());
+fn execute_0xc0(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    return cpu.return_from_call_conditional(memory, !cpu.test_zero_flag(), timers);
 }
 
-fn execute_0xc1(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.pop_stack_into_16_bit_register(register::ID16::BC, memory);
+fn execute_0xc1(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.pop_stack_into_16_bit_register(register::ID16::BC, memory, timers);
     return 12;
 }
 
-fn execute_0xc2(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    return cpu.jump_to_imm_address(memory, !cpu.test_zero_flag());
+fn execute_0xc2(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    return cpu.jump_to_imm_address(memory, !cpu.test_zero_flag(), timers);
 }
 
-fn execute_0xc3(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    return cpu.jump_to_imm_address(memory, true);
+fn execute_0xc3(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    return cpu.jump_to_imm_address(memory, true, timers);
 }
 
-fn execute_0xc4(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    return cpu.call_to_imm_address(memory, !cpu.test_zero_flag());
+fn execute_0xc4(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    return cpu.call_to_imm_address(memory, !cpu.test_zero_flag(), timers);
 }
 
-fn execute_0xc5(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.push_16bit_register_on_stack(register::ID16::BC, memory);
+fn execute_0xc5(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::BC, memory, timers);
 
     return 16;
 }
 
-fn execute_0xc6(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), false);
+fn execute_0xc6(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), false, timers);
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
     return 8;
 }
 
-fn execute_0xc7(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+fn execute_0xc7(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory, timers);
 
     cpu.pc = 0x0000;
 
     return 16;
 }
 
-fn execute_0xc8(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    return cpu.return_from_call_conditional(memory, cpu.test_zero_flag());
+fn execute_0xc8(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    return cpu.return_from_call_conditional(memory, cpu.test_zero_flag(), timers);
 }
 
-fn execute_0xc9(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    return cpu.return_from_call(memory);
+fn execute_0xc9(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    return cpu.return_from_call(memory, timers);
 }
 
-fn execute_0xca(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    return cpu.jump_to_imm_address(memory, cpu.test_zero_flag());
+fn execute_0xca(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    return cpu.jump_to_imm_address(memory, cpu.test_zero_flag(), timers);
 }
 
-fn execute_0xcb(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let ext_opcode = match memory.read(usize::from(cpu.pc)) {
+fn execute_0xcb(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let ext_opcode = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => ExtendedOpcode::from(byte),
         None => panic!("TODO"),
     };
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    return ext_opcode.execute(cpu, memory) + 4;
+    return ext_opcode.execute(cpu, memory, timers) + 4;
 }
 
-fn execute_0xcc(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    return cpu.call_to_imm_address(memory, cpu.test_zero_flag());
+fn execute_0xcc(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    return cpu.call_to_imm_address(memory, cpu.test_zero_flag(), timers);
 }
 
-fn execute_0xcd(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    return cpu.call_to_imm_address(memory, true);
+fn execute_0xcd(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    return cpu.call_to_imm_address(memory, true, timers);
 }
 
-fn execute_0xce(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), true);
+fn execute_0xce(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), true, timers);
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
     return 8;
 }
 
-fn execute_0xcf(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+fn execute_0xcf(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory, timers);
 
     cpu.pc = 0x0008;
 
     return 16;
 }
 
-fn execute_0xd0(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    return cpu.return_from_call_conditional(memory, !cpu.test_carry_flag());
+fn execute_0xd0(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    return cpu.return_from_call_conditional(memory, !cpu.test_carry_flag(), timers);
 }
 
-fn execute_0xd1(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.pop_stack_into_16_bit_register(register::ID16::DE, memory);
+fn execute_0xd1(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.pop_stack_into_16_bit_register(register::ID16::DE, memory, timers);
     return 12;
 }
 
-fn execute_0xd2(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    return cpu.jump_to_imm_address(memory, !cpu.test_carry_flag());
+fn execute_0xd2(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    return cpu.jump_to_imm_address(memory, !cpu.test_carry_flag(), timers);
 }
 
-fn execute_0xd4(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    return cpu.call_to_imm_address(memory, !cpu.test_carry_flag());
+fn execute_0xd4(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    return cpu.call_to_imm_address(memory, !cpu.test_carry_flag(), timers);
 }
 
-fn execute_0xd5(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.push_16bit_register_on_stack(register::ID16::DE, memory);
+fn execute_0xd5(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::DE, memory, timers);
 
     return 16;
 }
 
-fn execute_0xd6(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), false);
+fn execute_0xd6(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), false, timers);
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
     return 8;
 }
 
-fn execute_0xd7(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+fn execute_0xd7(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory, timers);
 
     cpu.pc = 0x0010;
 
     return 16;
 }
 
-fn execute_0xd8(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    return cpu.return_from_call_conditional(memory, cpu.test_carry_flag());
+fn execute_0xd8(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    return cpu.return_from_call_conditional(memory, cpu.test_carry_flag(), timers);
 }
 
-fn execute_0xd9(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
+fn execute_0xd9(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.interrupt_master_enable = true;
-    return cpu.return_from_call(memory);
+    return cpu.return_from_call(memory, timers);
 }
 
-fn execute_0xda(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    return cpu.jump_to_imm_address(memory, cpu.test_carry_flag());
+fn execute_0xda(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    return cpu.jump_to_imm_address(memory, cpu.test_carry_flag(), timers);
 }
 
-fn execute_0xdc(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    return cpu.call_to_imm_address(memory, cpu.test_carry_flag());
+fn execute_0xdc(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    return cpu.call_to_imm_address(memory, cpu.test_carry_flag(), timers);
 }
 
-fn execute_0xde(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), true);
+fn execute_0xde(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), true, timers);
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
     return 8;
 }
 
-fn execute_0xdf(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+fn execute_0xdf(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory, timers);
 
     cpu.pc = 0x0018;
 
     return 16;
 }
 
-fn execute_0xe0(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let offset = match memory.read(usize::from(cpu.pc)) {
+fn execute_0xe0(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let offset = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!("TODO")
     };
@@ -2930,48 +2931,48 @@ fn execute_0xe0(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
 
     let effective_addr: usize = 0xFF00 + usize::from(offset);
 
-    memory.write(effective_addr, cpu.af.hi);
+    memory.write(effective_addr, cpu.af.hi, cpu, timers);
 
     return 12;
 }
 
-fn execute_0xe1(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.pop_stack_into_16_bit_register(register::ID16::HL, memory);
+fn execute_0xe1(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.pop_stack_into_16_bit_register(register::ID16::HL, memory, timers);
     return 12;
 }
 
-fn execute_0xe2(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
+fn execute_0xe2(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     let effective_addr: usize = 0xFF00 + usize::from(cpu.bc.lo);
 
-    memory.write(effective_addr, cpu.af.hi);
+    memory.write(effective_addr, cpu.af.hi, cpu, timers);
 
     return 8;
 }
 
-fn execute_0xe5(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.push_16bit_register_on_stack(register::ID16::HL, memory);
+fn execute_0xe5(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::HL, memory, timers);
 
     return 16;
 }
 
-fn execute_0xe6(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.and_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc));
+fn execute_0xe6(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.and_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), timers);
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
     return 8;
 }
 
-fn execute_0xe7(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+fn execute_0xe7(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory, timers);
 
     cpu.pc = 0x0020;
 
     return 16;
 }
 
-fn execute_0xe8(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let added_byte = match memory.read(usize::from(cpu.pc)) {
+fn execute_0xe8(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let added_byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!("TODO"),
     };
@@ -3017,20 +3018,20 @@ fn execute_0xe8(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     return 16;
 }
 
-fn execute_0xe9(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xe9(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.pc = cpu.hl.word();
     return 4;
 }
 
-fn execute_0xea(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let lo_byte = match memory.read(usize::from(cpu.pc)) {
+fn execute_0xea(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let lo_byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!("TODO"),
     };
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    let hi_byte = match memory.read(usize::from(cpu.pc)) {
+    let hi_byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!("TODO"),
     };
@@ -3039,27 +3040,27 @@ fn execute_0xea(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
 
     let effective_addr: usize = (usize::from(hi_byte) << 8) | usize::from(lo_byte);
 
-    memory.write(effective_addr, cpu.af.hi);
+    memory.write(effective_addr, cpu.af.hi, cpu, timers);
 
     return 16;
 }
 
-fn execute_0xee(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.xor_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc));
+fn execute_0xee(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.xor_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), timers);
     cpu.pc = cpu.pc.wrapping_add(1);
     return 8;
 }
 
-fn execute_0xef(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+fn execute_0xef(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory, timers);
 
     cpu.pc = 0x0028;
 
     return 16;
 }
 
-fn execute_0xf0(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let offset = match memory.read(usize::from(cpu.pc)) {
+fn execute_0xf0(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let offset = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!("TODO")
     };
@@ -3068,7 +3069,7 @@ fn execute_0xf0(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
 
     let effective_addr: usize = 0xFF00 + usize::from(offset);
 
-    let byte = match memory.read(effective_addr) {
+    let byte = match memory.read(effective_addr, cpu, timers) {
         Some(byte) => byte,
         None => panic!("TODO"),
     };
@@ -3078,15 +3079,15 @@ fn execute_0xf0(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     return 12;
 }
 
-fn execute_0xf1(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.pop_stack_into_16_bit_register(register::ID16::AF, memory);
+fn execute_0xf1(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.pop_stack_into_16_bit_register(register::ID16::AF, memory, timers);
     return 12;
 }
 
-fn execute_0xf2(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
+fn execute_0xf2(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     let effective_addr: usize = 0xFF00 + usize::from(cpu.bc.lo);
 
-    let byte = match memory.read(effective_addr) {
+    let byte = match memory.read(effective_addr, cpu, timers) {
         Some(byte) => byte,
         None => panic!("TODO"),
     };
@@ -3098,35 +3099,35 @@ fn execute_0xf2(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     return 8;
 }
 
-fn execute_0xf3(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xf3(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.interrupt_master_enable = false;
     return 4;
 }
 
-fn execute_0xf5(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.push_16bit_register_on_stack(register::ID16::AF, memory);
+fn execute_0xf5(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::AF, memory, timers);
 
     return 16;
 }
 
-fn execute_0xf6(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.or_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc));
+fn execute_0xf6(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.or_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), timers);
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
     return 8;
 }
 
-fn execute_0xf7(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+fn execute_0xf7(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory, timers);
 
     cpu.pc = 0x0030;
 
     return 16;
 }
 
-fn execute_0xf8(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let added_byte = match memory.read(usize::from(cpu.pc)) {
+fn execute_0xf8(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let added_byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!("TODO"),
     };
@@ -3172,21 +3173,21 @@ fn execute_0xf8(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     return 12;
 }
 
-fn execute_0xf9(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xf9(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.sp = cpu.hl.word();
 
     return 8;
 }
 
-fn execute_0xfa(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    let lo_byte = match memory.read(usize::from(cpu.pc)) {
+fn execute_0xfa(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    let lo_byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!("TODO"),
     };
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    let hi_byte = match memory.read(usize::from(cpu.pc)) {
+    let hi_byte = match memory.read(usize::from(cpu.pc), cpu, timers) {
         Some(byte) => byte,
         None => panic!("TODO"),
     };
@@ -3195,7 +3196,7 @@ fn execute_0xfa(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
 
     let effective_addr: usize = (usize::from(hi_byte) << 8) | usize::from(lo_byte); 
 
-    cpu.af.hi = match memory.read(effective_addr) {
+    cpu.af.hi = match memory.read(effective_addr, cpu, timers) {
         Some(byte) => byte,
         None => panic!("TODO"),
     };
@@ -3203,22 +3204,22 @@ fn execute_0xfa(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
     return 16;
 }
 
-fn execute_0xfb(cpu: &mut LR35902, _: &mut memory::Memory) -> u32 {
+fn execute_0xfb(cpu: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
     cpu.interrupt_master_enable = true;
 
     return 4;
 }
 
-fn execute_0xfe(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.compare_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc));
+fn execute_0xfe(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.compare_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), timers);
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
     return 8;
 }
 
-fn execute_0xff(cpu: &mut LR35902, memory: &mut memory::Memory) -> u32 {
-    cpu.push_16bit_register_on_stack(register::ID16::PC, memory);
+fn execute_0xff(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory, timers);
 
     cpu.pc = 0x0038;
 

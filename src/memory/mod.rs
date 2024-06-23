@@ -1,4 +1,4 @@
-use crate::{cartridge, events};
+use crate::{cartridge, cpu, events, timers};
 use std::fmt::Debug;
 
 const OAM_TRANSFER_CYCLES: u32 = 160;
@@ -169,7 +169,13 @@ impl Memory {
         }
     }
 
-    fn write_io_registers(&mut self, addr: usize, val: u8) {
+    fn write_io_registers(
+        &mut self,
+        addr: usize,
+        val: u8,
+        cpu: &mut cpu::LR35902,
+        timers: &mut timers::Timers,
+    ) {
         match addr {
             io_registers::OAM_DMA_TRANSFER_ADDR => {
                 log::trace!("OAM DMA transfer initiated");
@@ -180,7 +186,8 @@ impl Memory {
                 }
 
                 for i in 0..0xA0 {
-                    self.sprite_attributes[i] = self.read((val as usize) << 8 | i).unwrap();
+                    self.sprite_attributes[i] =
+                        self.read((val as usize) << 8 | i, cpu, timers).unwrap();
                 }
             }
             io_registers::TIMER_COUNTER_ADDR => {
@@ -191,7 +198,7 @@ impl Memory {
             }
             // Writing any value to the TIMER DIV register resets it to 0.
             io_registers::TIMER_DIV_ADDR => {
-                events::notify(events::Event::TimerDivWrite);
+                timers.reset_sys_clock();
                 self.io_registers[addr - 0xFF00] = 0x00;
             }
             io_registers::JOYPAD_ADDR => {
@@ -289,8 +296,14 @@ impl Memory {
         self.io_registers[0xFF70 - offset] = 0xFF;
     }
 
-    pub fn read(&self, addr: usize) -> Option<u8> {
+    pub fn read(
+        &mut self,
+        addr: usize,
+        cpu: &mut cpu::LR35902,
+        timers: &mut timers::Timers,
+    ) -> Option<u8> {
         log::trace!("Reading from memory address {:X}", addr);
+        timers.increment(self, cpu);
 
         if self.oam_dma_transfer_in_progress {
             // Only High RAM is accessible during an oam dma transfer.
@@ -334,7 +347,7 @@ impl Memory {
 
         // Echo RAM
         if addr >= 0xE000 && addr < 0xFE00 {
-            return self.read((addr - 0xE000) + 0xC000).clone();
+            return self.read((addr - 0xE000) + 0xC000, cpu, timers).clone();
         }
 
         // OAM / Sprite attributes
@@ -364,8 +377,15 @@ impl Memory {
         None
     }
 
-    pub fn write(&mut self, addr: usize, val: u8) {
+    pub fn write(
+        &mut self,
+        addr: usize,
+        val: u8,
+        cpu: &mut cpu::LR35902,
+        timers: &mut timers::Timers,
+    ) {
         log::trace!("Writing to memory address {:X} value {:X}", addr, val);
+        timers.increment(self, cpu);
 
         if self.oam_dma_transfer_in_progress {
             // Only High RAM is accessible during an oam dma transfer.
@@ -403,7 +423,7 @@ impl Memory {
 
         // Echo RAM
         if addr >= 0xE000 && addr < 0xFE00 {
-            self.write((addr - 0xE000) + 0xC000, val);
+            self.write((addr - 0xE000) + 0xC000, val, cpu, timers);
         }
 
         // OAM / Sprite attributes
@@ -414,7 +434,7 @@ impl Memory {
 
         // IO Registers
         if addr >= 0xFF00 && addr < 0xFF80 {
-            self.write_io_registers(addr, val);
+            self.write_io_registers(addr, val, cpu, timers);
         }
 
         // High RAM
