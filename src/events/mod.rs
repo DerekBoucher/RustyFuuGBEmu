@@ -7,6 +7,7 @@ pub enum Event {
 }
 
 static mut BUS: Option<HashMap<Event, Vec<Sender<()>>>> = None;
+static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 pub fn init() {
     unsafe {
@@ -15,6 +16,7 @@ pub fn init() {
 }
 
 pub fn subscribe(event: Event) -> Receiver<()> {
+    let _lock = LOCK.lock().unwrap();
     let (sender, receiver) = crossbeam::channel::unbounded();
 
     unsafe {
@@ -29,10 +31,15 @@ pub fn subscribe(event: Event) -> Receiver<()> {
 }
 
 pub fn notify(event: Event) {
+    let _lock = LOCK.lock().unwrap();
+
     unsafe {
         if let Some(subscribers) = BUS.as_ref().unwrap().get(&event) {
             for subscriber in subscribers {
-                subscriber.send(()).unwrap();
+                match subscriber.send(()) {
+                    Ok(_) => {}
+                    Err(_) => {}
+                }
             }
         }
     }

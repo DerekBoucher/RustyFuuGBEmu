@@ -1,4 +1,4 @@
-use crate::cartridge;
+use crate::{cartridge, events};
 use std::fmt::Debug;
 
 const OAM_TRANSFER_CYCLES: u32 = 160;
@@ -191,6 +191,7 @@ impl Memory {
             }
             // Writing any value to the TIMER DIV register resets it to 0.
             io_registers::TIMER_DIV_ADDR => {
+                events::notify(events::Event::TimerDivWrite);
                 self.io_registers[addr - 0xFF00] = 0x00;
             }
             io_registers::JOYPAD_ADDR => {

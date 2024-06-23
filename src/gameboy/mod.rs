@@ -146,7 +146,10 @@ impl Gameboy {
                     match ack_sender.send(()) {
                         Ok(_) => {}
                         Err(err) => {
-                            log::error!("ack_sender channel closed before sending ack: {:?}", err,);
+                            log::error!(
+                                "ack_sender channel closed before sending ack: {:?}",
+                                err.to_string()
+                            );
                         }
                     }
                     return;
@@ -187,19 +190,37 @@ impl Gameboy {
         let mut cycles_this_update: u32 = 0;
         while cycles_this_update < CPU_CYCLES_PER_FRAME {
             select! {
-                recv(close_receiver) -> _ => {
-                    self.state.transition(State::EXITING);
-                    return;
+                recv(close_receiver) -> signal => {
+                    match signal {
+                        Ok(_) => {
+                            self.state.transition(State::EXITING);
+                            return;
+                        }
+                        _ => {}
+                    }
                 }
 
-                recv(skip_boot_rom_receiver) -> skip_boot_rom => {
-                    self.skip_boot_rom = skip_boot_rom.unwrap();
+                recv(skip_boot_rom_receiver) -> signal => {
+                    match signal {
+                        Ok(_) => {
+                            self.skip_boot_rom = signal.unwrap();
+                        }
+                        Err(err) => {
+                            log::error!("Failed to receive skip_boot_rom signal: {:?}", err.to_string());
+                        }
+                    }
                 }
 
-                recv(rom_data_receiver) -> rom_data => {
-                    self.load_rom(rom_data.unwrap());
-                    log::debug!("ROM cartridge loaded!");
-                    continue;
+                recv(rom_data_receiver) -> signal => {
+                    match signal {
+                        Ok(rom_data) => {
+                            self.load_rom(rom_data);
+                            log::debug!("ROM cartridge loaded!");
+                        }
+                        Err(err) => {
+                            log::error!("Failed to receive ROM data: {:?}", err.to_string());
+                        }
+                    }
                 }
 
                 default => {
