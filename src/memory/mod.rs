@@ -1,4 +1,4 @@
-use crate::{cartridge, cpu, events, timers};
+use crate::{cartridge, cpu, timers};
 use std::fmt::Debug;
 
 const OAM_TRANSFER_CYCLES: u32 = 160;
@@ -303,7 +303,6 @@ impl Memory {
         timers: &mut timers::Timers,
     ) -> Option<u8> {
         log::trace!("Reading from memory address {:X}", addr);
-        timers.increment(self, cpu);
 
         if self.oam_dma_transfer_in_progress {
             // Only High RAM is accessible during an oam dma transfer.
@@ -311,70 +310,66 @@ impl Memory {
                 return Some(self.hi_ram[addr - 0xFF80].clone());
             }
 
+            timers.increment(self, cpu);
+
             // Else, return dummy data
             return Some(0xFF);
         }
 
+        let data: Option<u8>;
+
         // If boot rom is enabled, the data should come from it.
         if addr < 0x100 && self.boot_rom_enabled() {
-            return Some(Memory::BOOT_ROM[addr].clone());
-        }
-
+            data = Some(Memory::BOOT_ROM[addr].clone());
+        } else
         // Cartridge ROM
         if addr < 0x8000 {
-            return self.cartridge.read(addr);
-        }
-
+            data = self.cartridge.read(addr);
+        } else
         // Video RAM
         if addr >= 0x8000 && addr < 0xA000 {
-            return Some(self.video_ram[addr - 0x8000].clone());
-        }
-
+            data = Some(self.video_ram[addr - 0x8000].clone());
+        } else
         // Cartridge RAM
         if addr >= 0xA000 && addr < 0xC000 {
-            return self.cartridge.read(addr);
-        }
-
+            data = self.cartridge.read(addr);
+        } else
         // Work RAM 0
         if addr >= 0xC000 && addr < 0xD000 {
-            return Some(self.work_ram0[addr - 0xC000].clone());
-        }
-
+            data = Some(self.work_ram0[addr - 0xC000].clone());
+        } else
         // Work RAM 1
         if addr >= 0xD000 && addr < 0xE000 {
-            return Some(self.work_ram1[addr - 0xD000].clone());
-        }
-
+            data = Some(self.work_ram1[addr - 0xD000].clone());
+        } else
         // Echo RAM
         if addr >= 0xE000 && addr < 0xFE00 {
-            return self.read((addr - 0xE000) + 0xC000, cpu, timers).clone();
-        }
-
+            data = self.read((addr - 0xE000) + 0xC000, cpu, timers).clone();
+        } else
         // OAM / Sprite attributes
         if addr >= 0xFE00 && addr < 0xFEA0 {
-            return Some(self.sprite_attributes[addr - 0xFE00].clone());
-        }
-
-        if addr >= 0xFEA0 && addr < 0xFF00 {
-            return Some(0xFF);
-        }
-
+            data = Some(self.sprite_attributes[addr - 0xFE00].clone());
+        } else if addr >= 0xFEA0 && addr < 0xFF00 {
+            data = Some(0xFF);
+        } else
         // IO Registers
         if addr >= 0xFF00 && addr < 0xFF80 {
-            return Some(self.io_registers[addr - 0xFF00].clone());
-        }
-
+            data = Some(self.io_registers[addr - 0xFF00].clone());
+        } else
         // High RAM
         if addr >= 0xFF80 && addr < 0xFFFF {
-            return Some(self.hi_ram[addr - 0xFF80].clone());
-        }
-
+            data = Some(self.hi_ram[addr - 0xFF80].clone());
+        } else
         // Interupt enable register
         if addr == 0xFFFF {
-            return Some(self.interrupt_enable_register.clone());
+            data = Some(self.interrupt_enable_register.clone());
+        } else {
+            data = None;
         }
 
-        None
+        timers.increment(self, cpu);
+
+        return data;
     }
 
     pub fn write(
@@ -385,13 +380,14 @@ impl Memory {
         timers: &mut timers::Timers,
     ) {
         log::trace!("Writing to memory address {:X} value {:X}", addr, val);
-        timers.increment(self, cpu);
 
         if self.oam_dma_transfer_in_progress {
             // Only High RAM is accessible during an oam dma transfer.
             if addr >= 0xFF80 && addr < 0xFFFF {
                 self.hi_ram[addr - 0xFF80] = val;
             }
+
+            timers.increment(self, cpu);
 
             return;
         }
@@ -429,7 +425,7 @@ impl Memory {
         // OAM / Sprite attributes
         // Not writable directly, needs to be performed via a OAM DMA transfer.
         if addr >= 0xFE00 && addr < 0xFF00 {
-            return;
+            //return;
         }
 
         // IO Registers
@@ -446,6 +442,8 @@ impl Memory {
         if addr == 0xFFFF {
             self.interrupt_enable_register = val;
         }
+
+        timers.increment(self, cpu);
     }
 
     pub fn dma_read(&self, addr: usize) -> Option<u8> {

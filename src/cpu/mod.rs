@@ -140,14 +140,22 @@ impl LR35902 {
         return self.halted;
     }
 
-    pub fn halt(&mut self, memory: &mut memory::Memory) {
+    pub fn is_stopped(&self) -> bool {
+        return self.paused;
+    }
+
+    pub fn halt(&mut self, memory: &mut memory::Memory, timers: &mut timers::Timers) {
         if self.bugged_halt {
             self.bugged_halt = false;
             return;
         }
 
-        let interrupt_enable_register = memory.dma_read(INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
-        let interrupt_flag_register = memory.dma_read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
+        let interrupt_enable_register = memory
+            .read(INTERRUPT_ENABLE_REGISTER_ADDR, self, timers)
+            .unwrap();
+        let interrupt_flag_register = memory
+            .read(INTERRUPT_FLAG_REGISTER_ADDR, self, timers)
+            .unwrap();
 
         if (interrupt_enable_register & V_BLANK_INTERRUPT_MASK) > 0
             && (interrupt_flag_register & V_BLANK_INTERRUPT_MASK) > 0
@@ -250,7 +258,6 @@ impl LR35902 {
             self.push_16bit_register_on_stack(ID16::PC, memory, timers);
             self.pc = V_BLANK_INTERRUPT_VECTOR;
 
-            // Mark interrupt as processed
             interrupt_flag_register &= !V_BLANK_INTERRUPT_MASK;
         } else if (interrupt_flag_register & LCDC_INTERRUPT_MASK > 0)
             && (interrupt_enable_register & LCDC_INTERRUPT_MASK > 0)
@@ -259,7 +266,6 @@ impl LR35902 {
             self.push_16bit_register_on_stack(ID16::PC, memory, timers);
             self.pc = LCDC_INTERRUPT_VECTOR;
 
-            // Mark interrupt as processed
             interrupt_flag_register &= !LCDC_INTERRUPT_MASK;
         } else if (interrupt_flag_register & TIMER_OVERFLOW_INTERRUPT_MASK > 0)
             && (interrupt_enable_register & TIMER_OVERFLOW_INTERRUPT_MASK > 0)
@@ -268,7 +274,6 @@ impl LR35902 {
             self.push_16bit_register_on_stack(ID16::PC, memory, timers);
             self.pc = TIMER_OVERFLOW_INTERRUPT_VECTOR;
 
-            // Mark interrupt as processed
             interrupt_flag_register &= !TIMER_OVERFLOW_INTERRUPT_MASK;
         } else if (interrupt_flag_register & SERIAL_IO_INTERRUPT_MASK > 0)
             && (interrupt_enable_register & SERIAL_IO_INTERRUPT_MASK > 0)
@@ -277,7 +282,6 @@ impl LR35902 {
             self.push_16bit_register_on_stack(ID16::PC, memory, timers);
             self.pc = SERIAL_IO_INTERRUPT_VECTOR;
 
-            // Mark interrupt as processed
             interrupt_flag_register &= !SERIAL_IO_INTERRUPT_MASK;
         } else if (interrupt_flag_register & CONTROLLER_IO_INTERRUPT_MASK > 0)
             && (interrupt_enable_register & CONTROLLER_IO_INTERRUPT_MASK > 0)
@@ -286,7 +290,6 @@ impl LR35902 {
             self.push_16bit_register_on_stack(ID16::PC, memory, timers);
             self.pc = CONTROLLER_IO_INTERRUPT_VECTOR;
 
-            // Mark interrupt as processed
             interrupt_flag_register &= !CONTROLLER_IO_INTERRUPT_MASK;
         }
 

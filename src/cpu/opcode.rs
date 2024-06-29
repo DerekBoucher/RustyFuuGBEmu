@@ -1010,7 +1010,7 @@ impl Opcode {
             Self::ReturnNotCarry_0xD0 => execute_0xd0(cpu, memory, timers),
             Self::PopDE_0xD1 => execute_0xd1(cpu, memory, timers),
             Self::JumpAbsoluteNotCarry_0xD2 => execute_0xd2(cpu, memory, timers),
-            Self::Nop_0xD3 => invalid_opcode(),
+            Self::Nop_0xD3 => invalid_opcode(Self::Nop_0xD3.into()),
             Self::CallNotCarry_0xD4 => execute_0xd4(cpu, memory, timers),
             Self::PushDE_0xD5 => execute_0xd5(cpu, memory, timers),
             Self::Sub8ImmFromA_0xD6 => execute_0xd6(cpu, memory, timers),
@@ -1018,32 +1018,32 @@ impl Opcode {
             Self::ReturnCarry_0xD8 => execute_0xd8(cpu, memory, timers),
             Self::ReturnInterruptMasterEnable_0xD9 => execute_0xd9(cpu, memory, timers),
             Self::JumpAbsoluteCarry_0xDA => execute_0xda(cpu, memory, timers),
-            Self::Nop_0xDB => invalid_opcode(),
+            Self::Nop_0xDB => invalid_opcode(Self::Nop_0xDB.into()),
             Self::CallCarry_0xDC => execute_0xdc(cpu, memory, timers),
-            Self::Nop_0xDD => invalid_opcode(),
+            Self::Nop_0xDD => invalid_opcode(Self::Nop_0xDD.into()),
             Self::Sub8ImmFromAWithCarry_0xDE => execute_0xde(cpu, memory, timers),
             Self::Reset18h_0xDF => execute_0xdf(cpu, memory, timers),
             Self::LoadAIntoHiMemOffset_0xE0 => execute_0xe0(cpu, memory, timers),
             Self::PopHL_0xE1 => execute_0xe1(cpu, memory, timers),
             Self::LoadAIntoHiMemOffsetC_0xE2 => execute_0xe2(cpu, memory, timers),
-            Self::Nop_0xE3 => invalid_opcode(),
-            Self::Nop_0xE4 => invalid_opcode(),
+            Self::Nop_0xE3 => invalid_opcode(Self::Nop_0xE3.into()),
+            Self::Nop_0xE4 => invalid_opcode(Self::Nop_0xE4.into()),
             Self::PushHL_0xE5 => execute_0xe5(cpu, memory, timers),
             Self::And8ImmIntoA_0xE6 => execute_0xe6(cpu, memory, timers),
             Self::Reset20h_0xE7 => execute_0xe7(cpu, memory, timers),
             Self::AddSigned8ImmIntoSP_0xE8 => execute_0xe8(cpu, memory, timers),
             Self::JumpMemoryHL_0xE9 => execute_0xe9(cpu, memory, timers),
             Self::WriteAInto16ImmAddress_0xEA => execute_0xea(cpu, memory, timers),
-            Self::Nop_0xEB => invalid_opcode(),
-            Self::Nop_0xEC => invalid_opcode(),
-            Self::Nop_0xED => invalid_opcode(),
+            Self::Nop_0xEB => invalid_opcode(Self::Nop_0xEB.into()),
+            Self::Nop_0xEC => invalid_opcode(Self::Nop_0xEC.into()),
+            Self::Nop_0xED => invalid_opcode(Self::Nop_0xED.into()),
             Self::Xor8ImmIntoA_0xEE => execute_0xee(cpu, memory, timers),
             Self::Reset28h_0xEF => execute_0xef(cpu, memory, timers),
             Self::LoadHiMemOffsetIntoA_0xF0 => execute_0xf0(cpu, memory, timers),
             Self::PopAF_0xF1 => execute_0xf1(cpu, memory, timers),
             Self::LoadMemOffsetCIntoA_0xF2 => execute_0xf2(cpu, memory, timers),
             Self::DisableInterrupts_0xF3 => execute_0xf3(cpu, memory, timers),
-            Self::Nop_0xF4 => invalid_opcode(),
+            Self::Nop_0xF4 => invalid_opcode(Self::Nop_0xF4.into()),
             Self::PushAF_0xF5 => execute_0xf5(cpu, memory, timers),
             Self::Or8ImmIntoA_0xF6 => execute_0xf6(cpu, memory, timers),
             Self::Reset30h_0xF7 => execute_0xf7(cpu, memory, timers),
@@ -1051,16 +1051,17 @@ impl Opcode {
             Self::LoadHLIntoSP_0xF9 => execute_0xf9(cpu, memory, timers),
             Self::LoadMemAddrIntoA_0xFA => execute_0xfa(cpu, memory, timers),
             Self::EnableInterrupts_0xFB => execute_0xfb(cpu, memory, timers),
-            Self::Nop_0xFC => invalid_opcode(),
-            Self::Nop_0xFD => invalid_opcode(),
+            Self::Nop_0xFC => invalid_opcode(Self::Nop_0xFC.into()),
+            Self::Nop_0xFD => invalid_opcode(Self::Nop_0xFD.into()),
             Self::CompareAWith8Imm_0xFE => execute_0xfe(cpu, memory, timers),
             Self::Reset38h_0xFF => execute_0xff(cpu, memory, timers),
         }
     }
 }
 
-fn invalid_opcode() -> u32 {
-    panic!("TODO")
+fn invalid_opcode(opcode: u8) -> u32 {
+    log::warn!("invalid opcode executed in rom: 0x{:X}", opcode);
+    4
 }
 
 fn execute_0x00(_: &mut LR35902, _: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
@@ -1260,6 +1261,7 @@ fn execute_0x10(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut tim
     // This opcode resets the DIV timer register
     // https://gbdev.io/pandocs/Timer_and_Divider_Registers.html#ff04--div-divider-register
     memory.write(TIMER_DIV_ADDR, 0x00, cpu, timers);
+    timers.reset_sys_clock();
 
     4
 }

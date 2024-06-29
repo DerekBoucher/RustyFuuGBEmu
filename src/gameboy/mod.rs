@@ -165,18 +165,38 @@ impl Gameboy {
         skip_boot_rom_receiver: &channel::Receiver<bool>,
     ) {
         select! {
-            recv(close_receiver) -> _ => {
-                self.state.transition(State::EXITING);
+            recv(close_receiver) -> signal => {
+                match signal {
+                    Ok(_) => {
+                        self.state.transition(State::EXITING);
+                        return;
+                    }
+                    _ => {}
+                }
             }
 
-            recv(skip_boot_rom_receiver) -> skip_boot_rom => {
-                self.skip_boot_rom = skip_boot_rom.unwrap();
+            recv(skip_boot_rom_receiver) -> signal => {
+                match signal {
+                    Ok(skip_boot_rom) => {
+                        self.skip_boot_rom = skip_boot_rom;
+                    }
+                    Err(err) => {
+                        log::error!("Failed to receive skip_boot_rom signal: {:?}", err.to_string());
+                    }
+                }
             }
 
-            recv(rom_data_receiver) -> rom_data => {
-                self.load_rom(rom_data.unwrap());
-                log::debug!("ROM cartridge loaded!");
-                self.state.transition(State::COMPUTING);
+            recv(rom_data_receiver) -> signal => {
+                match signal {
+                    Ok(rom_data) => {
+                        self.load_rom(rom_data);
+                        log::debug!("ROM cartridge loaded!");
+                        self.state.transition(State::COMPUTING);
+                    }
+                    Err(err) => {
+                        log::error!("Failed to receive ROM data: {:?}", err.to_string());
+                    }
+                }
             }
         }
     }
@@ -202,8 +222,8 @@ impl Gameboy {
 
                 recv(skip_boot_rom_receiver) -> signal => {
                     match signal {
-                        Ok(_) => {
-                            self.skip_boot_rom = signal.unwrap();
+                        Ok(skip_boot_rom) => {
+                            self.skip_boot_rom = skip_boot_rom;
                         }
                         Err(err) => {
                             log::error!("Failed to receive skip_boot_rom signal: {:?}", err.to_string());
@@ -227,7 +247,7 @@ impl Gameboy {
                     let cycles: u32;
                     if self.cpu.is_halted() {
                         cycles = 4;
-                        self.cpu.halt(&mut self.memory);
+                        self.cpu.halt(&mut self.memory, &mut self.timers);
                     } else {
                         cycles = self.cpu.execute_next_opcode(&mut self.memory, &mut self.timers);
                     }
