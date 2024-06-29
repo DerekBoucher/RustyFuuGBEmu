@@ -204,6 +204,9 @@ impl Memory {
             io_registers::JOYPAD_ADDR => {
                 self.handle_joypad_translation(val);
             }
+            io_registers::BOOT_ROM_DISABLE_ADDR => {
+                self.io_registers[addr - 0xFF00] = val;
+            }
             _ => self.io_registers[addr - 0xFF00] = val,
         }
     }
@@ -243,7 +246,7 @@ impl Memory {
         self.io_registers[io_registers::JOYPAD_ADDR - offset] = 0xCF;
         self.io_registers[io_registers::SERIAL_TRANSFER_DATA_ADDR - offset] = 0x00;
         self.io_registers[io_registers::SERIAL_TRANSFER_CONTROL_ADDR - offset] = 0x7E;
-        self.io_registers[io_registers::TIMER_DIV_ADDR - offset] = 0x00;
+        self.io_registers[io_registers::TIMER_DIV_ADDR - offset] = 0xAB;
         self.io_registers[io_registers::TIMER_COUNTER_ADDR - offset] = 0x00;
         self.io_registers[io_registers::TIMER_MOD_ADDR - offset] = 0x00;
         self.io_registers[io_registers::TIMER_CTRL_ADDR - offset] = 0xF8;

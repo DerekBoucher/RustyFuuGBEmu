@@ -115,6 +115,11 @@ impl LR35902 {
         memory: &mut memory::Memory,
         timers: &mut timers::Timers,
     ) -> u32 {
+        if self.halted {
+            timers.increment(memory, self);
+            return 4;
+        }
+
         let op = match memory.read(usize::from(self.pc), self, timers) {
             Some(x) => Opcode::from(x),
             None => panic!(
@@ -124,10 +129,9 @@ impl LR35902 {
         };
 
         self.pc = self.pc.wrapping_add(1);
-
         if self.bugged_halt {
-            self.pc = self.pc.wrapping_sub(1);
             self.bugged_halt = false;
+            self.pc = self.pc.wrapping_sub(1);
         }
 
         #[cfg(feature = "serial_debug")]
@@ -136,61 +140,8 @@ impl LR35902 {
         return op.execute(self, memory, timers);
     }
 
-    pub fn is_halted(&self) -> bool {
-        return self.halted;
-    }
-
     pub fn is_stopped(&self) -> bool {
         return self.paused;
-    }
-
-    pub fn halt(&mut self, memory: &mut memory::Memory, timers: &mut timers::Timers) {
-        if self.bugged_halt {
-            self.bugged_halt = false;
-            return;
-        }
-
-        let interrupt_enable_register = memory
-            .read(INTERRUPT_ENABLE_REGISTER_ADDR, self, timers)
-            .unwrap();
-        let interrupt_flag_register = memory
-            .read(INTERRUPT_FLAG_REGISTER_ADDR, self, timers)
-            .unwrap();
-
-        if (interrupt_enable_register & V_BLANK_INTERRUPT_MASK) > 0
-            && (interrupt_flag_register & V_BLANK_INTERRUPT_MASK) > 0
-        {
-            self.halted = false;
-            return;
-        }
-
-        if (interrupt_enable_register & LCDC_INTERRUPT_MASK) > 0
-            && (interrupt_flag_register & LCDC_INTERRUPT_MASK) > 0
-        {
-            self.halted = false;
-            return;
-        }
-
-        if (interrupt_enable_register & TIMER_OVERFLOW_INTERRUPT_MASK) > 0
-            && (interrupt_flag_register & TIMER_OVERFLOW_INTERRUPT_MASK) > 0
-        {
-            self.halted = false;
-            return;
-        }
-
-        if (interrupt_enable_register & SERIAL_IO_INTERRUPT_MASK) > 0
-            && (interrupt_flag_register & SERIAL_IO_INTERRUPT_MASK) > 0
-        {
-            self.halted = false;
-            return;
-        }
-
-        if (interrupt_enable_register & CONTROLLER_IO_INTERRUPT_MASK) > 0
-            && (interrupt_flag_register & CONTROLLER_IO_INTERRUPT_MASK) > 0
-        {
-            self.halted = false;
-            return;
-        }
     }
 
     pub fn set_post_boot_rom_state(&mut self) {
@@ -240,16 +191,18 @@ impl LR35902 {
     }
 
     pub fn process_interrupts(&mut self, memory: &mut memory::Memory, timers: &mut timers::Timers) {
-        if !self.interrupt_master_enable || self.halted {
-            return;
+        let interrupt_enable_register = memory.dma_read(INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
+        let mut interrupt_flag_register = memory.dma_read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
+
+        if self.halted {
+            if (interrupt_enable_register & interrupt_flag_register & 0x1F) > 0 {
+                self.halted = false;
+            }
         }
 
-        let interrupt_enable_register = memory
-            .read(INTERRUPT_ENABLE_REGISTER_ADDR, self, timers)
-            .unwrap();
-        let mut interrupt_flag_register = memory
-            .read(INTERRUPT_FLAG_REGISTER_ADDR, self, timers)
-            .unwrap();
+        if !self.interrupt_master_enable {
+            return;
+        }
 
         if (interrupt_flag_register & V_BLANK_INTERRUPT_MASK > 0)
             && (interrupt_enable_register & V_BLANK_INTERRUPT_MASK > 0)
@@ -294,12 +247,7 @@ impl LR35902 {
         }
 
         // Write the modified IF back to memory
-        memory.write(
-            INTERRUPT_FLAG_REGISTER_ADDR,
-            interrupt_flag_register,
-            self,
-            timers,
-        );
+        memory.dma_write(INTERRUPT_FLAG_REGISTER_ADDR, interrupt_flag_register);
     }
 
     fn reset_half_carry_flag(&mut self) {

@@ -89,6 +89,7 @@ impl Gameboy {
         if self.skip_boot_rom {
             self.cpu.set_post_boot_rom_state();
             self.memory.set_post_boot_rom_state();
+            self.timers.set_post_bootrom_state();
         }
     }
 
@@ -207,8 +208,8 @@ impl Gameboy {
         rom_data_receiver: &channel::Receiver<Vec<u8>>,
         skip_boot_rom_receiver: &channel::Receiver<bool>,
     ) {
-        let mut cycles_this_update: u32 = 0;
-        while cycles_this_update < CPU_CYCLES_PER_FRAME {
+        let mut cycles_this_frame_so_far: u32 = 0;
+        while cycles_this_frame_so_far < CPU_CYCLES_PER_FRAME {
             select! {
                 recv(close_receiver) -> signal => {
                     match signal {
@@ -244,15 +245,9 @@ impl Gameboy {
                 }
 
                 default => {
-                    let cycles: u32;
-                    if self.cpu.is_halted() {
-                        cycles = 4;
-                        self.cpu.halt(&mut self.memory, &mut self.timers);
-                    } else {
-                        cycles = self.cpu.execute_next_opcode(&mut self.memory, &mut self.timers);
-                    }
+                    let cycles = self.cpu.execute_next_opcode(&mut self.memory, &mut self.timers);
 
-                    cycles_this_update += cycles;
+                    cycles_this_frame_so_far += cycles;
 
                     self.memory.update_dma_transfer_cycles(cycles);
                     self.ppu.update_graphics(cycles, &mut self.memory, &mut self.cpu);

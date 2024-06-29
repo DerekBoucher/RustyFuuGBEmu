@@ -34,6 +34,20 @@ impl Timers {
         }
     }
 
+    pub fn set_post_bootrom_state(&mut self) {
+        self.system_clock = 0xABCC;
+        self.current_bit_7 = self.system_clock & (1 << 7) > 0;
+        self.current_bit_5 = self.system_clock & (1 << 5) > 0;
+        self.current_bit_3 = self.system_clock & (1 << 3) > 0;
+        self.current_bit_1 = self.system_clock & (1 << 1) > 0;
+
+        let previous_system_clock = self.system_clock.wrapping_sub(1);
+        self.prev_bit_1 = previous_system_clock & (1 << 1) > 0;
+        self.prev_bit_7 = previous_system_clock & (1 << 7) > 0;
+        self.prev_bit_5 = previous_system_clock & (1 << 5) > 0;
+        self.prev_bit_3 = previous_system_clock & (1 << 3) > 0;
+    }
+
     pub fn reset(&mut self) {
         *self = Timers::new();
     }
@@ -75,10 +89,7 @@ impl Timers {
 
             // Falling edge detection
             if prev_bit_to_use && !current_bit_to_use {
-                let timer_register = memory
-                    .dma_read(io_registers::TIMER_COUNTER_ADDR)
-                    .unwrap()
-                    .wrapping_add(1);
+                let timer_register = memory.dma_read(io_registers::TIMER_COUNTER_ADDR).unwrap();
 
                 if timer_register == 0xFF {
                     cpu.request_interrupt(memory, cpu::Interrupt::TimerOverflow);
@@ -86,7 +97,10 @@ impl Timers {
                     memory.dma_write(io_registers::TIMER_COUNTER_ADDR, timer_mod);
                     log::trace!("Timer interrupt requested");
                 } else {
-                    memory.dma_write(io_registers::TIMER_COUNTER_ADDR, timer_register);
+                    memory.dma_write(
+                        io_registers::TIMER_COUNTER_ADDR,
+                        timer_register.wrapping_add(1),
+                    );
                 }
             }
         }

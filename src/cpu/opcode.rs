@@ -2295,19 +2295,22 @@ fn execute_0x75(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut tim
     8
 }
 
-fn execute_0x76(cpu: &mut LR35902, memory: &mut memory::Memory, timers: &mut timers::Timers) -> u32 {
+fn execute_0x76(cpu: &mut LR35902, memory: &mut memory::Memory, _: &mut timers::Timers) -> u32 {
     let clock_cycles = 4;
 
     if cpu.interrupt_master_enable {
         cpu.halted = true;
-        return clock_cycles
+        return clock_cycles;
     }
 
-    let interrupt_enable_register = memory.read(cpu::INTERRUPT_ENABLE_REGISTER_ADDR, cpu, timers).unwrap();
-    let interrupt_flag_register = memory.read(cpu::INTERRUPT_FLAG_REGISTER_ADDR, cpu, timers).unwrap();
+    // The following is logic made to mimic the halt bug behaviour on the real hardware
+    let interrupt_enable_register = memory.dma_read(cpu::INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
+    let interrupt_flag_register = memory.dma_read(cpu::INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
 
-    if !((interrupt_enable_register & interrupt_flag_register & 0x1F) > 0x00) {
+
+    if (interrupt_enable_register & interrupt_flag_register & 0x1F) == 0x00 {
         cpu.halted = true;
+        return clock_cycles;
     }
 
     cpu.bugged_halt = true;
