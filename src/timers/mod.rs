@@ -89,7 +89,10 @@ impl Timers {
 
             // Falling edge detection
             if prev_bit_to_use && !current_bit_to_use {
-                let timer_register = memory.dma_read(io_registers::TIMER_COUNTER_ADDR).unwrap();
+                let timer_register = memory
+                    .dma_read(io_registers::TIMER_COUNTER_ADDR)
+                    .unwrap()
+                    .wrapping_add(1);
 
                 if timer_register == 0xFF {
                     cpu.request_interrupt(memory, cpu::Interrupt::TimerOverflow);
@@ -97,10 +100,7 @@ impl Timers {
                     memory.dma_write(io_registers::TIMER_COUNTER_ADDR, timer_mod);
                     log::trace!("Timer interrupt requested");
                 } else {
-                    memory.dma_write(
-                        io_registers::TIMER_COUNTER_ADDR,
-                        timer_register.wrapping_add(1),
-                    );
+                    memory.dma_write(io_registers::TIMER_COUNTER_ADDR, timer_register);
                 }
             }
         }

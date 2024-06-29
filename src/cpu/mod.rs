@@ -145,7 +145,7 @@ impl LR35902 {
     }
 
     pub fn set_post_boot_rom_state(&mut self) {
-        self.af.set_word(0x0108);
+        self.af.set_word(0x01B0);
         self.bc.set_word(0x0013);
         self.de.set_word(0x00D8);
         self.hl.set_word(0x014D);
