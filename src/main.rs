@@ -1,6 +1,5 @@
 mod cartridge;
 mod cpu;
-mod events;
 mod gameboy;
 mod memory;
 mod ppu;
@@ -38,9 +37,6 @@ fn main() {
     let (program_loop, display) = init_glium();
     let egui_glium_client = egui_glium::EguiGlium::new(&display, &program_loop);
     let mut opengl_renderer = renderer::OpenGL::new(&display);
-
-    // Initialize the event bus.
-    events::init();
 
     let cpu = cpu::LR35902::new();
     let memory = memory::Memory::default();
