@@ -304,6 +304,8 @@ impl Memory {
     ) -> Option<u8> {
         log::trace!("Reading from memory address {:X}", addr);
 
+        timers.increment(self, cpu);
+
         if self.oam_dma_transfer_in_progress {
             // Only High RAM is accessible during an oam dma transfer.
             if addr >= 0xFF80 && addr < 0xFFFF {
@@ -367,8 +369,6 @@ impl Memory {
             data = None;
         }
 
-        timers.increment(self, cpu);
-
         return data;
     }
 
@@ -381,13 +381,13 @@ impl Memory {
     ) {
         log::trace!("Writing to memory address {:X} value {:X}", addr, val);
 
+        timers.increment(self, cpu);
+
         if self.oam_dma_transfer_in_progress {
             // Only High RAM is accessible during an oam dma transfer.
             if addr >= 0xFF80 && addr < 0xFFFF {
                 self.hi_ram[addr - 0xFF80] = val;
             }
-
-            timers.increment(self, cpu);
 
             return;
         }
@@ -442,8 +442,6 @@ impl Memory {
         if addr == 0xFFFF {
             self.interrupt_enable_register = val;
         }
-
-        timers.increment(self, cpu);
     }
 
     pub fn dma_read(&self, addr: usize) -> Option<u8> {

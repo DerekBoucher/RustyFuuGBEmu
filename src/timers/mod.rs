@@ -52,7 +52,7 @@ impl Timers {
             None => panic!("Timer control register not found"),
         };
 
-        self.system_clock = self.system_clock.wrapping_add(1) & 0x3FFF;
+        self.system_clock = self.system_clock.wrapping_add(1);
 
         self.current_bit_7 = self.system_clock & (1 << 7) > 0;
         self.current_bit_5 = self.system_clock & (1 << 5) > 0;
