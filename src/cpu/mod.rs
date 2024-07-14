@@ -873,7 +873,7 @@ impl LR35902 {
             return 24;
         }
 
-        return 16;
+        return 12;
     }
 
     fn return_from_call_conditional(
