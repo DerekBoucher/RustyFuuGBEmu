@@ -15,6 +15,8 @@ pub struct Timers {
     current_bit_7: bool,
     current_bit_5: bool,
     current_bit_3: bool,
+
+    interrupt_pending: bool,
 }
 
 impl Timers {
@@ -31,6 +33,8 @@ impl Timers {
             current_bit_7: false,
             current_bit_5: false,
             current_bit_3: false,
+
+            interrupt_pending: false,
         }
     }
 
@@ -66,6 +70,13 @@ impl Timers {
             None => panic!("Timer control register not found"),
         };
 
+        if self.interrupt_pending {
+            self.interrupt_pending = false;
+            cpu.request_interrupt(memory, cpu::Interrupt::TimerOverflow);
+            let timer_mod = memory.dma_read(io_registers::TIMER_MOD_ADDR).unwrap();
+            memory.dma_write(io_registers::TIMER_COUNTER_ADDR, timer_mod);
+        }
+
         self.system_clock = self.system_clock.wrapping_add(1);
 
         self.current_bit_7 = self.system_clock & (1 << 7) > 0;
@@ -89,18 +100,18 @@ impl Timers {
 
             // Falling edge detection
             if prev_bit_to_use && !current_bit_to_use {
-                let timer_register = memory
-                    .dma_read(io_registers::TIMER_COUNTER_ADDR)
-                    .unwrap()
-                    .wrapping_add(1);
+                let timer_register = memory.dma_read(io_registers::TIMER_COUNTER_ADDR).unwrap();
 
                 if timer_register == 0xFF {
-                    cpu.request_interrupt(memory, cpu::Interrupt::TimerOverflow);
-                    let timer_mod = memory.dma_read(io_registers::TIMER_MOD_ADDR).unwrap();
-                    memory.dma_write(io_registers::TIMER_COUNTER_ADDR, timer_mod);
-                    log::trace!("Timer interrupt requested");
+                    // Both the interrupt + the TIMA reload are delayed 1 machine cycle
+                    // In the meantime, TIMA is resetted with 0
+                    self.interrupt_pending = true;
+                    memory.dma_write(io_registers::TIMER_COUNTER_ADDR, 0);
                 } else {
-                    memory.dma_write(io_registers::TIMER_COUNTER_ADDR, timer_register);
+                    memory.dma_write(
+                        io_registers::TIMER_COUNTER_ADDR,
+                        timer_register.wrapping_add(1),
+                    );
                 }
             }
         }
