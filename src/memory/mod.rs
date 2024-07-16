@@ -307,15 +307,11 @@ impl Memory {
     ) -> Option<u8> {
         log::trace!("Reading from memory address {:X}", addr);
 
-        timers.increment(self, cpu);
-
         if self.oam_dma_transfer_in_progress {
             // Only High RAM is accessible during an oam dma transfer.
             if addr >= 0xFF80 && addr < 0xFFFF {
                 return Some(self.hi_ram[addr - 0xFF80].clone());
             }
-
-            timers.increment(self, cpu);
 
             // Else, return dummy data
             return Some(0xFF);
@@ -383,8 +379,6 @@ impl Memory {
         timers: &mut timers::Timers,
     ) {
         log::trace!("Writing to memory address {:X} value {:X}", addr, val);
-
-        timers.increment(self, cpu);
 
         if self.oam_dma_transfer_in_progress {
             // Only High RAM is accessible during an oam dma transfer.

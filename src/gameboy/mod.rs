@@ -249,6 +249,7 @@ impl Gameboy {
 
                     cycles_this_frame_so_far += cycles;
 
+                    self.timers.increment(cycles, &mut self.memory, &mut self.cpu);
                     self.memory.update_dma_transfer_cycles(cycles);
                     self.ppu.update_graphics(cycles, &mut self.memory, &mut self.cpu);
                     self.cpu.process_interrupts(&mut self.memory,&mut self.timers);

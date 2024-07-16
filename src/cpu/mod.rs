@@ -116,7 +116,6 @@ impl LR35902 {
         timers: &mut timers::Timers,
     ) -> u32 {
         if self.halted {
-            timers.increment(memory, self);
             return 4;
         }
 
