@@ -101,17 +101,16 @@ impl Timers {
                 if prev_bit_to_use && !current_bit_to_use {
                     let timer_register = memory.dma_read(io_registers::TIMER_COUNTER_ADDR).unwrap();
 
-                    if timer_register == 0x00 {
+                    if timer_register == 0xFF {
                         // Both the interrupt + the TIMA reload are delayed 1 machine cycle
                         // In the meantime, TIMA is resetted with 0
                         self.interrupt_pending = true;
-                        memory.dma_write(io_registers::TIMER_COUNTER_ADDR, 0);
-                    } else {
-                        memory.dma_write(
-                            io_registers::TIMER_COUNTER_ADDR,
-                            timer_register.wrapping_add(1),
-                        );
                     }
+
+                    memory.dma_write(
+                        io_registers::TIMER_COUNTER_ADDR,
+                        timer_register.wrapping_add(1),
+                    );
                 }
             }
 
