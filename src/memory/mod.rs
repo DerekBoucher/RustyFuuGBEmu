@@ -305,6 +305,7 @@ impl Memory {
         cpu: &mut cpu::LR35902,
         timers: &mut timers::Timers,
     ) -> Option<u8> {
+        timers.increment(4, self, cpu);
         log::trace!("Reading from memory address {:X}", addr);
 
         if self.oam_dma_transfer_in_progress {
@@ -378,6 +379,7 @@ impl Memory {
         cpu: &mut cpu::LR35902,
         timers: &mut timers::Timers,
     ) {
+        timers.increment(4, self, cpu);
         log::trace!("Writing to memory address {:X} value {:X}", addr, val);
 
         if self.oam_dma_transfer_in_progress {
