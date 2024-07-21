@@ -99,7 +99,8 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
     let events_loop =
         glium::glutin::event_loop::EventLoopBuilder::<ui::events::UiEvent>::with_user_event()
             .build();
-    let wb = glium::glutin::window::WindowBuilder::new()
+
+    let window = glium::glutin::window::WindowBuilder::new()
         .with_inner_size(glium::glutin::dpi::LogicalSize::new(
             (ppu::NATIVE_SCREEN_WIDTH as i32) * ui::SCALE_FACTOR,
             ((ppu::NATIVE_SCREEN_HEIGHT as i32) * ui::SCALE_FACTOR) + ui::TOP_MENUBAR_HEIGHT as i32,
@@ -107,8 +108,12 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
         .with_title("RustyFuuGBemu")
         .with_wayland_csd_theme(Theme::Dark)
         .with_resizable(true);
-    let cb = glium::glutin::ContextBuilder::new();
-    let display = glium::Display::new(wb, cb, &events_loop).unwrap();
+
+    let context = glium::glutin::ContextBuilder::new()
+        .with_hardware_acceleration(Some(true))
+        .with_vsync(true);
+
+    let display = glium::Display::new(window, context, &events_loop).unwrap();
 
     return (events_loop, display);
 }

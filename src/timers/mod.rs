@@ -5,15 +5,15 @@ const TIMER_CONTROL_ENABLED_MASK: u8 = 1 << 2;
 pub struct Timers {
     system_clock: u16,
 
-    prev_bit_9: bool,
     prev_bit_7: bool,
     prev_bit_5: bool,
     prev_bit_3: bool,
+    prev_bit_1: bool,
 
-    current_bit_9: bool,
     current_bit_7: bool,
     current_bit_5: bool,
     current_bit_3: bool,
+    current_bit_1: bool,
 
     interrupt_pending: bool,
 
@@ -27,15 +27,15 @@ impl Timers {
         Timers {
             system_clock: 0,
 
-            prev_bit_9: false,
             prev_bit_7: false,
             prev_bit_5: false,
             prev_bit_3: false,
+            prev_bit_1: false,
 
-            current_bit_9: false,
             current_bit_7: false,
             current_bit_5: false,
             current_bit_3: false,
+            current_bit_1: false,
 
             interrupt_pending: false,
             tima: 0,
@@ -75,16 +75,16 @@ impl Timers {
 
     pub fn set_post_bootrom_state(&mut self) {
         self.system_clock = 0xABCC;
-        self.current_bit_9 = self.system_clock & (1 << 9) > 0;
         self.current_bit_7 = self.system_clock & (1 << 7) > 0;
         self.current_bit_5 = self.system_clock & (1 << 5) > 0;
         self.current_bit_3 = self.system_clock & (1 << 3) > 0;
+        self.current_bit_1 = self.system_clock & (1 << 1) > 0;
 
         let previous_system_clock = self.system_clock.wrapping_sub(1);
-        self.prev_bit_9 = previous_system_clock & (1 << 9) > 0;
         self.prev_bit_7 = previous_system_clock & (1 << 7) > 0;
         self.prev_bit_5 = previous_system_clock & (1 << 5) > 0;
         self.prev_bit_3 = previous_system_clock & (1 << 3) > 0;
+        self.prev_bit_1 = previous_system_clock & (1 << 1) > 0;
 
         self.interrupt_pending = false;
         self.tac = 0xF8;
@@ -98,10 +98,10 @@ impl Timers {
 
     pub fn reset_sys_clock(&mut self) {
         self.system_clock = 0;
-        self.current_bit_9 = false;
         self.current_bit_7 = false;
         self.current_bit_5 = false;
         self.current_bit_3 = false;
+        self.current_bit_1 = false;
     }
 
     pub fn tick(&mut self, cycles: u32) {
@@ -110,20 +110,20 @@ impl Timers {
             self.tima = self.tma;
         }
 
-        for _ in 0..cycles {
+        for _ in 0..cycles / 4 {
             self.system_clock = self.system_clock.wrapping_add(1);
 
-            self.current_bit_9 = self.system_clock & (1 << 9) > 0;
             self.current_bit_7 = self.system_clock & (1 << 7) > 0;
             self.current_bit_5 = self.system_clock & (1 << 5) > 0;
             self.current_bit_3 = self.system_clock & (1 << 3) > 0;
+            self.current_bit_1 = self.system_clock & (1 << 1) > 0;
 
             if self.tac & TIMER_CONTROL_ENABLED_MASK > 0 {
                 let (current_bit_to_use, prev_bit_to_use) = match self.tac & 0b11 {
-                    0 => (self.current_bit_9, self.prev_bit_9),
-                    3 => (self.current_bit_7, self.prev_bit_7),
-                    2 => (self.current_bit_5, self.prev_bit_5),
-                    1 => (self.current_bit_3, self.prev_bit_3),
+                    0 => (self.current_bit_7, self.prev_bit_7),
+                    3 => (self.current_bit_5, self.prev_bit_5),
+                    2 => (self.current_bit_3, self.prev_bit_3),
+                    1 => (self.current_bit_1, self.prev_bit_1),
                     _ => panic!("Invalid timer control register value"),
                 };
 
@@ -138,10 +138,10 @@ impl Timers {
                     self.tima = self.tima.wrapping_add(1);
                 }
 
-                self.prev_bit_9 = self.current_bit_9;
                 self.prev_bit_7 = self.current_bit_7;
                 self.prev_bit_5 = self.current_bit_5;
                 self.prev_bit_3 = self.current_bit_3;
+                self.prev_bit_1 = self.current_bit_1;
             }
         }
     }
