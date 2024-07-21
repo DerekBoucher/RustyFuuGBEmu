@@ -1,4 +1,4 @@
-use crate::{cartridge, cpu, timers};
+use crate::{cartridge, timers};
 use std::fmt::Debug;
 
 const OAM_TRANSFER_CYCLES: u32 = 160;
@@ -50,6 +50,8 @@ pub struct Memory {
 
     /// Number of cycles completed during a DMA transfer.
     oam_dma_transfer_cycles_completed: u32,
+
+    timers: timers::Timers,
 }
 
 /// Module containing important addresses for
@@ -62,6 +64,7 @@ pub mod io_registers {
     pub const TIMER_COUNTER_ADDR: usize = 0xFF05;
     pub const TIMER_MOD_ADDR: usize = 0xFF06;
     pub const TIMER_CTRL_ADDR: usize = 0xFF07;
+    pub const INTERRUPT_FLAG_REGISTER_ADDR: usize = 0xFF0F;
     pub const AUDIO_CH1_SWEEP_ADDR: usize = 0xFF10;
     pub const AUDIO_CH1_LENGTH_ADDR: usize = 0xFF11;
     pub const AUDIO_CH1_VOLUME_ADDR: usize = 0xFF12;
@@ -132,6 +135,7 @@ impl Memory {
             interrupt_enable_register: 0x00,
             oam_dma_transfer_cycles_completed: 0,
             oam_dma_transfer_in_progress: false,
+            timers: timers::Timers::new(),
         }
     }
 
@@ -148,6 +152,7 @@ impl Memory {
             interrupt_enable_register: 0x00,
             oam_dma_transfer_cycles_completed: 0,
             oam_dma_transfer_in_progress: false,
+            timers: timers::Timers::new(),
         }
     }
 
@@ -169,13 +174,7 @@ impl Memory {
         }
     }
 
-    fn write_io_registers(
-        &mut self,
-        addr: usize,
-        val: u8,
-        cpu: &mut cpu::LR35902,
-        timers: &mut timers::Timers,
-    ) {
+    fn write_io_registers(&mut self, addr: usize, val: u8) {
         match addr {
             io_registers::OAM_DMA_TRANSFER_ADDR => {
                 log::trace!("OAM DMA transfer initiated");
@@ -186,20 +185,20 @@ impl Memory {
                 }
 
                 for i in 0..0xA0 {
-                    self.sprite_attributes[i] =
-                        self.read((val as usize) << 8 | i, cpu, timers).unwrap();
+                    self.sprite_attributes[i] = self.read((val as usize) << 8 | i).unwrap();
                 }
             }
+            io_registers::TIMER_MOD_ADDR => {
+                self.timers.write(addr, val);
+            }
             io_registers::TIMER_COUNTER_ADDR => {
-                self.io_registers[addr - 0xFF00] = val;
+                self.timers.write(addr, val);
             }
             io_registers::TIMER_CTRL_ADDR => {
-                self.io_registers[addr - 0xFF00] = val;
+                self.timers.write(addr, val);
             }
-            // Writing any value to the TIMER DIV register resets it to 0.
             io_registers::TIMER_DIV_ADDR => {
-                timers.reset_sys_clock();
-                self.io_registers[addr - 0xFF00] = 0x00;
+                self.timers.write(addr, val);
             }
             io_registers::JOYPAD_ADDR => {
                 self.handle_joypad_translation(val);
@@ -297,21 +296,23 @@ impl Memory {
         self.io_registers[0xFF6A - offset] = 0xFF;
         self.io_registers[0xFF6B - offset] = 0xFF;
         self.io_registers[0xFF70 - offset] = 0xFF;
+
+        self.timers.set_post_bootrom_state();
     }
 
-    pub fn read(
-        &mut self,
-        addr: usize,
-        cpu: &mut cpu::LR35902,
-        timers: &mut timers::Timers,
-    ) -> Option<u8> {
-        timers.increment(4, self, cpu);
+    pub fn read(&mut self, addr: usize) -> Option<u8> {
         log::trace!("Reading from memory address {:X}", addr);
+
+        if self.timers.requires_interrupt() {
+            // TIMA Overflow
+            self.io_registers[io_registers::INTERRUPT_FLAG_REGISTER_ADDR - 0xFF00] |= 1 << 2;
+        }
+        self.timers.tick(4);
 
         if self.oam_dma_transfer_in_progress {
             // Only High RAM is accessible during an oam dma transfer.
             if addr >= 0xFF80 && addr < 0xFFFF {
-                return Some(self.hi_ram[addr - 0xFF80].clone());
+                return Some(self.hi_ram[addr - 0xFF80]);
             }
 
             // Else, return dummy data
@@ -322,7 +323,7 @@ impl Memory {
 
         // If boot rom is enabled, the data should come from it.
         if addr < 0x100 && self.boot_rom_enabled() {
-            data = Some(Memory::BOOT_ROM[addr].clone());
+            data = Some(Memory::BOOT_ROM[addr]);
         } else
         // Cartridge ROM
         if addr < 0x8000 {
@@ -330,7 +331,7 @@ impl Memory {
         } else
         // Video RAM
         if addr >= 0x8000 && addr < 0xA000 {
-            data = Some(self.video_ram[addr - 0x8000].clone());
+            data = Some(self.video_ram[addr - 0x8000]);
         } else
         // Cartridge RAM
         if addr >= 0xA000 && addr < 0xC000 {
@@ -338,33 +339,39 @@ impl Memory {
         } else
         // Work RAM 0
         if addr >= 0xC000 && addr < 0xD000 {
-            data = Some(self.work_ram0[addr - 0xC000].clone());
+            data = Some(self.work_ram0[addr - 0xC000]);
         } else
         // Work RAM 1
         if addr >= 0xD000 && addr < 0xE000 {
-            data = Some(self.work_ram1[addr - 0xD000].clone());
+            data = Some(self.work_ram1[addr - 0xD000]);
         } else
         // Echo RAM
         if addr >= 0xE000 && addr < 0xFE00 {
-            data = self.read((addr - 0xE000) + 0xC000, cpu, timers).clone();
+            data = self.read((addr - 0xE000) + 0xC000);
         } else
         // OAM / Sprite attributes
         if addr >= 0xFE00 && addr < 0xFEA0 {
-            data = Some(self.sprite_attributes[addr - 0xFE00].clone());
+            data = Some(self.sprite_attributes[addr - 0xFE00]);
         } else if addr >= 0xFEA0 && addr < 0xFF00 {
             data = Some(0xFF);
         } else
         // IO Registers
         if addr >= 0xFF00 && addr < 0xFF80 {
-            data = Some(self.io_registers[addr - 0xFF00].clone());
+            data = match addr {
+                io_registers::TIMER_DIV_ADDR => Some(self.timers.read(addr)),
+                io_registers::TIMER_COUNTER_ADDR => Some(self.timers.read(addr)),
+                io_registers::TIMER_MOD_ADDR => Some(self.timers.read(addr)),
+                io_registers::TIMER_CTRL_ADDR => Some(self.timers.read(addr)),
+                _ => Some(self.io_registers[addr - 0xFF00]),
+            }
         } else
         // High RAM
         if addr >= 0xFF80 && addr < 0xFFFF {
-            data = Some(self.hi_ram[addr - 0xFF80].clone());
+            data = Some(self.hi_ram[addr - 0xFF80]);
         } else
         // Interupt enable register
         if addr == 0xFFFF {
-            data = Some(self.interrupt_enable_register.clone());
+            data = Some(self.interrupt_enable_register);
         } else {
             data = None;
         }
@@ -372,15 +379,14 @@ impl Memory {
         return data;
     }
 
-    pub fn write(
-        &mut self,
-        addr: usize,
-        val: u8,
-        cpu: &mut cpu::LR35902,
-        timers: &mut timers::Timers,
-    ) {
-        timers.increment(4, self, cpu);
+    pub fn write(&mut self, addr: usize, val: u8) {
         log::trace!("Writing to memory address {:X} value {:X}", addr, val);
+
+        if self.timers.requires_interrupt() {
+            // TIMA Overflow
+            self.io_registers[io_registers::INTERRUPT_FLAG_REGISTER_ADDR - 0xFF00] |= 1 << 4;
+        }
+        self.timers.tick(4);
 
         if self.oam_dma_transfer_in_progress {
             // Only High RAM is accessible during an oam dma transfer.
@@ -418,7 +424,7 @@ impl Memory {
 
         // Echo RAM
         if addr >= 0xE000 && addr < 0xFE00 {
-            self.write((addr - 0xE000) + 0xC000, val, cpu, timers);
+            self.write((addr - 0xE000) + 0xC000, val);
         }
 
         // OAM / Sprite attributes
@@ -429,7 +435,7 @@ impl Memory {
 
         // IO Registers
         if addr >= 0xFF00 && addr < 0xFF80 {
-            self.write_io_registers(addr, val, cpu, timers);
+            self.write_io_registers(addr, val);
         }
 
         // High RAM
@@ -445,19 +451,19 @@ impl Memory {
 
     pub fn dma_read(&self, addr: usize) -> Option<u8> {
         if addr >= 0x8000 && addr < 0xA000 {
-            return Some(self.video_ram[addr - 0x8000].clone());
+            return Some(self.video_ram[addr - 0x8000]);
         }
 
         if addr >= 0xFF00 && addr < 0xFF80 {
-            return Some(self.io_registers[addr - 0xFF00].clone());
+            return Some(self.io_registers[addr - 0xFF00]);
         }
 
         if addr >= 0xFF80 && addr < 0xFFFF {
-            return Some(self.hi_ram[addr - 0xFF80].clone());
+            return Some(self.hi_ram[addr - 0xFF80]);
         }
 
         if addr == 0xFFFF {
-            return Some(self.interrupt_enable_register.clone());
+            return Some(self.interrupt_enable_register);
         }
 
         return None;

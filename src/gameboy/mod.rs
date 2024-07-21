@@ -245,13 +245,13 @@ impl Gameboy {
                 }
 
                 default => {
-                    let cycles = self.cpu.execute_next_opcode(&mut self.memory, &mut self.timers);
+                    let cycles = self.cpu.execute_next_opcode(&mut self.memory);
 
                     cycles_this_frame_so_far += cycles;
 
                     self.memory.update_dma_transfer_cycles(cycles);
                     self.ppu.update_graphics(cycles, &mut self.memory, &mut self.cpu);
-                    self.cpu.process_interrupts(&mut self.memory,&mut self.timers);
+                    self.cpu.process_interrupts(&mut self.memory);
                 }
             }
         }
