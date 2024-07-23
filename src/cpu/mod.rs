@@ -5,21 +5,16 @@ mod opcode;
 mod opcode_ext;
 mod register;
 
-use crate::memory;
 #[cfg(feature = "serial_debug")]
 use crate::memory::io_registers;
+use crate::{interrupt, memory};
 
 use opcode::Opcode;
 use register::{ID, ID16};
-use std::fmt::Debug;
-
-pub enum Interrupt {
-    VBlank,
-    LCDC,
-    _TimerOverflow,
-    _Serial,
-    _Joypad,
-}
+use std::{
+    fmt::Debug,
+    sync::{self, Arc},
+};
 
 /// Represents a byte addressable word register found
 /// inside the Sharp LR35902
@@ -63,12 +58,6 @@ const CARRY_FLAG_MASK: u8 = 1 << 4;
 pub const CPU_FREQUENCY: u32 = 4194304;
 pub const CPU_CYCLES_PER_FRAME: u32 = CPU_FREQUENCY / 60;
 
-const V_BLANK_INTERRUPT_MASK: u8 = 1 << 0;
-const LCDC_INTERRUPT_MASK: u8 = 1 << 1;
-const TIMER_OVERFLOW_INTERRUPT_MASK: u8 = 1 << 2;
-const SERIAL_IO_INTERRUPT_MASK: u8 = 1 << 3;
-const CONTROLLER_IO_INTERRUPT_MASK: u8 = 1 << 4;
-
 const V_BLANK_INTERRUPT_VECTOR: u16 = 0x0040;
 const LCDC_INTERRUPT_VECTOR: u16 = 0x0048;
 const TIMER_OVERFLOW_INTERRUPT_VECTOR: u16 = 0x0050;
@@ -110,9 +99,13 @@ impl LR35902 {
         *self = LR35902::new();
     }
 
-    pub fn execute_next_opcode(&mut self, memory: &mut memory::Memory) -> u32 {
+    pub fn execute_next_opcode(
+        &mut self,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        step_fn: &mut impl FnMut(),
+    ) -> u32 {
         if self.halted {
-            _ = memory.read(0); // Not great, but this is essentially just to tick the timer 4 cycles.
+            step_fn();
             return 4;
         }
 
@@ -120,7 +113,7 @@ impl LR35902 {
             return 0;
         }
 
-        let op = match memory.read(usize::from(self.pc)) {
+        let op = match memory.lock().unwrap().read(usize::from(self.pc)) {
             Some(x) => Opcode::from(x),
             None => panic!(
                 "memory returned empty value when attempting to fetch op code. Dumping cpu state...\n
@@ -137,7 +130,10 @@ impl LR35902 {
         #[cfg(feature = "serial_debug")]
         LR35902::serial_debug_output(memory);
 
-        return op.execute(self, memory);
+        let cycles = op.execute(self, memory, step_fn);
+
+        step_fn();
+        return cycles;
     }
 
     pub fn is_stopped(&self) -> bool {
@@ -153,49 +149,19 @@ impl LR35902 {
         self.sp = 0xFFFE;
     }
 
-    pub fn request_interrupt(&mut self, memory: &mut memory::Memory, interrupt: Interrupt) {
-        let interrupt_flag_register = memory.dma_read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
-
-        match interrupt {
-            Interrupt::VBlank => {
-                memory.dma_write(
-                    INTERRUPT_FLAG_REGISTER_ADDR,
-                    interrupt_flag_register | V_BLANK_INTERRUPT_MASK,
-                );
-            }
-            Interrupt::LCDC => {
-                memory.dma_write(
-                    INTERRUPT_FLAG_REGISTER_ADDR,
-                    interrupt_flag_register | LCDC_INTERRUPT_MASK,
-                );
-            }
-            Interrupt::_TimerOverflow => {
-                memory.dma_write(
-                    INTERRUPT_FLAG_REGISTER_ADDR,
-                    interrupt_flag_register | TIMER_OVERFLOW_INTERRUPT_MASK,
-                );
-            }
-            Interrupt::_Serial => {
-                memory.dma_write(
-                    INTERRUPT_FLAG_REGISTER_ADDR,
-                    interrupt_flag_register | SERIAL_IO_INTERRUPT_MASK,
-                );
-            }
-            Interrupt::_Joypad => {
-                memory.dma_write(
-                    INTERRUPT_FLAG_REGISTER_ADDR,
-                    interrupt_flag_register | CONTROLLER_IO_INTERRUPT_MASK,
-                );
-            }
-        }
-    }
-
-    pub fn process_interrupts(&mut self, memory: &mut memory::Memory) {
-        let interrupt_enable_register = memory.read(INTERRUPT_ENABLE_REGISTER_ADDR).unwrap();
-        let mut interrupt_flag_register = memory.read(INTERRUPT_FLAG_REGISTER_ADDR).unwrap();
+    pub fn process_interrupts(
+        &mut self,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        interrupt_bus: &Arc<sync::Mutex<interrupt::Bus>>,
+        step_fn: &mut impl FnMut(),
+    ) {
+        let pending_interrupt = interrupt_bus
+            .lock()
+            .unwrap()
+            .get_highest_priority_interrupt();
 
         if self.halted {
-            if (interrupt_enable_register & interrupt_flag_register & 0x1F) > 0 {
+            if pending_interrupt.is_some() {
                 self.halted = false;
             }
         }
@@ -204,50 +170,25 @@ impl LR35902 {
             return;
         }
 
-        if (interrupt_flag_register & V_BLANK_INTERRUPT_MASK > 0)
-            && (interrupt_enable_register & V_BLANK_INTERRUPT_MASK > 0)
-        {
-            self.interrupt_master_enable = false;
-            self.push_16bit_register_on_stack(ID16::PC, memory);
-            self.pc = V_BLANK_INTERRUPT_VECTOR;
+        match pending_interrupt {
+            Some(interrupt) => {
+                self.interrupt_master_enable = false;
+                self.push_16bit_register_on_stack(ID16::PC, &memory, step_fn);
 
-            interrupt_flag_register &= !V_BLANK_INTERRUPT_MASK;
-        } else if (interrupt_flag_register & LCDC_INTERRUPT_MASK > 0)
-            && (interrupt_enable_register & LCDC_INTERRUPT_MASK > 0)
-        {
-            self.interrupt_master_enable = false;
-            self.push_16bit_register_on_stack(ID16::PC, memory);
-            self.pc = LCDC_INTERRUPT_VECTOR;
+                match interrupt {
+                    interrupt::Interrupt::VBlank => self.pc = V_BLANK_INTERRUPT_VECTOR,
+                    interrupt::Interrupt::LcdStat => self.pc = LCDC_INTERRUPT_VECTOR,
+                    interrupt::Interrupt::TimerOverflow => {
+                        self.pc = TIMER_OVERFLOW_INTERRUPT_VECTOR
+                    }
+                    interrupt::Interrupt::Serial => self.pc = SERIAL_IO_INTERRUPT_VECTOR,
+                    interrupt::Interrupt::Joypad => self.pc = CONTROLLER_IO_INTERRUPT_VECTOR,
+                }
 
-            interrupt_flag_register &= !LCDC_INTERRUPT_MASK;
-        } else if (interrupt_flag_register & TIMER_OVERFLOW_INTERRUPT_MASK > 0)
-            && (interrupt_enable_register & TIMER_OVERFLOW_INTERRUPT_MASK > 0)
-        {
-            self.interrupt_master_enable = false;
-            self.push_16bit_register_on_stack(ID16::PC, memory);
-            self.pc = TIMER_OVERFLOW_INTERRUPT_VECTOR;
-
-            interrupt_flag_register &= !TIMER_OVERFLOW_INTERRUPT_MASK;
-        } else if (interrupt_flag_register & SERIAL_IO_INTERRUPT_MASK > 0)
-            && (interrupt_enable_register & SERIAL_IO_INTERRUPT_MASK > 0)
-        {
-            self.interrupt_master_enable = false;
-            self.push_16bit_register_on_stack(ID16::PC, memory);
-            self.pc = SERIAL_IO_INTERRUPT_VECTOR;
-
-            interrupt_flag_register &= !SERIAL_IO_INTERRUPT_MASK;
-        } else if (interrupt_flag_register & CONTROLLER_IO_INTERRUPT_MASK > 0)
-            && (interrupt_enable_register & CONTROLLER_IO_INTERRUPT_MASK > 0)
-        {
-            self.interrupt_master_enable = false;
-            self.push_16bit_register_on_stack(ID16::PC, memory);
-            self.pc = CONTROLLER_IO_INTERRUPT_VECTOR;
-
-            interrupt_flag_register &= !CONTROLLER_IO_INTERRUPT_MASK;
+                interrupt_bus.lock().unwrap().clear_interrupt(interrupt);
+            }
+            None => {}
         }
-
-        // Write the modified IF back to memory
-        memory.write(INTERRUPT_FLAG_REGISTER_ADDR, interrupt_flag_register);
     }
 
     fn reset_half_carry_flag(&mut self) {
@@ -431,12 +372,12 @@ impl LR35902 {
     fn compare_8_bit_memory(
         &mut self,
         target: register::ID,
-        memory: &mut memory::Memory,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
         addr: usize,
     ) {
         let target_value = self.read_register(&target);
 
-        let byte = match memory.read(addr) {
+        let byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("invalid memory address read in compare_8_bit_memory (addr: {}), dumping cpu state...\n{:?}", addr, self),
         };
@@ -465,7 +406,7 @@ impl LR35902 {
     fn add_8_bit_memory(
         &mut self,
         target: register::ID,
-        memory: &mut memory::Memory,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
         addr: usize,
         with_carry_flag: bool,
     ) {
@@ -476,7 +417,7 @@ impl LR35902 {
             false => 0x00,
         };
 
-        let byte = match memory.read(addr) {
+        let byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("invalid memory address read in add_8_bit_memory (addr: {}), dumping cpu state...\n{:?}", addr, self),
         };
@@ -549,7 +490,7 @@ impl LR35902 {
     fn sub_8_bit_memory(
         &mut self,
         target: register::ID,
-        memory: &mut memory::Memory,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
         addr: usize,
         with_carry_flag: bool,
     ) {
@@ -560,7 +501,7 @@ impl LR35902 {
             false => 0x00,
         };
 
-        let byte = match memory.read(addr) {
+        let byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("invalid memory address read in sub_8_bit_memory (addr: {}), dumping cpu state...\n{:?}", addr, self),
         };
@@ -610,10 +551,15 @@ impl LR35902 {
         self.write_register(&target, new_target_value);
     }
 
-    fn and_8_bit_memory(&mut self, target: register::ID, memory: &mut memory::Memory, addr: usize) {
+    fn and_8_bit_memory(
+        &mut self,
+        target: register::ID,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        addr: usize,
+    ) {
         let target_value = self.read_register(&target);
 
-        let byte = match memory.read(addr) {
+        let byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!(
                 "invalid 8 bit and operation: couldn't access byte at addr {:?}",
@@ -656,10 +602,15 @@ impl LR35902 {
         self.write_register(&target, new_target_value);
     }
 
-    fn xor_8_bit_memory(&mut self, target: register::ID, memory: &mut memory::Memory, addr: usize) {
+    fn xor_8_bit_memory(
+        &mut self,
+        target: register::ID,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        addr: usize,
+    ) {
         let target_value = self.read_register(&target);
 
-        let byte = match memory.read(addr) {
+        let byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!(
                 "invalid 8 bit xor operation: couldn't access byte at addr {:?}",
@@ -702,10 +653,15 @@ impl LR35902 {
         self.write_register(&target, new_target_value);
     }
 
-    fn or_8_bit_memory(&mut self, target: register::ID, memory: &mut memory::Memory, addr: usize) {
+    fn or_8_bit_memory(
+        &mut self,
+        target: register::ID,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        addr: usize,
+    ) {
         let target_value = self.read_register(&target);
 
-        let byte = match memory.read(addr) {
+        let byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!(
                 "invalid 8 bit or operation: couldn't access byte at addr {:?}",
@@ -731,16 +687,19 @@ impl LR35902 {
     fn pop_stack_into_16_bit_register(
         &mut self,
         reg_id: register::ID16,
-        memory: &mut memory::Memory,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        step_fn: &mut impl FnMut(),
     ) {
-        let lo_byte = match memory.read(usize::from(self.sp)) {
+        step_fn();
+        let lo_byte = match memory.lock().unwrap().read(usize::from(self.sp)) {
             Some(byte) => byte,
             None => panic!("error occured when loading return address from stack pointer"),
         };
 
         self.sp = self.sp.wrapping_add(1);
 
-        let hi_byte = match memory.read(usize::from(self.sp)) {
+        step_fn();
+        let hi_byte = match memory.lock().unwrap().read(usize::from(self.sp)) {
             Some(byte) => byte,
             None => panic!("error occured when loading return address from stack pointer"),
         };
@@ -774,8 +733,10 @@ impl LR35902 {
     fn push_16bit_register_on_stack(
         &mut self,
         reg_id: register::ID16,
-        memory: &mut memory::Memory,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        step_fn: &mut impl FnMut(),
     ) {
+        step_fn();
         let bytes = match reg_id {
             ID16::BC => self.bc.word().to_be_bytes(),
             ID16::DE => self.de.word().to_be_bytes(),
@@ -788,22 +749,31 @@ impl LR35902 {
         let hi_byte = bytes[0];
         let lo_byte = bytes[1];
 
+        step_fn();
         self.sp = self.sp.wrapping_sub(1);
-        memory.write(usize::from(self.sp), hi_byte);
+        memory.lock().unwrap().write(usize::from(self.sp), hi_byte);
 
+        step_fn();
         self.sp = self.sp.wrapping_sub(1);
-        memory.write(usize::from(self.sp), lo_byte);
+        memory.lock().unwrap().write(usize::from(self.sp), lo_byte);
     }
 
-    fn jump_to_imm_address(&mut self, memory: &mut memory::Memory, condition: bool) -> u32 {
-        let lo_byte = match memory.read(usize::from(self.pc)) {
+    fn jump_to_imm_address(
+        &mut self,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        condition: bool,
+        step_fn: &mut impl FnMut(),
+    ) -> u32 {
+        step_fn();
+        let lo_byte = match memory.lock().unwrap().read(usize::from(self.pc)) {
             Some(byte) => byte,
             None => panic!("error occured when loading lo byte address for non-zero jump"),
         };
 
         self.pc = self.pc.wrapping_add(1);
 
-        let hi_byte = match memory.read(usize::from(self.pc)) {
+        step_fn();
+        let hi_byte = match memory.lock().unwrap().read(usize::from(self.pc)) {
             Some(byte) => byte,
             None => panic!("error occured when loading hi byte address for non-zero jump"),
         };
@@ -811,6 +781,7 @@ impl LR35902 {
         self.pc = self.pc.wrapping_add(1);
 
         if condition {
+            step_fn();
             self.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
 
             return 16;
@@ -819,15 +790,22 @@ impl LR35902 {
         return 12;
     }
 
-    fn call_to_imm_address(&mut self, memory: &mut memory::Memory, condition: bool) -> u32 {
-        let lo_byte = match memory.read(usize::from(self.pc)) {
+    fn call_to_imm_address(
+        &mut self,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        condition: bool,
+        step_fn: &mut impl FnMut(),
+    ) -> u32 {
+        step_fn();
+        let lo_byte = match memory.lock().unwrap().read(usize::from(self.pc)) {
             Some(byte) => byte,
             None => panic!("error occured when loading lo byte address for non-zero jump"),
         };
 
         self.pc = self.pc.wrapping_add(1);
 
-        let hi_byte = match memory.read(usize::from(self.pc)) {
+        step_fn();
+        let hi_byte = match memory.lock().unwrap().read(usize::from(self.pc)) {
             Some(byte) => byte,
             None => panic!("error occured when loading hi byte address for non-zero jump"),
         };
@@ -835,7 +813,7 @@ impl LR35902 {
         self.pc = self.pc.wrapping_add(1);
 
         if condition {
-            self.push_16bit_register_on_stack(register::ID16::PC, memory);
+            self.push_16bit_register_on_stack(register::ID16::PC, &memory, step_fn);
             self.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
             return 24;
         }
@@ -845,23 +823,30 @@ impl LR35902 {
 
     fn return_from_call_conditional(
         &mut self,
-        memory: &mut memory::Memory,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
         condition: bool,
+        step_fn: &mut impl FnMut(),
     ) -> u32 {
+        step_fn();
+
         if condition {
-            let lo_byte = match memory.read(usize::from(self.sp)) {
+            step_fn();
+            let lo_byte = match memory.lock().unwrap().read(usize::from(self.sp)) {
                 Some(byte) => byte,
                 None => panic!("error occured when loading return address from stack pointer"),
             };
 
             self.sp = self.sp.wrapping_add(1);
 
-            let hi_byte = match memory.read(usize::from(self.sp)) {
+            step_fn();
+            let hi_byte = match memory.lock().unwrap().read(usize::from(self.sp)) {
                 Some(byte) => byte,
                 None => panic!("error occured when loading return address from stack pointer"),
             };
 
+            step_fn();
             self.sp = self.sp.wrapping_add(1);
+
             self.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
 
             return 20;
@@ -870,8 +855,12 @@ impl LR35902 {
         return 8;
     }
 
-    fn return_from_call(&mut self, memory: &mut memory::Memory) -> u32 {
-        self.pop_stack_into_16_bit_register(register::ID16::PC, memory);
+    fn return_from_call(
+        &mut self,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        step_fn: &mut impl FnMut(),
+    ) -> u32 {
+        self.pop_stack_into_16_bit_register(register::ID16::PC, memory, step_fn);
 
         return 16;
     }
@@ -901,8 +890,14 @@ impl LR35902 {
         return 4;
     }
 
-    fn rotate_8bit_memory_left(&mut self, memory: &mut memory::Memory, addr: usize) -> u32 {
-        let mut byte = match memory.read(addr) {
+    fn rotate_8bit_memory_left(
+        &mut self,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        addr: usize,
+        step_fn: &mut impl FnMut(),
+    ) -> u32 {
+        step_fn();
+        let mut byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("TODO"),
         };
@@ -924,7 +919,8 @@ impl LR35902 {
         self.reset_sub_flag();
         self.reset_half_carry_flag();
 
-        memory.write(addr, byte);
+        step_fn();
+        memory.lock().unwrap().write(addr, byte);
 
         return 12;
     }
@@ -954,8 +950,14 @@ impl LR35902 {
         return 4;
     }
 
-    fn rotate_8bit_memory_right(&mut self, memory: &mut memory::Memory, addr: usize) -> u32 {
-        let mut byte = match memory.read(addr) {
+    fn rotate_8bit_memory_right(
+        &mut self,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        addr: usize,
+        step_fn: &mut impl FnMut(),
+    ) -> u32 {
+        step_fn();
+        let mut byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("TODO"),
         };
@@ -977,7 +979,8 @@ impl LR35902 {
         self.reset_sub_flag();
         self.reset_half_carry_flag();
 
-        memory.write(addr, byte);
+        step_fn();
+        memory.lock().unwrap().write(addr, byte);
 
         return 12;
     }
@@ -1062,8 +1065,14 @@ impl LR35902 {
         return 4;
     }
 
-    fn rotate_8bit_memory_left_carry(&mut self, memory: &mut memory::Memory, addr: usize) -> u32 {
-        let mut byte = match memory.read(addr) {
+    fn rotate_8bit_memory_left_carry(
+        &mut self,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        addr: usize,
+        step_fn: &mut impl FnMut(),
+    ) -> u32 {
+        step_fn();
+        let mut byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("TODO"),
         };
@@ -1092,7 +1101,8 @@ impl LR35902 {
         self.reset_sub_flag();
         self.reset_half_carry_flag();
 
-        memory.write(addr, byte);
+        step_fn();
+        memory.lock().unwrap().write(addr, byte);
 
         return 12;
     }
@@ -1129,8 +1139,14 @@ impl LR35902 {
         return 4;
     }
 
-    fn rotate_8bit_memory_right_carry(&mut self, memory: &mut memory::Memory, addr: usize) -> u32 {
-        let mut byte = match memory.read(addr) {
+    fn rotate_8bit_memory_right_carry(
+        &mut self,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        addr: usize,
+        step_fn: &mut impl FnMut(),
+    ) -> u32 {
+        step_fn();
+        let mut byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("TODO"),
         };
@@ -1159,7 +1175,8 @@ impl LR35902 {
         self.reset_half_carry_flag();
         self.reset_sub_flag();
 
-        memory.write(addr, byte);
+        step_fn();
+        memory.lock().unwrap().write(addr, byte);
 
         return 12;
     }
@@ -1191,10 +1208,12 @@ impl LR35902 {
 
     fn shift_left_8bit_memory_into_carry(
         &mut self,
-        memory: &mut memory::Memory,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
         addr: usize,
+        step_fn: &mut impl FnMut(),
     ) -> u32 {
-        let mut byte = match memory.read(addr) {
+        step_fn();
+        let mut byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("TODO"),
         };
@@ -1213,7 +1232,8 @@ impl LR35902 {
             self.reset_zero_flag();
         }
 
-        memory.write(addr, byte);
+        step_fn();
+        memory.lock().unwrap().write(addr, byte);
 
         self.reset_sub_flag();
         self.reset_half_carry_flag();
@@ -1250,10 +1270,12 @@ impl LR35902 {
 
     fn shift_right_8bit_memory_into_carry(
         &mut self,
-        memory: &mut memory::Memory,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
         addr: usize,
+        step_fn: &mut impl FnMut(),
     ) -> u32 {
-        let mut byte = match memory.read(addr) {
+        step_fn();
+        let mut byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("TODO"),
         };
@@ -1274,7 +1296,8 @@ impl LR35902 {
             self.reset_zero_flag();
         }
 
-        memory.write(addr, byte);
+        step_fn();
+        memory.lock().unwrap().write(addr, byte);
 
         self.reset_sub_flag();
         self.reset_half_carry_flag();
@@ -1300,15 +1323,22 @@ impl LR35902 {
         return 4;
     }
 
-    fn swap_8bit_memory(&mut self, memory: &mut memory::Memory, addr: usize) -> u32 {
-        let current = match memory.read(addr) {
+    fn swap_8bit_memory(
+        &mut self,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        addr: usize,
+        step_fn: &mut impl FnMut(),
+    ) -> u32 {
+        step_fn();
+        let current = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("TODO"),
         };
 
         let result = ((current & 0x0F) << 4) | ((current & 0xF0) >> 4);
 
-        memory.write(addr, result);
+        step_fn();
+        memory.lock().unwrap().write(addr, result);
 
         if result == 0x00 {
             self.set_zero_flag();
@@ -1348,8 +1378,14 @@ impl LR35902 {
         return 4;
     }
 
-    fn shift_right_8bit_memory(&mut self, memory: &mut memory::Memory, addr: usize) -> u32 {
-        let current = match memory.read(addr) {
+    fn shift_right_8bit_memory(
+        &mut self,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        addr: usize,
+        step_fn: &mut impl FnMut(),
+    ) -> u32 {
+        step_fn();
+        let current = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("TODO"),
         };
@@ -1368,7 +1404,8 @@ impl LR35902 {
             self.reset_zero_flag();
         }
 
-        memory.write(addr, result);
+        step_fn();
+        memory.lock().unwrap().write(addr, result);
 
         self.reset_sub_flag();
         self.reset_half_carry_flag();
@@ -1393,11 +1430,13 @@ impl LR35902 {
 
     fn test_bit_memory(
         &mut self,
-        memory: &mut memory::Memory,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
         addr: usize,
         bit_position: u8,
+        step_fn: &mut impl FnMut(),
     ) -> u32 {
-        let current = match memory.read(addr) {
+        step_fn();
+        let current = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("TODO"),
         };
@@ -1423,16 +1462,22 @@ impl LR35902 {
 
     fn reset_bit_memory(
         &mut self,
-        memory: &mut memory::Memory,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
         addr: usize,
         bit_position: u8,
+        step_fn: &mut impl FnMut(),
     ) -> u32 {
-        let current = match memory.read(addr) {
+        step_fn();
+        let current = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("TODO"),
         };
 
-        memory.write(addr, current & !(1 << bit_position));
+        step_fn();
+        memory
+            .lock()
+            .unwrap()
+            .write(addr, current & !(1 << bit_position));
 
         return 12;
     }
@@ -1446,32 +1491,46 @@ impl LR35902 {
 
     fn set_bit_memory(
         &mut self,
-        memory: &mut memory::Memory,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
         addr: usize,
         bit_position: u8,
+        step_fn: &mut impl FnMut(),
     ) -> u32 {
-        let current = match memory.read(addr) {
+        step_fn();
+        let current = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("TODO"),
         };
 
-        memory.write(addr, current | (1 << bit_position));
+        step_fn();
+        memory
+            .lock()
+            .unwrap()
+            .write(addr, current | (1 << bit_position));
 
         return 12;
     }
 
     #[cfg(feature = "serial_debug")]
-    fn serial_debug_output(memory: &mut memory::Memory) {
+    fn serial_debug_output(memory: &Arc<sync::Mutex<memory::Memory>>) {
         use std::io::{self, Write};
 
-        match memory.read(io_registers::SERIAL_TRANSFER_CONTROL_ADDR) {
+        match memory
+            .lock()
+            .unwrap()
+            .read(io_registers::SERIAL_TRANSFER_CONTROL_ADDR)
+        {
             Some(byte) => {
                 if byte == 0x81 {
-                    match memory.read(io_registers::SERIAL_TRANSFER_DATA_ADDR) {
+                    match memory
+                        .lock()
+                        .unwrap()
+                        .read(io_registers::SERIAL_TRANSFER_DATA_ADDR)
+                    {
                         Some(byte) => {
                             print!("{}", byte as char);
                             io::stdout().flush().unwrap();
-                            memory.write(
+                            memory.lock().unwrap().write(
                                 io_registers::SERIAL_TRANSFER_CONTROL_ADDR,
                                 0x00,
                                 self,

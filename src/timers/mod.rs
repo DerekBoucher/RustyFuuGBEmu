@@ -1,4 +1,6 @@
-use crate::memory::io_registers;
+use std::sync::{self, Arc};
+
+use crate::{interrupt, memory::io_registers};
 const TIMER_CONTROL_ENABLED_MASK: u8 = 1 << 2;
 
 #[derive(Debug)]
@@ -44,15 +46,6 @@ impl Timers {
         }
     }
 
-    pub fn requires_interrupt(&mut self) -> bool {
-        if self.interrupt_pending {
-            self.interrupt_pending = false;
-            return true;
-        }
-
-        return false;
-    }
-
     pub fn read(&self, addr: usize) -> u8 {
         match addr {
             io_registers::TIMER_DIV_ADDR => (self.system_clock >> 8) as u8,
@@ -73,7 +66,7 @@ impl Timers {
         }
     }
 
-    pub fn set_post_bootrom_state(&mut self) {
+    pub fn set_post_boot_rom_state(&mut self) {
         self.system_clock = 0xABCC;
         self.current_bit_7 = self.system_clock & (1 << 7) > 0;
         self.current_bit_5 = self.system_clock & (1 << 5) > 0;
@@ -104,15 +97,20 @@ impl Timers {
         self.current_bit_1 = false;
     }
 
-    pub fn tick(&mut self, cycles: u32) {
+    pub fn step(&mut self, interrupt_bus: &Arc<sync::Mutex<crate::interrupt::Bus>>) {
         if self.interrupt_pending {
             self.interrupt_pending = false;
             self.tima = self.tma;
+            interrupt_bus
+                .lock()
+                .unwrap()
+                .request_interrupt(interrupt::Interrupt::TimerOverflow);
         }
 
-        for _ in 0..cycles / 4 {
-            self.system_clock = self.system_clock.wrapping_add(1);
+        self.system_clock = self.system_clock.wrapping_add(1);
 
+        for _ in 0..4 {
+            // Aka a machine cycle
             self.current_bit_7 = self.system_clock & (1 << 7) > 0;
             self.current_bit_5 = self.system_clock & (1 << 5) > 0;
             self.current_bit_3 = self.system_clock & (1 << 3) > 0;

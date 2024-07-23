@@ -1,6 +1,7 @@
 mod cartridge;
 mod cpu;
 mod gameboy;
+mod interrupt;
 mod memory;
 mod ppu;
 mod renderer;
@@ -38,11 +39,7 @@ fn main() {
     let egui_glium_client = egui_glium::EguiGlium::new(&display, &program_loop);
     let mut opengl_renderer = renderer::OpenGL::new(&display);
 
-    let cpu = cpu::LR35902::new();
-    let memory = memory::Memory::default();
-    let ppu = ppu::PPU::new();
-    let timers = timers::Timers::new();
-    let gameboy = gameboy::Gameboy::new(cpu, memory, ppu, timers, args.skip_boot_rom);
+    let gameboy = gameboy::Gameboy::new(args.skip_boot_rom);
 
     let mut ui = ui::Ui::new(
         egui_glium_client,
