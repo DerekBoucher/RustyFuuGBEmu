@@ -1,4 +1,5 @@
 mod ppu;
+mod sprite;
 mod stat;
 
 #[derive(Clone, Copy, Debug, PartialEq)]

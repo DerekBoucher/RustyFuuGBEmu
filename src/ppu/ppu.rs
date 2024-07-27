@@ -2,7 +2,10 @@ use std::sync::{self, Arc};
 
 use crate::{
     interrupt,
-    memory::{self, io_registers},
+    memory::{
+        self,
+        io_registers::{self},
+    },
     ppu::{
         self,
         stat::{self, StatUpdater},
@@ -77,39 +80,132 @@ impl PPU {
             return;
         }
 
-        self.scanline_counter -= 4;
+        for _ in 0..4 {
+            self.scanline_counter -= 1;
 
-        if self.scanline_counter <= 0 {
-            self.scanline_counter += stat::MAX_SCANLINE_COUNT;
+            if self.scanline_counter <= 0 {
+                self.scanline_counter += stat::MAX_SCANLINE_COUNT;
 
-            if current_scanline < 144 {
-                self.draw_scaline(lcdc, memory);
+                if current_scanline < 144 {
+                    self.draw_scaline(lcdc, memory);
+                    memory
+                        .lock()
+                        .unwrap()
+                        .write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
+                    return;
+                }
+
+                // V-Blank period
+                if current_scanline >= 144 && current_scanline < 154 {
+                    interrupt_bus
+                        .lock()
+                        .unwrap()
+                        .request(interrupt::Interrupt::VBlank);
+                    memory
+                        .lock()
+                        .unwrap()
+                        .write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
+                    return;
+                }
+
+                // Else, this means we've been through an entire frame cycle,
+                // reset the LY register to 0.
                 memory
                     .lock()
                     .unwrap()
-                    .write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
-                return;
+                    .write(io_registers::LCD_LY_ADDR, 0x00);
+            }
+        }
+    }
+
+    fn render_sprites(&mut self, lcdc: u8, memory: &Arc<sync::Mutex<memory::Memory>>) {
+        let sprite_8x16 = lcdc & (1 << 2) > 0;
+
+        let sprites = sprite::generate_from(memory);
+
+        let current_scanline = memory
+            .lock()
+            .unwrap()
+            .read(io_registers::LCD_LY_ADDR)
+            .unwrap();
+
+        for sprite in sprites {
+            let y_scale: u8;
+            if sprite_8x16 {
+                y_scale = 16;
+            } else {
+                y_scale = 8;
             }
 
-            // V-Blank period
-            if current_scanline >= 144 && current_scanline < 154 {
-                interrupt_bus
-                    .lock()
-                    .unwrap()
-                    .request(interrupt::Interrupt::VBlank);
-                memory
-                    .lock()
-                    .unwrap()
-                    .write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
-                return;
-            }
+            // Only need to update pixels if the actual sprite falls within the current scanline
+            if current_scanline >= sprite.get_y() && current_scanline < (sprite.get_y() + y_scale) {
+                let mut line: i32 = (current_scanline - sprite.get_y()) as i32;
 
-            // Else, this means we've been through an entire frame cycle,
-            // reset the LY register to 0.
-            memory
-                .lock()
-                .unwrap()
-                .write(io_registers::LCD_LY_ADDR, 0x00);
+                if sprite.is_y_flipped() {
+                    line -= y_scale as i32;
+                    line *= -1;
+                }
+
+                line *= 2;
+
+                let data_addr: usize =
+                    (0x8000 + (sprite.get_pattern_number() * 16) as usize) + line as usize;
+
+                let data1 = memory.lock().unwrap().read(data_addr).unwrap();
+                let data2 = memory.lock().unwrap().read(data_addr + 1).unwrap();
+
+                for tile_pixel in 7..0 {
+                    let mut color_bit = tile_pixel;
+
+                    if sprite.is_x_flipped() {
+                        color_bit -= 7;
+                        color_bit *= -1;
+                    }
+
+                    let mut color_code: u8 = 0x00;
+                    if data2 & (1 << color_bit) > 0 {
+                        color_code |= 0x02;
+                    }
+
+                    if data1 & (1 << color_bit) > 0 {
+                        color_code |= 0x01;
+                    }
+
+                    // If the current pixel color code for the given sprite is 0x00,
+                    // then this is considered a "transparent" pixel, therefore nothing left to do.
+                    if color_code == 0x00 {
+                        continue;
+                    }
+
+                    // TODO: Document what this logic does
+                    let mut color_palette_addr: usize = 0xFF48;
+
+                    if sprite.get_attributes() & (1 << 4) > 0 {
+                        color_palette_addr = 0xFF49;
+                    }
+
+                    let x_offset: i32 = tile_pixel - 1;
+                    let pixel_x: usize = sprite.get_x() as usize + x_offset as usize;
+
+                    // If the sprite's x pixel is out of the bounds of the screen, no reason to render it.
+                    // Also applies if the current scanline is in v-blank mode.
+                    if pixel_x > 159 || current_scanline > 143 {
+                        continue;
+                    }
+
+                    // Determine if sprite pixel has priority over background or window
+                    if !sprite.has_priority_over_bg()
+                        && self.pixels[pixel_x][current_scanline as usize] != ppu::Pixel::White
+                    {
+                        continue;
+                    }
+
+                    let pixel_rgb =
+                        PPU::determine_pixel_rgb(memory, color_palette_addr, color_code);
+
+                    self.pixels[pixel_x][current_scanline as usize] = pixel_rgb;
+                }
+            }
         }
     }
 
@@ -119,7 +215,7 @@ impl PPU {
         }
 
         if lcdc & LCDC_OBJ_ENABLE_MASK > 0 {
-            // TODO -render sprites
+            self.render_sprites(lcdc, memory);
         }
     }
 
@@ -172,6 +268,48 @@ impl PPU {
         }
     }
 
+    fn determine_pixel_rgb(
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        color_palette_addr: usize,
+        pixel_color_encoding: u8,
+    ) -> ppu::Pixel {
+        let color_palette = memory.lock().unwrap().read(color_palette_addr).unwrap();
+
+        // Depending on the current color palette that is in the PALETTE register,
+        // these encoding translate to different colors / shades of gray.
+        let palette_00 = (color_palette) & 0b11;
+        let palette_01 = (color_palette >> 2) & 0b11;
+        let palette_10 = (color_palette >> 4) & 0b11;
+        let palette_11 = (color_palette >> 6) & 0b11;
+
+        // The pixel value first needs to be mapped to the color palette
+        // defined in the PALETTE register.
+        let translated_color: u8 = match pixel_color_encoding {
+            0b00 => palette_00,
+            0b01 => palette_01,
+            0b10 => palette_10,
+            0b11 => palette_11,
+            _ => panic!(
+                "invalid color encoding when rendering scanline: {}",
+                pixel_color_encoding
+            ),
+        };
+
+        // Only then can we properly determine the actual pixel color to render.
+        let pixel = match translated_color {
+            0b00 => ppu::Pixel::White,
+            0b01 => ppu::Pixel::LightGray,
+            0b10 => ppu::Pixel::DarkGray,
+            0b11 => ppu::Pixel::Black,
+            _ => panic!(
+                "invalid color encoding when rendering scanline: {}",
+                pixel_color_encoding
+            ),
+        };
+
+        return pixel;
+    }
+
     // Tiles on GB are represented in VRAM as 16 bytes. They are located in the address range
     // 0x8000-0x97FF. In total, there are 384 possible tiles that can be defined in that area.
 
@@ -220,18 +358,6 @@ impl PPU {
             .unwrap()
             .read(memory::io_registers::LCD_WINY_ADDR)
             .unwrap();
-        let color_palette = memory
-            .lock()
-            .unwrap()
-            .read(memory::io_registers::LCD_PALETTE_ADDR)
-            .unwrap();
-
-        // Depending on the current color palette that is in the PALETTE register,
-        // these encoding translate to different colors / shades of gray.
-        let palette_00 = (color_palette) & 0b11;
-        let palette_01 = (color_palette >> 2) & 0b11;
-        let palette_10 = (color_palette >> 4) & 0b11;
-        let palette_11 = (color_palette >> 6) & 0b11;
 
         // Base address for the tile data in VRAM.
         // This area of memory contains the actual pixel color encodings to render tiles.
@@ -308,30 +434,11 @@ impl PPU {
                 pixel_color_encoding |= 0b01;
             }
 
-            // The pixel value first needs to be mapped to the color palette
-            // defined in the PALETTE register.
-            let translated_color: u8 = match pixel_color_encoding {
-                0b00 => palette_00,
-                0b01 => palette_01,
-                0b10 => palette_10,
-                0b11 => palette_11,
-                _ => panic!(
-                    "invalid color encoding when rendering scanline: {}",
-                    pixel_color_encoding
-                ),
-            };
-
-            // Only then can we properly determine the actual pixel color to render.
-            let pixel_color = match translated_color {
-                0b00 => ppu::Pixel::White,
-                0b01 => ppu::Pixel::LightGray,
-                0b10 => ppu::Pixel::DarkGray,
-                0b11 => ppu::Pixel::Black,
-                _ => panic!(
-                    "invalid color encoding when rendering scanline: {}",
-                    pixel_color_encoding
-                ),
-            };
+            let pixel_color = PPU::determine_pixel_rgb(
+                memory,
+                memory::io_registers::LCD_PALETTE_ADDR,
+                pixel_color_encoding,
+            );
 
             self.pixels[current_scanline as usize][pixel_iter as usize] = pixel_color;
         }

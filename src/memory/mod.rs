@@ -177,12 +177,10 @@ impl Memory {
         }
 
         for offset in 0..4 {
+            let effective_addr: usize = self.oam_hi_byte as usize
+                | (self.oam_dma_transfer_cycles_completed + offset) as usize;
             self.sprite_attributes[(self.oam_dma_transfer_cycles_completed + offset) as usize] =
-                self.read(
-                    (self.oam_hi_byte as usize) << 8
-                        | (self.oam_dma_transfer_cycles_completed + offset) as usize,
-                )
-                .unwrap();
+                self.dma_read(effective_addr).unwrap();
         }
         self.oam_dma_transfer_cycles_completed += 4;
 
@@ -311,6 +309,37 @@ impl Memory {
         self.io_registers[0xFF6A - offset] = 0xFF;
         self.io_registers[0xFF6B - offset] = 0xFF;
         self.io_registers[0xFF70 - offset] = 0xFF;
+    }
+
+    pub fn dma_read(&self, addr: usize) -> Option<u8> {
+        let data: Option<u8>;
+        if addr < 0x100 && self.boot_rom_enabled() {
+            data = Some(Memory::BOOT_ROM[addr]);
+        } else
+        // Cartridge ROM
+        if addr < 0x8000 {
+            data = self.cartridge.read(addr);
+        } else
+        // Video RAM
+        if addr >= 0x8000 && addr < 0xA000 {
+            data = Some(self.video_ram[addr - 0x8000]);
+        } else
+        // Cartridge RAM
+        if addr >= 0xA000 && addr < 0xC000 {
+            data = self.cartridge.read(addr);
+        } else
+        // Work RAM 0
+        if addr >= 0xC000 && addr < 0xD000 {
+            data = Some(self.work_ram0[addr - 0xC000]);
+        } else
+        // Work RAM 1
+        if addr >= 0xD000 && addr < 0xE000 {
+            data = Some(self.work_ram1[addr - 0xD000]);
+        } else {
+            panic!("Invalid DMA transfer source address");
+        }
+
+        return data;
     }
 
     pub fn read(&mut self, addr: usize) -> Option<u8> {
