@@ -96,7 +96,7 @@ impl PPU {
                 interrupt_bus
                     .lock()
                     .unwrap()
-                    .request_interrupt(interrupt::Interrupt::VBlank);
+                    .request(interrupt::Interrupt::VBlank);
                 memory
                     .lock()
                     .unwrap()
@@ -168,7 +168,7 @@ impl PPU {
             interrupt_bus
                 .lock()
                 .unwrap()
-                .request_interrupt(interrupt::Interrupt::LcdStat);
+                .request(interrupt::Interrupt::LcdStat);
         }
     }
 

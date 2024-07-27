@@ -1066,9 +1066,7 @@ fn invalid_opcode(opcode: u8) -> u32 {
     4
 }
 
-fn execute_0x00(_: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-
+fn execute_0x00(_: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
     4
 }
 
@@ -1090,7 +1088,7 @@ fn execute_0x01(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
         None => panic!(
             "opcode load imm 16 into BC failed to fetch hi byte. Dumping cpu state...\n{:?}",
             cpu,
-
+            
         ),
     };
 
@@ -1219,10 +1217,10 @@ fn execute_0x0a(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 }
 
 fn execute_0x0b(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    let new_bc = cpu.bc.word().wrapping_sub(1);
-
     step_fn();
+    let new_bc = cpu.bc.word().wrapping_sub(1);
     cpu.bc.set_word(new_bc);
+
 
     8
 }
@@ -1384,13 +1382,13 @@ fn execute_0x18(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
         ),
     };
 
-    cpu.pc = cpu.pc.wrapping_add(1);
-
     step_fn();
+    cpu.pc = cpu.pc.wrapping_add(1);
+    
     if bit::test_most_significant_bit(relative_addr) {
         cpu.pc = cpu
-            .pc
-            .wrapping_sub(bit::two_compliment_byte(relative_addr).into());
+        .pc
+        .wrapping_sub(bit::two_compliment_byte(relative_addr).into());
     } else {
         cpu.pc = cpu.pc.wrapping_add(relative_addr.into());
     }
@@ -1422,8 +1420,8 @@ fn execute_0x1a(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
 fn execute_0x1b(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     step_fn();
-    let new_de = cpu.de.word().wrapping_sub(1);
 
+    let new_de = cpu.de.word().wrapping_sub(1);
     cpu.de.set_word(new_de);
 
     8
@@ -1488,7 +1486,6 @@ fn execute_0x20(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
         return 8;
     }
 
-    step_fn();
     let relative_addr = match memory.lock().unwrap().read(usize::from(cpu.pc)) {
         Some(byte) => byte,
         None => panic!(
@@ -1496,6 +1493,7 @@ fn execute_0x20(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
             cpu,
         ),
     };
+    step_fn();
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
@@ -1539,8 +1537,8 @@ fn execute_0x21(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 fn execute_0x22(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     step_fn();
     memory.lock().unwrap().write(usize::from(cpu.hl.word()), cpu.af.hi);
-
     cpu.hl.set_word(cpu.hl.word().wrapping_add(1));
+    
 
     8
 }
@@ -1617,8 +1615,8 @@ fn execute_0x27(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
 }
 
 fn execute_0x28(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
     if !cpu.test_zero_flag() {
+        step_fn();
         cpu.pc = cpu.pc.wrapping_add(1);
         return 8;
     }
@@ -1632,6 +1630,7 @@ fn execute_0x28(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
         ),
     };
 
+    step_fn();
     cpu.pc = cpu.pc.wrapping_add(1);
 
     if bit::test_most_significant_bit(relative_addr) {
@@ -1672,9 +1671,8 @@ fn execute_0x2a(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 fn execute_0x2b(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     step_fn();
     let new_hl = cpu.hl.word().wrapping_sub(1);
-
     cpu.hl.set_word(new_hl);
-
+    
     8
 }
 
@@ -1699,7 +1697,7 @@ fn execute_0x2e(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
             cpu,
         ),
     };
-
+    
     cpu.hl.lo = byte;
 
     cpu.pc = cpu.pc.wrapping_add(1);
@@ -1717,12 +1715,12 @@ fn execute_0x2f(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
 }
 
 fn execute_0x30(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
     if cpu.test_carry_flag() {
+        step_fn();
         cpu.pc = cpu.pc.wrapping_add(1);
         return 8;
     }
-
+    
     step_fn();
     let relative_addr = match memory.lock().unwrap().read(usize::from(cpu.pc)) {
         Some(byte) => byte,
@@ -1732,6 +1730,7 @@ fn execute_0x30(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
         ),
     };
 
+    step_fn();
     cpu.pc = cpu.pc.wrapping_add(1);
 
     if bit::test_most_significant_bit(relative_addr) {
@@ -1776,8 +1775,8 @@ fn execute_0x31(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 fn execute_0x32(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     step_fn();
     memory.lock().unwrap().write(usize::from(cpu.hl.word()), cpu.af.hi);
-
     cpu.hl.set_word(cpu.hl.word().wrapping_sub(1));
+    
 
     8
 }
@@ -1880,8 +1879,8 @@ fn execute_0x37(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
 }
 
 fn execute_0x38(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
     if !cpu.test_carry_flag() {
+        step_fn();
         cpu.pc = cpu.pc.wrapping_add(1);
         return 8;
     }
@@ -1895,6 +1894,7 @@ fn execute_0x38(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
         ),
     };
 
+    step_fn();
     cpu.pc = cpu.pc.wrapping_add(1);
 
     if bit::test_most_significant_bit(relative_addr) {
@@ -2380,10 +2380,10 @@ fn execute_0x76(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, _:
 
     if (interrupt_enable_register & interrupt_flag_register & 0x1F) == 0x00 {
         cpu.halted = true;
-        return clock_cycles;
+    } else {
+        cpu.bugged_halt = true;
     }
 
-    cpu.bugged_halt = true;
 
     clock_cycles
 }
@@ -2489,8 +2489,7 @@ fn execute_0x85(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
 }
 
 fn execute_0x86(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), false);
+    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), false, step_fn);
 
     8
 }
@@ -2538,8 +2537,7 @@ fn execute_0x8d(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
 }
 
 fn execute_0x8e(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), true);
+    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), true, step_fn);
 
     8
 }
@@ -2587,8 +2585,7 @@ fn execute_0x95(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
 }
 
 fn execute_0x96(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), false);
+    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), false, step_fn);
 
     8
 }
@@ -2636,8 +2633,7 @@ fn execute_0x9d(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
 }
 
 fn execute_0x9e(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), true);
+    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), true, step_fn);
 
     8
 }
@@ -2685,8 +2681,7 @@ fn execute_0xa5(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
 }
 
 fn execute_0xa6(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-    cpu.and_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()));
+    cpu.and_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), step_fn);
 
     8
 }
@@ -2734,8 +2729,7 @@ fn execute_0xad(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
 }
 
 fn execute_0xae(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-    cpu.xor_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()));
+    cpu.xor_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), step_fn);
 
     8
 }
@@ -2783,8 +2777,7 @@ fn execute_0xb5(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
 }
 
 fn execute_0xb6(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-    cpu.or_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()));
+    cpu.or_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), step_fn);
 
     8
 }
@@ -2832,8 +2825,7 @@ fn execute_0xbd(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
 }
 
 fn execute_0xbe(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-    cpu.compare_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()));
+    cpu.compare_8_bit_memory(register::ID::A, memory, usize::from(cpu.hl.word()), step_fn);
 
     8
 }
@@ -2872,8 +2864,7 @@ fn execute_0xc5(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 }
 
 fn execute_0xc6(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), false);
+    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), false, step_fn);
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
@@ -2921,8 +2912,7 @@ fn execute_0xcd(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 }
 
 fn execute_0xce(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), true);
+    cpu.add_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), true, step_fn);
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
@@ -2961,8 +2951,7 @@ fn execute_0xd5(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 }
 
 fn execute_0xd6(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), false);
+    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), false, step_fn);
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
@@ -2995,8 +2984,7 @@ fn execute_0xdc(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 }
 
 fn execute_0xde(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), true);
+    cpu.sub_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), true, step_fn);
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
@@ -3034,9 +3022,9 @@ fn execute_0xe1(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 }
 
 fn execute_0xe2(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
     let effective_addr: usize = 0xFF00 + usize::from(cpu.bc.lo);
-
+    
+    step_fn();
     memory.lock().unwrap().write(effective_addr, cpu.af.hi);
 
     return 8;
@@ -3049,8 +3037,7 @@ fn execute_0xe5(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 }
 
 fn execute_0xe6(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-    cpu.and_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc));
+    cpu.and_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), step_fn);
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
@@ -3072,16 +3059,14 @@ fn execute_0xe8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
         None => panic!("TODO"),
     };
 
-    cpu.pc = cpu.pc.wrapping_add(1);
-
     step_fn();
+    cpu.pc = cpu.pc.wrapping_add(1);
     let lo_sp: u8 = cpu.sp.to_be_bytes()[1];
 
     cpu.reset_sub_flag();
     cpu.reset_zero_flag();
 
-    step_fn();
-
+    
     // Negative number
     if bit::test_most_significant_bit(added_byte) {
         if bit::is_half_carry(lo_sp, added_byte, false) {
@@ -3089,13 +3074,13 @@ fn execute_0xe8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
         } else {
             cpu.reset_half_carry_flag();
         }
-
+        
         if bit::is_carry(lo_sp, added_byte, false) {
             cpu.set_carry_flag();
         } else {
             cpu.reset_carry_flag();
         }
-
+        
         cpu.sp = cpu.sp.wrapping_sub(two_compliment_byte(added_byte).into());
     } else {
         if bit::is_half_carry(lo_sp, added_byte, false) {
@@ -3103,15 +3088,16 @@ fn execute_0xe8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
         } else {
             cpu.reset_half_carry_flag();
         }
-
+        
         if bit::is_carry(lo_sp, added_byte, false) {
             cpu.set_carry_flag();
         } else {
             cpu.reset_carry_flag();
         }
-
+        
         cpu.sp = cpu.sp.wrapping_add(added_byte.into());
     }
+    step_fn();
 
     return 16;
 }
@@ -3127,17 +3113,17 @@ fn execute_0xea(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
         Some(byte) => byte,
         None => panic!("TODO"),
     };
-
+    
     cpu.pc = cpu.pc.wrapping_add(1);
-
+    
     step_fn();
     let hi_byte = match memory.lock().unwrap().read(usize::from(cpu.pc)) {
         Some(byte) => byte,
         None => panic!("TODO"),
     };
-
+    
     cpu.pc = cpu.pc.wrapping_add(1);
-
+    
     let effective_addr: usize = (usize::from(hi_byte) << 8) | usize::from(lo_byte);
 
     step_fn();
@@ -3147,8 +3133,7 @@ fn execute_0xea(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 }
 
 fn execute_0xee(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-    cpu.xor_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc));
+    cpu.xor_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), step_fn);
     cpu.pc = cpu.pc.wrapping_add(1);
     return 8;
 }
@@ -3216,8 +3201,7 @@ fn execute_0xf5(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 }
 
 fn execute_0xf6(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-    cpu.or_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc));
+    cpu.or_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), step_fn);
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
@@ -3239,7 +3223,6 @@ fn execute_0xf8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
         None => panic!("TODO"),
     };
     
-    step_fn();
     cpu.pc = cpu.pc.wrapping_add(1);
 
     let lo_sp: u8 = cpu.sp.to_be_bytes()[1];
@@ -3247,7 +3230,6 @@ fn execute_0xf8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
     cpu.reset_sub_flag();
     cpu.reset_zero_flag();
 
-    step_fn();
     // Negative number
     if bit::test_most_significant_bit(added_byte) {
         if bit::is_half_carry(lo_sp, added_byte, false) {
@@ -3255,13 +3237,13 @@ fn execute_0xf8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
         } else {
             cpu.reset_half_carry_flag();
         }
-
+        
         if bit::is_carry(lo_sp, added_byte, false) {
             cpu.set_carry_flag();
         } else {
             cpu.reset_carry_flag();
         }
-
+        
         cpu.hl.set_word(cpu.sp.wrapping_sub(bit::two_compliment_byte(added_byte).into()));
     } else {
         if bit::is_half_carry(lo_sp, added_byte, false) {
@@ -3269,16 +3251,17 @@ fn execute_0xf8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
         } else {
             cpu.reset_half_carry_flag();
         }
-
+        
         if bit::is_carry(lo_sp, added_byte, false) {
             cpu.set_carry_flag();
         } else {
             cpu.reset_carry_flag();
         }
-
+        
         cpu.hl.set_word(cpu.sp.wrapping_add(added_byte.into()));
     }
-
+    step_fn();
+    
     return 12;
 }
 
@@ -3295,17 +3278,17 @@ fn execute_0xfa(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
         Some(byte) => byte,
         None => panic!("TODO"),
     };
-
+    
     cpu.pc = cpu.pc.wrapping_add(1);
-
+    
     step_fn();
     let hi_byte = match memory.lock().unwrap().read(usize::from(cpu.pc)) {
         Some(byte) => byte,
         None => panic!("TODO"),
     };
-
+    
     cpu.pc = cpu.pc.wrapping_add(1);
-
+    
     let effective_addr: usize = (usize::from(hi_byte) << 8) | usize::from(lo_byte); 
 
     step_fn();
@@ -3324,8 +3307,7 @@ fn execute_0xfb(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
 }
 
 fn execute_0xfe(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    step_fn();
-    cpu.compare_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc));
+    cpu.compare_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), step_fn);
 
     cpu.pc = cpu.pc.wrapping_add(1);
 

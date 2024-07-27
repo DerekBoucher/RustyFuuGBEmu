@@ -95,11 +95,13 @@ impl Gameboy {
         self.ppu.reset();
         self.memory.lock().unwrap().reset(cartridge::new(rom_data));
         self.timers.lock().unwrap().reset();
+        self.interrupt_bus.lock().unwrap().reset();
 
         if self.skip_boot_rom {
             self.cpu.lock().unwrap().set_post_boot_rom_state();
             self.memory.lock().unwrap().set_post_boot_rom_state();
             self.timers.lock().unwrap().set_post_boot_rom_state();
+            self.interrupt_bus.lock().unwrap().set_post_boot_rom_state();
         }
     }
 
@@ -261,9 +263,35 @@ impl Gameboy {
                         self.ppu.step_graphics(&self.memory, &self.interrupt_bus);
                     };
 
-                    let cycles = self.cpu.lock().unwrap().execute_next_opcode(&self.memory, step_fn);
-                    self.cpu.lock().unwrap().process_interrupts(&self.memory, &self.interrupt_bus, step_fn);
-                    cycles_this_frame_so_far += cycles;
+                    if self.cpu.lock().unwrap().is_stopped() {
+                        // todo
+                    }
+
+                    // let cycles: u32;
+
+                    if self.cpu.lock().unwrap().is_halted() {
+                        // cycles = 4;
+                        step_fn();
+                        self.cpu.lock().unwrap().handle_halt(&self.interrupt_bus);
+                    } else {
+                        _ = self.
+                            cpu.
+                            lock().
+                            unwrap().
+                            execute_next_opcode(&self.memory, step_fn);
+
+                            self.
+                                cpu.
+                                lock().
+                                unwrap().
+                                process_interrupts(&self.memory,
+                                    &self.interrupt_bus,
+                                    step_fn,
+                                );
+                    }
+
+
+                    cycles_this_frame_so_far += self.timers.lock().unwrap().get_elapsed_cycles();
                 }
             }
         }

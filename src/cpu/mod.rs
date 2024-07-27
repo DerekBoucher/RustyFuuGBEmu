@@ -95,6 +95,26 @@ impl LR35902 {
         }
     }
 
+    pub fn is_halted(&self) -> bool {
+        return self.halted;
+    }
+
+    pub fn handle_halt(&mut self, interrupt_bus: &Arc<sync::Mutex<interrupt::Bus>>) {
+        if self.bugged_halt {
+            self.bugged_halt = false;
+            return;
+        }
+
+        if interrupt_bus
+            .lock()
+            .unwrap()
+            .get_highest_priority_interrupt()
+            .is_some()
+        {
+            self.halted = false;
+        }
+    }
+
     pub fn reset(&mut self) {
         *self = LR35902::new();
     }
@@ -104,14 +124,7 @@ impl LR35902 {
         memory: &Arc<sync::Mutex<memory::Memory>>,
         step_fn: &mut impl FnMut(),
     ) -> u32 {
-        if self.halted {
-            step_fn();
-            return 4;
-        }
-
-        if self.is_stopped() {
-            return 0;
-        }
+        step_fn();
 
         let op = match memory.lock().unwrap().read(usize::from(self.pc)) {
             Some(x) => Opcode::from(x),
@@ -132,7 +145,6 @@ impl LR35902 {
 
         let cycles = op.execute(self, memory, step_fn);
 
-        step_fn();
         return cycles;
     }
 
@@ -155,20 +167,14 @@ impl LR35902 {
         interrupt_bus: &Arc<sync::Mutex<interrupt::Bus>>,
         step_fn: &mut impl FnMut(),
     ) {
+        if !self.interrupt_master_enable {
+            return;
+        }
+
         let pending_interrupt = interrupt_bus
             .lock()
             .unwrap()
             .get_highest_priority_interrupt();
-
-        if self.halted {
-            if pending_interrupt.is_some() {
-                self.halted = false;
-            }
-        }
-
-        if !self.interrupt_master_enable {
-            return;
-        }
 
         match pending_interrupt {
             Some(interrupt) => {
@@ -374,9 +380,11 @@ impl LR35902 {
         target: register::ID,
         memory: &Arc<sync::Mutex<memory::Memory>>,
         addr: usize,
+        step_fn: &mut impl FnMut(),
     ) {
         let target_value = self.read_register(&target);
 
+        step_fn();
         let byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("invalid memory address read in compare_8_bit_memory (addr: {}), dumping cpu state...\n{:?}", addr, self),
@@ -409,6 +417,7 @@ impl LR35902 {
         memory: &Arc<sync::Mutex<memory::Memory>>,
         addr: usize,
         with_carry_flag: bool,
+        step_fn: &mut impl FnMut(),
     ) {
         let target_value = self.read_register(&target);
 
@@ -417,6 +426,7 @@ impl LR35902 {
             false => 0x00,
         };
 
+        step_fn();
         let byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("invalid memory address read in add_8_bit_memory (addr: {}), dumping cpu state...\n{:?}", addr, self),
@@ -493,6 +503,7 @@ impl LR35902 {
         memory: &Arc<sync::Mutex<memory::Memory>>,
         addr: usize,
         with_carry_flag: bool,
+        step_fn: &mut impl FnMut(),
     ) {
         let target_value = self.read_register(&target);
 
@@ -501,6 +512,7 @@ impl LR35902 {
             false => 0x00,
         };
 
+        step_fn();
         let byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!("invalid memory address read in sub_8_bit_memory (addr: {}), dumping cpu state...\n{:?}", addr, self),
@@ -556,9 +568,11 @@ impl LR35902 {
         target: register::ID,
         memory: &Arc<sync::Mutex<memory::Memory>>,
         addr: usize,
+        step_fn: &mut impl FnMut(),
     ) {
         let target_value = self.read_register(&target);
 
+        step_fn();
         let byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!(
@@ -607,9 +621,11 @@ impl LR35902 {
         target: register::ID,
         memory: &Arc<sync::Mutex<memory::Memory>>,
         addr: usize,
+        step_fn: &mut impl FnMut(),
     ) {
         let target_value = self.read_register(&target);
 
+        step_fn();
         let byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!(
@@ -658,9 +674,11 @@ impl LR35902 {
         target: register::ID,
         memory: &Arc<sync::Mutex<memory::Memory>>,
         addr: usize,
+        step_fn: &mut impl FnMut(),
     ) {
         let target_value = self.read_register(&target);
 
+        step_fn();
         let byte = match memory.lock().unwrap().read(addr) {
             Some(byte) => byte,
             None => panic!(
@@ -781,8 +799,8 @@ impl LR35902 {
         self.pc = self.pc.wrapping_add(1);
 
         if condition {
-            step_fn();
             self.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
+            step_fn();
 
             return 16;
         }
@@ -844,10 +862,10 @@ impl LR35902 {
                 None => panic!("error occured when loading return address from stack pointer"),
             };
 
-            step_fn();
             self.sp = self.sp.wrapping_add(1);
-
             self.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
+
+            step_fn();
 
             return 20;
         }
@@ -1441,6 +1459,7 @@ impl LR35902 {
             None => panic!("TODO"),
         };
 
+        step_fn();
         if current & (1 << bit_position) > 0 {
             self.reset_zero_flag();
         } else {
@@ -1530,12 +1549,10 @@ impl LR35902 {
                         Some(byte) => {
                             print!("{}", byte as char);
                             io::stdout().flush().unwrap();
-                            memory.lock().unwrap().write(
-                                io_registers::SERIAL_TRANSFER_CONTROL_ADDR,
-                                0x00,
-                                self,
-                                timers,
-                            );
+                            memory
+                                .lock()
+                                .unwrap()
+                                .write(io_registers::SERIAL_TRANSFER_CONTROL_ADDR, 0x00);
                         }
                         None => {}
                     }

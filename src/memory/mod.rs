@@ -47,6 +47,7 @@ pub struct Memory {
 
     /// Number of cycles completed during a DMA transfer.
     oam_dma_transfer_cycles_completed: u32,
+    oam_hi_byte: u8,
 
     timer_ref: Arc<sync::Mutex<timers::Timers>>,
 
@@ -138,6 +139,7 @@ impl Memory {
             hi_ram: [0x00; 0x7F],
             oam_dma_transfer_cycles_completed: 0,
             oam_dma_transfer_in_progress: false,
+            oam_hi_byte: 0,
             timer_ref,
             interrupt_bus_ref,
         }
@@ -158,6 +160,7 @@ impl Memory {
             hi_ram: [0x00; 0x7F],
             oam_dma_transfer_cycles_completed: 0,
             oam_dma_transfer_in_progress: false,
+            oam_hi_byte: 0,
             timer_ref,
             interrupt_bus_ref,
         }
@@ -173,7 +176,16 @@ impl Memory {
             return;
         }
 
+        for offset in 0..4 {
+            self.sprite_attributes[(self.oam_dma_transfer_cycles_completed + offset) as usize] =
+                self.read(
+                    (self.oam_hi_byte as usize) << 8
+                        | (self.oam_dma_transfer_cycles_completed + offset) as usize,
+                )
+                .unwrap();
+        }
         self.oam_dma_transfer_cycles_completed += 4;
+
         if self.oam_dma_transfer_cycles_completed >= OAM_TRANSFER_CYCLES {
             log::trace!("OAM DMA transfer completed");
             self.oam_dma_transfer_in_progress = false;
@@ -195,9 +207,7 @@ impl Memory {
                     panic!("Invalid DMA transfer source address");
                 }
 
-                for i in 0..0xA0 {
-                    self.sprite_attributes[i] = self.read((val as usize) << 8 | i).unwrap();
-                }
+                self.oam_hi_byte = val;
             }
             io_registers::TIMER_MOD_ADDR
             | io_registers::TIMER_COUNTER_ADDR
@@ -255,7 +265,6 @@ impl Memory {
         self.io_registers[io_registers::TIMER_COUNTER_ADDR - offset] = 0x00;
         self.io_registers[io_registers::TIMER_MOD_ADDR - offset] = 0x00;
         self.io_registers[io_registers::TIMER_CTRL_ADDR - offset] = 0xF8;
-        self.io_registers[0xFF0F - offset] = 0xE1;
         self.io_registers[io_registers::AUDIO_CH1_SWEEP_ADDR - offset] = 0x80;
         self.io_registers[io_registers::AUDIO_CH1_LENGTH_ADDR - offset] = 0xBF;
         self.io_registers[io_registers::AUDIO_CH1_VOLUME_ADDR - offset] = 0xF3;

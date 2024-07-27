@@ -22,7 +22,17 @@ impl Bus {
         }
     }
 
-    pub fn request_interrupt(&mut self, interrupt: Interrupt) {
+    pub fn reset(&mut self) {
+        self.flag_bits = 0;
+        self.enable_bits = 0;
+    }
+
+    pub fn set_post_boot_rom_state(&mut self) {
+        self.enable_bits = 0;
+        self.flag_bits = 0xE1;
+    }
+
+    pub fn request(&mut self, interrupt: Interrupt) {
         let interrupt_bit = match interrupt {
             Interrupt::VBlank => 0,
             Interrupt::LcdStat => 1,
@@ -36,8 +46,8 @@ impl Bus {
 
     pub fn get_highest_priority_interrupt(&mut self) -> Option<Interrupt> {
         for interrupt_bit in 0..5 {
-            if (self.flag_bits & (1 << interrupt_bit)) != 0
-                && (self.enable_bits & (1 << interrupt_bit)) != 0
+            if (self.flag_bits & (1 << interrupt_bit)) > 0
+                && (self.enable_bits & (1 << interrupt_bit)) > 0
             {
                 return match interrupt_bit {
                     0 => Some(Interrupt::VBlank),

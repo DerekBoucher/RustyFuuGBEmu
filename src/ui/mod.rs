@@ -99,6 +99,7 @@ impl Ui {
         match selected_rom {
             Some(rom_path) => match fs::read(rom_path.as_path()) {
                 Ok(rom_data) => {
+                    log::info!("Loaded ROM: {}", rom_path.display());
                     gb_controller.load_rom(rom_data);
                 }
                 Err(err) => {

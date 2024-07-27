@@ -85,10 +85,11 @@ fn main() {
         match gb_orchestrator.render_requested() {
             Some(frame_data) => {
                 opengl_renderer.update_frame(&display, frame_data);
-                display.gl_window().window().request_redraw();
             }
-            None => (),
+            _ => {}
         }
+
+        display.gl_window().window().request_redraw();
     });
 }
 
