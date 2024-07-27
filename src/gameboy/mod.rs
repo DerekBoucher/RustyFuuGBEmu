@@ -1,6 +1,10 @@
+use std::sync;
+use std::sync::Arc;
+
 use crate::cartridge;
 use crate::cpu;
 use crate::cpu::CPU_CYCLES_PER_FRAME;
+use crate::interrupt;
 use crate::memory;
 use crate::ppu;
 use crate::timers;
@@ -47,10 +51,11 @@ impl State {
 pub struct Gameboy {
     state: State,
     skip_boot_rom: bool,
-    cpu: cpu::LR35902,
-    memory: memory::Memory,
+    memory: Arc<sync::Mutex<memory::Memory>>,
+    cpu: Arc<sync::Mutex<cpu::LR35902>>,
     ppu: ppu::PPU,
-    timers: timers::Timers,
+    timers: Arc<sync::Mutex<timers::Timers>>,
+    interrupt_bus: Arc<sync::Mutex<interrupt::Bus>>,
 }
 
 pub struct Orchestrator {
@@ -63,32 +68,40 @@ pub struct Orchestrator {
 }
 
 impl Gameboy {
-    pub fn new(
-        cpu: cpu::LR35902,
-        memory: memory::Memory,
-        ppu: ppu::PPU,
-        timers: timers::Timers,
-        skip_boot_rom: bool,
-    ) -> Self {
+    pub fn new(skip_boot_rom: bool) -> Self {
+        let timers = Arc::new(sync::Mutex::new(timers::Timers::new()));
+        let ppu = ppu::PPU::new();
+
+        let interrupt_bus = Arc::new(sync::Mutex::new(interrupt::Bus::new()));
+        let memory = Arc::new(sync::Mutex::new(memory::Memory::default(
+            timers.clone(),
+            interrupt_bus.clone(),
+        )));
+        let cpu = Arc::new(sync::Mutex::new(cpu::LR35902::new()));
+
         return Self {
             state: State::INITIALIZING,
             cpu,
             memory,
             ppu,
-            timers,
             skip_boot_rom,
+            timers,
+            interrupt_bus,
         };
     }
 
     fn load_rom(&mut self, rom_data: Vec<u8>) {
-        self.cpu.reset();
+        self.cpu.lock().unwrap().reset();
         self.ppu.reset();
-        self.timers.reset();
-        self.memory.reset(cartridge::new(rom_data));
+        self.memory.lock().unwrap().reset(cartridge::new(rom_data));
+        self.timers.lock().unwrap().reset();
+        self.interrupt_bus.lock().unwrap().reset();
 
         if self.skip_boot_rom {
-            self.cpu.set_post_boot_rom_state();
-            self.memory.set_post_boot_rom_state();
+            self.cpu.lock().unwrap().set_post_boot_rom_state();
+            self.memory.lock().unwrap().set_post_boot_rom_state();
+            self.timers.lock().unwrap().set_post_boot_rom_state();
+            self.interrupt_bus.lock().unwrap().set_post_boot_rom_state();
         }
     }
 
@@ -146,7 +159,10 @@ impl Gameboy {
                     match ack_sender.send(()) {
                         Ok(_) => {}
                         Err(err) => {
-                            log::error!("ack_sender channel closed before sending ack: {:?}", err,);
+                            log::error!(
+                                "ack_sender channel closed before sending ack: {:?}",
+                                err.to_string()
+                            );
                         }
                     }
                     return;
@@ -162,18 +178,38 @@ impl Gameboy {
         skip_boot_rom_receiver: &channel::Receiver<bool>,
     ) {
         select! {
-            recv(close_receiver) -> _ => {
-                self.state.transition(State::EXITING);
+            recv(close_receiver) -> signal => {
+                match signal {
+                    Ok(_) => {
+                        self.state.transition(State::EXITING);
+                        return;
+                    }
+                    _ => {}
+                }
             }
 
-            recv(skip_boot_rom_receiver) -> skip_boot_rom => {
-                self.skip_boot_rom = skip_boot_rom.unwrap();
+            recv(skip_boot_rom_receiver) -> signal => {
+                match signal {
+                    Ok(skip_boot_rom) => {
+                        self.skip_boot_rom = skip_boot_rom;
+                    }
+                    Err(err) => {
+                        log::error!("Failed to receive skip_boot_rom signal: {:?}", err.to_string());
+                    }
+                }
             }
 
-            recv(rom_data_receiver) -> rom_data => {
-                self.load_rom(rom_data.unwrap());
-                log::debug!("ROM cartridge loaded!");
-                self.state.transition(State::COMPUTING);
+            recv(rom_data_receiver) -> signal => {
+                match signal {
+                    Ok(rom_data) => {
+                        self.load_rom(rom_data);
+                        log::debug!("ROM cartridge loaded!");
+                        self.state.transition(State::COMPUTING);
+                    }
+                    Err(err) => {
+                        log::error!("Failed to receive ROM data: {:?}", err.to_string());
+                    }
+                }
             }
         }
     }
@@ -184,39 +220,78 @@ impl Gameboy {
         rom_data_receiver: &channel::Receiver<Vec<u8>>,
         skip_boot_rom_receiver: &channel::Receiver<bool>,
     ) {
-        let mut cycles_this_update: u32 = 0;
-        while cycles_this_update < CPU_CYCLES_PER_FRAME {
+        let mut cycles_this_frame_so_far: u32 = 0;
+        while cycles_this_frame_so_far < CPU_CYCLES_PER_FRAME {
             select! {
-                recv(close_receiver) -> _ => {
-                    self.state.transition(State::EXITING);
-                    return;
+                recv(close_receiver) -> signal => {
+                    match signal {
+                        Ok(_) => {
+                            self.state.transition(State::EXITING);
+                            return;
+                        }
+                        _ => {}
+                    }
                 }
 
-                recv(skip_boot_rom_receiver) -> skip_boot_rom => {
-                    self.skip_boot_rom = skip_boot_rom.unwrap();
+                recv(skip_boot_rom_receiver) -> signal => {
+                    match signal {
+                        Ok(skip_boot_rom) => {
+                            self.skip_boot_rom = skip_boot_rom;
+                        }
+                        Err(err) => {
+                            log::error!("Failed to receive skip_boot_rom signal: {:?}", err.to_string());
+                        }
+                    }
                 }
 
-                recv(rom_data_receiver) -> rom_data => {
-                    self.load_rom(rom_data.unwrap());
-                    log::debug!("ROM cartridge loaded!");
-                    continue;
+                recv(rom_data_receiver) -> signal => {
+                    match signal {
+                        Ok(rom_data) => {
+                            self.load_rom(rom_data);
+                            log::debug!("ROM cartridge loaded!");
+                        }
+                        Err(err) => {
+                            log::error!("Failed to receive ROM data: {:?}", err.to_string());
+                        }
+                    }
                 }
 
                 default => {
-                    let cycles: u32;
-                    if self.cpu.is_halted() {
-                        cycles = 4;
-                        self.cpu.halt(&mut self.memory);
-                    } else {
-                        cycles = self.cpu.execute_next_opcode(&mut self.memory);
+                    let step_fn = &mut || {
+                        self.timers.lock().unwrap().step(&self.interrupt_bus);
+                        self.memory.lock().unwrap().step_dma();
+                        self.ppu.step_graphics(&self.memory, &self.interrupt_bus);
+                    };
+
+                    if self.cpu.lock().unwrap().is_stopped() {
+                        // todo
                     }
 
-                    cycles_this_update += cycles;
+                    // let cycles: u32;
 
-                    self.memory.update_dma_transfer_cycles(cycles);
-                    self.timers.update(cycles, &mut self.memory, &mut self.cpu);
-                    self.ppu.update_graphics(cycles, &mut self.memory, &mut self.cpu);
-                    self.cpu.process_interrupts(&mut self.memory,&mut self.timers);
+                    if self.cpu.lock().unwrap().is_halted() {
+                        // cycles = 4;
+                        step_fn();
+                        self.cpu.lock().unwrap().handle_halt(&self.interrupt_bus);
+                    } else {
+                        _ = self.
+                            cpu.
+                            lock().
+                            unwrap().
+                            execute_next_opcode(&self.memory, step_fn);
+
+                            self.
+                                cpu.
+                                lock().
+                                unwrap().
+                                process_interrupts(&self.memory,
+                                    &self.interrupt_bus,
+                                    step_fn,
+                                );
+                    }
+
+
+                    cycles_this_frame_so_far += self.timers.lock().unwrap().get_elapsed_cycles();
                 }
             }
         }

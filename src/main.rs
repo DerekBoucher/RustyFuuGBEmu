@@ -1,6 +1,7 @@
 mod cartridge;
 mod cpu;
 mod gameboy;
+mod interrupt;
 mod memory;
 mod ppu;
 mod renderer;
@@ -23,7 +24,7 @@ struct Args {
     #[arg(short, long)]
     rom_path: Option<String>,
 
-    #[arg(short, long, default_value_t = false)]
+    #[arg(short, long, default_value_t = true)]
     skip_boot_rom: bool,
 }
 
@@ -38,11 +39,7 @@ fn main() {
     let egui_glium_client = egui_glium::EguiGlium::new(&display, &program_loop);
     let mut opengl_renderer = renderer::OpenGL::new(&display);
 
-    let cpu = cpu::LR35902::new();
-    let memory = memory::Memory::default();
-    let ppu = ppu::PPU::new();
-    let timers = timers::Timers::new();
-    let gameboy = gameboy::Gameboy::new(cpu, memory, ppu, timers, args.skip_boot_rom);
+    let gameboy = gameboy::Gameboy::new(args.skip_boot_rom);
 
     let mut ui = ui::Ui::new(
         egui_glium_client,
@@ -88,10 +85,11 @@ fn main() {
         match gb_orchestrator.render_requested() {
             Some(frame_data) => {
                 opengl_renderer.update_frame(&display, frame_data);
-                display.gl_window().window().request_redraw();
             }
-            None => (),
+            _ => {}
         }
+
+        display.gl_window().window().request_redraw();
     });
 }
 
@@ -99,7 +97,8 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
     let events_loop =
         glium::glutin::event_loop::EventLoopBuilder::<ui::events::UiEvent>::with_user_event()
             .build();
-    let wb = glium::glutin::window::WindowBuilder::new()
+
+    let window = glium::glutin::window::WindowBuilder::new()
         .with_inner_size(glium::glutin::dpi::LogicalSize::new(
             (ppu::NATIVE_SCREEN_WIDTH as i32) * ui::SCALE_FACTOR,
             ((ppu::NATIVE_SCREEN_HEIGHT as i32) * ui::SCALE_FACTOR) + ui::TOP_MENUBAR_HEIGHT as i32,
@@ -107,8 +106,12 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
         .with_title("RustyFuuGBemu")
         .with_wayland_csd_theme(Theme::Dark)
         .with_resizable(true);
-    let cb = glium::glutin::ContextBuilder::new();
-    let display = glium::Display::new(wb, cb, &events_loop).unwrap();
+
+    let context = glium::glutin::ContextBuilder::new()
+        .with_hardware_acceleration(Some(true))
+        .with_vsync(true);
+
+    let display = glium::Display::new(window, context, &events_loop).unwrap();
 
     return (events_loop, display);
 }

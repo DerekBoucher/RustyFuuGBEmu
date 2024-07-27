@@ -1,5 +1,6 @@
-use crate::cartridge;
-use std::fmt::Debug;
+use crate::{cartridge, interrupt, timers};
+use std::sync;
+use std::{fmt::Debug, sync::Arc};
 
 const OAM_TRANSFER_CYCLES: u32 = 160;
 
@@ -41,15 +42,16 @@ pub struct Memory {
     /// Occupies memory locations 0xFF80 ~ 0xFFFE.
     hi_ram: [u8; 0x7F],
 
-    /// Master interrupt enable register.
-    /// Occupies a single byte of memory at location 0xFFFF.
-    interrupt_enable_register: u8,
-
     /// Flag indicating whether a DMA transfer is in progress.
     oam_dma_transfer_in_progress: bool,
 
     /// Number of cycles completed during a DMA transfer.
     oam_dma_transfer_cycles_completed: u32,
+    oam_hi_byte: u8,
+
+    timer_ref: Arc<sync::Mutex<timers::Timers>>,
+
+    interrupt_bus_ref: Arc<sync::Mutex<interrupt::Bus>>,
 }
 
 /// Module containing important addresses for
@@ -62,6 +64,7 @@ pub mod io_registers {
     pub const TIMER_COUNTER_ADDR: usize = 0xFF05;
     pub const TIMER_MOD_ADDR: usize = 0xFF06;
     pub const TIMER_CTRL_ADDR: usize = 0xFF07;
+    pub const INTERRUPT_FLAG_REGISTER_ADDR: usize = 0xFF0F;
     pub const AUDIO_CH1_SWEEP_ADDR: usize = 0xFF10;
     pub const AUDIO_CH1_LENGTH_ADDR: usize = 0xFF11;
     pub const AUDIO_CH1_VOLUME_ADDR: usize = 0xFF12;
@@ -95,6 +98,7 @@ pub mod io_registers {
     pub const LCD_WINY_ADDR: usize = 0xFF4A;
     pub const LCD_WINX_ADDR: usize = 0xFF4B;
     pub const BOOT_ROM_DISABLE_ADDR: usize = 0xFF50;
+    pub const INTERRUPT_ENABLE_REGISTER_ADDR: usize = 0xFFFF;
 }
 
 impl Memory {
@@ -119,7 +123,11 @@ impl Memory {
         0x50,
     ];
 
-    pub fn new(cartridge: Box<dyn cartridge::Interface>) -> Self {
+    pub fn new(
+        cartridge: Box<dyn cartridge::Interface>,
+        timer_ref: Arc<sync::Mutex<timers::Timers>>,
+        interrupt_bus_ref: Arc<sync::Mutex<interrupt::Bus>>,
+    ) -> Self {
         Self {
             cartridge,
             video_ram: [0x00; 0x2000],
@@ -129,13 +137,18 @@ impl Memory {
             sprite_attributes: [0x00; 0xA0],
             io_registers: [0x00; 0x80],
             hi_ram: [0x00; 0x7F],
-            interrupt_enable_register: 0x00,
             oam_dma_transfer_cycles_completed: 0,
             oam_dma_transfer_in_progress: false,
+            oam_hi_byte: 0,
+            timer_ref,
+            interrupt_bus_ref,
         }
     }
 
-    pub fn default() -> Self {
+    pub fn default(
+        timer_ref: Arc<sync::Mutex<timers::Timers>>,
+        interrupt_bus_ref: Arc<sync::Mutex<interrupt::Bus>>,
+    ) -> Self {
         Self {
             cartridge: cartridge::default(),
             video_ram: [0x00; 0x2000],
@@ -145,9 +158,11 @@ impl Memory {
             sprite_attributes: [0x00; 0xA0],
             io_registers: [0x00; 0x80],
             hi_ram: [0x00; 0x7F],
-            interrupt_enable_register: 0x00,
             oam_dma_transfer_cycles_completed: 0,
             oam_dma_transfer_in_progress: false,
+            oam_hi_byte: 0,
+            timer_ref,
+            interrupt_bus_ref,
         }
     }
 
@@ -155,13 +170,22 @@ impl Memory {
         return self.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] == 0x00;
     }
 
-    pub fn update_dma_transfer_cycles(&mut self, cycles: u32) {
+    pub fn step_dma(&mut self) {
         if !self.oam_dma_transfer_in_progress {
             self.oam_dma_transfer_cycles_completed = 0;
             return;
         }
 
-        self.oam_dma_transfer_cycles_completed += cycles;
+        for offset in 0..4 {
+            self.sprite_attributes[(self.oam_dma_transfer_cycles_completed + offset) as usize] =
+                self.read(
+                    (self.oam_hi_byte as usize) << 8
+                        | (self.oam_dma_transfer_cycles_completed + offset) as usize,
+                )
+                .unwrap();
+        }
+        self.oam_dma_transfer_cycles_completed += 4;
+
         if self.oam_dma_transfer_cycles_completed >= OAM_TRANSFER_CYCLES {
             log::trace!("OAM DMA transfer completed");
             self.oam_dma_transfer_in_progress = false;
@@ -171,6 +195,10 @@ impl Memory {
 
     fn write_io_registers(&mut self, addr: usize, val: u8) {
         match addr {
+            io_registers::INTERRUPT_FLAG_REGISTER_ADDR => {
+                self.interrupt_bus_ref.lock().unwrap().write(addr, val);
+            }
+
             io_registers::OAM_DMA_TRANSFER_ADDR => {
                 log::trace!("OAM DMA transfer initiated");
                 self.oam_dma_transfer_in_progress = true;
@@ -179,15 +207,20 @@ impl Memory {
                     panic!("Invalid DMA transfer source address");
                 }
 
-                for i in 0..0xA0 {
-                    self.sprite_attributes[i] = self.read((val as usize) << 8 | i).unwrap();
-                }
+                self.oam_hi_byte = val;
             }
-            io_registers::TIMER_CTRL_ADDR => {
-                self.io_registers[addr - 0xFF00] = val;
+            io_registers::TIMER_MOD_ADDR
+            | io_registers::TIMER_COUNTER_ADDR
+            | io_registers::TIMER_DIV_ADDR
+            | io_registers::TIMER_CTRL_ADDR => {
+                self.timer_ref.lock().unwrap().write(addr, val);
             }
+
             io_registers::JOYPAD_ADDR => {
                 self.handle_joypad_translation(val);
+            }
+            io_registers::BOOT_ROM_DISABLE_ADDR => {
+                self.io_registers[addr - 0xFF00] = val;
             }
             _ => self.io_registers[addr - 0xFF00] = val,
         }
@@ -228,11 +261,10 @@ impl Memory {
         self.io_registers[io_registers::JOYPAD_ADDR - offset] = 0xCF;
         self.io_registers[io_registers::SERIAL_TRANSFER_DATA_ADDR - offset] = 0x00;
         self.io_registers[io_registers::SERIAL_TRANSFER_CONTROL_ADDR - offset] = 0x7E;
-        self.io_registers[io_registers::TIMER_DIV_ADDR - offset] = 0x00;
+        self.io_registers[io_registers::TIMER_DIV_ADDR - offset] = 0xAB;
         self.io_registers[io_registers::TIMER_COUNTER_ADDR - offset] = 0x00;
         self.io_registers[io_registers::TIMER_MOD_ADDR - offset] = 0x00;
         self.io_registers[io_registers::TIMER_CTRL_ADDR - offset] = 0xF8;
-        self.io_registers[0xFF0F - offset] = 0xE1;
         self.io_registers[io_registers::AUDIO_CH1_SWEEP_ADDR - offset] = 0x80;
         self.io_registers[io_registers::AUDIO_CH1_LENGTH_ADDR - offset] = 0xBF;
         self.io_registers[io_registers::AUDIO_CH1_VOLUME_ADDR - offset] = 0xF3;
@@ -281,84 +313,82 @@ impl Memory {
         self.io_registers[0xFF70 - offset] = 0xFF;
     }
 
-    pub fn read(&self, addr: usize) -> Option<u8> {
-        log::trace!("Reading from memory address {:X}", addr);
-
+    pub fn read(&mut self, addr: usize) -> Option<u8> {
         if self.oam_dma_transfer_in_progress {
             // Only High RAM is accessible during an oam dma transfer.
             if addr >= 0xFF80 && addr < 0xFFFF {
-                return Some(self.hi_ram[addr - 0xFF80].clone());
+                return Some(self.hi_ram[addr - 0xFF80]);
             }
 
             // Else, return dummy data
             return Some(0xFF);
         }
 
+        let data: Option<u8>;
+
         // If boot rom is enabled, the data should come from it.
         if addr < 0x100 && self.boot_rom_enabled() {
-            return Some(Memory::BOOT_ROM[addr].clone());
-        }
-
+            data = Some(Memory::BOOT_ROM[addr]);
+        } else
         // Cartridge ROM
         if addr < 0x8000 {
-            return self.cartridge.read(addr);
-        }
-
+            data = self.cartridge.read(addr);
+        } else
         // Video RAM
         if addr >= 0x8000 && addr < 0xA000 {
-            return Some(self.video_ram[addr - 0x8000].clone());
-        }
-
+            data = Some(self.video_ram[addr - 0x8000]);
+        } else
         // Cartridge RAM
         if addr >= 0xA000 && addr < 0xC000 {
-            return self.cartridge.read(addr);
-        }
-
+            data = self.cartridge.read(addr);
+        } else
         // Work RAM 0
         if addr >= 0xC000 && addr < 0xD000 {
-            return Some(self.work_ram0[addr - 0xC000].clone());
-        }
-
+            data = Some(self.work_ram0[addr - 0xC000]);
+        } else
         // Work RAM 1
         if addr >= 0xD000 && addr < 0xE000 {
-            return Some(self.work_ram1[addr - 0xD000].clone());
-        }
-
+            data = Some(self.work_ram1[addr - 0xD000]);
+        } else
         // Echo RAM
         if addr >= 0xE000 && addr < 0xFE00 {
-            return self.read((addr - 0xE000) + 0xC000).clone();
-        }
-
+            data = self.read((addr - 0xE000) + 0xC000);
+        } else
         // OAM / Sprite attributes
         if addr >= 0xFE00 && addr < 0xFEA0 {
-            return Some(self.sprite_attributes[addr - 0xFE00].clone());
-        }
-
-        if addr >= 0xFEA0 && addr < 0xFF00 {
-            return Some(0xFF);
-        }
-
+            data = Some(self.sprite_attributes[addr - 0xFE00]);
+        } else if addr >= 0xFEA0 && addr < 0xFF00 {
+            data = Some(0xFF);
+        } else
         // IO Registers
         if addr >= 0xFF00 && addr < 0xFF80 {
-            return Some(self.io_registers[addr - 0xFF00].clone());
-        }
+            data = match addr {
+                io_registers::TIMER_DIV_ADDR => Some(self.timer_ref.lock().unwrap().read(addr)),
+                io_registers::TIMER_COUNTER_ADDR => Some(self.timer_ref.lock().unwrap().read(addr)),
+                io_registers::TIMER_MOD_ADDR => Some(self.timer_ref.lock().unwrap().read(addr)),
+                io_registers::TIMER_CTRL_ADDR => Some(self.timer_ref.lock().unwrap().read(addr)),
 
+                io_registers::INTERRUPT_FLAG_REGISTER_ADDR => {
+                    Some(self.interrupt_bus_ref.lock().unwrap().read(addr))
+                }
+                _ => Some(self.io_registers[addr - 0xFF00]),
+            }
+        } else
         // High RAM
         if addr >= 0xFF80 && addr < 0xFFFF {
-            return Some(self.hi_ram[addr - 0xFF80].clone());
-        }
-
+            data = Some(self.hi_ram[addr - 0xFF80]);
+        } else
         // Interupt enable register
         if addr == 0xFFFF {
-            return Some(self.interrupt_enable_register.clone());
+            data = Some(self.interrupt_bus_ref.lock().unwrap().read(addr));
+        } else {
+            data = None;
         }
 
-        None
+        return data;
     }
 
     pub fn write(&mut self, addr: usize, val: u8) {
-        log::trace!("Writing to memory address {:X} value {:X}", addr, val);
-
         if self.oam_dma_transfer_in_progress {
             // Only High RAM is accessible during an oam dma transfer.
             if addr >= 0xFF80 && addr < 0xFFFF {
@@ -401,7 +431,7 @@ impl Memory {
         // OAM / Sprite attributes
         // Not writable directly, needs to be performed via a OAM DMA transfer.
         if addr >= 0xFE00 && addr < 0xFF00 {
-            return;
+            //return;
         }
 
         // IO Registers
@@ -416,102 +446,15 @@ impl Memory {
 
         // Interupt enable register
         if addr == 0xFFFF {
-            self.interrupt_enable_register = val;
-        }
-    }
-
-    pub fn dma_read(&self, addr: usize) -> Option<u8> {
-        if addr >= 0x8000 && addr < 0xA000 {
-            return Some(self.video_ram[addr - 0x8000].clone());
-        }
-
-        if addr >= 0xFF00 && addr < 0xFF80 {
-            return Some(self.io_registers[addr - 0xFF00].clone());
-        }
-
-        if addr >= 0xFF80 && addr < 0xFFFF {
-            return Some(self.hi_ram[addr - 0xFF80].clone());
-        }
-
-        if addr == 0xFFFF {
-            return Some(self.interrupt_enable_register.clone());
-        }
-
-        return None;
-    }
-
-    pub fn dma_write(&mut self, addr: usize, val: u8) {
-        if addr >= 0x8000 && addr < 0xA000 {
-            self.video_ram[addr - 0x8000] = val;
-        }
-
-        if addr >= 0xFF00 && addr < 0xFF80 {
-            self.io_registers[addr - 0xFF00] = val;
-        }
-
-        if addr >= 0xFF80 && addr < 0xFFFF {
-            self.hi_ram[addr - 0xFF80] = val;
-        }
-
-        if addr == 0xFFFF {
-            self.interrupt_enable_register = val;
+            self.interrupt_bus_ref.lock().unwrap().write(addr, val);
         }
     }
 
     pub fn reset(&mut self, cartridge: Box<dyn cartridge::Interface>) {
-        *self = Memory::new(cartridge);
+        *self = Memory::new(
+            cartridge,
+            self.timer_ref.clone(),
+            self.interrupt_bus_ref.clone(),
+        );
     }
 }
-
-//impl interface::Memory for Memory {
-//
-//    fn read(&self, addr: usize) -> Option<u8> {
-//        return self.read(addr);
-//    }
-//
-//    fn write(&mut self, addr: usize, val: u8) {
-//        self.write(addr, val);
-//    }
-//
-//    fn update_dma_transfer_cycles(&mut self, cycles: u32) {
-//        self.update_dma_transfer_cycles(cycles);
-//    }
-//
-//    fn dma_read(&self, addr: usize) -> Option<u8> {
-//        if addr >= 0x8000 && addr < 0xA000 {
-//            return Some(self.video_ram[addr - 0x8000].clone());
-//        }
-//
-//        if addr >= 0xFF00 && addr < 0xFF80 {
-//            return Some(self.io_registers[addr - 0xFF00].clone());
-//        }
-//
-//        if addr >= 0xFF80 && addr < 0xFFFF {
-//            return Some(self.hi_ram[addr - 0xFF80].clone());
-//        }
-//
-//        if addr == 0xFFFF {
-//            return Some(self.interrupt_enable_register.clone());
-//        }
-//
-//        return None;
-//    }
-//
-//    fn dma_write(&mut self, addr: usize, val: u8) {
-//        if addr >= 0x8000 && addr < 0xA000 {
-//            self.video_ram[addr - 0x8000] = val;
-//        }
-//
-//        if addr >= 0xFF00 && addr < 0xFF80 {
-//            self.io_registers[addr - 0xFF00] = val;
-//        }
-//
-//        if addr >= 0xFF80 && addr < 0xFFFF {
-//            self.hi_ram[addr - 0xFF80] = val;
-//        }
-//
-//        if addr == 0xFFFF {
-//            self.interrupt_enable_register = val;
-//        }
-//    }
-//}

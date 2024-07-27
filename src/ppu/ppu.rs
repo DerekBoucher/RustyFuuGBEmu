@@ -1,5 +1,7 @@
+use std::sync::{self, Arc};
+
 use crate::{
-    cpu,
+    interrupt,
     memory::{self, io_registers},
     ppu::{
         self,
@@ -24,13 +26,12 @@ impl PPU {
         *self = PPU::new();
     }
 
-    pub fn update_graphics(
+    pub fn step_graphics(
         &mut self,
-        cycles: u32,
-        memory: &mut memory::Memory,
-        cpu: &mut cpu::LR35902,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        interrupt_bus: &Arc<sync::Mutex<interrupt::Bus>>,
     ) {
-        let lcdc = match memory.dma_read(io_registers::LCD_CONTROL_ADDR) {
+        let lcdc = match memory.lock().unwrap().read(io_registers::LCD_CONTROL_ADDR) {
             Some(value) => value,
             None => {
                 log::error!("failed to read lcdc register");
@@ -38,7 +39,7 @@ impl PPU {
             }
         };
 
-        let stat = match memory.dma_read(io_registers::LCD_STAT_ADDR) {
+        let stat = match memory.lock().unwrap().read(io_registers::LCD_STAT_ADDR) {
             Some(value) => value,
             None => {
                 log::error!("failed to read stat register");
@@ -46,7 +47,7 @@ impl PPU {
             }
         };
 
-        let current_scanline = match memory.dma_read(io_registers::LCD_LY_ADDR) {
+        let current_scanline = match memory.lock().unwrap().read(io_registers::LCD_LY_ADDR) {
             Some(value) => value,
             None => {
                 log::error!("failed to read LY register");
@@ -54,7 +55,7 @@ impl PPU {
             }
         };
 
-        let ly = match memory.dma_read(io_registers::LCD_LY_ADDR) {
+        let ly = match memory.lock().unwrap().read(io_registers::LCD_LY_ADDR) {
             Some(value) => value,
             None => {
                 log::error!("failed to read LY register");
@@ -62,7 +63,7 @@ impl PPU {
             }
         };
 
-        let lyc = match memory.dma_read(io_registers::LCD_LYC_ADDR) {
+        let lyc = match memory.lock().unwrap().read(io_registers::LCD_LYC_ADDR) {
             Some(value) => value,
             None => {
                 log::error!("failed to read LYC register");
@@ -70,37 +71,49 @@ impl PPU {
             }
         };
 
-        self.set_lcdc_status(lcdc, stat, current_scanline, ly, lyc, memory, cpu);
+        self.set_lcdc_status(lcdc, stat, current_scanline, ly, lyc, memory, interrupt_bus);
 
         if lcdc & LCDC_ENABLE_MASK == 0 {
             return;
         }
 
-        self.scanline_counter -= cycles as i32;
+        self.scanline_counter -= 4;
 
         if self.scanline_counter <= 0 {
             self.scanline_counter += stat::MAX_SCANLINE_COUNT;
 
             if current_scanline < 144 {
                 self.draw_scaline(lcdc, memory);
-                memory.dma_write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
+                memory
+                    .lock()
+                    .unwrap()
+                    .write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
                 return;
             }
 
             // V-Blank period
             if current_scanline >= 144 && current_scanline < 154 {
-                cpu.request_interrupt(memory, cpu::Interrupt::VBlank);
-                memory.dma_write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
+                interrupt_bus
+                    .lock()
+                    .unwrap()
+                    .request(interrupt::Interrupt::VBlank);
+                memory
+                    .lock()
+                    .unwrap()
+                    .write(io_registers::LCD_LY_ADDR, ly.wrapping_add(1));
                 return;
             }
 
             // Else, this means we've been through an entire frame cycle,
             // reset the LY register to 0.
-            memory.dma_write(io_registers::LCD_LY_ADDR, 0x00);
+            memory
+                .lock()
+                .unwrap()
+                .write(io_registers::LCD_LY_ADDR, 0x00);
         }
     }
 
-    fn draw_scaline(&mut self, lcdc: u8, memory: &mut memory::Memory) {
+    fn draw_scaline(&mut self, lcdc: u8, memory: &Arc<sync::Mutex<memory::Memory>>) {
         if lcdc & LCDC_BG_WINDOW_ENABLE_MASK > 0 {
             self.render_tiles(memory);
         }
@@ -117,17 +130,23 @@ impl PPU {
         current_scanline: u8,
         ly: u8,
         lyc: u8,
-        memory: &mut memory::Memory,
-        cpu: &mut cpu::LR35902,
+        memory: &Arc<sync::Mutex<memory::Memory>>,
+        interrupt_bus: &Arc<sync::Mutex<interrupt::Bus>>,
     ) {
         if lcdc & LCDC_ENABLE_MASK == 0 {
             self.scanline_counter = stat::MAX_SCANLINE_COUNT;
 
             // Reset the LY register
-            memory.dma_write(io_registers::LCD_LY_ADDR, 0x00);
+            memory
+                .lock()
+                .unwrap()
+                .write(io_registers::LCD_LY_ADDR, 0x00);
 
             // Reset the STAT register to 1111 1100
-            memory.dma_write(io_registers::LCD_STAT_ADDR, stat & !stat::MODE_MASK);
+            memory
+                .lock()
+                .unwrap()
+                .write(io_registers::LCD_STAT_ADDR, stat & !stat::MODE_MASK);
 
             // Exit pre-emptively, since LCD is disabled
             return;
@@ -141,9 +160,15 @@ impl PPU {
             .process_ly_lyc(ly, lyc)
             .build();
 
-        memory.dma_write(io_registers::LCD_STAT_ADDR, new_stat);
+        memory
+            .lock()
+            .unwrap()
+            .write(io_registers::LCD_STAT_ADDR, new_stat);
         if requires_interrupt {
-            cpu.request_interrupt(memory, cpu::Interrupt::LCDC);
+            interrupt_bus
+                .lock()
+                .unwrap()
+                .request(interrupt::Interrupt::LcdStat);
         }
     }
 
@@ -159,26 +184,46 @@ impl PPU {
 
     // Background tiles make up the background environment, and typically have lower precedence then the window tiles.
     // Window tiles have precedence over background tiles, when enabled.
-    fn render_tiles(&mut self, memory: &memory::Memory) {
-        let current_scanline = memory.dma_read(memory::io_registers::LCD_LY_ADDR).unwrap();
+    fn render_tiles(&mut self, memory: &Arc<sync::Mutex<memory::Memory>>) {
+        let current_scanline = memory
+            .lock()
+            .unwrap()
+            .read(memory::io_registers::LCD_LY_ADDR)
+            .unwrap();
         if current_scanline > 144 {
             return;
         }
 
         let lcdc = memory
-            .dma_read(memory::io_registers::LCD_CONTROL_ADDR)
+            .lock()
+            .unwrap()
+            .read(memory::io_registers::LCD_CONTROL_ADDR)
             .unwrap();
-        let scroll_x = memory.dma_read(memory::io_registers::LCD_SCX_ADDR).unwrap();
-        let scroll_y = memory.dma_read(memory::io_registers::LCD_SCY_ADDR).unwrap();
+        let scroll_x = memory
+            .lock()
+            .unwrap()
+            .read(memory::io_registers::LCD_SCX_ADDR)
+            .unwrap();
+        let scroll_y = memory
+            .lock()
+            .unwrap()
+            .read(memory::io_registers::LCD_SCY_ADDR)
+            .unwrap();
         let win_x = memory
-            .dma_read(memory::io_registers::LCD_WINX_ADDR)
+            .lock()
+            .unwrap()
+            .read(memory::io_registers::LCD_WINX_ADDR)
             .unwrap()
             .wrapping_sub(7); // TODO: Explain the sub 7
         let win_y = memory
-            .dma_read(memory::io_registers::LCD_WINY_ADDR)
+            .lock()
+            .unwrap()
+            .read(memory::io_registers::LCD_WINY_ADDR)
             .unwrap();
         let color_palette = memory
-            .dma_read(memory::io_registers::LCD_PALETTE_ADDR)
+            .lock()
+            .unwrap()
+            .read(memory::io_registers::LCD_PALETTE_ADDR)
             .unwrap();
 
         // Depending on the current color palette that is in the PALETTE register,
@@ -226,7 +271,7 @@ impl PPU {
 
             let tile_column: usize = (pixel_x / 8).into();
             let tile_id_address: usize = tile_map_ptr + tile_column + tile_row;
-            let mut tile_id = memory.dma_read(tile_id_address).unwrap();
+            let mut tile_id = memory.lock().unwrap().read(tile_id_address).unwrap();
             let tile_line_offset: usize = ((pixel_y % 8) * 2).into();
             let mut tile_data_address: usize = tile_data_ptr + (tile_id as usize * 16);
 
@@ -237,10 +282,14 @@ impl PPU {
             }
 
             let data1 = memory
-                .dma_read(tile_data_address + tile_line_offset)
+                .lock()
+                .unwrap()
+                .read(tile_data_address + tile_line_offset)
                 .unwrap();
             let data2 = memory
-                .dma_read(tile_data_address + tile_line_offset + 1)
+                .lock()
+                .unwrap()
+                .read(tile_data_address + tile_line_offset + 1)
                 .unwrap();
 
             let current_bit_position: usize = 7 - ((pixel_iter as usize + scroll_x as usize) % 8);
@@ -294,22 +343,6 @@ impl PPU {
         return self.pixels.clone();
     }
 }
-
-//impl ppu::PPU for PPU {
-//    fn reset(&mut self) {
-//        *self = PPU::new();
-//    }
-//
-//
-//    fn update_graphics(
-//        &mut self,
-//        cycles: u32,
-//        memory: &mut impl ppu::Memory,
-//        cpu: &mut impl ppu::CPU,
-//    ) {
-//        self.update_graphics(cycles, memory, cpu)
-//    }
-//}
 
 // If the 4th bit (starting from the right, 0 based) of the LCDC register is '1', then the
 // background and window tile data are located at the base address of 0x8000 and the addressing uses an unsigned 8-bit integer.

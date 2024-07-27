@@ -19,8 +19,8 @@ impl Orchestrator {
         >,
         channel::Receiver<bool>,
     ) {
-        let (close_sender, close_receiver) = channel::unbounded();
-        let (ack_sender, ack_receiver) = channel::unbounded();
+        let (close_sender, close_receiver) = channel::bounded(1);
+        let (ack_sender, ack_receiver) = channel::bounded(1);
         let (rom_data_sender, rom_data_receiver) = channel::bounded::<Vec<u8>>(1);
         let (frame_data_sender, frame_data_receiver) = channel::bounded::<
             [[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT],
