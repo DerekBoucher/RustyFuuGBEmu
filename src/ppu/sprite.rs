@@ -8,7 +8,7 @@ const OAM_ADDR: usize = 0xFE00;
 pub struct Sprite {
     x_pos: u8,
     y_pos: u8,
-    pattern_number: u8,
+    pub pattern_number: u8,
     attributes: u8,
 }
 
@@ -21,7 +21,7 @@ impl Sprite {
         self.attributes & (1 << 5) > 0
     }
 
-    pub fn has_priority_over_bg(&self) -> bool {
+    pub fn bg_has_priority_over_this(&self) -> bool {
         self.attributes & (1 << 7) > 0
     }
 
@@ -42,7 +42,7 @@ impl Sprite {
     }
 }
 
-pub fn generate_from(memory: &Arc<Mutex<Memory>>) -> [Sprite; 40] {
+pub fn process_from_memory(memory: &Arc<Mutex<Memory>>) -> [Sprite; 40] {
     let mut sprites = [Sprite {
         x_pos: 0,
         y_pos: 0,
@@ -50,29 +50,30 @@ pub fn generate_from(memory: &Arc<Mutex<Memory>>) -> [Sprite; 40] {
         attributes: 0,
     }; 40];
 
-    for i in 40..0 {
-        let transformed_idx = i * 4;
+    for i in (0..40).rev() {
+        let transformed_idx = i as usize * 4;
 
-        sprites[i].y_pos = memory
+        sprites[i as usize].y_pos = memory
             .lock()
             .unwrap()
-            .read(OAM_ADDR + transformed_idx)
+            .dma_read(OAM_ADDR + transformed_idx)
             .unwrap()
-            - 0x10;
-        sprites[i].x_pos = memory
+            .wrapping_sub(0x10);
+        sprites[i as usize].x_pos = memory
             .lock()
             .unwrap()
-            .read(OAM_ADDR + transformed_idx + 1)
+            .dma_read(OAM_ADDR + transformed_idx + 1)
+            .unwrap()
+            .wrapping_sub(0x08);
+        sprites[i as usize].pattern_number = memory
+            .lock()
+            .unwrap()
+            .dma_read(OAM_ADDR + transformed_idx + 2)
             .unwrap();
-        sprites[i].pattern_number = memory
+        sprites[i as usize].attributes = memory
             .lock()
             .unwrap()
-            .read(OAM_ADDR + transformed_idx + 2)
-            .unwrap();
-        sprites[i].attributes = memory
-            .lock()
-            .unwrap()
-            .read(OAM_ADDR + transformed_idx + 3)
+            .dma_read(OAM_ADDR + transformed_idx + 3)
             .unwrap();
     }
 

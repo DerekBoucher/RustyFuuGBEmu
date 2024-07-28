@@ -8,7 +8,7 @@ use crate::ui;
 #[derive(Copy, Clone)]
 struct Vertex {
     position: [f32; 2],
-    color: [f32; 3],
+    color: [f64; 3],
 }
 implement_vertex!(Vertex, position, color);
 

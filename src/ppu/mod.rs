@@ -11,12 +11,12 @@ pub enum Pixel {
 }
 
 impl Pixel {
-    pub fn to_rgb(&self) -> (f32, f32, f32) {
+    pub fn to_rgb(&self) -> (f64, f64, f64) {
         match self {
-            Self::White => (1.0, 1.0, 1.0),
-            Self::Black => (0.0, 0.0, 0.0),
-            Self::LightGray => (0.75, 0.75, 0.75),
-            Self::DarkGray => (0.83, 0.83, 0.83),
+            Self::White => (255.0 / 255.0, 246.0 / 255.0, 210.0 / 255.0),
+            Self::LightGray => (249.0 / 255.0, 168.0 / 255.0, 116.0 / 255.0),
+            Self::DarkGray => (235.0 / 255.0, 106.0 / 255.0, 110.0 / 255.0),
+            Self::Black => (123.0 / 255.0, 63.0 / 255.0, 87.0 / 255.0),
         }
     }
 }

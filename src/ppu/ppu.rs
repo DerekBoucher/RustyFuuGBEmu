@@ -34,7 +34,11 @@ impl PPU {
         memory: &Arc<sync::Mutex<memory::Memory>>,
         interrupt_bus: &Arc<sync::Mutex<interrupt::Bus>>,
     ) {
-        let lcdc = match memory.lock().unwrap().read(io_registers::LCD_CONTROL_ADDR) {
+        let lcdc = match memory
+            .lock()
+            .unwrap()
+            .dma_read(io_registers::LCD_CONTROL_ADDR)
+        {
             Some(value) => value,
             None => {
                 log::error!("failed to read lcdc register");
@@ -42,7 +46,7 @@ impl PPU {
             }
         };
 
-        let stat = match memory.lock().unwrap().read(io_registers::LCD_STAT_ADDR) {
+        let stat = match memory.lock().unwrap().dma_read(io_registers::LCD_STAT_ADDR) {
             Some(value) => value,
             None => {
                 log::error!("failed to read stat register");
@@ -50,7 +54,7 @@ impl PPU {
             }
         };
 
-        let current_scanline = match memory.lock().unwrap().read(io_registers::LCD_LY_ADDR) {
+        let current_scanline = match memory.lock().unwrap().dma_read(io_registers::LCD_LY_ADDR) {
             Some(value) => value,
             None => {
                 log::error!("failed to read LY register");
@@ -58,7 +62,7 @@ impl PPU {
             }
         };
 
-        let ly = match memory.lock().unwrap().read(io_registers::LCD_LY_ADDR) {
+        let ly = match memory.lock().unwrap().dma_read(io_registers::LCD_LY_ADDR) {
             Some(value) => value,
             None => {
                 log::error!("failed to read LY register");
@@ -66,7 +70,7 @@ impl PPU {
             }
         };
 
-        let lyc = match memory.lock().unwrap().read(io_registers::LCD_LYC_ADDR) {
+        let lyc = match memory.lock().unwrap().dma_read(io_registers::LCD_LYC_ADDR) {
             Some(value) => value,
             None => {
                 log::error!("failed to read LYC register");
@@ -121,40 +125,43 @@ impl PPU {
     fn render_sprites(&mut self, lcdc: u8, memory: &Arc<sync::Mutex<memory::Memory>>) {
         let sprite_8x16 = lcdc & (1 << 2) > 0;
 
-        let sprites = sprite::generate_from(memory);
+        let sprites = sprite::process_from_memory(memory);
 
         let current_scanline = memory
             .lock()
             .unwrap()
-            .read(io_registers::LCD_LY_ADDR)
+            .dma_read(io_registers::LCD_LY_ADDR)
             .unwrap();
 
-        for sprite in sprites {
-            let y_scale: u8;
+        for mut sprite in sprites {
+            let sprite_height_pixel: u8;
             if sprite_8x16 {
-                y_scale = 16;
+                sprite_height_pixel = 16;
+                sprite.pattern_number &= 0xFE;
             } else {
-                y_scale = 8;
+                sprite_height_pixel = 8;
             }
 
             // Only need to update pixels if the actual sprite falls within the current scanline
-            if current_scanline >= sprite.get_y() && current_scanline < (sprite.get_y() + y_scale) {
+            if current_scanline >= sprite.get_y()
+                && current_scanline < (sprite.get_y() + sprite_height_pixel)
+            {
                 let mut line: i32 = (current_scanline - sprite.get_y()) as i32;
 
                 if sprite.is_y_flipped() {
-                    line -= y_scale as i32;
+                    line -= sprite_height_pixel as i32;
                     line *= -1;
                 }
 
                 line *= 2;
 
                 let data_addr: usize =
-                    (0x8000 + (sprite.get_pattern_number() * 16) as usize) + line as usize;
+                    (0x8000 + (sprite.get_pattern_number() as usize * 16) as usize) + line as usize;
 
-                let data1 = memory.lock().unwrap().read(data_addr).unwrap();
-                let data2 = memory.lock().unwrap().read(data_addr + 1).unwrap();
+                let data1 = memory.lock().unwrap().dma_read(data_addr).unwrap();
+                let data2 = memory.lock().unwrap().dma_read(data_addr + 1).unwrap();
 
-                for tile_pixel in 7..0 {
+                for tile_pixel in (0..8).rev() {
                     let mut color_bit = tile_pixel;
 
                     if sprite.is_x_flipped() {
@@ -185,17 +192,17 @@ impl PPU {
                     }
 
                     let x_offset: i32 = tile_pixel - 1;
-                    let pixel_x: usize = sprite.get_x() as usize + x_offset as usize;
+                    let x: usize = sprite.get_x().wrapping_add(x_offset as u8) as usize;
 
                     // If the sprite's x pixel is out of the bounds of the screen, no reason to render it.
                     // Also applies if the current scanline is in v-blank mode.
-                    if pixel_x > 159 || current_scanline > 143 {
+                    if x > 159 || current_scanline > 143 {
                         continue;
                     }
 
                     // Determine if sprite pixel has priority over background or window
-                    if !sprite.has_priority_over_bg()
-                        && self.pixels[pixel_x][current_scanline as usize] != ppu::Pixel::White
+                    if sprite.bg_has_priority_over_this()
+                        && self.pixels[current_scanline as usize][x] != ppu::Pixel::White
                     {
                         continue;
                     }
@@ -203,7 +210,7 @@ impl PPU {
                     let pixel_rgb =
                         PPU::determine_pixel_rgb(memory, color_palette_addr, color_code);
 
-                    self.pixels[pixel_x][current_scanline as usize] = pixel_rgb;
+                    self.pixels[current_scanline as usize][x] = pixel_rgb;
                 }
             }
         }
@@ -273,7 +280,7 @@ impl PPU {
         color_palette_addr: usize,
         pixel_color_encoding: u8,
     ) -> ppu::Pixel {
-        let color_palette = memory.lock().unwrap().read(color_palette_addr).unwrap();
+        let color_palette = memory.lock().unwrap().dma_read(color_palette_addr).unwrap();
 
         // Depending on the current color palette that is in the PALETTE register,
         // these encoding translate to different colors / shades of gray.
@@ -326,7 +333,7 @@ impl PPU {
         let current_scanline = memory
             .lock()
             .unwrap()
-            .read(memory::io_registers::LCD_LY_ADDR)
+            .dma_read(memory::io_registers::LCD_LY_ADDR)
             .unwrap();
         if current_scanline > 144 {
             return;
@@ -335,28 +342,28 @@ impl PPU {
         let lcdc = memory
             .lock()
             .unwrap()
-            .read(memory::io_registers::LCD_CONTROL_ADDR)
+            .dma_read(memory::io_registers::LCD_CONTROL_ADDR)
             .unwrap();
         let scroll_x = memory
             .lock()
             .unwrap()
-            .read(memory::io_registers::LCD_SCX_ADDR)
+            .dma_read(memory::io_registers::LCD_SCX_ADDR)
             .unwrap();
         let scroll_y = memory
             .lock()
             .unwrap()
-            .read(memory::io_registers::LCD_SCY_ADDR)
+            .dma_read(memory::io_registers::LCD_SCY_ADDR)
             .unwrap();
         let win_x = memory
             .lock()
             .unwrap()
-            .read(memory::io_registers::LCD_WINX_ADDR)
+            .dma_read(memory::io_registers::LCD_WINX_ADDR)
             .unwrap()
             .wrapping_sub(7); // TODO: Explain the sub 7
         let win_y = memory
             .lock()
             .unwrap()
-            .read(memory::io_registers::LCD_WINY_ADDR)
+            .dma_read(memory::io_registers::LCD_WINY_ADDR)
             .unwrap();
 
         // Base address for the tile data in VRAM.
@@ -397,7 +404,7 @@ impl PPU {
 
             let tile_column: usize = (pixel_x / 8).into();
             let tile_id_address: usize = tile_map_ptr + tile_column + tile_row;
-            let mut tile_id = memory.lock().unwrap().read(tile_id_address).unwrap();
+            let mut tile_id = memory.lock().unwrap().dma_read(tile_id_address).unwrap();
             let tile_line_offset: usize = ((pixel_y % 8) * 2).into();
             let mut tile_data_address: usize = tile_data_ptr + (tile_id as usize * 16);
 
@@ -410,12 +417,12 @@ impl PPU {
             let data1 = memory
                 .lock()
                 .unwrap()
-                .read(tile_data_address + tile_line_offset)
+                .dma_read(tile_data_address + tile_line_offset)
                 .unwrap();
             let data2 = memory
                 .lock()
                 .unwrap()
-                .read(tile_data_address + tile_line_offset + 1)
+                .dma_read(tile_data_address + tile_line_offset + 1)
                 .unwrap();
 
             let current_bit_position: usize = 7 - ((pixel_iter as usize + scroll_x as usize) % 8);
