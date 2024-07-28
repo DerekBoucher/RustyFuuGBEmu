@@ -8,6 +8,7 @@ use glium::Frame;
 use std::fs;
 
 pub mod events;
+use gameboy::channel::front_end::Frontend;
 
 pub const TOP_MENUBAR_HEIGHT: f32 = 20.0;
 pub const SCALE_FACTOR: i32 = 5;
@@ -36,7 +37,7 @@ impl Ui {
         control_flow: &mut ControlFlow,
         display: &Display,
         frame: &mut Frame,
-        gb_controller: &mut gameboy::Orchestrator,
+        frontend: &mut Frontend,
     ) {
         let egui_redraw_timer = self.egui_glium_client.run(display, |egui_ctx| {
             egui::TopBottomPanel::top("top_panel")
@@ -45,7 +46,7 @@ impl Ui {
                     ui.horizontal(|ui| {
                         ui.menu_button("File", |ui| {
                             if ui.button("Load ROM").clicked() {
-                                Ui::load_rom_from_file_dialog(gb_controller);
+                                Ui::load_rom_from_file_dialog(frontend);
                                 ui.close_menu();
                             }
 
@@ -62,7 +63,7 @@ impl Ui {
                                 .checkbox(&mut self.skip_boot_rom, "Skip Boot ROM")
                                 .clicked()
                             {
-                                gb_controller.set_skip_boot_rom(self.skip_boot_rom);
+                                frontend.send_set_skip_boot_rom_back_end(self.skip_boot_rom);
                             }
                         })
                     });
@@ -91,7 +92,7 @@ impl Ui {
         }
     }
 
-    fn load_rom_from_file_dialog(gb_controller: &mut gameboy::Orchestrator) {
+    fn load_rom_from_file_dialog(frontend: &mut Frontend) {
         let selected_rom = rfd::FileDialog::new()
             .add_filter("Gameboy ROM", &["gb"])
             .pick_file();
@@ -100,7 +101,7 @@ impl Ui {
             Some(rom_path) => match fs::read(rom_path.as_path()) {
                 Ok(rom_data) => {
                     log::info!("Loaded ROM: {}", rom_path.display());
-                    gb_controller.load_rom(rom_data);
+                    frontend.send_rom_data_back_end(rom_data);
                 }
                 Err(err) => {
                     // TODO: Add UI dialog indicating error

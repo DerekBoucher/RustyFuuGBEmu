@@ -10,7 +10,7 @@ mod ui;
 
 use clap::Parser;
 use env_logger::Env;
-use gameboy::Orchestrator;
+use gameboy::channel::front_end::Frontend;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::EventLoop;
 use glium::glutin::platform::unix::WindowBuilderExtUnix;
@@ -46,7 +46,7 @@ fn main() {
         program_loop.create_proxy(),
         args.skip_boot_rom,
     );
-    let mut gb_orchestrator = gameboy.start();
+    let mut gb_frontend = gameboy.start();
 
     program_loop.run(move |program_event, _, control_flow| {
         let next_frame_time =
@@ -60,14 +60,14 @@ fn main() {
                 ..
             } => match window_event {
                 WindowEvent::CloseRequested => {
-                    handle_app_close(control_flow, &mut gb_orchestrator);
+                    handle_app_close(control_flow, &mut gb_frontend);
                 }
 
                 _ => ui.process_window_event(window_event, &display),
             },
             Event::UserEvent(custom_event) => match custom_event {
                 ui::events::UiEvent::CloseWindow => {
-                    handle_app_close(control_flow, &mut gb_orchestrator);
+                    handle_app_close(control_flow, &mut gb_frontend);
                 }
             },
             Event::NewEvents(_) => {}
@@ -76,13 +76,13 @@ fn main() {
                 let mut frame = display.draw();
                 frame.clear_color(1.0, 1.0, 1.0, 1.0);
                 opengl_renderer.render(&mut frame);
-                ui.draw(control_flow, &display, &mut frame, &mut gb_orchestrator);
+                ui.draw(control_flow, &display, &mut frame, &mut gb_frontend);
                 frame.finish().unwrap();
             }
             _ => {}
         }
 
-        match gb_orchestrator.render_requested() {
+        match gb_frontend.should_render_screen() {
             Some(frame_data) => {
                 opengl_renderer.update_frame(&display, frame_data);
             }
@@ -118,19 +118,12 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
 
 fn handle_app_close(
     control_flow: &mut glutin::event_loop::ControlFlow,
-    gb_controller: &mut Orchestrator,
+    gb_frontend: &mut Frontend,
 ) {
     *control_flow = glutin::event_loop::ControlFlow::Exit;
-    gb_controller.close();
-    match gb_controller.join() {
+    gb_frontend.send_close_back_end();
+    match gb_frontend.join_back_end() {
         Ok(_) => (),
-        Err(err) => match err {
-            crossbeam::channel::RecvTimeoutError::Timeout => {
-                log::error!("gb thread deadlocked -> join operation did not complete on time")
-            }
-            crossbeam::channel::RecvTimeoutError::Disconnected => {
-                log::error!("lost connection to gb thread while waiting for a join")
-            }
-        },
+        Err(err) => panic!("error occurred when joining back end thread: {:?}", err),
     }
 }
