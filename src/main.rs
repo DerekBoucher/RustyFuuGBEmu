@@ -2,6 +2,7 @@ mod cartridge;
 mod cpu;
 mod gameboy;
 mod interrupt;
+mod joypad;
 mod memory;
 mod ppu;
 mod renderer;
@@ -11,12 +12,13 @@ mod ui;
 use clap::Parser;
 use env_logger::Env;
 use gameboy::channel::front_end::Frontend;
-use glium::glutin::event::{Event, WindowEvent};
+use glium::glutin::event::{Event, VirtualKeyCode, WindowEvent};
 use glium::glutin::event_loop::EventLoop;
 use glium::glutin::platform::unix::WindowBuilderExtUnix;
 use glium::glutin::window::Theme;
 use glium::Display;
 use glium::{glutin, Surface};
+use joypad::{ActionButton, DirectionButton};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -61,6 +63,43 @@ fn main() {
             } => match window_event {
                 WindowEvent::CloseRequested => {
                     handle_app_close(control_flow, &mut gb_frontend);
+                }
+                WindowEvent::KeyboardInput { input, .. } => {
+                    match input.virtual_keycode.unwrap() {
+                        VirtualKeyCode::A => {
+                            gb_frontend.send_joypad_data(None, Some(ActionButton::Start))
+                        }
+                        VirtualKeyCode::S => {
+                            gb_frontend.send_joypad_data(None, Some(ActionButton::Select))
+                        }
+                        VirtualKeyCode::D => {
+                            gb_frontend.send_joypad_data(None, Some(ActionButton::A))
+                        }
+                        VirtualKeyCode::F => {
+                            gb_frontend.send_joypad_data(None, Some(ActionButton::B))
+                        }
+
+                        VirtualKeyCode::Right => {
+                            gb_frontend.send_joypad_data(Some(DirectionButton::Right), None)
+                        }
+                        VirtualKeyCode::Left => {
+                            gb_frontend.send_joypad_data(Some(DirectionButton::Left), None)
+                        }
+                        VirtualKeyCode::Up => {
+                            gb_frontend.send_joypad_data(Some(DirectionButton::Up), None)
+                        }
+                        VirtualKeyCode::Down => {
+                            gb_frontend.send_joypad_data(Some(DirectionButton::Down), None)
+                        }
+                        _ => {}
+                    }
+
+                    //println!(
+                    //    "key scancode: {:?}, state: {:?}, virt: {:?}",
+                    //    input.scancode,
+                    //    input.state,
+                    //    input.virtual_keycode.unwrap()
+                    //)
                 }
 
                 _ => ui.process_window_event(window_event, &display),

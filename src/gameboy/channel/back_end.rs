@@ -1,4 +1,7 @@
-use crate::ppu::{self, Pixel, NATIVE_SCREEN_HEIGHT, NATIVE_SCREEN_WIDTH};
+use crate::{
+    joypad::{ActionButton, DirectionButton},
+    ppu::{self, Pixel, NATIVE_SCREEN_HEIGHT, NATIVE_SCREEN_WIDTH},
+};
 use std::sync::mpsc::{Receiver, SyncSender, TryRecvError};
 
 pub struct Backend {
@@ -7,6 +10,7 @@ pub struct Backend {
     rom_data_receiver: Receiver<Vec<u8>>,
     frame_data_sender: SyncSender<[[Pixel; NATIVE_SCREEN_WIDTH]; NATIVE_SCREEN_HEIGHT]>,
     skip_boot_rom_recv: Receiver<bool>,
+    joypad_recv: Receiver<(Option<DirectionButton>, Option<ActionButton>)>,
 }
 
 impl Backend {
@@ -16,6 +20,7 @@ impl Backend {
         rom_data_receiver: Receiver<Vec<u8>>,
         frame_data_sender: SyncSender<[[Pixel; NATIVE_SCREEN_WIDTH]; NATIVE_SCREEN_HEIGHT]>,
         skip_boot_rom_recv: Receiver<bool>,
+        joypad_recv: Receiver<(Option<DirectionButton>, Option<ActionButton>)>,
     ) -> Self {
         return Self {
             close_receiver,
@@ -23,6 +28,7 @@ impl Backend {
             rom_data_receiver,
             frame_data_sender,
             skip_boot_rom_recv,
+            joypad_recv,
         };
     }
 
@@ -74,6 +80,16 @@ impl Backend {
         match self.ack_sender.send(()) {
             Ok(_) => {}
             Err(err) => panic!("error occurred when sending ack to front end: {:?}", err),
+        }
+    }
+
+    pub fn recv_joypad_data(&self) -> (Option<DirectionButton>, Option<ActionButton>) {
+        match self.joypad_recv.try_recv() {
+            Ok(data) => data,
+            Err(err) => match err {
+                TryRecvError::Empty => (None, None),
+                _ => panic!("error receiving joypad data from front end: {:?}", err),
+            },
         }
     }
 }

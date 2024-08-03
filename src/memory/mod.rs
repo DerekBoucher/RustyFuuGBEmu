@@ -1,3 +1,6 @@
+use queues::{queue, IsQueue, Queue};
+
+use crate::joypad::{ActionButton, DirectionButton};
 use crate::{cartridge, interrupt, timers};
 use std::sync;
 use std::{fmt::Debug, sync::Arc};
@@ -52,6 +55,9 @@ pub struct Memory {
     timer_ref: Arc<sync::Mutex<timers::Timers>>,
 
     interrupt_bus_ref: Arc<sync::Mutex<interrupt::Bus>>,
+
+    joypad_dir_queue: Queue<DirectionButton>,
+    joypad_action_queue: Queue<ActionButton>,
 }
 
 /// Module containing important addresses for
@@ -142,6 +148,8 @@ impl Memory {
             oam_hi_byte: 0,
             timer_ref,
             interrupt_bus_ref,
+            joypad_dir_queue: queue![],
+            joypad_action_queue: queue![],
         }
     }
 
@@ -163,6 +171,8 @@ impl Memory {
             oam_hi_byte: 0,
             timer_ref,
             interrupt_bus_ref,
+            joypad_dir_queue: queue![],
+            joypad_action_queue: queue![],
         }
     }
 
@@ -225,9 +235,36 @@ impl Memory {
         }
     }
 
+    pub fn write_joypad_queue(
+        &mut self,
+        direction_press: Option<DirectionButton>,
+        action_press: Option<ActionButton>,
+    ) {
+        if direction_press.is_none() && action_press.is_none() {
+            return;
+        }
+
+        if direction_press.is_some() {
+            match self.joypad_dir_queue.add(direction_press.unwrap()) {
+                Ok(_) => {}
+                Err(err) => panic!(
+                    "error occurred queuing direction press from joypad: {:?}",
+                    err
+                ),
+            }
+        }
+
+        if action_press.is_some() {
+            match self.joypad_action_queue.add(action_press.unwrap()) {
+                Ok(_) => {}
+                Err(err) => panic!("error occurred queuing action press from joypad: {:?}", err),
+            }
+        }
+    }
+
     fn handle_joypad_translation(&mut self, val: u8) {
-        let action_read = !((val & (1 << 5)) > 0);
-        let direction_read = !((val & (1 << 4)) > 0);
+        let action_read = val & (1 << 5) == 0;
+        let direction_read = val & (1 << 4) == 0;
 
         if !action_read && !direction_read {
             return;
@@ -236,17 +273,51 @@ impl Memory {
         let joypad_state = val & 0xF0;
         let result: u8;
 
-        let joypad_buffer: u8 = 0xFF; // TODO - Need to be declared at the gameboy level for controller from keyboard
-
         if action_read {
-            result = joypad_state | (joypad_buffer & 0x0F);
+            let mask = match self.joypad_action_queue.remove() {
+                Ok(button) => match button {
+                    ActionButton::A => ActionButton::A.to_u8(),
+                    ActionButton::B => ActionButton::B.to_u8(),
+                    ActionButton::Start => ActionButton::Start.to_u8(),
+                    ActionButton::Select => ActionButton::Select.to_u8(),
+                },
+                Err(_) => 0xFF,
+            };
+
+            result = joypad_state | (mask & 0x0F);
             self.io_registers[io_registers::JOYPAD_ADDR - 0xFF00] = result;
+
+            if mask != 0xFF {
+                self.interrupt_bus_ref
+                    .lock()
+                    .unwrap()
+                    .request(interrupt::Interrupt::Joypad);
+            }
+
             return;
         }
 
         if direction_read {
-            result = joypad_state | ((joypad_buffer >> 4) & 0x0F);
+            let mask = match self.joypad_dir_queue.remove() {
+                Ok(button) => match button {
+                    DirectionButton::Up => DirectionButton::Up.to_u8(),
+                    DirectionButton::Down => DirectionButton::Down.to_u8(),
+                    DirectionButton::Left => DirectionButton::Left.to_u8(),
+                    DirectionButton::Right => DirectionButton::Right.to_u8(),
+                },
+                Err(_) => 0xFF,
+            };
+
+            result = joypad_state | (mask & 0x0F);
             self.io_registers[io_registers::JOYPAD_ADDR - 0xFF00] = result;
+
+            if mask != 0xFF {
+                self.interrupt_bus_ref
+                    .lock()
+                    .unwrap()
+                    .request(interrupt::Interrupt::Joypad);
+            }
+
             return;
         }
     }

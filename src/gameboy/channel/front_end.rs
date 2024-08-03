@@ -1,3 +1,4 @@
+use crate::joypad::{ActionButton, DirectionButton};
 use crate::ppu::{self, Pixel};
 use std::sync::mpsc::{self, RecvTimeoutError, TryRecvError};
 use std::time::Duration;
@@ -9,6 +10,7 @@ pub struct Frontend {
     frame_data_receiver:
         mpsc::Receiver<[[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT]>,
     skip_boot_rom_sender: mpsc::SyncSender<bool>,
+    joypad_sender: mpsc::Sender<(Option<DirectionButton>, Option<ActionButton>)>,
 }
 
 impl Frontend {
@@ -20,6 +22,7 @@ impl Frontend {
             [[Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT],
         >,
         skip_boot_rom_sender: mpsc::SyncSender<bool>,
+        joypad_sender: mpsc::Sender<(Option<DirectionButton>, Option<ActionButton>)>,
     ) -> Self {
         return Self {
             close_sender,
@@ -27,6 +30,7 @@ impl Frontend {
             rom_data_sender,
             frame_data_receiver,
             skip_boot_rom_sender,
+            joypad_sender,
         };
     }
 
@@ -62,6 +66,17 @@ impl Frontend {
             Ok(frame) => Some(frame),
             Err(TryRecvError::Empty) => None,
             _ => None,
+        }
+    }
+
+    pub fn send_joypad_data(
+        &self,
+        direction_press: Option<DirectionButton>,
+        action_press: Option<ActionButton>,
+    ) {
+        match self.joypad_sender.send((direction_press, action_press)) {
+            Ok(_) => {}
+            Err(err) => panic!("error occurred sending joypad data to backend: {:?}", err),
         }
     }
 }
