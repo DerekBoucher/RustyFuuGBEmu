@@ -12,13 +12,12 @@ mod ui;
 use clap::Parser;
 use env_logger::Env;
 use gameboy::channel::front_end::Frontend;
-use glium::glutin::event::{ElementState, Event, VirtualKeyCode, WindowEvent};
+use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::EventLoop;
 use glium::glutin::platform::unix::WindowBuilderExtUnix;
 use glium::glutin::window::Theme;
 use glium::Display;
 use glium::{glutin, Surface};
-use joypad::{ActionButton, DirectionButton};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -48,7 +47,7 @@ fn main() {
         program_loop.create_proxy(),
         args.skip_boot_rom,
     );
-    let mut gb_frontend = gameboy.start();
+    let mut frontend = gameboy.start();
 
     program_loop.run(move |program_event, _, control_flow| {
         let next_frame_time =
@@ -62,55 +61,14 @@ fn main() {
                 ..
             } => match window_event {
                 WindowEvent::CloseRequested => {
-                    handle_app_close(control_flow, &mut gb_frontend);
-                }
-                WindowEvent::KeyboardInput { input, .. } => {
-                    if input.state != ElementState::Pressed {
-                        return;
-                    }
-
-                    match input.virtual_keycode.unwrap() {
-                        VirtualKeyCode::A => {
-                            gb_frontend.send_joypad_data(None, Some(ActionButton::Start))
-                        }
-                        VirtualKeyCode::S => {
-                            gb_frontend.send_joypad_data(None, Some(ActionButton::Select))
-                        }
-                        VirtualKeyCode::D => {
-                            gb_frontend.send_joypad_data(None, Some(ActionButton::A))
-                        }
-                        VirtualKeyCode::F => {
-                            gb_frontend.send_joypad_data(None, Some(ActionButton::B))
-                        }
-
-                        VirtualKeyCode::Right => {
-                            gb_frontend.send_joypad_data(Some(DirectionButton::Right), None)
-                        }
-                        VirtualKeyCode::Left => {
-                            gb_frontend.send_joypad_data(Some(DirectionButton::Left), None)
-                        }
-                        VirtualKeyCode::Up => {
-                            gb_frontend.send_joypad_data(Some(DirectionButton::Up), None)
-                        }
-                        VirtualKeyCode::Down => {
-                            gb_frontend.send_joypad_data(Some(DirectionButton::Down), None)
-                        }
-                        _ => {}
-                    }
-
-                    log::debug!(
-                        "key scancode: {:?}, state: {:?}, virt: {:?}",
-                        input.scancode,
-                        input.state,
-                        input.virtual_keycode.unwrap()
-                    )
+                    handle_app_close(control_flow, &mut frontend);
                 }
 
-                _ => ui.process_window_event(window_event, &display),
+                _ => ui.process_window_event(window_event, &display, &frontend),
             },
             Event::UserEvent(custom_event) => match custom_event {
                 ui::events::UiEvent::CloseWindow => {
-                    handle_app_close(control_flow, &mut gb_frontend);
+                    handle_app_close(control_flow, &mut frontend);
                 }
             },
             Event::NewEvents(_) => {}
@@ -119,13 +77,13 @@ fn main() {
                 let mut frame = display.draw();
                 frame.clear_color(1.0, 1.0, 1.0, 1.0);
                 opengl_renderer.render(&mut frame);
-                ui.draw(control_flow, &display, &mut frame, &mut gb_frontend);
+                ui.draw(control_flow, &display, &mut frame, &mut frontend);
                 frame.finish().unwrap();
             }
             _ => {}
         }
 
-        match gb_frontend.should_render_screen() {
+        match frontend.should_render_screen() {
             Some(frame_data) => {
                 opengl_renderer.update_frame(&display, frame_data);
             }

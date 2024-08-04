@@ -1,5 +1,9 @@
 use crate::gameboy;
+use crate::joypad::ActionButton;
+use crate::joypad::DirectionButton;
 
+use glium::glutin::event::ElementState;
+use glium::glutin::event::VirtualKeyCode;
 use glium::glutin::event::WindowEvent;
 use glium::glutin::event_loop::ControlFlow;
 use glium::glutin::event_loop::EventLoopProxy;
@@ -84,7 +88,51 @@ impl Ui {
         self.egui_glium_client.paint(display, frame);
     }
 
-    pub fn process_window_event(&mut self, event: WindowEvent<'_>, display: &Display) {
+    pub fn process_window_event(
+        &mut self,
+        event: WindowEvent<'_>,
+        display: &Display,
+        frontend: &Frontend,
+    ) {
+        match event {
+            WindowEvent::KeyboardInput { input, .. } => {
+                if input.state != ElementState::Pressed {
+                    return;
+                }
+
+                match input.virtual_keycode.unwrap() {
+                    VirtualKeyCode::A => frontend.send_joypad_data(None, Some(ActionButton::Start)),
+                    VirtualKeyCode::S => {
+                        frontend.send_joypad_data(None, Some(ActionButton::Select))
+                    }
+                    VirtualKeyCode::D => frontend.send_joypad_data(None, Some(ActionButton::A)),
+                    VirtualKeyCode::F => frontend.send_joypad_data(None, Some(ActionButton::B)),
+
+                    VirtualKeyCode::Right => {
+                        frontend.send_joypad_data(Some(DirectionButton::Right), None)
+                    }
+                    VirtualKeyCode::Left => {
+                        frontend.send_joypad_data(Some(DirectionButton::Left), None)
+                    }
+                    VirtualKeyCode::Up => {
+                        frontend.send_joypad_data(Some(DirectionButton::Up), None)
+                    }
+                    VirtualKeyCode::Down => {
+                        frontend.send_joypad_data(Some(DirectionButton::Down), None)
+                    }
+                    _ => {}
+                }
+
+                log::debug!(
+                    "key scancode: {:?}, state: {:?}, virt: {:?}",
+                    input.scancode,
+                    input.state,
+                    input.virtual_keycode.unwrap()
+                )
+            }
+            _ => {}
+        }
+
         let event_response = self.egui_glium_client.on_event(&event);
 
         if event_response.repaint {
