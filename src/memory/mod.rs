@@ -226,7 +226,7 @@ impl Memory {
             }
 
             io_registers::JOYPAD_ADDR => {
-                self.handle_joypad_translation(val);
+                self.handle_joypad_write(val);
             }
             io_registers::BOOT_ROM_DISABLE_ADDR => {
                 self.io_registers[addr - 0xFF00] = val;
@@ -240,10 +240,6 @@ impl Memory {
         direction_press: Option<DirectionButton>,
         action_press: Option<ActionButton>,
     ) {
-        if direction_press.is_none() && action_press.is_none() {
-            return;
-        }
-
         if direction_press.is_some() {
             match self.joypad_dir_queue.add(direction_press.unwrap()) {
                 Ok(_) => {}
@@ -252,6 +248,13 @@ impl Memory {
                     err
                 ),
             }
+
+            self.interrupt_bus_ref
+                .lock()
+                .unwrap()
+                .request(interrupt::Interrupt::Joypad);
+
+            return;
         }
 
         if action_press.is_some() {
@@ -259,10 +262,17 @@ impl Memory {
                 Ok(_) => {}
                 Err(err) => panic!("error occurred queuing action press from joypad: {:?}", err),
             }
+
+            self.interrupt_bus_ref
+                .lock()
+                .unwrap()
+                .request(interrupt::Interrupt::Joypad);
+
+            return;
         }
     }
 
-    fn handle_joypad_translation(&mut self, val: u8) {
+    fn handle_joypad_write(&mut self, val: u8) {
         let action_read = val & (1 << 5) == 0;
         let direction_read = val & (1 << 4) == 0;
 
@@ -281,18 +291,11 @@ impl Memory {
                     ActionButton::Start => ActionButton::Start.to_u8(),
                     ActionButton::Select => ActionButton::Select.to_u8(),
                 },
-                Err(_) => 0xFF,
+                Err(_) => 0x0F,
             };
 
             result = joypad_state | (mask & 0x0F);
             self.io_registers[io_registers::JOYPAD_ADDR - 0xFF00] = result;
-
-            if mask != 0xFF {
-                self.interrupt_bus_ref
-                    .lock()
-                    .unwrap()
-                    .request(interrupt::Interrupt::Joypad);
-            }
 
             return;
         }
@@ -305,18 +308,11 @@ impl Memory {
                     DirectionButton::Left => DirectionButton::Left.to_u8(),
                     DirectionButton::Right => DirectionButton::Right.to_u8(),
                 },
-                Err(_) => 0xFF,
+                Err(_) => 0x0F,
             };
 
             result = joypad_state | (mask & 0x0F);
             self.io_registers[io_registers::JOYPAD_ADDR - 0xFF00] = result;
-
-            if mask != 0xFF {
-                self.interrupt_bus_ref
-                    .lock()
-                    .unwrap()
-                    .request(interrupt::Interrupt::Joypad);
-            }
 
             return;
         }

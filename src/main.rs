@@ -12,7 +12,7 @@ mod ui;
 use clap::Parser;
 use env_logger::Env;
 use gameboy::channel::front_end::Frontend;
-use glium::glutin::event::{Event, VirtualKeyCode, WindowEvent};
+use glium::glutin::event::{ElementState, Event, VirtualKeyCode, WindowEvent};
 use glium::glutin::event_loop::EventLoop;
 use glium::glutin::platform::unix::WindowBuilderExtUnix;
 use glium::glutin::window::Theme;
@@ -65,6 +65,10 @@ fn main() {
                     handle_app_close(control_flow, &mut gb_frontend);
                 }
                 WindowEvent::KeyboardInput { input, .. } => {
+                    if input.state != ElementState::Pressed {
+                        return;
+                    }
+
                     match input.virtual_keycode.unwrap() {
                         VirtualKeyCode::A => {
                             gb_frontend.send_joypad_data(None, Some(ActionButton::Start))
@@ -94,12 +98,12 @@ fn main() {
                         _ => {}
                     }
 
-                    //println!(
-                    //    "key scancode: {:?}, state: {:?}, virt: {:?}",
-                    //    input.scancode,
-                    //    input.state,
-                    //    input.virtual_keycode.unwrap()
-                    //)
+                    log::debug!(
+                        "key scancode: {:?}, state: {:?}, virt: {:?}",
+                        input.scancode,
+                        input.state,
+                        input.virtual_keycode.unwrap()
+                    )
                 }
 
                 _ => ui.process_window_event(window_event, &display),
