@@ -99,7 +99,7 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
         glium::glutin::event_loop::EventLoopBuilder::<ui::events::UiEvent>::with_user_event()
             .build();
 
-    let window = glium::glutin::window::WindowBuilder::new()
+    let window_builder = glium::glutin::window::WindowBuilder::new()
         .with_inner_size(glium::glutin::dpi::LogicalSize::new(
             (ppu::NATIVE_SCREEN_WIDTH as i32) * ui::SCALE_FACTOR,
             ((ppu::NATIVE_SCREEN_HEIGHT as i32) * ui::SCALE_FACTOR) + ui::TOP_MENUBAR_HEIGHT as i32,
@@ -112,7 +112,7 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
         .with_hardware_acceleration(Some(true))
         .with_vsync(true);
 
-    let display = glium::Display::new(window, context, &events_loop).unwrap();
+    let display = glium::Display::new(window_builder, context, &events_loop).unwrap();
 
     return (events_loop, display);
 }
