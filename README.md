@@ -1,6 +1,6 @@
 # RustyFuuGBEmu
 
-<img src="./assets/Screenshot_Tetris.png" width=300><img src="./assets/Screenshot_Super_Mario_Land.png" width=300><img src="./assets/Screenshot_Pipe_Dream.png" width=300><img src="./assets/Screenshot_Metroid.png" width=300><img src="./assets/Screenshot_Controls.png" width=300>
+<img src="./assets/Screenshot_Tetris.png" width=30%><img src="./assets/Screenshot_Super_Mario_Land.png" width=30%><img src="./assets/Screenshot_Pipe_Dream.png" width=30%><img src="./assets/Screenshot_Metroid.png" width=30%><img src="./assets/Screenshot_Controls.png" width=30%>
 
 DMG Gameboy emulator fully written in rust 🦀
 The intent of the implementation is purely for educational / hobby purposes. There is currently no plan to support Gameboy Color / Super Gameboy games at the moment.
