@@ -1,10 +1,37 @@
 # RustyFuuGBEmu
 
+<img src="./assets/Screenshot_Tetris.png" width=300>
+<img src="./assets/Screenshot_Super_Mario_Land.png" width=300>
+<img src="./assets/Screenshot_Pipe_Dream.png" width=300>
+<img src="./assets/Screenshot_Metroid.png" width=300>
+<img src="./assets/Screenshot_Controls.png" width=300>
+
 DMG Gameboy emulator fully written in rust 🦀
+The intent of the implementation is purely for educational / hobby purposes. There is currently no plan to support Gameboy Color / Super Gameboy games at the moment.
+
+# Installation
+
+The rust toolchain is required in order to install this binary.
+
+To compile-run the executable directly:
+```sh
+cargo run
+```
+
+To simply build:
+```sh
+cargo build
+```
+
+To install the compiled binary to the rust `PATH` (`$HOME/.cargo/bin` on UNIX-like operating systems)
+
+```sh
+cargo install --path .
+```
 
 # TODO
 
-- [ ] Implement Memory
+- [X] Implement Memory
     - [ ] Implement Cartridge
         - [x] ROM Only
         - [X] MBC1
@@ -20,26 +47,11 @@ DMG Gameboy emulator fully written in rust 🦀
         - [ ] HuC-3
         - [ ] Others
     - [x] Add Boot ROM
-    - [ ] I/O Registers
-    - [ ] OAM RAM
-- [ ] Implement CPU
-    - [ ] Implement Timers
-- [ ] Implement PPU
+    - [X] I/O Registers
+    - [X] OAM RAM
+- [X] Implement CPU
+    - [X] Implement Timers
+- [X] Implement PPU
 - [ ] Implement APU
-- [ ] Implement Main
-
-# Important Notes
-
-## Obscure Half Carry Check for 16-bit OPs
-
-Some specific OPCODES check and set the half carry flag using bits 3-> 4 while some others use 11 -> 12.
-See https://stackoverflow.com/questions/57958631/game-boy-half-carry-flag-and-16-bit-instructions-especially-opcode-0xe8 for more details
-
-## Ubuntu Dependencies
-
-`glium` dependencies:
-```sh
-sudo apt install libfontconfig1-dev
-```
-
+- [X] Implement Main
 

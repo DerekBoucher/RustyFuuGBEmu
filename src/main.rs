@@ -2,6 +2,7 @@ mod cartridge;
 mod cpu;
 mod gameboy;
 mod interrupt;
+mod joypad;
 mod memory;
 mod ppu;
 mod renderer;
@@ -10,7 +11,7 @@ mod ui;
 
 use clap::Parser;
 use env_logger::Env;
-use gameboy::Orchestrator;
+use gameboy::channel::front_end::Frontend;
 use glium::glutin::event::{Event, WindowEvent};
 use glium::glutin::event_loop::EventLoop;
 use glium::glutin::platform::unix::WindowBuilderExtUnix;
@@ -46,7 +47,7 @@ fn main() {
         program_loop.create_proxy(),
         args.skip_boot_rom,
     );
-    let mut gb_orchestrator = gameboy.start();
+    let mut frontend = gameboy.start();
 
     program_loop.run(move |program_event, _, control_flow| {
         let next_frame_time =
@@ -60,14 +61,14 @@ fn main() {
                 ..
             } => match window_event {
                 WindowEvent::CloseRequested => {
-                    handle_app_close(control_flow, &mut gb_orchestrator);
+                    handle_app_close(control_flow, &mut frontend);
                 }
 
-                _ => ui.process_window_event(window_event, &display),
+                _ => ui.process_window_event(window_event, &display, &frontend),
             },
             Event::UserEvent(custom_event) => match custom_event {
                 ui::events::UiEvent::CloseWindow => {
-                    handle_app_close(control_flow, &mut gb_orchestrator);
+                    handle_app_close(control_flow, &mut frontend);
                 }
             },
             Event::NewEvents(_) => {}
@@ -76,13 +77,13 @@ fn main() {
                 let mut frame = display.draw();
                 frame.clear_color(1.0, 1.0, 1.0, 1.0);
                 opengl_renderer.render(&mut frame);
-                ui.draw(control_flow, &display, &mut frame, &mut gb_orchestrator);
+                ui.draw(control_flow, &display, &mut frame, &mut frontend);
                 frame.finish().unwrap();
             }
             _ => {}
         }
 
-        match gb_orchestrator.render_requested() {
+        match frontend.should_render_screen() {
             Some(frame_data) => {
                 opengl_renderer.update_frame(&display, frame_data);
             }
@@ -98,7 +99,7 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
         glium::glutin::event_loop::EventLoopBuilder::<ui::events::UiEvent>::with_user_event()
             .build();
 
-    let window = glium::glutin::window::WindowBuilder::new()
+    let window_builder = glium::glutin::window::WindowBuilder::new()
         .with_inner_size(glium::glutin::dpi::LogicalSize::new(
             (ppu::NATIVE_SCREEN_WIDTH as i32) * ui::SCALE_FACTOR,
             ((ppu::NATIVE_SCREEN_HEIGHT as i32) * ui::SCALE_FACTOR) + ui::TOP_MENUBAR_HEIGHT as i32,
@@ -111,26 +112,19 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
         .with_hardware_acceleration(Some(true))
         .with_vsync(true);
 
-    let display = glium::Display::new(window, context, &events_loop).unwrap();
+    let display = glium::Display::new(window_builder, context, &events_loop).unwrap();
 
     return (events_loop, display);
 }
 
 fn handle_app_close(
     control_flow: &mut glutin::event_loop::ControlFlow,
-    gb_controller: &mut Orchestrator,
+    gb_frontend: &mut Frontend,
 ) {
     *control_flow = glutin::event_loop::ControlFlow::Exit;
-    gb_controller.close();
-    match gb_controller.join() {
+    gb_frontend.send_close_back_end();
+    match gb_frontend.join_back_end() {
         Ok(_) => (),
-        Err(err) => match err {
-            crossbeam::channel::RecvTimeoutError::Timeout => {
-                log::error!("gb thread deadlocked -> join operation did not complete on time")
-            }
-            crossbeam::channel::RecvTimeoutError::Disconnected => {
-                log::error!("lost connection to gb thread while waiting for a join")
-            }
-        },
+        Err(err) => panic!("error occurred when joining back end thread: {:?}", err),
     }
 }

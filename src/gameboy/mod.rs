@@ -8,10 +8,10 @@ use crate::interrupt;
 use crate::memory;
 use crate::ppu;
 use crate::timers;
-use crossbeam::channel;
-use crossbeam::select;
 
-mod orchestrator;
+pub mod channel;
+use channel::back_end::Backend;
+use channel::front_end::Frontend;
 
 #[derive(Debug)]
 enum State {
@@ -58,15 +58,6 @@ pub struct Gameboy {
     interrupt_bus: Arc<sync::Mutex<interrupt::Bus>>,
 }
 
-pub struct Orchestrator {
-    close_sender: channel::Sender<()>,
-    ack_receiver: channel::Receiver<()>,
-    rom_data_sender: channel::Sender<Vec<u8>>,
-    frame_data_receiver:
-        channel::Receiver<[[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT]>,
-    skip_boot_rom_sender: channel::Sender<bool>,
-}
-
 impl Gameboy {
     pub fn new(skip_boot_rom: bool) -> Self {
         let timers = Arc::new(sync::Mutex::new(timers::Timers::new()));
@@ -105,195 +96,114 @@ impl Gameboy {
         }
     }
 
-    pub fn start(mut self) -> Orchestrator {
-        let (
-            orchestrator,
-            close_receiver,
-            ack_sender,
-            rom_data_receiver,
-            frame_data_sender,
-            skip_boot_rom_recv,
-        ) = Orchestrator::new();
-
-        std::thread::spawn(move || {
-            self.run(
-                close_receiver,
-                ack_sender,
-                rom_data_receiver,
-                frame_data_sender,
-                skip_boot_rom_recv,
-            )
-        });
-
-        return orchestrator;
+    pub fn start(mut self) -> Frontend {
+        let (frontend, backend) = channel::new();
+        let _ = std::thread::spawn(move || self.run(backend));
+        return frontend;
     }
 
-    fn run(
-        &mut self,
-        close_receiver: channel::Receiver<()>,
-        ack_sender: channel::Sender<()>,
-        rom_data_receiver: channel::Receiver<Vec<u8>>,
-        frame_data_sender: channel::Sender<
-            [[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT],
-        >,
-        skip_boot_rom_recv: channel::Receiver<bool>,
-    ) {
+    fn run(&mut self, backend: Backend) {
         loop {
             match self.state {
                 State::INITIALIZING => {
-                    self.initialize(&close_receiver, &rom_data_receiver, &skip_boot_rom_recv);
+                    self.initialize(&backend);
                 }
                 State::COMPUTING => {
-                    self.compute(&close_receiver, &rom_data_receiver, &skip_boot_rom_recv);
+                    self.compute(&backend);
                 }
                 State::RENDERING => {
-                    // Ask main thread to render the frame.
+                    // Ask the front end to render the frame.
                     // Since the frame_data channel is bounded with a capacity of 1, we can
                     // also rely on this thread blocking until the main thread renders, which in
                     // turn allows the main thread to control the FPS of the emulation.
-                    frame_data_sender.send(self.ppu.get_frame_data()).unwrap();
+                    backend.send_frame_data_front_end(self.ppu.get_frame_data());
                     self.state.transition(State::COMPUTING);
                 }
                 State::EXITING => {
                     log::debug!("gb thread exited");
-                    match ack_sender.send(()) {
-                        Ok(_) => {}
-                        Err(err) => {
-                            log::error!(
-                                "ack_sender channel closed before sending ack: {:?}",
-                                err.to_string()
-                            );
-                        }
-                    }
+                    backend.ack_front_end();
                     return;
                 }
             }
         }
     }
 
-    fn initialize(
-        &mut self,
-        close_receiver: &channel::Receiver<()>,
-        rom_data_receiver: &channel::Receiver<Vec<u8>>,
-        skip_boot_rom_receiver: &channel::Receiver<bool>,
-    ) {
-        select! {
-            recv(close_receiver) -> signal => {
-                match signal {
-                    Ok(_) => {
-                        self.state.transition(State::EXITING);
-                        return;
-                    }
-                    _ => {}
-                }
-            }
+    fn initialize(&mut self, backend: &Backend) {
+        if backend.should_close() {
+            self.state.transition(State::EXITING);
+            return;
+        }
 
-            recv(skip_boot_rom_receiver) -> signal => {
-                match signal {
-                    Ok(skip_boot_rom) => {
-                        self.skip_boot_rom = skip_boot_rom;
-                    }
-                    Err(err) => {
-                        log::error!("Failed to receive skip_boot_rom signal: {:?}", err.to_string());
-                    }
-                }
-            }
+        match backend.should_set_skip_bootrom() {
+            Some(skip_bootrom) => self.skip_boot_rom = skip_bootrom,
+            _ => {}
+        }
 
-            recv(rom_data_receiver) -> signal => {
-                match signal {
-                    Ok(rom_data) => {
-                        self.load_rom(rom_data);
-                        log::debug!("ROM cartridge loaded!");
-                        self.state.transition(State::COMPUTING);
-                    }
-                    Err(err) => {
-                        log::error!("Failed to receive ROM data: {:?}", err.to_string());
-                    }
-                }
+        match backend.should_load_rom() {
+            Some(rom_data) => {
+                self.load_rom(rom_data);
+                log::debug!("rom cartridge loaded!");
+                self.state.transition(State::COMPUTING);
             }
+            _ => {}
         }
     }
 
-    fn compute(
-        &mut self,
-        close_receiver: &channel::Receiver<()>,
-        rom_data_receiver: &channel::Receiver<Vec<u8>>,
-        skip_boot_rom_receiver: &channel::Receiver<bool>,
-    ) {
+    fn compute(&mut self, backend: &Backend) {
         let mut cycles_this_frame_so_far: u32 = 0;
         while cycles_this_frame_so_far < CPU_CYCLES_PER_FRAME {
-            select! {
-                recv(close_receiver) -> signal => {
-                    match signal {
-                        Ok(_) => {
-                            self.state.transition(State::EXITING);
-                            return;
-                        }
-                        _ => {}
-                    }
-                }
-
-                recv(skip_boot_rom_receiver) -> signal => {
-                    match signal {
-                        Ok(skip_boot_rom) => {
-                            self.skip_boot_rom = skip_boot_rom;
-                        }
-                        Err(err) => {
-                            log::error!("Failed to receive skip_boot_rom signal: {:?}", err.to_string());
-                        }
-                    }
-                }
-
-                recv(rom_data_receiver) -> signal => {
-                    match signal {
-                        Ok(rom_data) => {
-                            self.load_rom(rom_data);
-                            log::debug!("ROM cartridge loaded!");
-                        }
-                        Err(err) => {
-                            log::error!("Failed to receive ROM data: {:?}", err.to_string());
-                        }
-                    }
-                }
-
-                default => {
-                    let step_fn = &mut || {
-                        self.timers.lock().unwrap().step(&self.interrupt_bus);
-                        self.memory.lock().unwrap().step_dma();
-                        self.ppu.step_graphics(&self.memory, &self.interrupt_bus);
-                    };
-
-                    if self.cpu.lock().unwrap().is_stopped() {
-                        // todo
-                    }
-
-                    // let cycles: u32;
-
-                    if self.cpu.lock().unwrap().is_halted() {
-                        // cycles = 4;
-                        step_fn();
-                        self.cpu.lock().unwrap().handle_halt(&self.interrupt_bus);
-                    } else {
-                        _ = self.
-                            cpu.
-                            lock().
-                            unwrap().
-                            execute_next_opcode(&self.memory, step_fn);
-
-                            self.
-                                cpu.
-                                lock().
-                                unwrap().
-                                process_interrupts(&self.memory,
-                                    &self.interrupt_bus,
-                                    step_fn,
-                                );
-                    }
-
-
-                    cycles_this_frame_so_far += self.timers.lock().unwrap().get_elapsed_cycles();
-                }
+            if backend.should_close() {
+                self.state.transition(State::EXITING);
+                return;
             }
+
+            let (direction_press, action_press) = backend.recv_joypad_data();
+            self.memory
+                .lock()
+                .unwrap()
+                .write_joypad_queue(direction_press, action_press);
+
+            match backend.should_set_skip_bootrom() {
+                Some(skip_bootrom) => self.skip_boot_rom = skip_bootrom,
+                None => {}
+            }
+
+            match backend.should_load_rom() {
+                Some(rom_data) => {
+                    self.load_rom(rom_data);
+                    log::debug!("rom cartridge loaded!");
+                }
+                None => {}
+            }
+
+            let step_fn = &mut || {
+                self.timers.lock().unwrap().step(&self.interrupt_bus);
+                self.memory.lock().unwrap().step_dma();
+                self.ppu.step_graphics(&self.memory, &self.interrupt_bus);
+            };
+
+            if self.cpu.lock().unwrap().is_stopped() {
+                // todo
+            }
+
+            if self.cpu.lock().unwrap().is_halted() {
+                step_fn();
+                self.cpu.lock().unwrap().handle_halt(&self.interrupt_bus);
+            } else {
+                _ = self
+                    .cpu
+                    .lock()
+                    .unwrap()
+                    .execute_next_opcode(&self.memory, step_fn);
+
+                self.cpu.lock().unwrap().process_interrupts(
+                    &self.memory,
+                    &self.interrupt_bus,
+                    step_fn,
+                );
+            }
+
+            cycles_this_frame_so_far += self.timers.lock().unwrap().get_elapsed_cycles();
         }
         self.state.transition(State::RENDERING);
     }

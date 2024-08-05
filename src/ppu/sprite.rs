@@ -58,13 +58,13 @@ pub fn process_from_memory(memory: &Arc<Mutex<Memory>>) -> [Sprite; 40] {
             .unwrap()
             .dma_read(OAM_ADDR + transformed_idx)
             .unwrap()
-            .wrapping_sub(0x10);
+            .wrapping_sub(16);
         sprites[i as usize].x_pos = memory
             .lock()
             .unwrap()
             .dma_read(OAM_ADDR + transformed_idx + 1)
             .unwrap()
-            .wrapping_sub(0x08);
+            .wrapping_sub(8);
         sprites[i as usize].pattern_number = memory
             .lock()
             .unwrap()
