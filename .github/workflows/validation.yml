@@ -12,11 +12,13 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
     - name: Get latest tag
       id: get_latest_tag
       run: |
-        latest_tag=$(git describe --tags --always `git rev-list --tags --max-count=1`)
+        latest_tag=$(git describe --tags --always $(git rev-list --tags --max-count=1))
         echo "latest_tag=$latest_tag" >> $GITHUB_ENV
 
     - name: Extract version from Cargo.toml
