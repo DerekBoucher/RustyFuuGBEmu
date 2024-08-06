@@ -3,11 +3,11 @@ on:
     branches:
       - main
 
-name: Tag next version
+name: Version
 
 jobs:
   tag:
-    name: Tag next version
+    name: Tag next
     timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
@@ -20,20 +20,11 @@ jobs:
         id: get_next_version
         run: |
           cargo_version=$(grep '^version' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-          IFS='.' read -r -a cargo_version_parts <<< "$cargo_version"
-          next_major=$(printf "%d.0.0" $((${cargo_version_parts[0]} + 1)))
-          next_minor=$(printf "%d.%d.0" ${cargo_version_parts[0]} $((${cargo_version_parts[1]} + 1)))
-          next_patch=$(printf "%d.%d.%d" ${cargo_version_parts[0]} ${cargo_version_parts[1]} $((${cargo_version_parts[2]} + 1)))
-          echo "next_major=$next_major" >> $GITHUB_ENV
-          echo "next_minor=$next_minor" >> $GITHUB_ENV
-          echo "next_patch=$next_patch" >> $GITHUB_ENV
+          echo "cargo_version=$cargo_version" >> $GITHUB_ENV
 
       - name: Create Tag
         id: create_tag
         run: |
-          next_major=${{ env.next_major }}
-          next_minor=${{ env.next_minor }}
-          next_patch=${{ env.next_patch }}
-          git tag $(printf "v%d.%d.%d" $next_major $next_minor $next_patch)
+          git tag $(printf "v%s" ${{ env.cargo_version }})
           git push origin --tags
 
