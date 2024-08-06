@@ -1,0 +1,43 @@
+on:
+  workflow_run:
+    workflows: ["Run Unit Tests"]
+    types:
+      - completed
+  push:
+    branches:
+      - main
+
+name: Tag next version
+
+jobs:
+  tag:
+    name: Tag next version
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Determine next semantic version
+        uses: paulhatch/semantic-version@v5.4.0
+        id: semver
+        with:
+          tag_prefix: "v"
+          major_pattern: "(MAJOR)"
+          minor_pattern: "(MINOR)"
+          version_format: "${major}.${minor}.${patch}"
+          change_path: "src"
+          search_commit_body: true
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Update version in Cargo.toml
+        run: |
+          sed -i "s/^version = \".*\"/version = \"${{ steps.semver.outputs.version }}\"/" Cargo.toml
+      - name: Commit change
+        run: |
+          git add Cargo.toml
+          git commit -m "[ci skip] Update Cargo.toml version to ${{ steps.semver.outputs.version }}"
+          git push
