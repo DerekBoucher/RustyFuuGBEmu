@@ -25,10 +25,11 @@ jobs:
         cargo_version=$(grep '^version' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
         echo "cargo_version=$cargo_version" >> $GITHUB_ENV
 
-    - name: Compare versions
+    - name: Check if next version is correct
       run: |
         latest_tag=${{ env.latest_tag }}
         cargo_version=${{ env.cargo_version }}
+        echo "cargo: $cargo_version"
         
         IFS='.' read -r -a latest_version_parts <<< "${latest_tag#v}"
         IFS='.' read -r -a cargo_version_parts <<< "$cargo_version"
