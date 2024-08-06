@@ -1,11 +1,10 @@
 on:
   workflow_run:
     workflows: ["Run Unit Tests"]
-    types:
-      - completed
-  push:
     branches:
       - main
+    types:
+      - completed
 
 name: Tag next version
 
