@@ -1,12 +1,13 @@
-name: Run Unit Tests
+name: Unit Tests
 on:
   pull_request:
 
 jobs:
   unit_tests:
+    name: Run
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install ubuntu dependencies
         run: sudo apt-get install -y libgtk-3-dev
       - name: Install latest stable rust toolchain
