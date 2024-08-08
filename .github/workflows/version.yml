@@ -15,8 +15,6 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up git bot
         run: |
@@ -45,8 +43,6 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Install ubuntu dependencies
         run: sudo apt-get install -y libgtk-3-dev
