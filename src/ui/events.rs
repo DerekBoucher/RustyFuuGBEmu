@@ -2,3 +2,4 @@
 pub enum UiEvent {
     CloseWindow,
 }
+

@@ -2104,7 +2104,7 @@ dependencies = [
 
 [[package]]
 name = "rusty_fuugbemu"
-version = "0.0.1"
+version = "0.0.5"
 dependencies = [
  "bytemuck",
  "clap",
