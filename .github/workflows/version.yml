@@ -14,12 +14,7 @@ jobs:
       version: ${{ steps.get_next_version.outputs.version }}
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
-
-      - name: Set up git bot
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions@github.com"
+        uses: actions/checkout@v3
 
       - name: Get next version from Cargo.toml
         id: get_next_version
@@ -31,7 +26,6 @@ jobs:
       - name: Create Tag
         id: create_tag
         run: |
-          git remote set-url origin https://x-access-token:${{ secrets.RELEASE_TOKEN }}@github.com/${{ github.repository }}.git
           git tag $(printf "%s" ${{ env.cargo_version }})
           git push origin --tags
 
@@ -42,7 +36,7 @@ jobs:
     needs: tag
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Install ubuntu dependencies
         run: sudo apt-get install -y libgtk-3-dev
