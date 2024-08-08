@@ -1,10 +1,10 @@
 on:
-  push:
-    tags:
+  create:
 
 name: Release
 
 jobs:
+  if: ${{ startsWith(github.ref, 'refs/tags/v') }}
   create-release:
     name: Create Release
     runs-on: ubuntu-latest
