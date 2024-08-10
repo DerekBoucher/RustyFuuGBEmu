@@ -164,7 +164,7 @@ impl PPU {
                 for tile_pixel in (0..8).rev() {
                     let mut color_bit = tile_pixel;
 
-                    if sprite.is_x_flipped() {
+                    if !sprite.is_x_flipped() {
                         color_bit -= 7;
                         color_bit *= -1;
                     }
