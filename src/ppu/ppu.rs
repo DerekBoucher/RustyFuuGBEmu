@@ -191,8 +191,7 @@ impl PPU {
                         color_palette_addr = 0xFF49;
                     }
 
-                    let x_offset: i32 = tile_pixel - 1;
-                    let x: usize = sprite.get_x().wrapping_add(x_offset as u8) as usize;
+                    let x: usize = sprite.get_x().wrapping_add(tile_pixel as u8) as usize;
 
                     // If the sprite's x pixel is out of the bounds of the screen, no reason to render it.
                     // Also applies if the current scanline is in v-blank mode.
