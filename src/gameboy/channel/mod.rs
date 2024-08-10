@@ -7,6 +7,7 @@ use crate::{
 };
 use back_end::Backend;
 use front_end::Frontend;
+use glium::glutin::event::ElementState;
 use std::sync::mpsc;
 
 pub fn new() -> (Frontend, Backend) {
@@ -18,7 +19,7 @@ pub fn new() -> (Frontend, Backend) {
     >(1);
     let (skip_boot_rom_sender, skip_boot_rom_recv) = mpsc::sync_channel::<bool>(1);
     let (joypad_sender, joypad_recv) =
-        mpsc::channel::<(Option<DirectionButton>, Option<ActionButton>)>();
+        mpsc::channel::<(Option<DirectionButton>, Option<ActionButton>, ElementState)>();
 
     return (
         Frontend::new(

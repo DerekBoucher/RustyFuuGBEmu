@@ -1,3 +1,4 @@
+use glium::glutin::event::ElementState;
 use queues::{queue, IsQueue, Queue};
 
 use crate::joypad::{ActionButton, DirectionButton};
@@ -56,8 +57,11 @@ pub struct Memory {
 
     interrupt_bus_ref: Arc<sync::Mutex<interrupt::Bus>>,
 
-    joypad_dir_queue: Queue<DirectionButton>,
-    joypad_action_queue: Queue<ActionButton>,
+    joypad_dir_queue: Queue<(DirectionButton, ElementState)>,
+    joypad_action_queue: Queue<(ActionButton, ElementState)>,
+
+    joypad_direction_buffer: u8,
+    joypad_action_buffer: u8,
 }
 
 /// Module containing important addresses for
@@ -150,6 +154,8 @@ impl Memory {
             interrupt_bus_ref,
             joypad_dir_queue: queue![],
             joypad_action_queue: queue![],
+            joypad_action_buffer: 0x0F,
+            joypad_direction_buffer: 0x0F,
         }
     }
 
@@ -173,6 +179,8 @@ impl Memory {
             interrupt_bus_ref,
             joypad_dir_queue: queue![],
             joypad_action_queue: queue![],
+            joypad_action_buffer: 0x0F,
+            joypad_direction_buffer: 0x0F,
         }
     }
 
@@ -239,9 +247,13 @@ impl Memory {
         &mut self,
         direction_press: Option<DirectionButton>,
         action_press: Option<ActionButton>,
+        input_state: ElementState,
     ) {
         if direction_press.is_some() {
-            match self.joypad_dir_queue.add(direction_press.unwrap()) {
+            match self
+                .joypad_dir_queue
+                .add((direction_press.unwrap(), input_state))
+            {
                 Ok(_) => {}
                 Err(err) => panic!(
                     "error occurred queuing direction press from joypad: {:?}",
@@ -258,7 +270,10 @@ impl Memory {
         }
 
         if action_press.is_some() {
-            match self.joypad_action_queue.add(action_press.unwrap()) {
+            match self
+                .joypad_action_queue
+                .add((action_press.unwrap(), input_state))
+            {
                 Ok(_) => {}
                 Err(err) => panic!("error occurred queuing action press from joypad: {:?}", err),
             }
@@ -276,46 +291,52 @@ impl Memory {
         let action_read = val & (1 << 5) == 0;
         let direction_read = val & (1 << 4) == 0;
 
-        if !action_read && !direction_read {
-            return;
-        }
-
-        let joypad_state = val & 0xF0;
-        let result: u8;
+        let hi_nibble: u8 = (val | 0xC0) & 0xF0;
+        let mut lo_nibble: u8 = 0x0F;
 
         if action_read {
-            let mask = match self.joypad_action_queue.remove() {
-                Ok(button) => match button {
-                    ActionButton::A => ActionButton::A.to_u8(),
-                    ActionButton::B => ActionButton::B.to_u8(),
-                    ActionButton::Start => ActionButton::Start.to_u8(),
-                    ActionButton::Select => ActionButton::Select.to_u8(),
-                },
-                Err(_) => 0x0F,
+            match self.joypad_action_queue.remove() {
+                Ok((button, input_state)) => {
+                    if input_state == ElementState::Pressed {
+                        lo_nibble &= button.to_u8();
+                    } else {
+                        lo_nibble |= !button.to_u8();
+                    }
+
+                    self.joypad_action_buffer = lo_nibble & 0x0F;
+
+                    log::trace!(
+                        "action press: {:b}, state: {:?}",
+                        hi_nibble | self.joypad_action_buffer,
+                        input_state
+                    );
+                }
+                Err(_) => {}
             };
-
-            result = joypad_state | (mask & 0x0F);
-            self.io_registers[io_registers::JOYPAD_ADDR - 0xFF00] = result;
-
-            return;
         }
 
         if direction_read {
-            let mask = match self.joypad_dir_queue.remove() {
-                Ok(button) => match button {
-                    DirectionButton::Up => DirectionButton::Up.to_u8(),
-                    DirectionButton::Down => DirectionButton::Down.to_u8(),
-                    DirectionButton::Left => DirectionButton::Left.to_u8(),
-                    DirectionButton::Right => DirectionButton::Right.to_u8(),
-                },
-                Err(_) => 0x0F,
+            match self.joypad_dir_queue.remove() {
+                Ok((button, input_state)) => {
+                    if input_state == ElementState::Pressed {
+                        lo_nibble &= button.to_u8();
+                    } else {
+                        lo_nibble |= !button.to_u8();
+                    }
+
+                    self.joypad_direction_buffer = lo_nibble & 0x0F;
+
+                    log::trace!(
+                        "direction press: {:b}, state: {:?}",
+                        hi_nibble | self.joypad_direction_buffer,
+                        input_state
+                    );
+                }
+                Err(_) => {}
             };
-
-            result = joypad_state | (mask & 0x0F);
-            self.io_registers[io_registers::JOYPAD_ADDR - 0xFF00] = result;
-
-            return;
         }
+
+        self.io_registers[io_registers::JOYPAD_ADDR - 0xFF00] = hi_nibble & 0xF0;
     }
 
     pub fn set_post_boot_rom_state(&mut self) {
@@ -517,6 +538,7 @@ impl Memory {
                 io_registers::INTERRUPT_FLAG_REGISTER_ADDR => {
                     Some(self.interrupt_bus_ref.lock().unwrap().read(addr))
                 }
+                io_registers::JOYPAD_ADDR => self.handle_joypad_read(),
                 _ => Some(self.io_registers[addr - 0xFF00]),
             };
         }
@@ -602,5 +624,21 @@ impl Memory {
             self.timer_ref.clone(),
             self.interrupt_bus_ref.clone(),
         );
+    }
+
+    fn handle_joypad_read(&self) -> Option<u8> {
+        let hi_nibble = self.io_registers[io_registers::JOYPAD_ADDR - 0xFF00] & 0xF0;
+        let action_read = hi_nibble & (1 << 5) == 0;
+        let direction_read = hi_nibble & (1 << 4) == 0;
+
+        if action_read {
+            return Some(hi_nibble | self.joypad_action_buffer);
+        }
+
+        if direction_read {
+            return Some(hi_nibble | self.joypad_direction_buffer);
+        }
+
+        Some(hi_nibble | 0x0F)
     }
 }
