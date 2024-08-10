@@ -64,6 +64,7 @@ jobs:
           release_name: Release ${{ needs.tag.outputs.version }}
           draft: false
           prerelease: false
+          generateReleaseNotes: true
 
       - name: Upload Release Asset
         id: upload-release-asset
