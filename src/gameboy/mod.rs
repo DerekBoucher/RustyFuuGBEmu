@@ -157,11 +157,12 @@ impl Gameboy {
                 return;
             }
 
-            let (direction_press, action_press) = backend.recv_joypad_data();
-            self.memory
-                .lock()
-                .unwrap()
-                .write_joypad_queue(direction_press, action_press);
+            let (direction_press, action_press, input_state) = backend.recv_joypad_data();
+            self.memory.lock().unwrap().write_joypad_queue(
+                direction_press,
+                action_press,
+                input_state,
+            );
 
             match backend.should_set_skip_bootrom() {
                 Some(skip_bootrom) => self.skip_boot_rom = skip_bootrom,

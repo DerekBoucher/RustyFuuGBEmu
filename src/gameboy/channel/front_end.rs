@@ -1,3 +1,5 @@
+use glium::glutin::event::ElementState;
+
 use crate::joypad::{ActionButton, DirectionButton};
 use crate::ppu::{self, Pixel};
 use std::sync::mpsc::{self, RecvTimeoutError, TryRecvError};
@@ -10,7 +12,7 @@ pub struct Frontend {
     frame_data_receiver:
         mpsc::Receiver<[[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT]>,
     skip_boot_rom_sender: mpsc::SyncSender<bool>,
-    joypad_sender: mpsc::Sender<(Option<DirectionButton>, Option<ActionButton>)>,
+    joypad_sender: mpsc::Sender<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
 }
 
 impl Frontend {
@@ -22,7 +24,7 @@ impl Frontend {
             [[Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT],
         >,
         skip_boot_rom_sender: mpsc::SyncSender<bool>,
-        joypad_sender: mpsc::Sender<(Option<DirectionButton>, Option<ActionButton>)>,
+        joypad_sender: mpsc::Sender<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
     ) -> Self {
         return Self {
             close_sender,
@@ -73,8 +75,12 @@ impl Frontend {
         &self,
         direction_press: Option<DirectionButton>,
         action_press: Option<ActionButton>,
+        input_state: ElementState,
     ) {
-        match self.joypad_sender.send((direction_press, action_press)) {
+        match self
+            .joypad_sender
+            .send((direction_press, action_press, input_state))
+        {
             Ok(_) => {}
             Err(err) => panic!("error occurred sending joypad data to backend: {:?}", err),
         }
