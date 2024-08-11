@@ -383,27 +383,28 @@ impl PPU {
 
         // TODO: determine if the window logic is correct
         let mut pixel_y: u8 = scroll_y.wrapping_add(current_scanline);
-        if window_enabled(lcdc) {
-            pixel_y = current_scanline.wrapping_sub(win_y);
-        }
+        //if window_enabled(lcdc) && win_y >= current_scanline && win_y < NATIVE_SCREEN_HEIGHT as u8 {
+        //    pixel_y = current_scanline.wrapping_sub(win_y);
+        //}
 
         // The row of the tile to render.
         // Since the tile map is made up of a 32x32 grid of tiles, this value is determined by
         // dividing the current pixel's y position by 8 -> gives us the byte offset within a tile, and then
         // multiplying by 32 -> to advance the memory pointer to the correct row of tiles within the 32 rows.
-        let tile_row: usize = (pixel_y as usize) / 8 * 32;
+        let tile_map_y: usize = (pixel_y as usize) / 8 * 32;
 
         // Main loop through each 160 pixels of the current scanline we are rendering
         for pixel_iter in 0..ppu::NATIVE_SCREEN_WIDTH as u8 {
             let mut pixel_x: u8 = pixel_iter.wrapping_add(scroll_x);
 
-            if window_enabled(lcdc) && (pixel_iter >= win_x) {
-                pixel_x = pixel_iter.wrapping_sub(win_x);
-            }
+            //if window_enabled(lcdc) && (pixel_iter >= win_x) {
+            //    pixel_x = pixel_iter.wrapping_sub(win_x);
+            //}
 
-            let tile_column: usize = (pixel_x / 8).into();
-            let tile_id_address: usize = tile_map_ptr + tile_column + tile_row;
+            let tile_map_x: usize = (pixel_x / 8).into();
+            let tile_id_address: usize = tile_map_ptr + tile_map_x + tile_map_y;
             let mut tile_id = memory.lock().unwrap().dma_read(tile_id_address).unwrap();
+
             let tile_line_offset: usize = ((pixel_y % 8) * 2).into();
             let mut tile_data_address: usize = tile_data_ptr + (tile_id as usize * 16);
 
@@ -424,7 +425,7 @@ impl PPU {
                 .dma_read(tile_data_address + tile_line_offset + 1)
                 .unwrap();
 
-            let current_bit_position: usize = 7 - ((pixel_iter as usize + scroll_x as usize) % 8);
+            let current_bit_position: usize = 7 - (pixel_x % 8) as usize;
 
             let mut pixel_color_encoding: u8 = 0x00;
 
