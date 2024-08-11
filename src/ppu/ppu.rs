@@ -377,29 +377,33 @@ impl PPU {
         // This also tells the PPU how much of an offset it needs to calculate when accessing the tile data section.
         let tile_map_ptr = determine_tile_map_address(lcdc);
 
-        // The y-coordinate of the current scanline we are rendering.
-        // The scroll-y value here allows for simulating a 'scrolling' effect when the frames
-        // are rendered.
-
-        // TODO: determine if the window logic is correct
-        let mut pixel_y: u8 = scroll_y.wrapping_add(current_scanline);
-        //if window_enabled(lcdc) && win_y >= current_scanline && win_y < NATIVE_SCREEN_HEIGHT as u8 {
-        //    pixel_y = current_scanline.wrapping_sub(win_y);
-        //}
-
-        // The row of the tile to render.
-        // Since the tile map is made up of a 32x32 grid of tiles, this value is determined by
-        // dividing the current pixel's y position by 8 -> gives us the byte offset within a tile, and then
-        // multiplying by 32 -> to advance the memory pointer to the correct row of tiles within the 32 rows.
-        let tile_map_y: usize = (pixel_y as usize) / 8 * 32;
+        let mut is_in_window_y = false;
+        if window_enabled(lcdc) && current_scanline >= win_y {
+            is_in_window_y = true;
+        }
 
         // Main loop through each 160 pixels of the current scanline we are rendering
         for pixel_iter in 0..ppu::NATIVE_SCREEN_WIDTH as u8 {
+            let mut pixel_y: u8 = current_scanline.wrapping_add(scroll_y);
             let mut pixel_x: u8 = pixel_iter.wrapping_add(scroll_x);
 
-            //if window_enabled(lcdc) && (pixel_iter >= win_x) {
-            //    pixel_x = pixel_iter.wrapping_sub(win_x);
-            //}
+            // Check if our current coordinate is inside a window.
+            // If true, then we need to render the window instead of the background.
+            let mut is_in_window_x = false;
+            if window_enabled(lcdc) && pixel_iter >= win_x {
+                is_in_window_x = true;
+            }
+
+            if is_in_window_x && is_in_window_y {
+                pixel_x = pixel_iter;
+                pixel_y = current_scanline;
+            }
+
+            // The row of the tile to render.
+            // Since the tile map is made up of a 32x32 grid of tiles, this value is determined by
+            // dividing the current pixel's y position by 8 -> gives us the byte offset within a tile, and then
+            // multiplying by 32 -> to advance the memory pointer to the correct row of tiles within the 32 rows.
+            let tile_map_y: usize = (pixel_y as usize) / 8 * 32;
 
             let tile_map_x: usize = (pixel_x / 8).into();
             let tile_id_address: usize = tile_map_ptr + tile_map_x + tile_map_y;
