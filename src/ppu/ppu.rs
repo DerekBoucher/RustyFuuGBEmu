@@ -1,3 +1,4 @@
+use core::panic;
 use std::sync::{self, Arc};
 
 use crate::{
@@ -21,6 +22,8 @@ impl PPU {
     pub fn new() -> Self {
         PPU {
             pixels: [[ppu::Pixel::White; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT],
+            pixel_encodings: [[ppu::Pixel::White; ppu::NATIVE_SCREEN_WIDTH];
+                ppu::NATIVE_SCREEN_HEIGHT],
             scanline_counter: 0,
         }
     }
@@ -199,9 +202,11 @@ impl PPU {
                         continue;
                     }
 
-                    // Determine if sprite pixel has priority over background or window
-                    if sprite.bg_has_priority_over_this()
-                        && self.pixels[current_scanline as usize][x] != ppu::Pixel::White
+                    // Determine if the background / window has priority over this sprite.
+                    // If true, background pixel should not be overwritten, unless the pixel color
+                    // at that coordinate is 0x00 (White).
+                    if sprite.bg_has_priority()
+                        && self.pixel_encodings[current_scanline as usize][x] != ppu::Pixel::White
                     {
                         continue;
                     }
@@ -451,6 +456,14 @@ impl PPU {
                 pixel_color_encoding,
             );
 
+            self.pixel_encodings[current_scanline as usize][pixel_iter as usize] =
+                match pixel_color_encoding {
+                    0b00 => Pixel::White,
+                    0b01 => Pixel::LightGray,
+                    0b10 => Pixel::DarkGray,
+                    0b11 => Pixel::Black,
+                    _ => panic!("invalid pixel color data fetched from vram"),
+                };
             self.pixels[current_scanline as usize][pixel_iter as usize] = pixel_color;
         }
     }
