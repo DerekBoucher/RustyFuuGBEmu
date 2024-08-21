@@ -27,5 +27,6 @@ pub const NATIVE_SCREEN_HEIGHT: usize = 144;
 #[derive(Debug)]
 pub struct PPU {
     pixels: [[Pixel; NATIVE_SCREEN_WIDTH]; NATIVE_SCREEN_HEIGHT],
+    pixel_encodings: [[Pixel; NATIVE_SCREEN_WIDTH]; NATIVE_SCREEN_HEIGHT],
     scanline_counter: i32,
 }

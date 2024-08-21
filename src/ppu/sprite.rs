@@ -21,7 +21,7 @@ impl Sprite {
         self.attributes & (1 << 5) > 0
     }
 
-    pub fn bg_has_priority_over_this(&self) -> bool {
+    pub fn bg_has_priority(&self) -> bool {
         self.attributes & (1 << 7) > 0
     }
 
