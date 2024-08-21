@@ -89,7 +89,7 @@ impl Ui {
                             ui.label(RichText::new("Up: ").size(15.0));
                             if ui
                                 .button(
-                                    RichText::new(format_args!("{:?}", &self.key_up).to_string())
+                                    RichText::new(format_args!("{:?}", &self.key_up.0).to_string())
                                         .size(15.0),
                                 )
                                 .clicked()
@@ -103,8 +103,10 @@ impl Ui {
                             ui.label(RichText::new("Down: ").size(15.0));
                             if ui
                                 .button(
-                                    RichText::new(format_args!("{:?}", &self.key_down).to_string())
-                                        .size(15.0),
+                                    RichText::new(
+                                        format_args!("{:?}", &self.key_down.0).to_string(),
+                                    )
+                                    .size(15.0),
                                 )
                                 .clicked()
                             {
@@ -117,8 +119,10 @@ impl Ui {
                             ui.label(RichText::new("Left: ").size(15.0));
                             if ui
                                 .button(
-                                    RichText::new(format_args!("{:?}", &self.key_left).to_string())
-                                        .size(15.0),
+                                    RichText::new(
+                                        format_args!("{:?}", &self.key_left.0).to_string(),
+                                    )
+                                    .size(15.0),
                                 )
                                 .clicked()
                             {
@@ -132,7 +136,7 @@ impl Ui {
                             if ui
                                 .button(
                                     RichText::new(
-                                        format_args!("{:?}", &self.key_right).to_string(),
+                                        format_args!("{:?}", &self.key_right.0).to_string(),
                                     )
                                     .size(15.0),
                                 )
@@ -149,7 +153,7 @@ impl Ui {
                             ui.label(RichText::new("A: ").size(15.0));
                             if ui
                                 .button(
-                                    RichText::new(format_args!("{:?}", &self.key_a).to_string())
+                                    RichText::new(format_args!("{:?}", &self.key_a.0).to_string())
                                         .size(15.0),
                                 )
                                 .clicked()
@@ -163,7 +167,7 @@ impl Ui {
                             ui.label(RichText::new("B: ").size(15.0));
                             if ui
                                 .button(
-                                    RichText::new(format_args!("{:?}", &self.key_b).to_string())
+                                    RichText::new(format_args!("{:?}", &self.key_b.0).to_string())
                                         .size(15.0),
                                 )
                                 .clicked()
@@ -178,7 +182,7 @@ impl Ui {
                             if ui
                                 .button(
                                     RichText::new(
-                                        format_args!("{:?}", &self.key_start).to_string(),
+                                        format_args!("{:?}", &self.key_start.0).to_string(),
                                     )
                                     .size(15.0),
                                 )
@@ -194,7 +198,7 @@ impl Ui {
                             if ui
                                 .button(
                                     RichText::new(
-                                        format_args!("{:?}", &self.key_select).to_string(),
+                                        format_args!("{:?}", &self.key_select.0).to_string(),
                                     )
                                     .size(15.0),
                                 )
