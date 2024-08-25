@@ -1539,7 +1539,6 @@ fn execute_0x22(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
     memory.lock().unwrap().write(usize::from(cpu.hl.word()), cpu.af.hi);
     cpu.hl.set_word(cpu.hl.word().wrapping_add(1));
     
-
     8
 }
 
@@ -2884,6 +2883,7 @@ fn execute_0xc8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 }
 
 fn execute_0xc9(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
+    step_fn();
     return cpu.return_from_call(memory, step_fn);
 }
 
@@ -2972,6 +2972,7 @@ fn execute_0xd8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
 fn execute_0xd9(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     cpu.interrupt_master_enable = true;
+    step_fn();
     return cpu.return_from_call(memory, step_fn);
 }
 

@@ -36,7 +36,7 @@ pub struct Memory {
 
     /// Sprite data.
     /// Occupies memory locations 0xFE00 ~ 0xFE9F.
-    sprite_attributes: [u8; 0xA0],
+    oam: [u8; 0xA0],
 
     /// IO Registers such as interupts, controls, etc...
     /// Occupies memory locations 0xFF00 ~ 0xFF7F.
@@ -144,7 +144,7 @@ impl Memory {
             work_ram0: [0x00; 0x1000],
             work_ram1: [0x00; 0x1000],
             _echo_ram: [0x00; 0x1E00],
-            sprite_attributes: [0x00; 0xA0],
+            oam: [0x00; 0xA0],
             io_registers: [0x00; 0x80],
             hi_ram: [0x00; 0x7F],
             oam_dma_transfer_cycles_completed: 0,
@@ -169,7 +169,7 @@ impl Memory {
             work_ram0: [0x00; 0x1000],
             work_ram1: [0x00; 0x1000],
             _echo_ram: [0x00; 0x1E00],
-            sprite_attributes: [0x00; 0xA0],
+            oam: [0x00; 0xA0],
             io_registers: [0x00; 0x80],
             hi_ram: [0x00; 0x7F],
             oam_dma_transfer_cycles_completed: 0,
@@ -190,16 +190,15 @@ impl Memory {
 
     pub fn step_dma(&mut self) {
         if !self.oam_dma_transfer_in_progress {
-            self.oam_dma_transfer_cycles_completed = 0;
             return;
         }
 
         for _ in 0..4 {
-            let sprite_addr = self.oam_dma_transfer_cycles_completed as usize;
+            let sprite_data_addr = self.oam_dma_transfer_cycles_completed as usize;
 
-            let data_addr: usize = (self.oam_hi_byte as usize) << 8 | sprite_addr;
+            let data_addr: usize = (self.oam_hi_byte as usize) << 8 | sprite_data_addr;
 
-            self.sprite_attributes[sprite_addr] = self.dma_read(data_addr).unwrap();
+            self.oam[sprite_data_addr] = self.dma_read(data_addr).unwrap();
             self.oam_dma_transfer_cycles_completed += 1;
         }
 
@@ -437,7 +436,7 @@ impl Memory {
 
         // OAM / Sprite attributes
         if addr >= 0xFE00 && addr < 0xFEA0 {
-            return Some(self.sprite_attributes[addr - 0xFE00]);
+            return Some(self.oam[addr - 0xFE00]);
         }
 
         if addr >= 0xFEA0 && addr < 0xFF00 {
@@ -520,7 +519,7 @@ impl Memory {
 
         // OAM / Sprite attributes
         if addr >= 0xFE00 && addr < 0xFEA0 {
-            return Some(self.sprite_attributes[addr - 0xFE00]);
+            return Some(self.oam[addr - 0xFE00]);
         }
 
         if addr >= 0xFEA0 && addr < 0xFF00 {

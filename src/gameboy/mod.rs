@@ -191,7 +191,7 @@ impl Gameboy {
                 step_fn();
                 self.cpu.lock().unwrap().handle_halt(&self.interrupt_bus);
             } else {
-                _ = self
+                let _ = self
                     .cpu
                     .lock()
                     .unwrap()
@@ -206,6 +206,7 @@ impl Gameboy {
 
             cycles_this_frame_so_far += self.timers.lock().unwrap().get_elapsed_cycles();
         }
+
         self.state.transition(State::RENDERING);
     }
 }

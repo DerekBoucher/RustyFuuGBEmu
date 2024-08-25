@@ -108,15 +108,6 @@ impl Timers {
     }
 
     pub fn step(&mut self, interrupt_bus: &Arc<sync::Mutex<interrupt::Bus>>) {
-        if self.interrupt_pending {
-            self.interrupt_pending = false;
-            self.tima = self.tma;
-            interrupt_bus
-                .lock()
-                .unwrap()
-                .request(interrupt::Interrupt::TimerOverflow);
-        }
-
         // Looping 4 times to simulate a machine cycle (1 M-Cycle = 4 CPU cycles)
         for _ in 0..4 {
             self.system_clock = self.system_clock.wrapping_add(1);
@@ -152,6 +143,15 @@ impl Timers {
             self.prev_bit_7 = self.current_bit_7;
             self.prev_bit_5 = self.current_bit_5;
             self.prev_bit_3 = self.current_bit_3;
+        }
+
+        if self.interrupt_pending {
+            self.interrupt_pending = false;
+            self.tima = self.tma;
+            interrupt_bus
+                .lock()
+                .unwrap()
+                .request(interrupt::Interrupt::TimerOverflow);
         }
     }
 }

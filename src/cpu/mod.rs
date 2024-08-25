@@ -1,7 +1,7 @@
 //! Module containing all logic relevant to the emulation of the original
 //! Gameboy's CPU (Sharp LR35902)
 mod bit;
-mod opcode;
+pub mod opcode;
 mod opcode_ext;
 mod register;
 
@@ -125,7 +125,6 @@ impl LR35902 {
         step_fn: &mut impl FnMut(),
     ) -> u32 {
         step_fn();
-
         let op = match memory.lock().unwrap().read(usize::from(self.pc)) {
             Some(x) => Opcode::from(x),
             None => panic!(
@@ -143,9 +142,7 @@ impl LR35902 {
         #[cfg(feature = "serial_debug")]
         LR35902::serial_debug_output(memory);
 
-        let cycles = op.execute(self, memory, step_fn);
-
-        return cycles;
+        return op.execute(self, memory, step_fn);
     }
 
     pub fn is_stopped(&self) -> bool {
