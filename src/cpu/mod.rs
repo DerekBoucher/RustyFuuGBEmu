@@ -1,7 +1,7 @@
 //! Module containing all logic relevant to the emulation of the original
 //! Gameboy's CPU (Sharp LR35902)
 mod bit;
-mod opcode;
+pub mod opcode;
 mod opcode_ext;
 mod register;
 
@@ -10,6 +10,7 @@ use crate::memory::io_registers;
 use crate::{interrupt, memory};
 
 use opcode::Opcode;
+use opcode_ext::ExtendedOpcode;
 use register::{ID, ID16};
 use std::{
     fmt::Debug,
@@ -123,9 +124,7 @@ impl LR35902 {
         &mut self,
         memory: &Arc<sync::Mutex<memory::Memory>>,
         step_fn: &mut impl FnMut(),
-    ) -> u32 {
-        step_fn();
-
+    ) -> (u32, Opcode) {
         let op = match memory.lock().unwrap().read(usize::from(self.pc)) {
             Some(x) => Opcode::from(x),
             None => panic!(
@@ -133,6 +132,8 @@ impl LR35902 {
                 {:?}", self
             ),
         };
+
+        step_fn();
 
         self.pc = self.pc.wrapping_add(1);
         if self.bugged_halt {
@@ -145,7 +146,7 @@ impl LR35902 {
 
         let cycles = op.execute(self, memory, step_fn);
 
-        return cycles;
+        return (cycles, op);
     }
 
     pub fn is_stopped(&self) -> bool {

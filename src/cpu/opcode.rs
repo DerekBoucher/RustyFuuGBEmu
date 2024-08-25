@@ -13,6 +13,7 @@ use super::bit::two_compliment_byte;
 
 #[allow(non_camel_case_types)]
 #[repr(u8)]
+#[derive(Debug, Copy, Clone)]
 pub enum Opcode {
     Nop_0x00,
     LdImm16IntoBC_0x01,
@@ -270,6 +271,13 @@ pub enum Opcode {
     Nop_0xFD,
     CompareAWith8Imm_0xFE,
     Reset38h_0xFF,
+}
+
+impl std::fmt::Display for Opcode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let byte: u8 = Into::<u8>::into(*self);
+        write!(f, "{}", byte)
+    }
 }
 
 impl std::convert::From<u8> for Opcode {
@@ -1539,7 +1547,6 @@ fn execute_0x22(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
     memory.lock().unwrap().write(usize::from(cpu.hl.word()), cpu.af.hi);
     cpu.hl.set_word(cpu.hl.word().wrapping_add(1));
     
-
     8
 }
 
@@ -2884,6 +2891,7 @@ fn execute_0xc8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 }
 
 fn execute_0xc9(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
+    step_fn();
     return cpu.return_from_call(memory, step_fn);
 }
 
@@ -2972,6 +2980,7 @@ fn execute_0xd8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
 fn execute_0xd9(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     cpu.interrupt_master_enable = true;
+    step_fn();
     return cpu.return_from_call(memory, step_fn);
 }
 

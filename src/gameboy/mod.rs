@@ -56,6 +56,8 @@ pub struct Gameboy {
     ppu: ppu::PPU,
     timers: Arc<sync::Mutex<timers::Timers>>,
     interrupt_bus: Arc<sync::Mutex<interrupt::Bus>>,
+    opcode_cycles_total: i64,
+    step_cycles_total: i64,
 }
 
 impl Gameboy {
@@ -71,6 +73,8 @@ impl Gameboy {
         let cpu = Arc::new(sync::Mutex::new(cpu::LR35902::new()));
 
         return Self {
+            step_cycles_total: 0,
+            opcode_cycles_total: 0,
             state: State::INITIALIZING,
             cpu,
             memory,
@@ -178,6 +182,7 @@ impl Gameboy {
             }
 
             let step_fn = &mut || {
+                self.step_cycles_total = self.step_cycles_total.wrapping_add(4);
                 self.timers.lock().unwrap().step(&self.interrupt_bus);
                 self.memory.lock().unwrap().step_dma();
                 self.ppu.step_graphics(&self.memory, &self.interrupt_bus);
@@ -191,21 +196,45 @@ impl Gameboy {
                 step_fn();
                 self.cpu.lock().unwrap().handle_halt(&self.interrupt_bus);
             } else {
-                _ = self
+                let (cycles, opcode) = self
                     .cpu
                     .lock()
                     .unwrap()
                     .execute_next_opcode(&self.memory, step_fn);
+
+                self.opcode_cycles_total = self.opcode_cycles_total.wrapping_add(cycles.into());
+
+                let curr_int = self
+                    .interrupt_bus
+                    .lock()
+                    .unwrap()
+                    .get_highest_priority_interrupt();
 
                 self.cpu.lock().unwrap().process_interrupts(
                     &self.memory,
                     &self.interrupt_bus,
                     step_fn,
                 );
+
+                let op: u8 = opcode.into();
+
+                if self.opcode_cycles_total != self.step_cycles_total && curr_int.is_none() {
+                    log::debug!(
+                        "opcode: {}, step: {}, delta: {}, opcode: {:2X}",
+                        self.opcode_cycles_total,
+                        self.step_cycles_total,
+                        self.opcode_cycles_total - self.step_cycles_total,
+                        op,
+                    );
+                }
+
+                self.opcode_cycles_total = 0;
+                self.step_cycles_total = 0;
             }
 
             cycles_this_frame_so_far += self.timers.lock().unwrap().get_elapsed_cycles();
         }
+
         self.state.transition(State::RENDERING);
     }
 }
