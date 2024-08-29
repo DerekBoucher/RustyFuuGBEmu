@@ -20,6 +20,7 @@ pub fn new() -> (Frontend, Backend) {
     let (skip_boot_rom_sender, skip_boot_rom_recv) = mpsc::sync_channel::<bool>(1);
     let (joypad_sender, joypad_recv) =
         mpsc::channel::<(Option<DirectionButton>, Option<ActionButton>, ElementState)>();
+    let (pause_sender, pause_receiver) = mpsc::sync_channel::<bool>(1);
 
     return (
         Frontend::new(
@@ -29,6 +30,7 @@ pub fn new() -> (Frontend, Backend) {
             frame_data_receiver,
             skip_boot_rom_sender,
             joypad_sender,
+            pause_sender,
         ),
         Backend::new(
             close_receiver,
@@ -37,6 +39,7 @@ pub fn new() -> (Frontend, Backend) {
             frame_data_sender,
             skip_boot_rom_recv,
             joypad_recv,
+            pause_receiver,
         ),
     );
 }

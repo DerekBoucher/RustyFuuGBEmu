@@ -13,6 +13,7 @@ pub struct Backend {
     frame_data_sender: SyncSender<[[Pixel; NATIVE_SCREEN_WIDTH]; NATIVE_SCREEN_HEIGHT]>,
     skip_boot_rom_recv: Receiver<bool>,
     joypad_recv: Receiver<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
+    pause_recv: Receiver<bool>,
 }
 
 impl Backend {
@@ -23,6 +24,7 @@ impl Backend {
         frame_data_sender: SyncSender<[[Pixel; NATIVE_SCREEN_WIDTH]; NATIVE_SCREEN_HEIGHT]>,
         skip_boot_rom_recv: Receiver<bool>,
         joypad_recv: Receiver<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
+        pause_recv: Receiver<bool>,
     ) -> Self {
         return Self {
             close_receiver,
@@ -31,7 +33,29 @@ impl Backend {
             frame_data_sender,
             skip_boot_rom_recv,
             joypad_recv,
+            pause_recv,
         };
+    }
+
+    pub fn should_pause(&self) -> bool {
+        let result = self.pause_recv.try_recv();
+        match result {
+            Ok(should_pause) => should_pause,
+            Err(err) => match err {
+                TryRecvError::Empty => false,
+                _ => panic!("error occurred receving pause signal: {:?}", err),
+            },
+        }
+    }
+
+    pub fn wait_pause_resume(&self) {
+        let result = self.pause_recv.recv();
+        match result {
+            Ok(_) => {}
+            Err(err) => panic!("error occurred receiving resume signal: {:?}", err),
+        }
+
+        return;
     }
 
     pub fn should_close(&self) -> bool {

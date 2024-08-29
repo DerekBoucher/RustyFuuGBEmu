@@ -134,6 +134,10 @@ impl Gameboy {
             return;
         }
 
+        if backend.should_pause() {
+            backend.wait_pause_resume();
+        }
+
         match backend.should_set_skip_bootrom() {
             Some(skip_bootrom) => self.skip_boot_rom = skip_bootrom,
             _ => {}
@@ -155,6 +159,10 @@ impl Gameboy {
             if backend.should_close() {
                 self.state.transition(State::EXITING);
                 return;
+            }
+
+            if backend.should_pause() {
+                backend.wait_pause_resume();
             }
 
             let (direction_press, action_press, input_state) = backend.recv_joypad_data();

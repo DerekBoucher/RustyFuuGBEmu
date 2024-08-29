@@ -23,6 +23,7 @@ pub struct Ui {
     skip_boot_rom: bool,
     controls: controls::Ui,
     vram_viewer: vram_viewer::Ui,
+    is_paused: bool,
 }
 
 impl Ui {
@@ -37,6 +38,7 @@ impl Ui {
             skip_boot_rom,
             controls: controls::Ui::new(),
             vram_viewer: vram_viewer::Ui::new(),
+            is_paused: false,
         }
     }
 
@@ -61,10 +63,18 @@ impl Ui {
                         ui.menu_button("File", |ui| {
                             if ui.button("Load ROM").clicked() {
                                 Ui::load_rom_from_file_dialog(frontend);
+
+                                // When loading a rom, un-pause the emulator to avoid weirdness
+                                self.is_paused = false;
+                                frontend.send_pause(self.is_paused);
+
                                 ui.close_menu();
                             }
 
                             if ui.button("Exit").clicked() {
+                                self.is_paused = false;
+                                frontend.send_pause(self.is_paused);
+
                                 self.ui_event_loop_proxy
                                     .send_event(events::UiEvent::CloseWindow)
                                     .unwrap();
@@ -78,6 +88,10 @@ impl Ui {
                                 .clicked()
                             {
                                 frontend.send_set_skip_boot_rom_back_end(self.skip_boot_rom);
+                            }
+
+                            if ui.checkbox(&mut self.is_paused, "Pause").clicked() {
+                                frontend.send_pause(self.is_paused);
                             }
 
                             ui.separator();

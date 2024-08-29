@@ -13,6 +13,7 @@ pub struct Frontend {
         mpsc::Receiver<[[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT]>,
     skip_boot_rom_sender: mpsc::SyncSender<bool>,
     joypad_sender: mpsc::Sender<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
+    pause_sender: mpsc::SyncSender<bool>,
 }
 
 impl Frontend {
@@ -25,6 +26,7 @@ impl Frontend {
         >,
         skip_boot_rom_sender: mpsc::SyncSender<bool>,
         joypad_sender: mpsc::Sender<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
+        pause_sender: mpsc::SyncSender<bool>,
     ) -> Self {
         return Self {
             close_sender,
@@ -33,6 +35,7 @@ impl Frontend {
             frame_data_receiver,
             skip_boot_rom_sender,
             joypad_sender,
+            pause_sender,
         };
     }
 
@@ -40,6 +43,13 @@ impl Frontend {
         match self.close_sender.send(()) {
             Ok(_) => {}
             Err(err) => panic!("error occurred sending close signal to back end: {:?}", err),
+        }
+    }
+
+    pub fn send_pause(&self, pause: bool) {
+        match self.pause_sender.send(pause) {
+            Ok(_) => {}
+            Err(err) => panic!("error occurred sending pause signal to back end: {:?}", err),
         }
     }
 

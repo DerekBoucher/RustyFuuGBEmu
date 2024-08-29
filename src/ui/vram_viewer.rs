@@ -1,4 +1,4 @@
-use egui::{self, Vec2};
+use egui;
 
 pub struct Ui {
     show: bool,
