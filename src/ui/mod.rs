@@ -11,6 +11,7 @@ use std::fs;
 
 mod controls;
 pub mod events;
+mod vram_viewer;
 use gameboy::channel::front_end::Frontend;
 
 pub const TOP_MENUBAR_HEIGHT: f32 = 20.0;
@@ -21,6 +22,7 @@ pub struct Ui {
     ui_event_loop_proxy: EventLoopProxy<events::UiEvent>,
     skip_boot_rom: bool,
     controls: controls::Ui,
+    vram_viewer: vram_viewer::Ui,
 }
 
 impl Ui {
@@ -34,6 +36,7 @@ impl Ui {
             ui_event_loop_proxy: event_loop_proxy,
             skip_boot_rom,
             controls: controls::Ui::new(),
+            vram_viewer: vram_viewer::Ui::new(),
         }
     }
 
@@ -49,9 +52,6 @@ impl Ui {
             visuals.window_shadow = Shadow::NONE;
             visuals.popup_shadow = Shadow::NONE;
             egui_ctx.set_visuals(visuals);
-
-            // Preferences window
-            self.controls.render(egui_ctx);
 
             // Top menubar
             egui::TopBottomPanel::top("top_panel")
@@ -85,9 +85,22 @@ impl Ui {
                                 self.controls.show(true);
                                 ui.close_menu();
                             }
-                        })
+                        });
+
+                        ui.menu_button("Debug", |ui| {
+                            if ui.button("VRAM Viewer").clicked() {
+                                self.vram_viewer.show(true);
+                                ui.close_menu();
+                            }
+                        });
                     });
                 });
+
+            // Controls window
+            self.controls.render(egui_ctx);
+
+            // VRAM Viewer window
+            self.vram_viewer.render(egui_ctx);
         });
 
         let time_until_next_redraw = std::time::Instant::now().checked_add(egui_redraw_timer);
