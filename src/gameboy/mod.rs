@@ -97,7 +97,7 @@ impl Gameboy {
     }
 
     pub fn start(mut self) -> Frontend {
-        let (frontend, backend) = channel::new();
+        let (frontend, backend) = channel::new(self.memory.clone());
         let _ = std::thread::spawn(move || self.run(backend));
         return frontend;
     }

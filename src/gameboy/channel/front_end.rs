@@ -1,8 +1,10 @@
 use glium::glutin::event::ElementState;
 
 use crate::joypad::{ActionButton, DirectionButton};
+use crate::memory;
 use crate::ppu::{self, Pixel};
 use std::sync::mpsc::{self, RecvTimeoutError, TryRecvError};
+use std::sync::{self, Arc};
 use std::time::Duration;
 
 pub struct Frontend {
@@ -14,6 +16,7 @@ pub struct Frontend {
     skip_boot_rom_sender: mpsc::SyncSender<bool>,
     joypad_sender: mpsc::Sender<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
     pause_sender: mpsc::SyncSender<bool>,
+    memory_ref: Arc<sync::Mutex<memory::Memory>>,
 }
 
 impl Frontend {
@@ -27,6 +30,7 @@ impl Frontend {
         skip_boot_rom_sender: mpsc::SyncSender<bool>,
         joypad_sender: mpsc::Sender<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
         pause_sender: mpsc::SyncSender<bool>,
+        memory_ref: Arc<sync::Mutex<memory::Memory>>,
     ) -> Self {
         return Self {
             close_sender,
@@ -36,6 +40,7 @@ impl Frontend {
             skip_boot_rom_sender,
             joypad_sender,
             pause_sender,
+            memory_ref,
         };
     }
 

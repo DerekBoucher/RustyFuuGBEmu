@@ -3,14 +3,14 @@ pub mod front_end;
 
 use crate::{
     joypad::{ActionButton, DirectionButton},
-    ppu,
+    memory, ppu,
 };
 use back_end::Backend;
 use front_end::Frontend;
 use glium::glutin::event::ElementState;
-use std::sync::mpsc;
+use std::sync::{self, mpsc, Arc};
 
-pub fn new() -> (Frontend, Backend) {
+pub fn new(memory_ref: Arc<sync::Mutex<memory::Memory>>) -> (Frontend, Backend) {
     let (close_sender, close_receiver) = mpsc::sync_channel::<()>(1);
     let (ack_sender, ack_receiver) = mpsc::sync_channel::<()>(1);
     let (rom_data_sender, rom_data_receiver) = mpsc::sync_channel::<Vec<u8>>(1);
@@ -31,6 +31,7 @@ pub fn new() -> (Frontend, Backend) {
             skip_boot_rom_sender,
             joypad_sender,
             pause_sender,
+            memory_ref,
         ),
         Backend::new(
             close_receiver,
