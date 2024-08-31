@@ -19,6 +19,15 @@ impl Pixel {
             Self::Black => (14.0 / 255.0, 14.0 / 255.0, 26.0 / 255.0),
         }
     }
+
+    pub fn to_rgb_u8(&self) -> (u8, u8, u8) {
+        match self {
+            Self::White => (250, 251, 246),
+            Self::LightGray => (197, 182, 189),
+            Self::DarkGray => (85, 89, 116),
+            Self::Black => (14, 14, 26),
+        }
+    }
 }
 
 pub const NATIVE_SCREEN_WIDTH: usize = 160;

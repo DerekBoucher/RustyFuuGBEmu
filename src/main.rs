@@ -40,12 +40,13 @@ fn main() {
     let egui_glium_client = egui_glium::EguiGlium::new(&display, &program_loop);
     let mut opengl_renderer = renderer::OpenGL::new(&display);
 
-    let gameboy = gameboy::Gameboy::new(args.skip_boot_rom);
+    let (gameboy, memory_ref) = gameboy::Gameboy::new(args.skip_boot_rom);
 
     let mut ui = ui::Ui::new(
         egui_glium_client,
         program_loop.create_proxy(),
         args.skip_boot_rom,
+        memory_ref,
     );
     let mut frontend = gameboy.start();
 

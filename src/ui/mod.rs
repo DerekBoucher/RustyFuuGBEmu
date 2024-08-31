@@ -1,4 +1,5 @@
 use crate::gameboy;
+use crate::memory::Memory;
 
 use egui::epaint::Shadow;
 use egui::Visuals;
@@ -8,9 +9,12 @@ use glium::glutin::event_loop::EventLoopProxy;
 use glium::Display;
 use glium::Frame;
 use std::fs;
+use std::sync::Arc;
+use std::sync::Mutex;
 
 mod controls;
 pub mod events;
+mod vram_viewer;
 use gameboy::channel::front_end::Frontend;
 
 pub const TOP_MENUBAR_HEIGHT: f32 = 20.0;
@@ -21,6 +25,9 @@ pub struct Ui {
     ui_event_loop_proxy: EventLoopProxy<events::UiEvent>,
     skip_boot_rom: bool,
     controls: controls::Ui,
+    vram_viewer: vram_viewer::Ui,
+    is_paused: bool,
+    memory_ref: Arc<Mutex<Memory>>,
 }
 
 impl Ui {
@@ -28,12 +35,16 @@ impl Ui {
         egui_glium_client: egui_glium::EguiGlium,
         event_loop_proxy: EventLoopProxy<events::UiEvent>,
         skip_boot_rom: bool,
+        memory_ref: Arc<Mutex<Memory>>,
     ) -> Self {
         Self {
             egui_glium_client,
             ui_event_loop_proxy: event_loop_proxy,
             skip_boot_rom,
             controls: controls::Ui::new(),
+            vram_viewer: vram_viewer::Ui::new(),
+            is_paused: false,
+            memory_ref,
         }
     }
 
@@ -44,27 +55,32 @@ impl Ui {
         frame: &mut Frame,
         frontend: &mut Frontend,
     ) {
-        let egui_redraw_timer = self.egui_glium_client.run(display, |egui_ctx| {
+        let egui_redraw_timer = self.egui_glium_client.run(display, |ctx| {
             let mut visuals = Visuals::default();
             visuals.window_shadow = Shadow::NONE;
             visuals.popup_shadow = Shadow::NONE;
-            egui_ctx.set_visuals(visuals);
-
-            // Preferences window
-            self.controls.render(egui_ctx);
+            ctx.set_visuals(visuals);
 
             // Top menubar
             egui::TopBottomPanel::top("top_panel")
                 .exact_height(TOP_MENUBAR_HEIGHT)
-                .show(egui_ctx, |ui| {
+                .show(ctx, |ui| {
                     ui.horizontal(|ui| {
                         ui.menu_button("File", |ui| {
                             if ui.button("Load ROM").clicked() {
                                 Ui::load_rom_from_file_dialog(frontend);
+
+                                // When loading a rom, un-pause the emulator to avoid weirdness
+                                self.is_paused = false;
+                                frontend.send_pause(self.is_paused);
+
                                 ui.close_menu();
                             }
 
                             if ui.button("Exit").clicked() {
+                                self.is_paused = false;
+                                frontend.send_pause(self.is_paused);
+
                                 self.ui_event_loop_proxy
                                     .send_event(events::UiEvent::CloseWindow)
                                     .unwrap();
@@ -80,14 +96,31 @@ impl Ui {
                                 frontend.send_set_skip_boot_rom_back_end(self.skip_boot_rom);
                             }
 
+                            if ui.checkbox(&mut self.is_paused, "Pause").clicked() {
+                                frontend.send_pause(self.is_paused);
+                            }
+
                             ui.separator();
                             if ui.button("Controls").clicked() {
                                 self.controls.show(true);
                                 ui.close_menu();
                             }
-                        })
+                        });
+
+                        ui.menu_button("Debug", |ui| {
+                            if ui.button("VRAM Viewer").clicked() {
+                                self.vram_viewer.show(true);
+                                ui.close_menu();
+                            }
+                        });
                     });
                 });
+
+            // Controls window
+            self.controls.render(ctx);
+
+            // VRAM Viewer window
+            self.vram_viewer.render(ctx, &self.memory_ref);
         });
 
         let time_until_next_redraw = std::time::Instant::now().checked_add(egui_redraw_timer);
