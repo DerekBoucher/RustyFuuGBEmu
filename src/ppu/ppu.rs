@@ -279,7 +279,7 @@ impl PPU {
         }
     }
 
-    fn determine_pixel_rgb(
+    pub fn determine_pixel_rgb(
         memory: &Arc<sync::Mutex<memory::Memory>>,
         color_palette_addr: usize,
         pixel_color_encoding: u8,

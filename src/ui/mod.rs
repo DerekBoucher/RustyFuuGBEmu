@@ -1,4 +1,5 @@
 use crate::gameboy;
+use crate::memory::Memory;
 
 use egui::epaint::Shadow;
 use egui::Visuals;
@@ -8,6 +9,8 @@ use glium::glutin::event_loop::EventLoopProxy;
 use glium::Display;
 use glium::Frame;
 use std::fs;
+use std::sync::Arc;
+use std::sync::Mutex;
 
 mod controls;
 pub mod events;
@@ -24,6 +27,7 @@ pub struct Ui {
     controls: controls::Ui,
     vram_viewer: vram_viewer::Ui,
     is_paused: bool,
+    memory_ref: Arc<Mutex<Memory>>,
 }
 
 impl Ui {
@@ -31,6 +35,7 @@ impl Ui {
         egui_glium_client: egui_glium::EguiGlium,
         event_loop_proxy: EventLoopProxy<events::UiEvent>,
         skip_boot_rom: bool,
+        memory_ref: Arc<Mutex<Memory>>,
     ) -> Self {
         Self {
             egui_glium_client,
@@ -39,6 +44,7 @@ impl Ui {
             controls: controls::Ui::new(),
             vram_viewer: vram_viewer::Ui::new(),
             is_paused: false,
+            memory_ref,
         }
     }
 
@@ -49,16 +55,16 @@ impl Ui {
         frame: &mut Frame,
         frontend: &mut Frontend,
     ) {
-        let egui_redraw_timer = self.egui_glium_client.run(display, |egui_ctx| {
+        let egui_redraw_timer = self.egui_glium_client.run(display, |ctx| {
             let mut visuals = Visuals::default();
             visuals.window_shadow = Shadow::NONE;
             visuals.popup_shadow = Shadow::NONE;
-            egui_ctx.set_visuals(visuals);
+            ctx.set_visuals(visuals);
 
             // Top menubar
             egui::TopBottomPanel::top("top_panel")
                 .exact_height(TOP_MENUBAR_HEIGHT)
-                .show(egui_ctx, |ui| {
+                .show(ctx, |ui| {
                     ui.horizontal(|ui| {
                         ui.menu_button("File", |ui| {
                             if ui.button("Load ROM").clicked() {
@@ -111,10 +117,10 @@ impl Ui {
                 });
 
             // Controls window
-            self.controls.render(egui_ctx);
+            self.controls.render(ctx);
 
             // VRAM Viewer window
-            self.vram_viewer.render(egui_ctx);
+            self.vram_viewer.render(ctx, &self.memory_ref);
         });
 
         let time_until_next_redraw = std::time::Instant::now().checked_add(egui_redraw_timer);

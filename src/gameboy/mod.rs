@@ -1,11 +1,13 @@
 use std::sync;
 use std::sync::Arc;
+use std::sync::Mutex;
 
 use crate::cartridge;
 use crate::cpu;
 use crate::cpu::CPU_CYCLES_PER_FRAME;
 use crate::interrupt;
 use crate::memory;
+use crate::memory::Memory;
 use crate::ppu;
 use crate::timers;
 
@@ -59,7 +61,7 @@ pub struct Gameboy {
 }
 
 impl Gameboy {
-    pub fn new(skip_boot_rom: bool) -> Self {
+    pub fn new(skip_boot_rom: bool) -> (Self, Arc<Mutex<Memory>>) {
         let timers = Arc::new(sync::Mutex::new(timers::Timers::new()));
         let ppu = ppu::PPU::new();
 
@@ -68,17 +70,21 @@ impl Gameboy {
             timers.clone(),
             interrupt_bus.clone(),
         )));
+        let memory_ref = memory.clone();
         let cpu = Arc::new(sync::Mutex::new(cpu::LR35902::new()));
 
-        return Self {
-            state: State::INITIALIZING,
-            cpu,
-            memory,
-            ppu,
-            skip_boot_rom,
-            timers,
-            interrupt_bus,
-        };
+        return (
+            Self {
+                state: State::INITIALIZING,
+                cpu,
+                memory,
+                ppu,
+                skip_boot_rom,
+                timers,
+                interrupt_bus,
+            },
+            memory_ref,
+        );
     }
 
     fn load_rom(&mut self, rom_data: Vec<u8>) {
@@ -97,7 +103,7 @@ impl Gameboy {
     }
 
     pub fn start(mut self) -> Frontend {
-        let (frontend, backend) = channel::new(self.memory.clone());
+        let (frontend, backend) = channel::new();
         let _ = std::thread::spawn(move || self.run(backend));
         return frontend;
     }
