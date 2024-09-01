@@ -20,8 +20,17 @@ impl Ui {
     }
 
     pub fn render(&mut self, ctx: &egui::Context, memory_ref: &Arc<Mutex<Memory>>) {
+        let lcdc = memory_ref
+            .lock()
+            .unwrap()
+            .dma_read(LCD_CONTROL_ADDR)
+            .unwrap();
+
+        let is_unsigned_addressing = lcdc & (1 << 4) > 0;
+
         let _ = egui::SidePanel::new(egui::panel::Side::Right, egui::Id::new("vram_viewer"))
             .exact_width(650.0)
+            .resizable(true)
             .show_animated(ctx, self.show, |ui| {
                 let _ = containers::Frame::default()
                     .inner_margin(Margin::symmetric(5.0, 0.0))
@@ -37,10 +46,10 @@ impl Ui {
                             self.render_lcdc_view(ui, memory_ref);
 
                             ui.add_space(10.0);
-                            self.render_tile_data_view(ctx, ui, memory_ref);
+                            self.render_tile_data_view(ctx, ui, memory_ref, is_unsigned_addressing);
 
                             ui.add_space(10.0);
-                            self.render_tile_map_view(ctx, ui, memory_ref);
+                            self.render_tile_map_view(ctx, ui, memory_ref, is_unsigned_addressing);
                         });
                     });
             });
@@ -115,6 +124,7 @@ impl Ui {
         ctx: &Context,
         parent: &mut egui::Ui,
         memory_ref: &Arc<Mutex<Memory>>,
+        is_unsigned: bool,
     ) {
         parent.push_id("tile_map_view", |ui| {
             ui.label(egui::RichText::new("Tile Mapping").size(24.0));
@@ -132,8 +142,13 @@ impl Ui {
                             .dma_read(0x9800 + addr_offset)
                             .unwrap();
 
-                        let texture =
-                            Self::render_tile(ctx, memory_ref, tile_id as usize, "mapping");
+                        let texture = Self::render_tile(
+                            ctx,
+                            memory_ref,
+                            tile_id as usize,
+                            "mapping",
+                            is_unsigned,
+                        );
                         ui.image(&texture, Vec2::new(24.0, 24.0));
                     }
                 });
@@ -146,6 +161,7 @@ impl Ui {
         ctx: &Context,
         parent: &mut egui::Ui,
         memory_ref: &Arc<Mutex<Memory>>,
+        is_unsigned: bool,
     ) {
         parent.push_id("tile_data_view", |ui| {
             ui.label(egui::RichText::new("Tile Data").size(24.0));
@@ -158,7 +174,8 @@ impl Ui {
                     for x in 0..16 {
                         let tile_num = (y * 16) + x;
 
-                        let texture = Self::render_tile(ctx, memory_ref, tile_num, "data");
+                        let texture =
+                            Self::render_tile(ctx, memory_ref, tile_num, "data", is_unsigned);
                         ui.image(&texture, Vec2::new(24.0, 24.0));
                     }
                 });
@@ -171,21 +188,30 @@ impl Ui {
         memory_ref: &Arc<Mutex<Memory>>,
         tile_num: usize,
         id_suffix: &str,
+        is_unsigned: bool,
     ) -> TextureHandle {
         let mut tile_rgb: [u8; 8 * 8 * 3] = [0x0; 8 * 8 * 3];
         let mut iter: usize = 0;
+
+        let effective_addr: usize = match is_unsigned {
+            true => 0x8000 + (tile_num * 16),
+            false => match tile_num < 128 {
+                true => 0x9000 + (tile_num * 16),
+                false => 0x8800 + ((tile_num - 128) * 16),
+            },
+        };
 
         for i in (0..16).step_by(2) {
             let data1 = memory_ref
                 .lock()
                 .unwrap()
-                .dma_read(0x8000 + (tile_num * 16) + i)
+                .dma_read(effective_addr + i)
                 .unwrap();
 
             let data2 = memory_ref
                 .lock()
                 .unwrap()
-                .dma_read(0x8000 + (tile_num * 16) + i + 1)
+                .dma_read(effective_addr + i + 1)
                 .unwrap();
 
             for j in (0..8).rev() {
