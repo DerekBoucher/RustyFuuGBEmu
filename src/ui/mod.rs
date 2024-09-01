@@ -2,6 +2,7 @@ use crate::gameboy;
 use crate::memory::Memory;
 
 use egui::epaint::Shadow;
+use egui::Color32;
 use egui::Visuals;
 use glium::glutin::event::WindowEvent;
 use glium::glutin::event_loop::ControlFlow;
@@ -59,6 +60,7 @@ impl Ui {
             let mut visuals = Visuals::default();
             visuals.window_shadow = Shadow::NONE;
             visuals.popup_shadow = Shadow::NONE;
+            visuals.override_text_color = Some(Color32::WHITE);
             ctx.set_visuals(visuals);
 
             // Top menubar
