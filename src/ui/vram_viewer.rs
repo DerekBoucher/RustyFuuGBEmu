@@ -6,7 +6,11 @@ use egui::{
 };
 
 use crate::{
-    memory::{self, io_registers::LCD_CONTROL_ADDR, Memory},
+    memory::{
+        self,
+        io_registers::{LCD_CONTROL_ADDR, LCD_SCX_ADDR, LCD_SCY_ADDR},
+        Memory,
+    },
     ppu::PPU,
 };
 
@@ -52,7 +56,7 @@ impl Ui {
                             self.render_tile_data_view(ctx, ui, memory_ref, is_unsigned_addressing);
 
                             ui.add_space(10.0);
-                            self.render_tile_map_view(ctx, ui, memory_ref, is_unsigned_addressing);
+                            self.render_tile_map_view(ctx, ui, memory_ref, lcdc);
                         });
                     });
             });
@@ -127,11 +131,18 @@ impl Ui {
         ctx: &Context,
         parent: &mut egui::Ui,
         memory_ref: &Arc<Mutex<Memory>>,
-        is_unsigned: bool,
+        lcdc: u8,
     ) {
+        let is_unsigned = lcdc & (1 << 4) > 0;
+        let scx = memory_ref.lock().unwrap().dma_read(LCD_SCX_ADDR).unwrap();
+        let scy = memory_ref.lock().unwrap().dma_read(LCD_SCY_ADDR).unwrap();
+
         parent.push_id("tile_map_view", |ui| {
             ui.label(egui::RichText::new("Tile Mapping").size(24.0));
             ui.separator();
+
+            ui.label(format!("Scroll X: {}", scx));
+            ui.label(format!("Scroll Y: {}", scy));
 
             ui.spacing_mut().item_spacing = Vec2::new(1.0, 1.0);
 
