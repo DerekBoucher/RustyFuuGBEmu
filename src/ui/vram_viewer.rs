@@ -1,6 +1,9 @@
 use std::sync::{Arc, Mutex};
 
-use egui::{self, containers, style::Margin, ColorImage, Context, RichText, TextureHandle, Vec2};
+use egui::{
+    self, containers, style::Margin, Color32, ColorImage, Context, Frame, Label, RichText,
+    TextureHandle, Vec2,
+};
 
 use crate::{
     memory::{self, io_registers::LCD_CONTROL_ADDR, Memory},
@@ -29,7 +32,7 @@ impl Ui {
         let is_unsigned_addressing = lcdc & (1 << 4) > 0;
 
         let _ = egui::SidePanel::new(egui::panel::Side::Right, egui::Id::new("vram_viewer"))
-            .exact_width(650.0)
+            .min_width(650.0)
             .resizable(true)
             .show_animated(ctx, self.show, |ui| {
                 let _ = containers::Frame::default()
@@ -132,10 +135,25 @@ impl Ui {
 
             ui.spacing_mut().item_spacing = Vec2::new(1.0, 1.0);
 
-            for y in 0..32 {
+            for y in 0..33 {
                 ui.horizontal(|ui| {
-                    for x in 0..32 {
-                        let addr_offset: usize = (y * 32) + x;
+                    for x in 0..33 {
+                        if x == 0 && y == 0 {
+                            ui.add_sized(Vec2::new(24.0, 24.0), Label::new(""));
+                            continue;
+                        }
+
+                        if x == 0 {
+                            ui.add_sized(Vec2::new(24.0, 24.0), Label::new(format!("{}", y)));
+                            continue;
+                        }
+
+                        if y == 0 {
+                            ui.add_sized(Vec2::new(24.0, 24.0), Label::new(format!("{}", x)));
+                            continue;
+                        }
+
+                        let addr_offset: usize = ((y - 1) * 32) + (x - 1);
                         let tile_id = memory_ref
                             .lock()
                             .unwrap()
@@ -169,10 +187,33 @@ impl Ui {
 
             ui.spacing_mut().item_spacing = Vec2::new(1.0, 1.0);
 
-            for y in 0..24 {
+            for y in 0..25 {
                 ui.horizontal(|ui| {
-                    for x in 0..16 {
-                        let tile_num = (y * 16) + x;
+                    for x in 0..17 {
+                        if x == 0 && y == 0 {
+                            // White space
+                            ui.add_sized(Vec2::new(24.0, 24.0), egui::Label::new(""));
+                            continue;
+                        }
+
+                        if x == 0 {
+                            ui.add_sized(
+                                Vec2::new(24.0, 24.0),
+                                Label::new(RichText::new(format!("{}", y)).color(Color32::WHITE)),
+                            );
+                            continue;
+                        }
+
+                        if y == 0 {
+                            ui.add_sized(
+                                Vec2::new(24.0, 24.0),
+                                Label::new(RichText::new(format!("{}", x)).color(Color32::WHITE)),
+                            );
+
+                            continue;
+                        }
+
+                        let tile_num = ((y - 1) * 16) + (x - 1);
 
                         let texture =
                             Self::render_tile(ctx, memory_ref, tile_num, "data", is_unsigned);
