@@ -1,14 +1,16 @@
 use std::sync::{Arc, Mutex};
 
 use egui::{
-    self, containers, style::Margin, Color32, ColorImage, Context, Frame, Label, RichText,
-    TextureHandle, Vec2,
+    self, containers, style::Margin, Color32, ColorImage, Context, Label, RichText, TextureHandle,
+    Vec2,
 };
 
 use crate::{
     memory::{
         self,
-        io_registers::{LCD_CONTROL_ADDR, LCD_SCX_ADDR, LCD_SCY_ADDR},
+        io_registers::{
+            LCD_CONTROL_ADDR, LCD_SCX_ADDR, LCD_SCY_ADDR, LCD_WINX_ADDR, LCD_WINY_ADDR,
+        },
         Memory,
     },
     ppu::PPU,
@@ -57,6 +59,9 @@ impl Ui {
 
                             ui.add_space(10.0);
                             self.render_tile_map_view(ctx, ui, memory_ref, lcdc);
+
+                            ui.add_space(10.0);
+                            self.render_window_tile_map_view(ctx, ui, memory_ref, lcdc);
                         });
                     });
             });
@@ -126,6 +131,75 @@ impl Ui {
         });
     }
 
+    fn render_window_tile_map_view(
+        &mut self,
+        ctx: &Context,
+        parent: &mut egui::Ui,
+        memory_ref: &Arc<Mutex<Memory>>,
+        lcdc: u8,
+    ) {
+        let winx = memory_ref
+            .lock()
+            .unwrap()
+            .dma_read(LCD_WINX_ADDR)
+            .unwrap()
+            .wrapping_sub(7);
+        let winy = memory_ref.lock().unwrap().dma_read(LCD_WINY_ADDR).unwrap();
+        let is_unsigned = lcdc & (1 << 4) > 0;
+
+        parent.push_id("win_tile_map_view", |ui| {
+            ui.label(RichText::new("Window Tile Mapping").size(24.0));
+            ui.separator();
+
+            ui.label(format!("Window X: {}", winx));
+            ui.label(format!("Window Y: {}", winy));
+
+            ui.spacing_mut().item_spacing = Vec2::new(1.0, 1.0);
+            for y in 0..33 {
+                ui.horizontal(|ui| {
+                    for x in 0..33 {
+                        if x == 0 && y == 0 {
+                            ui.add_sized(Vec2::new(24.0, 24.0), Label::new(""));
+                            continue;
+                        }
+
+                        if x == 0 {
+                            ui.add_sized(Vec2::new(24.0, 24.0), Label::new(format!("{}", y)));
+                            continue;
+                        }
+
+                        if y == 0 {
+                            ui.add_sized(Vec2::new(24.0, 24.0), Label::new(format!("{}", x)));
+                            continue;
+                        }
+
+                        let base_addr = match lcdc & (1 << 6) > 0 {
+                            true => 0x9C00,
+                            false => 0x9800,
+                        };
+                        let offset: usize = ((y - 1) * 32) + (x - 1);
+
+                        let tile_id = memory_ref
+                            .lock()
+                            .unwrap()
+                            .dma_read(base_addr + offset)
+                            .unwrap();
+
+                        let texture = Self::render_tile(
+                            ctx,
+                            memory_ref,
+                            tile_id as usize,
+                            "win_mapping",
+                            is_unsigned,
+                        );
+
+                        ui.image(&texture, Vec2::new(24.0, 24.0));
+                    }
+                });
+            }
+        });
+    }
+
     fn render_tile_map_view(
         &mut self,
         ctx: &Context,
@@ -138,7 +212,7 @@ impl Ui {
         let scy = memory_ref.lock().unwrap().dma_read(LCD_SCY_ADDR).unwrap();
 
         parent.push_id("tile_map_view", |ui| {
-            ui.label(egui::RichText::new("Tile Mapping").size(24.0));
+            ui.label(egui::RichText::new("Background Tile Mapping").size(24.0));
             ui.separator();
 
             ui.label(format!("Scroll X: {}", scx));
@@ -164,18 +238,23 @@ impl Ui {
                             continue;
                         }
 
-                        let addr_offset: usize = ((y - 1) * 32) + (x - 1);
+                        let base_addr = match lcdc & (1 << 3) > 0 {
+                            true => 0x9C00,
+                            false => 0x9800,
+                        };
+                        let offset: usize = ((y - 1) * 32) + (x - 1);
+
                         let tile_id = memory_ref
                             .lock()
                             .unwrap()
-                            .dma_read(0x9800 + addr_offset)
+                            .dma_read(base_addr + offset)
                             .unwrap();
 
                         let texture = Self::render_tile(
                             ctx,
                             memory_ref,
                             tile_id as usize,
-                            "mapping",
+                            "bg_mapping",
                             is_unsigned,
                         );
                         ui.image(&texture, Vec2::new(24.0, 24.0));
