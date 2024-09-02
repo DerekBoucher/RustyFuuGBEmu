@@ -112,7 +112,9 @@ fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
         .with_wayland_csd_theme(Theme::Dark)
         .with_resizable(true);
 
-    let context = glium::glutin::ContextBuilder::new().with_hardware_acceleration(Some(true));
+    let context = glium::glutin::ContextBuilder::new()
+        .with_vsync(true)
+        .with_hardware_acceleration(Some(true));
 
     let display = glium::Display::new(window_builder, context, &events_loop).unwrap();
 
