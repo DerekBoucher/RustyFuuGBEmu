@@ -370,69 +370,69 @@ impl PPU {
             .dma_read(memory::io_registers::LCD_WINY_ADDR)
             .unwrap();
 
-        // Base address for the tile data in VRAM.
-        // This area of memory contains the actual pixel color encodings to render tiles.
-        // Each contiguous 16 bytes represent a tile. Each tile is indexed by their ID, which is simply the order
-        // in which they appear in this VRAM area. Example: 0x8000-0x800F -> Tile ID #1, 0x8010-0x801F -> Tile ID #2, etc...
-        let (tile_data_ptr, uses_unsigned_id) = determine_tile_data_address(lcdc);
+        let bg_tile_map_ptr = match lcdc & (1 << 3) > 0 {
+            true => 0x9C00,
+            false => 0x9800,
+        };
 
-        // Base address for the tile map in VRAM.
-        // The tile map is made up of a 32x32 grid of "tile ID's". These tell
-        // the PPU which tile data to use to make up the current frame.
-        // This also tells the PPU how much of an offset it needs to calculate when accessing the tile data section.
-        let tile_map_ptr = determine_tile_map_address(lcdc);
+        let win_tile_map_ptr: usize = match lcdc & (1 << 6) > 0 {
+            true => 0x9C00,
+            false => 0x9800,
+        };
 
-        let mut is_in_window_y = false;
-        if window_enabled(lcdc) && current_scanline >= win_y {
-            is_in_window_y = true;
-        }
+        let is_in_window_y = match window_enabled(lcdc) && current_scanline >= win_y {
+            true => true,
+            false => false,
+        };
 
         // Main loop through each 160 pixels of the current scanline we are rendering
         for pixel_iter in 0..ppu::NATIVE_SCREEN_WIDTH as u8 {
-            let mut pixel_y: u8 = current_scanline.wrapping_add(scroll_y);
-            let mut pixel_x: u8 = pixel_iter.wrapping_add(scroll_x);
-
             // Check if our current coordinate is inside a window.
             // If true, then we need to render the window instead of the background.
-            let mut is_in_window_x = false;
-            if window_enabled(lcdc) && pixel_iter >= win_x {
-                is_in_window_x = true;
-            }
+            let is_in_window_x = match window_enabled(lcdc) && pixel_iter >= win_x {
+                true => true,
+                false => false,
+            };
 
-            if is_in_window_x && is_in_window_y {
-                pixel_x = pixel_iter;
-                pixel_y = current_scanline;
-            }
+            let is_in_window = is_in_window_x && is_in_window_y && window_enabled(lcdc);
+
+            let pixel_x: u8 = match is_in_window {
+                true => pixel_iter.wrapping_sub(win_x),
+                false => pixel_iter.wrapping_add(scroll_x),
+            };
+
+            let pixel_y: u8 = match is_in_window {
+                true => current_scanline.wrapping_sub(win_y),
+                false => current_scanline.wrapping_add(scroll_y),
+            };
+
+            let tile_map_ptr = match is_in_window {
+                true => win_tile_map_ptr,
+                false => bg_tile_map_ptr,
+            };
 
             // The row of the tile to render.
             // Since the tile map is made up of a 32x32 grid of tiles, this value is determined by
             // dividing the current pixel's y position by 8 -> gives us the byte offset within a tile, and then
             // multiplying by 32 -> to advance the memory pointer to the correct row of tiles within the 32 rows.
-            let tile_map_y: usize = (pixel_y as usize) / 8 * 32;
-
+            let tile_map_y: usize = (pixel_y / 8) as usize * 32;
             let tile_map_x: usize = (pixel_x / 8).into();
-            let tile_id_address: usize = tile_map_ptr + tile_map_x + tile_map_y;
-            let mut tile_id = memory.lock().unwrap().dma_read(tile_id_address).unwrap();
 
+            let tile_id_address = tile_map_ptr + tile_map_x + tile_map_y;
+            let tile_id = memory.lock().unwrap().dma_read(tile_id_address).unwrap() as usize;
             let tile_line_offset: usize = ((pixel_y % 8) * 2).into();
-            let mut tile_data_address: usize = tile_data_ptr + (tile_id as usize * 16);
 
-            if !uses_unsigned_id && (tile_id & 0x80) > 0 {
-                tile_id = !tile_id;
-                tile_id = tile_id.wrapping_add(1);
-                tile_data_address = tile_data_ptr - (tile_id as usize * 16);
-            }
+            let effective_addr: usize = match lcdc & (1 << 4) > 0 {
+                true => 0x8000 + (tile_id * 16),
 
-            let data1 = memory
-                .lock()
-                .unwrap()
-                .dma_read(tile_data_address + tile_line_offset)
-                .unwrap();
-            let data2 = memory
-                .lock()
-                .unwrap()
-                .dma_read(tile_data_address + tile_line_offset + 1)
-                .unwrap();
+                false => match tile_id < 128 {
+                    true => 0x9000 + (tile_id * 16),
+                    false => 0x8800 + ((tile_id - 128) * 16),
+                },
+            } + tile_line_offset;
+
+            let data1 = memory.lock().unwrap().dma_read(effective_addr).unwrap();
+            let data2 = memory.lock().unwrap().dma_read(effective_addr + 1).unwrap();
 
             let current_bit_position: usize = 7 - (pixel_x % 8) as usize;
 
@@ -473,28 +473,6 @@ impl PPU {
     ) -> [[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT] {
         return self.pixels.clone();
     }
-}
-
-// If the 4th bit (starting from the right, 0 based) of the LCDC register is '1', then the
-// background and window tile data are located at the base address of 0x8000 and the addressing uses an unsigned 8-bit integer.
-// If the bit is '0', then the base address is 0x9000, and the addressing should use a signed 8-bit integer.
-fn determine_tile_data_address(lcdc: u8) -> (usize, bool) {
-    if (lcdc & (1 << 4)) > 0 {
-        return (0x8000, true);
-    }
-
-    return (0x9000, false);
-}
-
-// If the 3rd bit (starting from the right, 0 based) of the LCDC register is '1', then the
-// tile mappings are located at the base address of 0x9C00.
-// If the bit is '0', then the base address is 0x9800.
-fn determine_tile_map_address(lcdc: u8) -> usize {
-    if (lcdc & (1 << 3)) > 0 {
-        return 0x9C00;
-    }
-
-    return 0x9800;
 }
 
 // If the 5th bit (starting from the right, 0 based) of the LCDC register is '1', then the
