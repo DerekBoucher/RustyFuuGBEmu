@@ -1,20 +1,14 @@
-use std::sync::{Arc, Mutex};
-
+use crate::memory::io_registers::{
+    LCD_CONTROL_ADDR, LCD_PALETTE_ADDR, LCD_SCX_ADDR, LCD_SCY_ADDR, LCD_WINX_ADDR, LCD_WINY_ADDR,
+};
+use crate::memory::Memory;
+use crate::ppu::Pixel;
+use core::panic;
 use egui::{
     self, containers, style::Margin, Color32, ColorImage, Context, Label, RichText, TextureHandle,
     Vec2,
 };
-
-use crate::{
-    memory::{
-        self,
-        io_registers::{
-            LCD_CONTROL_ADDR, LCD_SCX_ADDR, LCD_SCY_ADDR, LCD_WINX_ADDR, LCD_WINY_ADDR,
-        },
-        Memory,
-    },
-    ppu::PPU,
-};
+use std::sync::{Arc, Mutex};
 
 pub struct Ui {
     show: bool,
@@ -29,14 +23,6 @@ impl Ui {
     }
 
     pub fn render(&mut self, ctx: &egui::Context, memory_ref: &Arc<Mutex<Memory>>) {
-        let lcdc = memory_ref
-            .lock()
-            .unwrap()
-            .dma_read(LCD_CONTROL_ADDR)
-            .unwrap();
-
-        let is_unsigned_addressing = lcdc & (1 << 4) > 0;
-
         let _ = egui::SidePanel::new(egui::panel::Side::Right, egui::Id::new("vram_viewer"))
             .min_width(650.0)
             .resizable(true)
@@ -50,30 +36,30 @@ impl Ui {
                             }
                         });
 
+                        let memory = memory_ref.lock().unwrap();
+                        let vram = memory.borrow_vram();
+                        let io_reg = memory.borrow_io_reg();
+
                         let _ = egui::ScrollArea::new([true, true]).show(ui, |ui| {
                             ui.add_space(10.0);
-                            self.render_lcdc_view(ui, memory_ref);
+                            self.render_lcdc_view(ui, &io_reg);
 
                             ui.add_space(10.0);
-                            self.render_tile_data_view(ctx, ui, memory_ref, is_unsigned_addressing);
+                            self.render_tile_data_view(ctx, ui, &vram, &io_reg);
 
                             ui.add_space(10.0);
-                            self.render_tile_map_view(ctx, ui, memory_ref, lcdc);
+                            self.render_tile_map_view(ctx, ui, &vram, &io_reg);
 
                             ui.add_space(10.0);
-                            self.render_window_tile_map_view(ctx, ui, memory_ref, lcdc);
+                            self.render_window_tile_map_view(ctx, ui, &vram, &io_reg);
                         });
                     });
             });
     }
 
-    fn render_lcdc_view(&mut self, parent: &mut egui::Ui, memory_ref: &Arc<Mutex<Memory>>) {
+    fn render_lcdc_view(&mut self, parent: &mut egui::Ui, io_reg: &[u8; 0x80]) {
         parent.push_id("lcdc_view", |ui| {
-            let lcdc = memory_ref
-                .lock()
-                .unwrap()
-                .dma_read(LCD_CONTROL_ADDR)
-                .unwrap();
+            let lcdc = io_reg[LCD_CONTROL_ADDR - 0xFF00];
 
             let bg_win_enabled: &str = match lcdc & (1 << 0) > 0 {
                 true => "Enabled",
@@ -135,17 +121,12 @@ impl Ui {
         &mut self,
         ctx: &Context,
         parent: &mut egui::Ui,
-        memory_ref: &Arc<Mutex<Memory>>,
-        lcdc: u8,
+        vram: &[u8; 0x2000],
+        io_reg: &[u8; 0x80],
     ) {
-        let winx = memory_ref
-            .lock()
-            .unwrap()
-            .dma_read(LCD_WINX_ADDR)
-            .unwrap()
-            .wrapping_sub(7);
-        let winy = memory_ref.lock().unwrap().dma_read(LCD_WINY_ADDR).unwrap();
-        let is_unsigned = lcdc & (1 << 4) > 0;
+        let winx = io_reg[LCD_WINX_ADDR - 0xFF00].wrapping_sub(7);
+        let winy = io_reg[LCD_WINY_ADDR - 0xFF00];
+        let lcdc = io_reg[LCD_CONTROL_ADDR - 0xFF00];
 
         parent.push_id("win_tile_map_view", |ui| {
             ui.label(RichText::new("Window Tile Mapping").size(24.0));
@@ -179,20 +160,8 @@ impl Ui {
                         };
                         let offset: usize = ((y - 1) * 32) + (x - 1);
 
-                        let tile_id = memory_ref
-                            .lock()
-                            .unwrap()
-                            .dma_read(base_addr + offset)
-                            .unwrap();
-
-                        let texture = Self::render_tile(
-                            ctx,
-                            memory_ref,
-                            tile_id as usize,
-                            "win_mapping",
-                            is_unsigned,
-                        );
-
+                        let tile_id = vram[(base_addr + offset) - 0x8000] as usize;
+                        let texture = Self::render_tile(ctx, &vram, &io_reg, tile_id);
                         ui.image(&texture, Vec2::new(24.0, 24.0));
                     }
                 });
@@ -204,12 +173,12 @@ impl Ui {
         &mut self,
         ctx: &Context,
         parent: &mut egui::Ui,
-        memory_ref: &Arc<Mutex<Memory>>,
-        lcdc: u8,
+        vram: &[u8; 0x2000],
+        io_reg: &[u8; 0x80],
     ) {
-        let is_unsigned = lcdc & (1 << 4) > 0;
-        let scx = memory_ref.lock().unwrap().dma_read(LCD_SCX_ADDR).unwrap();
-        let scy = memory_ref.lock().unwrap().dma_read(LCD_SCY_ADDR).unwrap();
+        let lcdc = io_reg[LCD_CONTROL_ADDR - 0xFF00];
+        let scx = io_reg[LCD_SCX_ADDR - 0xFF00];
+        let scy = io_reg[LCD_SCY_ADDR - 0xFF00];
 
         parent.push_id("tile_map_view", |ui| {
             ui.label(egui::RichText::new("Background Tile Mapping").size(24.0));
@@ -244,19 +213,8 @@ impl Ui {
                         };
                         let offset: usize = ((y - 1) * 32) + (x - 1);
 
-                        let tile_id = memory_ref
-                            .lock()
-                            .unwrap()
-                            .dma_read(base_addr + offset)
-                            .unwrap();
-
-                        let texture = Self::render_tile(
-                            ctx,
-                            memory_ref,
-                            tile_id as usize,
-                            "bg_mapping",
-                            is_unsigned,
-                        );
+                        let tile_id = vram[(base_addr + offset) - 0x8000] as usize;
+                        let texture = Self::render_tile(ctx, &vram, &io_reg, tile_id);
                         ui.image(&texture, Vec2::new(24.0, 24.0));
                     }
                 });
@@ -268,8 +226,8 @@ impl Ui {
         &mut self,
         ctx: &Context,
         parent: &mut egui::Ui,
-        memory_ref: &Arc<Mutex<Memory>>,
-        is_unsigned: bool,
+        vram: &[u8; 0x2000],
+        io_reg: &[u8; 0x80],
     ) {
         parent.push_id("tile_data_view", |ui| {
             ui.label(egui::RichText::new("Tile Data").size(24.0));
@@ -303,10 +261,9 @@ impl Ui {
                             continue;
                         }
 
-                        let tile_num = ((y - 1) * 16) + (x - 1);
+                        let tile_id = ((y - 1) * 16) + (x - 1);
 
-                        let texture =
-                            Self::render_tile(ctx, memory_ref, tile_num, "data", is_unsigned);
+                        let texture = Self::render_tile(ctx, &vram, &io_reg, tile_id);
                         ui.image(&texture, Vec2::new(24.0, 24.0));
                     }
                 });
@@ -316,13 +273,15 @@ impl Ui {
 
     fn render_tile(
         ctx: &Context,
-        memory_ref: &Arc<Mutex<Memory>>,
+        vram: &[u8; 0x2000],
+        io_reg: &[u8; 0x80],
         tile_id: usize,
-        id_suffix: &str,
-        is_unsigned: bool,
     ) -> TextureHandle {
         let mut tile_rgb: [u8; 8 * 8 * 3] = [0x0; 8 * 8 * 3];
         let mut iter: usize = 0;
+
+        let lcdc = io_reg[LCD_CONTROL_ADDR - 0xFF00];
+        let is_unsigned = lcdc & (1 << 4) > 0;
 
         let effective_addr: usize = match is_unsigned {
             true => 0x8000 + (tile_id * 16),
@@ -333,17 +292,8 @@ impl Ui {
         };
 
         for i in (0..16).step_by(2) {
-            let data1 = memory_ref
-                .lock()
-                .unwrap()
-                .dma_read(effective_addr + i)
-                .unwrap();
-
-            let data2 = memory_ref
-                .lock()
-                .unwrap()
-                .dma_read(effective_addr + i + 1)
-                .unwrap();
+            let data1 = vram[(effective_addr + i) - 0x8000];
+            let data2 = vram[(effective_addr + i + 1) - 0x8000];
 
             for j in (0..8).rev() {
                 let mut pixel_color_encoding: u8 = 0x00;
@@ -356,11 +306,28 @@ impl Ui {
                     pixel_color_encoding |= 0b01;
                 }
 
-                let pixel = PPU::determine_pixel_rgb(
-                    memory_ref,
-                    memory::io_registers::LCD_PALETTE_ADDR,
-                    pixel_color_encoding,
-                );
+                let color_palette = io_reg[LCD_PALETTE_ADDR - 0xFF00];
+
+                let palette_00 = (color_palette) & 0b11;
+                let palette_01 = (color_palette >> 2) & 0b11;
+                let palette_10 = (color_palette >> 4) & 0b11;
+                let palette_11 = (color_palette >> 6) & 0b11;
+
+                let translated_color = match pixel_color_encoding {
+                    0b00 => palette_00,
+                    0b01 => palette_01,
+                    0b10 => palette_10,
+                    0b11 => palette_11,
+                    _ => panic!("invalid pixel encoding"),
+                };
+
+                let pixel = match translated_color {
+                    0b00 => Pixel::White,
+                    0b01 => Pixel::LightGray,
+                    0b10 => Pixel::DarkGray,
+                    0b11 => Pixel::Black,
+                    _ => panic!("invalid pixel encoding"),
+                };
 
                 let rgb = pixel.to_rgb_u8();
                 tile_rgb[iter] = rgb.0;
@@ -374,7 +341,7 @@ impl Ui {
 
         let image = ColorImage::from_rgb([8, 8], &tile_rgb);
         return ctx.load_texture(
-            format!("tile_id_{}_{}", tile_id, id_suffix),
+            format!("tile_id_{}", tile_id),
             image,
             egui::TextureOptions::NEAREST,
         );

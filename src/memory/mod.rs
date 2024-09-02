@@ -184,6 +184,14 @@ impl Memory {
         }
     }
 
+    pub fn borrow_vram(&self) -> &[u8; 0x2000] {
+        return &self.video_ram;
+    }
+
+    pub fn borrow_io_reg(&self) -> &[u8; 0x80] {
+        return &self.io_registers;
+    }
+
     fn boot_rom_enabled(&self) -> bool {
         return self.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] == 0x00;
     }
