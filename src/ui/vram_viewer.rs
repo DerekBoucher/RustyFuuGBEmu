@@ -317,7 +317,7 @@ impl Ui {
     fn render_tile(
         ctx: &Context,
         memory_ref: &Arc<Mutex<Memory>>,
-        tile_num: usize,
+        tile_id: usize,
         id_suffix: &str,
         is_unsigned: bool,
     ) -> TextureHandle {
@@ -325,10 +325,10 @@ impl Ui {
         let mut iter: usize = 0;
 
         let effective_addr: usize = match is_unsigned {
-            true => 0x8000 + (tile_num * 16),
-            false => match tile_num < 128 {
-                true => 0x9000 + (tile_num * 16),
-                false => 0x8800 + ((tile_num - 128) * 16),
+            true => 0x8000 + (tile_id * 16),
+            false => match tile_id < 128 {
+                true => 0x9000 + (tile_id * 16),
+                false => 0x8800 + ((tile_id - 128) * 16),
             },
         };
 
@@ -374,7 +374,7 @@ impl Ui {
 
         let image = ColorImage::from_rgb([8, 8], &tile_rgb);
         return ctx.load_texture(
-            format!("tile_id_{}_{}", tile_num, id_suffix),
+            format!("tile_id_{}_{}", tile_id, id_suffix),
             image,
             egui::TextureOptions::NEAREST,
         );

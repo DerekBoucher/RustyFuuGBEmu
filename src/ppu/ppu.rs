@@ -380,29 +380,33 @@ impl PPU {
             false => 0x9800,
         };
 
-        let mut is_in_window_y = false;
-        if window_enabled(lcdc) && current_scanline >= win_y {
-            is_in_window_y = true;
-        }
+        let is_in_window_y = match window_enabled(lcdc) && current_scanline >= win_y {
+            true => true,
+            false => false,
+        };
 
         // Main loop through each 160 pixels of the current scanline we are rendering
         for pixel_iter in 0..ppu::NATIVE_SCREEN_WIDTH as u8 {
-            let mut pixel_y: u8 = current_scanline.wrapping_add(scroll_y);
-            let mut pixel_x: u8 = pixel_iter.wrapping_add(scroll_x);
-
             // Check if our current coordinate is inside a window.
             // If true, then we need to render the window instead of the background.
-            let mut is_in_window_x = false;
-            if window_enabled(lcdc) && pixel_iter >= win_x {
-                is_in_window_x = true;
-            }
+            let is_in_window_x = match window_enabled(lcdc) && pixel_iter >= win_x {
+                true => true,
+                false => false,
+            };
 
-            if is_in_window_x && is_in_window_y && window_enabled(lcdc) {
-                pixel_x = pixel_iter;
-                pixel_y = current_scanline;
-            }
+            let is_in_window = is_in_window_x && is_in_window_y && window_enabled(lcdc);
 
-            let tile_map_ptr = match is_in_window_y && is_in_window_x && window_enabled(lcdc) {
+            let pixel_x: u8 = match is_in_window {
+                true => pixel_iter.wrapping_sub(win_x),
+                false => pixel_iter.wrapping_add(scroll_x),
+            };
+
+            let pixel_y: u8 = match is_in_window {
+                true => current_scanline.wrapping_sub(win_y),
+                false => current_scanline.wrapping_add(scroll_y),
+            };
+
+            let tile_map_ptr = match is_in_window {
                 true => win_tile_map_ptr,
                 false => bg_tile_map_ptr,
             };
@@ -411,21 +415,21 @@ impl PPU {
             // Since the tile map is made up of a 32x32 grid of tiles, this value is determined by
             // dividing the current pixel's y position by 8 -> gives us the byte offset within a tile, and then
             // multiplying by 32 -> to advance the memory pointer to the correct row of tiles within the 32 rows.
-            let tile_map_y: usize = (pixel_y as usize) / 8 * 32;
+            let tile_map_y: usize = (pixel_y / 8) as usize * 32;
             let tile_map_x: usize = (pixel_x / 8).into();
 
             let tile_id_address = tile_map_ptr + tile_map_x + tile_map_y;
-            let tile_id = memory.lock().unwrap().dma_read(tile_id_address).unwrap();
+            let tile_id = memory.lock().unwrap().dma_read(tile_id_address).unwrap() as usize;
             let tile_line_offset: usize = ((pixel_y % 8) * 2).into();
 
             let effective_addr: usize = match lcdc & (1 << 4) > 0 {
-                true => 0x8000 + (tile_id as usize * 16) + tile_line_offset,
+                true => 0x8000 + (tile_id * 16),
 
                 false => match tile_id < 128 {
-                    true => 0x9000 + (tile_id as usize * 16) + tile_line_offset,
-                    false => 0x8800 + ((tile_id as usize - 128) * 16) + tile_line_offset,
+                    true => 0x9000 + (tile_id * 16),
+                    false => 0x8800 + ((tile_id - 128) * 16),
                 },
-            };
+            } + tile_line_offset;
 
             let data1 = memory.lock().unwrap().dma_read(effective_addr).unwrap();
             let data2 = memory.lock().unwrap().dma_read(effective_addr + 1).unwrap();
