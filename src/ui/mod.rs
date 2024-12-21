@@ -14,6 +14,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 mod controls;
+mod cpu_viewer;
 pub mod events;
 mod vram_viewer;
 use gameboy::channel::front_end::Frontend;
@@ -27,6 +28,7 @@ pub struct Ui {
     skip_boot_rom: bool,
     controls: controls::Ui,
     vram_viewer: vram_viewer::Ui,
+    cpu_viewer: cpu_viewer::Ui,
     is_paused: bool,
     memory_ref: Arc<Mutex<Memory>>,
 }
@@ -44,6 +46,7 @@ impl Ui {
             skip_boot_rom,
             controls: controls::Ui::new(),
             vram_viewer: vram_viewer::Ui::new(),
+            cpu_viewer: cpu_viewer::Ui::new(),
             is_paused: false,
             memory_ref,
         }
@@ -111,7 +114,13 @@ impl Ui {
 
                         ui.menu_button("Debug", |ui| {
                             if ui.button("VRAM Viewer").clicked() {
+                                self.cpu_viewer.show(false);
                                 self.vram_viewer.show(true);
+                                ui.close_menu();
+                            }
+                            if ui.button("CPU Viewer").clicked() {
+                                self.vram_viewer.show(false);
+                                self.cpu_viewer.show(true);
                                 ui.close_menu();
                             }
                         });
@@ -123,6 +132,8 @@ impl Ui {
 
             // VRAM Viewer window
             self.vram_viewer.render(ctx, &self.memory_ref);
+
+            self.cpu_viewer.render(ctx);
         });
 
         let time_until_next_redraw = std::time::Instant::now().checked_add(egui_redraw_timer);
