@@ -12,14 +12,17 @@ mod ui;
 use std::time::{Duration, Instant};
 
 use clap::Parser;
+use egui::ViewportId;
+use egui_glium::EguiGlium;
 use env_logger::Env;
-use gameboy::channel::front_end::Frontend;
-use glium::glutin::event::{Event, WindowEvent};
-use glium::glutin::event_loop::{ControlFlow, EventLoop};
-use glium::glutin::platform::unix::WindowBuilderExtUnix;
-use glium::glutin::window::Theme;
-use glium::Display;
-use glium::{glutin, Surface};
+use glium::glutin::surface::WindowSurface;
+use glium::{backend::glutin::SimpleWindowBuilder, Surface};
+use winit::error::EventLoopError;
+use winit::event::{Event, WindowEvent};
+use winit::event_loop::{ControlFlow, EventLoop};
+use winit::window::Window;
+
+use crate::gameboy::channel::front_end::Frontend;
 
 const FPS: u64 = 60;
 const FRAME_INTERVAL: Duration = Duration::from_nanos(1_000_000_000 / FPS);
@@ -34,15 +37,15 @@ struct Args {
     skip_boot_rom: bool,
 }
 
-fn main() {
+fn main() -> Result<(), EventLoopError> {
     let env = Env::default().filter_or("RUST_LOG", "debug");
     env_logger::init_from_env(env);
 
     log::info!("Starting RustyFuuGBemu");
     let args = Args::parse();
 
-    let (program_loop, display) = init_glium();
-    let egui_glium_client = egui_glium::EguiGlium::new(&display, &program_loop);
+    let (program_loop, display, window) = init_glium();
+    let egui_glium_client = EguiGlium::new(ViewportId::ROOT, &display, &window, &program_loop);
     let mut opengl_renderer = renderer::OpenGL::new(&display);
 
     let (gameboy, memory_ref) = gameboy::Gameboy::new(args.skip_boot_rom);
@@ -56,76 +59,78 @@ fn main() {
     let mut frontend = gameboy.start();
     let mut next_frame_time = Instant::now() + FRAME_INTERVAL;
 
-    program_loop.run(move |program_event, _, control_flow| {
-        *control_flow = ControlFlow::WaitUntil(next_frame_time);
+    program_loop.run(move |window_event, event_loop| {
+        let mut control_flow = event_loop.control_flow();
+        control_flow = ControlFlow::WaitUntil(next_frame_time);
 
-        match program_event {
+        match window_event {
             Event::WindowEvent {
                 event: window_event,
                 ..
             } => match window_event {
                 WindowEvent::CloseRequested => {
-                    handle_app_close(control_flow, &mut frontend);
+                    handle_app_close(&mut control_flow, &mut frontend);
                 }
 
-                _ => ui.process_window_event(window_event, &display, &frontend),
+                WindowEvent::RedrawRequested => {
+                    let mut frame = display.draw();
+                    frame.clear_color(1.0, 1.0, 1.0, 1.0);
+                    opengl_renderer.render(&mut frame);
+                    ui.draw(
+                        &mut control_flow,
+                        &display,
+                        &mut frame,
+                        &mut frontend,
+                        &window,
+                    );
+                    frame.finish().unwrap();
+                }
+                _ => ui.process_window_event(window_event, &display, &window, &frontend),
             },
             Event::UserEvent(custom_event) => match custom_event {
                 ui::events::UiEvent::CloseWindow => {
-                    handle_app_close(control_flow, &mut frontend);
+                    handle_app_close(&mut control_flow, &mut frontend);
+                    event_loop.exit();
                 }
             },
-            Event::RedrawRequested(_) => {
-                let mut frame = display.draw();
-                frame.clear_color(1.0, 1.0, 1.0, 1.0);
-                opengl_renderer.render(&mut frame);
-                ui.draw(control_flow, &display, &mut frame, &mut frontend);
-                frame.finish().unwrap();
-            }
             _ => {}
         }
 
         if Instant::now() >= next_frame_time {
             next_frame_time = Instant::now() + FRAME_INTERVAL;
-            match frontend.should_render_screen() {
-                Some(frame_data) => {
-                    opengl_renderer.update_frame(&display, frame_data);
-                }
-                _ => {}
+            if let Some(frame_data) = frontend.should_render_screen() {
+                opengl_renderer.update_frame(&display, frame_data);
             }
-            display.gl_window().window().request_redraw();
+            window.request_redraw();
         }
-    });
+
+        event_loop.set_control_flow(control_flow);
+    })
 }
 
-fn init_glium() -> (EventLoop<ui::events::UiEvent>, Display) {
-    let events_loop =
-        glium::glutin::event_loop::EventLoopBuilder::<ui::events::UiEvent>::with_user_event()
-            .build();
-
-    let window_builder = glium::glutin::window::WindowBuilder::new()
-        .with_inner_size(glium::glutin::dpi::LogicalSize::new(
-            (ppu::NATIVE_SCREEN_WIDTH as i32) * ui::SCALE_FACTOR,
-            ((ppu::NATIVE_SCREEN_HEIGHT as i32) * ui::SCALE_FACTOR) + ui::TOP_MENUBAR_HEIGHT as i32,
-        ))
-        .with_title("RustyFuuGBemu")
-        .with_wayland_csd_theme(Theme::Dark)
-        .with_resizable(true);
-
-    let context = glium::glutin::ContextBuilder::new()
-        .with_vsync(true)
-        .with_hardware_acceleration(Some(true));
-
-    let display = glium::Display::new(window_builder, context, &events_loop).unwrap();
-
-    return (events_loop, display);
-}
-
-fn handle_app_close(
-    control_flow: &mut glutin::event_loop::ControlFlow,
-    gb_frontend: &mut Frontend,
+fn init_glium() -> (
+    EventLoop<ui::events::UiEvent>,
+    glium::Display<WindowSurface>,
+    Window,
 ) {
-    *control_flow = glutin::event_loop::ControlFlow::Exit;
+    let event_loop = EventLoop::<ui::events::UiEvent>::with_user_event()
+        .build()
+        .unwrap();
+
+    let width = (ppu::NATIVE_SCREEN_WIDTH as u32) * ui::SCALE_FACTOR as u32;
+    let height = (ppu::NATIVE_SCREEN_HEIGHT as u32 * (ui::SCALE_FACTOR as u32))
+        + ui::TOP_MENUBAR_HEIGHT as u32;
+
+    let (window, display) = SimpleWindowBuilder::new()
+        .with_title("RustyFuuGBEmu")
+        .with_inner_size(width, height)
+        .build(&event_loop);
+
+    (event_loop, display, window)
+}
+
+fn handle_app_close(control_flow: &mut ControlFlow, gb_frontend: &mut Frontend) {
+    *control_flow = ControlFlow::Wait;
     gb_frontend.send_close_back_end();
 
     // Drain the frame data channel to avoid backend from blocking.

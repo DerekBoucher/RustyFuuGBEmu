@@ -1,12 +1,12 @@
-use crate::memory::io_registers::{
-    LCD_CONTROL_ADDR, LCD_PALETTE_ADDR, LCD_SCX_ADDR, LCD_SCY_ADDR, LCD_WINX_ADDR, LCD_WINY_ADDR,
-};
+use crate::memory;
 use crate::memory::Memory;
 use crate::ppu::Pixel;
 use core::panic;
 use egui::{
-    self, containers, style::Margin, Color32, ColorImage, Context, Label, RichText, TextureHandle,
-    Vec2,
+    self, containers, Color32, ColorImage, Context, Label, Margin, RichText, TextureHandle, Vec2,
+};
+use memory::io_registers::{
+    LCD_CONTROL_ADDR, LCD_PALETTE_ADDR, LCD_SCX_ADDR, LCD_SCY_ADDR, LCD_WINX_ADDR, LCD_WINY_ADDR,
 };
 use std::sync::{Arc, Mutex};
 
@@ -23,12 +23,12 @@ impl Ui {
     }
 
     pub fn render(&mut self, ctx: &egui::Context, memory_ref: &Arc<Mutex<Memory>>) {
-        let _ = egui::SidePanel::new(egui::panel::Side::Right, egui::Id::new("vram_viewer"))
-            .min_width(650.0)
-            .resizable(true)
-            .show_animated(ctx, self.show, |ui| {
+        egui::panel::SidePanel::right(egui::Id::new("vram_viewer")).show_animated(
+            ctx,
+            self.show,
+            |ui| {
                 let _ = containers::Frame::default()
-                    .inner_margin(Margin::symmetric(5.0, 0.0))
+                    .inner_margin(Margin::symmetric(5, 0))
                     .show(ui, |ui| {
                         ui.horizontal(|ui| {
                             if ui.button("close").clicked() {
@@ -54,7 +54,8 @@ impl Ui {
                             self.render_window_tile_map_view(ctx, ui, &vram, &io_reg);
                         });
                     });
-            });
+            },
+        );
     }
 
     fn render_lcdc_view(&mut self, parent: &mut egui::Ui, io_reg: &[u8; 0x80]) {
@@ -162,7 +163,7 @@ impl Ui {
 
                         let tile_id = vram[(base_addr + offset) - 0x8000] as usize;
                         let texture = Self::render_tile(ctx, &vram, &io_reg, tile_id);
-                        ui.image(&texture, Vec2::new(24.0, 24.0));
+                        ui.image(&texture);
                     }
                 });
             }
@@ -215,7 +216,7 @@ impl Ui {
 
                         let tile_id = vram[(base_addr + offset) - 0x8000] as usize;
                         let texture = Self::render_tile(ctx, &vram, &io_reg, tile_id);
-                        ui.image(&texture, Vec2::new(24.0, 24.0));
+                        ui.image(&texture);
                     }
                 });
             }
@@ -264,7 +265,7 @@ impl Ui {
                         let tile_id = ((y - 1) * 16) + (x - 1);
 
                         let texture = Self::render_tile(ctx, &vram, &io_reg, tile_id);
-                        ui.image(&texture, Vec2::new(24.0, 24.0));
+                        ui.image(&texture);
                     }
                 });
             }

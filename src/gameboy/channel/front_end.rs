@@ -1,4 +1,4 @@
-use glium::glutin::event::ElementState;
+use winit::event::ElementState;
 
 use crate::joypad::{ActionButton, DirectionButton};
 use crate::ppu::{self, Pixel};
