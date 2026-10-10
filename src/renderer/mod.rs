@@ -1,3 +1,5 @@
+use glium::glutin::surface::WindowSurface;
+use glium::Display;
 use glium::{implement_vertex, Surface};
 extern crate glium;
 
@@ -26,7 +28,7 @@ pub struct OpenGL {
 }
 
 impl OpenGL {
-    pub fn new(display: &glium::backend::glutin::Display) -> Self {
+    pub fn new(display: &Display<WindowSurface>) -> Self {
         let mut position_vertices = [Vertex {
             position: [0.0, 0.0],
             color: [1.0, 1.0, 1.0],
@@ -103,7 +105,7 @@ impl OpenGL {
 
     pub fn update_frame(
         &mut self,
-        display: &glium::backend::glutin::Display,
+        display: &Display<WindowSurface>,
         frame_data: [[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT],
     ) {
         let mut i = 0;

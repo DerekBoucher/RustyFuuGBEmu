@@ -7,8 +7,8 @@ use crate::{
 };
 use back_end::Backend;
 use front_end::Frontend;
-use glium::glutin::event::ElementState;
 use std::sync::mpsc;
+use winit::event::ElementState;
 
 pub fn new() -> (Frontend, Backend) {
     let (close_sender, close_receiver) = mpsc::sync_channel::<()>(1);

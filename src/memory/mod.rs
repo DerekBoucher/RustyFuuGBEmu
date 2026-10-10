@@ -1,5 +1,5 @@
-use glium::glutin::event::ElementState;
 use queues::{queue, IsQueue, Queue};
+use winit::event::ElementState;
 
 use crate::joypad::{ActionButton, DirectionButton};
 use crate::{cartridge, interrupt, timers};
