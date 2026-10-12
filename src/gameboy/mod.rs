@@ -73,7 +73,7 @@ impl Gameboy {
         let memory_ref = memory.clone();
         let cpu = Arc::new(sync::Mutex::new(cpu::LR35902::new()));
 
-        return (
+        (
             Self {
                 state: State::INITIALIZING,
                 cpu,
@@ -84,7 +84,7 @@ impl Gameboy {
                 interrupt_bus,
             },
             memory_ref,
-        );
+        )
     }
 
     fn load_rom(&mut self, rom_data: Vec<u8>) {
@@ -105,7 +105,7 @@ impl Gameboy {
     pub fn start(mut self) -> Frontend {
         let (frontend, backend) = channel::new();
         let _ = std::thread::spawn(move || self.run(backend));
-        return frontend;
+        frontend
     }
 
     fn run(&mut self, backend: Backend) {

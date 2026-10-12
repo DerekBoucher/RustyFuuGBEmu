@@ -16,16 +16,124 @@ use egui::ViewportId;
 use egui_glium::EguiGlium;
 use env_logger::Env;
 use glium::glutin::surface::WindowSurface;
+use glium::Display;
 use glium::{backend::glutin::SimpleWindowBuilder, Surface};
+use winit::application::ApplicationHandler;
 use winit::error::EventLoopError;
-use winit::event::{Event, WindowEvent};
+use winit::event::WindowEvent;
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::Window;
 
 use crate::gameboy::channel::front_end::Frontend;
+use crate::renderer::OpenGL;
+use crate::ui::Ui;
 
 const FPS: u64 = 60;
-const FRAME_INTERVAL: Duration = Duration::from_nanos(1_000_000_000 / FPS);
+const FRAME_DURATION: Duration = Duration::from_nanos(1_000_000_000 / FPS);
+
+struct App {
+    front_end: Frontend,
+    display: Display<WindowSurface>,
+    window: Window,
+    // TODO: Abstract renderer behind an interface to support multiple rendering technologies
+    opengl_renderer: OpenGL,
+    ui: Ui,
+    last_frame_update: Instant,
+}
+
+impl ApplicationHandler<ui::events::UiEvent> for App {
+    fn resumed(&mut self, _event_loop: &winit::event_loop::ActiveEventLoop) {}
+
+    fn window_event(
+        &mut self,
+        event_loop: &winit::event_loop::ActiveEventLoop,
+        _window_id: winit::window::WindowId,
+        event: WindowEvent,
+    ) {
+        let mut control_flow = event_loop.control_flow();
+
+        match event {
+            WindowEvent::CloseRequested => {
+                handle_app_close(&mut control_flow, &mut self.front_end);
+                event_loop.set_control_flow(control_flow);
+                return;
+            }
+
+            WindowEvent::RedrawRequested => {
+                let mut frame = self.display.draw();
+                frame.clear_color(1.0, 1.0, 1.0, 1.0);
+                self.opengl_renderer.render(&mut frame);
+                self.ui.draw(
+                    &mut control_flow,
+                    &self.display,
+                    &mut frame,
+                    &mut self.front_end,
+                    &self.window,
+                );
+                frame.finish().unwrap();
+            }
+            _ => self
+                .ui
+                .process_window_event(event, &self.display, &self.window, &self.front_end),
+        }
+
+        event_loop.set_control_flow(ControlFlow::Poll);
+    }
+
+    fn user_event(
+        &mut self,
+        event_loop: &winit::event_loop::ActiveEventLoop,
+        event: ui::events::UiEvent,
+    ) {
+        let mut control_flow = event_loop.control_flow();
+
+        match event {
+            ui::events::UiEvent::CloseWindow => {
+                handle_app_close(&mut control_flow, &mut self.front_end);
+                event_loop.exit();
+            }
+        }
+    }
+
+    fn new_events(
+        &mut self,
+        event_loop: &winit::event_loop::ActiveEventLoop,
+        cause: winit::event::StartCause,
+    ) {
+        let _ = (event_loop, cause);
+
+        let now = Instant::now();
+        if now - self.last_frame_update >= FRAME_DURATION {
+            self.last_frame_update = now;
+            self.window.request_redraw();
+        }
+    }
+
+    fn device_event(
+        &mut self,
+        event_loop: &winit::event_loop::ActiveEventLoop,
+        device_id: winit::event::DeviceId,
+        event: winit::event::DeviceEvent,
+    ) {
+        let _ = (event_loop, device_id, event);
+    }
+
+    fn about_to_wait(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
+        let _ = event_loop;
+    }
+
+    fn suspended(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
+        let _ = event_loop;
+    }
+
+    fn exiting(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
+        let _ = event_loop;
+    }
+
+    fn memory_warning(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
+        let _ = event_loop;
+    }
+}
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -46,71 +154,33 @@ fn main() -> Result<(), EventLoopError> {
 
     let (program_loop, display, window) = init_glium();
     let egui_glium_client = EguiGlium::new(ViewportId::ROOT, &display, &window, &program_loop);
-    let mut opengl_renderer = renderer::OpenGL::new(&display);
+    let opengl_renderer = renderer::OpenGL::new(&display);
 
     let (gameboy, memory_ref) = gameboy::Gameboy::new(args.skip_boot_rom);
 
-    let mut ui = ui::Ui::new(
+    let ui = ui::Ui::new(
         egui_glium_client,
         program_loop.create_proxy(),
         args.skip_boot_rom,
         memory_ref,
     );
-    let mut frontend = gameboy.start();
-    let mut next_frame_time = Instant::now() + FRAME_INTERVAL;
+    let front_end = gameboy.start();
 
-    program_loop.run(move |window_event, event_loop| {
-        let mut control_flow = event_loop.control_flow();
-        control_flow = ControlFlow::WaitUntil(next_frame_time);
+    let mut app = App {
+        front_end,
+        display,
+        window,
+        opengl_renderer,
+        ui,
+        last_frame_update: Instant::now(),
+    };
 
-        match window_event {
-            Event::WindowEvent {
-                event: window_event,
-                ..
-            } => match window_event {
-                WindowEvent::CloseRequested => {
-                    handle_app_close(&mut control_flow, &mut frontend);
-                }
-
-                WindowEvent::RedrawRequested => {
-                    let mut frame = display.draw();
-                    frame.clear_color(1.0, 1.0, 1.0, 1.0);
-                    opengl_renderer.render(&mut frame);
-                    ui.draw(
-                        &mut control_flow,
-                        &display,
-                        &mut frame,
-                        &mut frontend,
-                        &window,
-                    );
-                    frame.finish().unwrap();
-                }
-                _ => ui.process_window_event(window_event, &display, &window, &frontend),
-            },
-            Event::UserEvent(custom_event) => match custom_event {
-                ui::events::UiEvent::CloseWindow => {
-                    handle_app_close(&mut control_flow, &mut frontend);
-                    event_loop.exit();
-                }
-            },
-            _ => {}
-        }
-
-        if Instant::now() >= next_frame_time {
-            next_frame_time = Instant::now() + FRAME_INTERVAL;
-            if let Some(frame_data) = frontend.should_render_screen() {
-                opengl_renderer.update_frame(&display, frame_data);
-            }
-            window.request_redraw();
-        }
-
-        event_loop.set_control_flow(control_flow);
-    })
+    program_loop.run_app(&mut app)
 }
 
 fn init_glium() -> (
     EventLoop<ui::events::UiEvent>,
-    glium::Display<WindowSurface>,
+    Display<WindowSurface>,
     Window,
 ) {
     let event_loop = EventLoop::<ui::events::UiEvent>::with_user_event()
