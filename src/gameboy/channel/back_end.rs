@@ -34,7 +34,7 @@ impl Backend {
         joypad_recv: Receiver<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
         pause_recv: Receiver<bool>,
     ) -> Self {
-        return Self {
+        Self {
             close_receiver,
             close_requested: Cell::new(false),
             ack_sender,
@@ -43,7 +43,7 @@ impl Backend {
             skip_boot_rom_recv,
             joypad_recv,
             pause_recv,
-        };
+        }
     }
 
     pub fn should_pause(&self) -> bool {

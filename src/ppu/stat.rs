@@ -60,7 +60,7 @@ impl StatUpdater {
             }
         }
 
-        return self;
+        self
     }
 
     pub fn process_oam_search(mut self, scanline_counter: i32) -> Self {
@@ -77,7 +77,7 @@ impl StatUpdater {
             }
         }
 
-        return self;
+        self
     }
 
     pub fn process_pixel_transfer(mut self, scanline_counter: i32) -> Self {
@@ -90,7 +90,7 @@ impl StatUpdater {
             self.new_stat |= StatMode::PixelTransfer as u8;
         }
 
-        return self;
+        self
     }
 
     pub fn process_hblank(mut self) -> Self {
@@ -105,7 +105,7 @@ impl StatUpdater {
             self.requires_interrupt = true;
         }
 
-        return self;
+        self
     }
 
     pub fn process_ly_lyc(mut self, ly: u8, lyc: u8) -> Self {
@@ -119,7 +119,7 @@ impl StatUpdater {
             self.requires_interrupt = true;
         }
 
-        return self;
+        self
     }
 
     pub fn build(&self) -> (u8, bool) {

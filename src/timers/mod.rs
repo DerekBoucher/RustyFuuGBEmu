@@ -104,7 +104,7 @@ impl Timers {
     pub fn get_elapsed_cycles(&mut self) -> u32 {
         let cycles = self.accumulated_cycles;
         self.accumulated_cycles = 0;
-        return cycles;
+        cycles
     }
 
     pub fn step(&mut self, interrupt_bus: &Arc<sync::Mutex<interrupt::Bus>>) {

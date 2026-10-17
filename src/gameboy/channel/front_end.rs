@@ -28,7 +28,7 @@ impl Frontend {
         joypad_sender: mpsc::Sender<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
         pause_sender: mpsc::SyncSender<bool>,
     ) -> Self {
-        return Self {
+        Self {
             close_sender,
             ack_receiver,
             rom_data_sender,
@@ -36,7 +36,7 @@ impl Frontend {
             skip_boot_rom_sender,
             joypad_sender,
             pause_sender,
-        };
+        }
     }
 
     pub fn send_close_back_end(&self) {

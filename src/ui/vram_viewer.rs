@@ -42,16 +42,16 @@ impl Ui {
 
                         let _ = egui::ScrollArea::new([true, true]).show(ui, |ui| {
                             ui.add_space(10.0);
-                            self.render_lcdc_view(ui, &io_reg);
+                            self.render_lcdc_view(ui, io_reg);
 
                             ui.add_space(10.0);
-                            self.render_tile_data_view(ctx, ui, &vram, &io_reg);
+                            self.render_tile_data_view(ctx, ui, vram, io_reg);
 
                             ui.add_space(10.0);
-                            self.render_tile_map_view(ctx, ui, &vram, &io_reg);
+                            self.render_tile_map_view(ctx, ui, vram, io_reg);
 
                             ui.add_space(10.0);
-                            self.render_window_tile_map_view(ctx, ui, &vram, &io_reg);
+                            self.render_window_tile_map_view(ctx, ui, vram, io_reg);
                         });
                     });
             },
@@ -87,12 +87,12 @@ impl Ui {
                 false => "Signed / BG & Window Range: 0x8800 - 0x97FF",
             };
 
-            let window_enabled: &str = match lcdc & (1 >> 5) > 0 {
+            let window_enabled: &str = match lcdc & (1 << 5) > 0 {
                 true => "Enabled",
                 false => "Disabled",
             };
 
-            let window_tile_map_range: &str = match lcdc & (1 >> 6) > 0 {
+            let window_tile_map_range: &str = match lcdc & (1 << 6) > 0 {
                 true => "0x9C00-0x9FFF",
                 false => "0x9800-0x9BFF",
             };
@@ -162,7 +162,7 @@ impl Ui {
                         let offset: usize = ((y - 1) * 32) + (x - 1);
 
                         let tile_id = vram[(base_addr + offset) - 0x8000] as usize;
-                        let texture = Self::render_tile(ctx, &vram, &io_reg, tile_id);
+                        let texture = Self::render_tile(ctx, vram, io_reg, tile_id);
                         ui.image(&texture);
                     }
                 });
@@ -215,7 +215,7 @@ impl Ui {
                         let offset: usize = ((y - 1) * 32) + (x - 1);
 
                         let tile_id = vram[(base_addr + offset) - 0x8000] as usize;
-                        let texture = Self::render_tile(ctx, &vram, &io_reg, tile_id);
+                        let texture = Self::render_tile(ctx, vram, io_reg, tile_id);
                         ui.image(&texture);
                     }
                 });
@@ -264,7 +264,7 @@ impl Ui {
 
                         let tile_id = ((y - 1) * 16) + (x - 1);
 
-                        let texture = Self::render_tile(ctx, &vram, &io_reg, tile_id);
+                        let texture = Self::render_tile(ctx, vram, io_reg, tile_id);
                         ui.image(&texture);
                     }
                 });
@@ -341,10 +341,10 @@ impl Ui {
         }
 
         let image = ColorImage::from_rgb([8, 8], &tile_rgb);
-        return ctx.load_texture(
+        ctx.load_texture(
             format!("tile_id_{}", tile_id),
             image,
             egui::TextureOptions::NEAREST,
-        );
+        )
     }
 }

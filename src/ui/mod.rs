@@ -60,11 +60,12 @@ impl Ui {
         window: &Window,
     ) {
         self.egui_glium_client.run(window, |ctx| {
-            let mut visuals = Visuals::default();
-            visuals.window_shadow = Shadow::NONE;
-            visuals.popup_shadow = Shadow::NONE;
-            visuals.override_text_color = Some(Color32::WHITE);
-            ctx.set_visuals(visuals);
+            ctx.set_visuals(Visuals {
+                window_shadow: Shadow::NONE,
+                popup_shadow: Shadow::NONE,
+                override_text_color: Some(Color32::WHITE),
+                ..Default::default()
+            });
 
             // Top menubar
             egui::TopBottomPanel::top("top_panel")
@@ -79,7 +80,7 @@ impl Ui {
                                 self.is_paused = false;
                                 frontend.send_pause(self.is_paused);
 
-                                ui.close_menu();
+                                ui.close();
                             }
 
                             if ui.button("Exit").clicked() {
@@ -95,7 +96,7 @@ impl Ui {
                                         err
                                     );
                                 }
-                                ui.close_menu();
+                                ui.close();
                             }
                         });
 
@@ -114,14 +115,14 @@ impl Ui {
                             ui.separator();
                             if ui.button("Controls").clicked() {
                                 self.controls.show(true);
-                                ui.close_menu();
+                                ui.close();
                             }
                         });
 
                         ui.menu_button("Debug", |ui| {
                             if ui.button("VRAM Viewer").clicked() {
                                 self.vram_viewer.show(true);
-                                ui.close_menu();
+                                ui.close();
                             }
                         });
                     });

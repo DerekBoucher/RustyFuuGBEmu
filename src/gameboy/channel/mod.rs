@@ -22,7 +22,7 @@ pub fn new() -> (Frontend, Backend) {
         mpsc::channel::<(Option<DirectionButton>, Option<ActionButton>, ElementState)>();
     let (pause_sender, pause_receiver) = mpsc::sync_channel::<bool>(1);
 
-    return (
+    (
         Frontend::new(
             close_sender,
             ack_receiver,
@@ -41,5 +41,5 @@ pub fn new() -> (Frontend, Backend) {
             joypad_recv,
             pause_receiver,
         ),
-    );
+    )
 }

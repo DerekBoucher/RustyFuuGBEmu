@@ -56,8 +56,8 @@ impl MBC1 {
             return false;
         }
 
-        return self.rom[cartridge::header::TYPE_ADDR] == cartridge::mbc_id::MBC1_RAM
-            || self.rom[cartridge::header::TYPE_ADDR] == cartridge::mbc_id::MBC1_RAM_BATTERY;
+        self.rom[cartridge::header::TYPE_ADDR] == cartridge::mbc_id::MBC1_RAM
+            || self.rom[cartridge::header::TYPE_ADDR] == cartridge::mbc_id::MBC1_RAM_BATTERY
     }
 
     fn read(&self, addr: usize) -> Option<u8> {
@@ -70,24 +70,22 @@ impl MBC1 {
             if self.rom[cartridge::header::ROM_SIZE_ADDR] >= cartridge::rom_size_id::ONE_MEGABYTE
                 && self.banking_mode == MBC1::RAM_BANKING_MODE
             {
-                let translated_addr: usize;
+                let translated_addr: usize = match self.ram_bank_select_register {
+                    0x00 => addr,
+                    0x01 => addr + (0x10 * 0x4000),
+                    0x02 => addr + (0x20 * 0x4000),
+                    0x03 => addr + (0x30 * 0x4000),
+                    _ => addr,
+                };
 
-                match self.ram_bank_select_register {
-                    0x00 => translated_addr = addr,
-                    0x01 => translated_addr = addr + (0x10 * 0x4000),
-                    0x02 => translated_addr = addr + (0x20 * 0x4000),
-                    0x03 => translated_addr = addr + (0x30 * 0x4000),
-                    _ => translated_addr = addr,
-                }
-
-                return Some(self.rom[translated_addr].clone());
+                return Some(self.rom[translated_addr]);
             }
 
-            return Some(self.rom[addr].clone());
+            return Some(self.rom[addr]);
         }
 
         // ROM Banks 0x01 - 0x7F. See https://gbdev.io/pandocs/MBC1.html#40007fff--rom-bank-01-7f-read-only for more details.
-        if addr >= 0x4000 && addr < 0x8000 {
+        if (0x4000..0x8000).contains(&addr) {
             let mut translated_addr = addr - 0x4000;
             let mut bank_number: usize = self.rom_bank_select_register;
 
@@ -101,20 +99,18 @@ impl MBC1 {
             }
 
             translated_addr += bank_number * 0x4000;
-            return Some(self.rom[translated_addr].clone());
+            return Some(self.rom[translated_addr]);
         }
 
         // RAM banks
-        if addr >= 0xA000 && addr < 0xC000 {
+        if (0xA000..0xC000).contains(&addr) {
             if !self.supports_ram() || !self.ram_enabled {
                 return Some(0xFF);
             }
 
             let translated_addr: usize = addr - 0xA000;
 
-            return Some(
-                self.ram_banks[self.ram_bank_select_register & 0b11][translated_addr].clone(),
-            );
+            return Some(self.ram_banks[self.ram_bank_select_register & 0b11][translated_addr]);
         }
 
         None
@@ -131,7 +127,7 @@ impl MBC1 {
             self.ram_enabled = false;
         }
 
-        if addr >= 0x2000 && addr < 0x4000 {
+        if (0x2000..0x4000).contains(&addr) {
             self.rom_bank_select_register = (val & 0x1F).into();
             if self.rom_bank_select_register == 0x00
                 || self.rom_bank_select_register == 0x20
@@ -146,11 +142,11 @@ impl MBC1 {
             }
         }
 
-        if addr >= 0x4000 && addr < 0x6000 {
+        if (0x4000..0x6000).contains(&addr) {
             self.ram_bank_select_register = (val & 0x3).into();
         }
 
-        if addr >= 0x6000 && addr < 0x8000 {
+        if (0x6000..0x8000).contains(&addr) {
             if val & 0x1 == 0x00 {
                 self.banking_mode = MBC1::SIMPLE_BANKING_MODE;
                 return;
@@ -160,7 +156,7 @@ impl MBC1 {
         }
 
         // RAM banks
-        if addr >= 0xA000 && addr < 0xC000 {
+        if (0xA000..0xC000).contains(&addr) {
             if !self.supports_ram() || !self.ram_enabled {
                 return;
             }
@@ -169,7 +165,7 @@ impl MBC1 {
             let mut bank_number: usize = 0x0;
 
             if self.rom[cartridge::header::RAM_SIZE_ADDR] >= cartridge::ram_size_id::FOUR_BANKS {
-                bank_number = usize::from(self.ram_bank_select_register & 0b00000011);
+                bank_number = self.ram_bank_select_register & 0b00000011;
             }
 
             self.ram_banks[bank_number][translated_addr] = val;

@@ -65,7 +65,7 @@ impl Ui {
             .resizable(false)
             .open(&mut self.show)
             .show(egui_ctx, |ui| {
-                let image_data = image::load_from_memory(&self.gb_control_png).unwrap();
+                let image_data = image::load_from_memory(self.gb_control_png).unwrap();
                 let image_rgba = image_data.to_rgba8();
                 let image_size = [image_data.width() as usize, image_data.height() as usize];
                 let image_rgba = image_rgba.as_flat_samples();
@@ -87,7 +87,7 @@ impl Ui {
                             ui.label(RichText::new("Up: ").size(15.0));
                             if ui
                                 .button(
-                                    RichText::new(format_args!("{:?}", &self.key_up.0).to_string())
+                                    RichText::new(format_args!("{:?}", self.key_up.0).to_string())
                                         .size(15.0),
                                 )
                                 .clicked()
@@ -102,7 +102,7 @@ impl Ui {
                             if ui
                                 .button(
                                     RichText::new(
-                                        format_args!("{:?}", &self.key_down.0).to_string(),
+                                        format_args!("{:?}", self.key_down.0).to_string(),
                                     )
                                     .size(15.0),
                                 )
@@ -118,7 +118,7 @@ impl Ui {
                             if ui
                                 .button(
                                     RichText::new(
-                                        format_args!("{:?}", &self.key_left.0).to_string(),
+                                        format_args!("{:?}", self.key_left.0).to_string(),
                                     )
                                     .size(15.0),
                                 )
@@ -134,7 +134,7 @@ impl Ui {
                             if ui
                                 .button(
                                     RichText::new(
-                                        format_args!("{:?}", &self.key_right.0).to_string(),
+                                        format_args!("{:?}", self.key_right.0).to_string(),
                                     )
                                     .size(15.0),
                                 )
@@ -151,7 +151,7 @@ impl Ui {
                             ui.label(RichText::new("A: ").size(15.0));
                             if ui
                                 .button(
-                                    RichText::new(format_args!("{:?}", &self.key_a.0).to_string())
+                                    RichText::new(format_args!("{:?}", self.key_a.0).to_string())
                                         .size(15.0),
                                 )
                                 .clicked()
@@ -165,7 +165,7 @@ impl Ui {
                             ui.label(RichText::new("B: ").size(15.0));
                             if ui
                                 .button(
-                                    RichText::new(format_args!("{:?}", &self.key_b.0).to_string())
+                                    RichText::new(format_args!("{:?}", self.key_b.0).to_string())
                                         .size(15.0),
                                 )
                                 .clicked()
@@ -180,7 +180,7 @@ impl Ui {
                             if ui
                                 .button(
                                     RichText::new(
-                                        format_args!("{:?}", &self.key_start.0).to_string(),
+                                        format_args!("{:?}", self.key_start.0).to_string(),
                                     )
                                     .size(15.0),
                                 )
@@ -196,7 +196,7 @@ impl Ui {
                             if ui
                                 .button(
                                     RichText::new(
-                                        format_args!("{:?}", &self.key_select.0).to_string(),
+                                        format_args!("{:?}", self.key_select.0).to_string(),
                                     )
                                     .size(15.0),
                                 )
@@ -212,8 +212,6 @@ impl Ui {
     }
 
     fn render_key_bind_window(&mut self, egui_ctx: &Context) {
-        if !self.show_key_bind_window {}
-
         egui::Window::new("")
             .open(&mut self.show_key_bind_window)
             .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
@@ -226,111 +224,87 @@ impl Ui {
 
     pub fn process_window_event(&mut self, event: WindowEvent, frontend: &Frontend) {
         if self.show_key_bind_window {
-            match event {
-                WindowEvent::KeyboardInput { event, .. } => {
-                    if event.state != ElementState::Pressed {
-                        return;
-                    }
-
-                    self.show_key_bind_window = false;
-
-                    let key: KeyCode = match event.physical_key {
-                        PhysicalKey::Code(key_code) => key_code,
-                        PhysicalKey::Unidentified(_) => return,
-                    };
-
-                    match self.key_to_modify {
-                        (Some(direction), None) => match direction {
-                            DirectionButton::Up => self.key_up = (key, ElementState::Released),
-                            DirectionButton::Down => self.key_down = (key, ElementState::Released),
-                            DirectionButton::Left => self.key_left = (key, ElementState::Released),
-                            DirectionButton::Right => {
-                                self.key_right = (key, ElementState::Released)
-                            }
-                        },
-                        (None, Some(action)) => match action {
-                            ActionButton::A => self.key_a = (key, ElementState::Released),
-                            ActionButton::B => self.key_b = (key, ElementState::Released),
-                            ActionButton::Start => self.key_start = (key, ElementState::Released),
-                            ActionButton::Select => self.key_select = (key, ElementState::Released),
-                        },
-                        _ => {}
-                    }
-
-                    self.key_to_modify = (None, None);
+            if let WindowEvent::KeyboardInput { event, .. } = event {
+                if event.state != ElementState::Pressed {
+                    return;
                 }
-                _ => {}
+
+                self.show_key_bind_window = false;
+
+                let key: KeyCode = match event.physical_key {
+                    PhysicalKey::Code(key_code) => key_code,
+                    PhysicalKey::Unidentified(_) => return,
+                };
+
+                match self.key_to_modify {
+                    (Some(direction), None) => match direction {
+                        DirectionButton::Up => self.key_up = (key, ElementState::Released),
+                        DirectionButton::Down => self.key_down = (key, ElementState::Released),
+                        DirectionButton::Left => self.key_left = (key, ElementState::Released),
+                        DirectionButton::Right => self.key_right = (key, ElementState::Released),
+                    },
+                    (None, Some(action)) => match action {
+                        ActionButton::A => self.key_a = (key, ElementState::Released),
+                        ActionButton::B => self.key_b = (key, ElementState::Released),
+                        ActionButton::Start => self.key_start = (key, ElementState::Released),
+                        ActionButton::Select => self.key_select = (key, ElementState::Released),
+                    },
+                    _ => {}
+                }
+
+                self.key_to_modify = (None, None);
             }
             return;
         }
 
         // Else we are processing actual gameplay inputs
-        match event {
-            WindowEvent::KeyboardInput { event, .. } => {
-                let key_pressed = match event.physical_key {
-                    PhysicalKey::Code(key_code) => key_code,
-                    PhysicalKey::Unidentified(_) => return,
-                };
+        if let WindowEvent::KeyboardInput { event, .. } = event {
+            let key_pressed = match event.physical_key {
+                PhysicalKey::Code(key_code) => key_code,
+                PhysicalKey::Unidentified(_) => return,
+            };
 
-                if key_pressed == self.key_a.0 {
-                    if event.state != self.key_a.1 {
-                        self.key_a.1 = event.state;
-                        frontend.send_joypad_data(None, Some(ActionButton::A), event.state);
-                    }
-                }
-
-                if key_pressed == self.key_b.0 {
-                    if event.state != self.key_b.1 {
-                        self.key_b.1 = event.state;
-                        frontend.send_joypad_data(None, Some(ActionButton::B), event.state);
-                    }
-                }
-
-                if key_pressed == self.key_start.0 {
-                    if event.state != self.key_start.1 {
-                        self.key_start.1 = event.state;
-                        frontend.send_joypad_data(None, Some(ActionButton::Start), event.state);
-                    }
-                }
-
-                if key_pressed == self.key_select.0 {
-                    if event.state != self.key_select.1 {
-                        self.key_select.1 = event.state;
-                        frontend.send_joypad_data(None, Some(ActionButton::Select), event.state);
-                    }
-                }
-
-                if key_pressed == self.key_up.0 {
-                    if event.state != self.key_up.1 {
-                        self.key_up.1 = event.state;
-                        frontend.send_joypad_data(Some(DirectionButton::Up), None, event.state);
-                    }
-                }
-
-                if key_pressed == self.key_down.0 {
-                    if event.state != self.key_down.1 {
-                        self.key_down.1 = event.state;
-                        frontend.send_joypad_data(Some(DirectionButton::Down), None, event.state);
-                    }
-                }
-
-                if key_pressed == self.key_left.0 {
-                    if event.state != self.key_left.1 {
-                        self.key_left.1 = event.state;
-                        frontend.send_joypad_data(Some(DirectionButton::Left), None, event.state);
-                    }
-                }
-
-                if key_pressed == self.key_right.0 {
-                    if event.state != self.key_right.1 {
-                        self.key_right.1 = event.state;
-                        frontend.send_joypad_data(Some(DirectionButton::Right), None, event.state);
-                    }
-                }
-
-                log::trace!("state: {:?}", event.state);
+            if key_pressed == self.key_a.0 && event.state != self.key_a.1 {
+                self.key_a.1 = event.state;
+                frontend.send_joypad_data(None, Some(ActionButton::A), event.state);
             }
-            _ => {}
+
+            if key_pressed == self.key_b.0 && event.state != self.key_b.1 {
+                self.key_b.1 = event.state;
+                frontend.send_joypad_data(None, Some(ActionButton::B), event.state);
+            }
+
+            if key_pressed == self.key_start.0 && event.state != self.key_start.1 {
+                self.key_start.1 = event.state;
+                frontend.send_joypad_data(None, Some(ActionButton::Start), event.state);
+            }
+
+            if key_pressed == self.key_select.0 && event.state != self.key_select.1 {
+                self.key_select.1 = event.state;
+                frontend.send_joypad_data(None, Some(ActionButton::Select), event.state);
+            }
+
+            if key_pressed == self.key_up.0 && event.state != self.key_up.1 {
+                self.key_up.1 = event.state;
+                frontend.send_joypad_data(Some(DirectionButton::Up), None, event.state);
+            }
+
+            if key_pressed == self.key_down.0 && event.state != self.key_down.1 {
+                self.key_down.1 = event.state;
+                frontend.send_joypad_data(Some(DirectionButton::Down), None, event.state);
+            }
+
+            if key_pressed == self.key_left.0 && event.state != self.key_left.1 {
+                self.key_left.1 = event.state;
+                frontend.send_joypad_data(Some(DirectionButton::Left), None, event.state);
+            }
+
+            if key_pressed == self.key_right.0 && event.state != self.key_right.1 {
+                self.key_right.1 = event.state;
+                frontend.send_joypad_data(Some(DirectionButton::Right), None, event.state);
+            }
+
+            log::trace!("state: {:?}", event.state);
         }
     }
 }
