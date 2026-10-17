@@ -79,6 +79,22 @@ impl ApplicationHandler<ui::events::UiEvent> for App {
                 );
                 frame.finish().unwrap();
             }
+            WindowEvent::Resized(size) => {
+                // Keep the GL surface (framebuffer) in sync with the window's
+                // physical size. This is critical when the DPI scale factor
+                // changes (e.g. Wayland fractional scaling): egui maps pointer
+                // positions from physical pixels using pixels_per_point, while
+                // its painter derives the drawing coordinate space from the
+                // framebuffer size. If these disagree, clicks are offset from
+                // the drawn UI.
+                self.display.resize((size.width, size.height));
+                self.ui.process_window_event(
+                    WindowEvent::Resized(size),
+                    &self.display,
+                    &self.window,
+                    &self.front_end,
+                );
+            }
             _ => self
                 .ui
                 .process_window_event(event, &self.display, &self.window, &self.front_end),
