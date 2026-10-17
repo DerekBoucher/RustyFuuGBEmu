@@ -3,6 +3,30 @@ use std::sync::Arc;
 use winit::dpi::PhysicalSize;
 use winit::window::Window;
 
+/// Rendering backend selected with the `--renderer` command line argument.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, clap::ValueEnum)]
+pub enum Backend {
+    /// Let wgpu pick the best available backend.
+    #[default]
+    Auto,
+    /// Force the Vulkan backend.
+    Vulkan,
+    /// Force the OpenGL backend.
+    #[value(name = "opengl")]
+    OpenGl,
+}
+
+impl Backend {
+    /// The wgpu backend mask this selection restricts wgpu to.
+    fn backends(self) -> wgpu::Backends {
+        match self {
+            Self::Auto => wgpu::Backends::PRIMARY,
+            Self::Vulkan => wgpu::Backends::VULKAN,
+            Self::OpenGl => wgpu::Backends::GL,
+        }
+    }
+}
+
 /// wgpu objects shared by the UI and the render loop.
 ///
 /// Owns everything needed to present frames: the configured surface, the
@@ -16,9 +40,9 @@ pub struct GpuContext {
 }
 
 impl GpuContext {
-    pub fn new(window: Arc<Window>) -> Result<Self, String> {
+    pub fn new(window: Arc<Window>, backend: Backend) -> Result<Self, String> {
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::PRIMARY,
+            backends: backend.backends(),
             ..Default::default()
         });
 

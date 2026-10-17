@@ -24,7 +24,7 @@ use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop, EventLoopProxy}
 use winit::window::Window;
 
 use crate::gameboy::channel::front_end::Frontend;
-use crate::gpu::GpuContext;
+use crate::gpu::{Backend, GpuContext};
 use crate::memory::Memory;
 use crate::renderer::Renderer;
 use crate::ui::Ui;
@@ -52,6 +52,8 @@ struct App {
     // Kept until `resumed`, where they are used to construct the UI.
     ui_event_loop_proxy: EventLoopProxy<ui::events::UiEvent>,
     skip_boot_rom: bool,
+    /// Backend wgpu is restricted to, from `--renderer`.
+    backend: Backend,
     memory_ref: Arc<Mutex<Memory>>,
     state: Option<AppState>,
     last_frame_update: Instant,
@@ -103,7 +105,7 @@ impl ApplicationHandler<ui::events::UiEvent> for App {
             }
         };
 
-        let gpu = match GpuContext::new(window.clone()) {
+        let gpu = match GpuContext::new(window.clone(), self.backend) {
             Ok(gpu) => gpu,
             Err(err) => {
                 log::error!("failed to initialize wgpu: {err}");
@@ -319,6 +321,10 @@ struct Args {
 
     #[arg(short, long, default_value_t = true)]
     skip_boot_rom: bool,
+
+    /// Rendering backend to use.
+    #[arg(long, value_enum, default_value_t = Backend::Auto)]
+    renderer: Backend,
 }
 
 fn main() -> Result<(), EventLoopError> {
@@ -337,6 +343,7 @@ fn main() -> Result<(), EventLoopError> {
         front_end,
         ui_event_loop_proxy: program_loop.create_proxy(),
         skip_boot_rom: args.skip_boot_rom,
+        backend: args.renderer,
         memory_ref,
         state: None,
         last_frame_update: Instant::now(),
