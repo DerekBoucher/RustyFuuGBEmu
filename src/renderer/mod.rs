@@ -7,6 +7,26 @@ mod shaders;
 use crate::ppu;
 use crate::ui;
 
+/// Technology-agnostic buffer of RGB pixel data that the emulator back end
+/// sends to the front end whenever a frame is ready to be displayed.
+pub type FrameData = [[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT];
+
+/// Interface implemented by every rendering technology.
+///
+/// The application only depends on this trait, so rendering back ends (OpenGL,
+/// software, ...) can be swapped, for example through a command line argument,
+/// without changing the code that drives the emulator.
+// TODO: `update_frame` and `render` still expose glium types because OpenGL is
+// the only implementation; make the interface fully technology-agnostic once a
+// second renderer is added.
+pub trait Renderer {
+    /// Uploads the newest [`FrameData`] sent by the emulator back end.
+    fn update_frame(&mut self, display: &Display<WindowSurface>, frame_data: FrameData);
+
+    /// Draws the most recently uploaded frame.
+    fn render(&mut self, frame: &mut glium::Frame);
+}
+
 #[derive(Copy, Clone)]
 struct Vertex {
     position: [f32; 2],
@@ -102,12 +122,10 @@ impl OpenGL {
             indices,
         }
     }
+}
 
-    pub fn update_frame(
-        &mut self,
-        display: &Display<WindowSurface>,
-        frame_data: [[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT],
-    ) {
+impl Renderer for OpenGL {
+    fn update_frame(&mut self, display: &Display<WindowSurface>, frame_data: FrameData) {
         let mut i = 0;
         let mut current_vertices = self.vertex_buffer.read().unwrap();
 
@@ -124,7 +142,7 @@ impl OpenGL {
         self.vertex_buffer = glium::VertexBuffer::new(display, &current_vertices).unwrap();
     }
 
-    pub fn render(&self, frame: &mut glium::Frame) {
+    fn render(&mut self, frame: &mut glium::Frame) {
         frame
             .draw(
                 &self.vertex_buffer,

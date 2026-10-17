@@ -25,7 +25,7 @@ use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::Window;
 
 use crate::gameboy::channel::front_end::Frontend;
-use crate::renderer::OpenGL;
+use crate::renderer::Renderer;
 use crate::ui::Ui;
 
 const FPS: u64 = 60;
@@ -34,13 +34,12 @@ const FRAME_DURATION: Duration = Duration::from_nanos(1_000_000_000 / FPS);
 struct App {
     front_end: Frontend,
     // Fields are dropped in declaration order. `ui` (whose egui clipboard holds
-    // a raw pointer to the winit Wayland connection) and `opengl_renderer`
-    // (which holds GL resources) must be dropped before `display` and
-    // `window`; dropping the window disconnects the Wayland connection the
-    // other fields depend on.
+    // a raw pointer to the winit Wayland connection) and `renderer` (which
+    // holds GL resources) must be dropped before `display` and `window`;
+    // dropping the window disconnects the Wayland connection the other fields
+    // depend on.
     ui: Ui,
-    // TODO: Abstract renderer behind an interface to support multiple rendering technologies
-    opengl_renderer: OpenGL,
+    renderer: Box<dyn Renderer>,
     display: Display<WindowSurface>,
     window: Window,
     last_frame_update: Instant,
@@ -90,12 +89,12 @@ impl ApplicationHandler<ui::events::UiEvent> for App {
                 // upload the pixels to the GPU. The frame channel is bounded, so
                 // this also unblocks the back end after it finishes a frame.
                 if let Some(frame_data) = self.front_end.should_render_screen() {
-                    self.opengl_renderer.update_frame(&self.display, frame_data);
+                    self.renderer.update_frame(&self.display, frame_data);
                 }
 
                 let mut frame = self.display.draw();
                 frame.clear_color(1.0, 1.0, 1.0, 1.0);
-                self.opengl_renderer.render(&mut frame);
+                self.renderer.render(&mut frame);
                 self.ui.draw(
                     &mut control_flow,
                     &self.display,
@@ -203,7 +202,9 @@ fn main() -> Result<(), EventLoopError> {
 
     let (program_loop, display, window) = init_glium();
     let egui_glium_client = EguiGlium::new(ViewportId::ROOT, &display, &window, &program_loop);
-    let opengl_renderer = renderer::OpenGL::new(&display);
+    // The application depends only on the `Renderer` interface. Future renderer
+    // implementations can be selected here, e.g. from a command line argument.
+    let renderer: Box<dyn Renderer> = Box::new(renderer::OpenGL::new(&display));
 
     let (gameboy, memory_ref) = gameboy::Gameboy::new(args.skip_boot_rom);
 
@@ -219,7 +220,7 @@ fn main() -> Result<(), EventLoopError> {
         front_end,
         display,
         window,
-        opengl_renderer,
+        renderer,
         ui,
         last_frame_update: Instant::now(),
         is_closing: false,
