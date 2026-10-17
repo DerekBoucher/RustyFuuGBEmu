@@ -1,4 +1,5 @@
 use crate::gameboy;
+use crate::gpu::GpuContext;
 use crate::memory::Memory;
 
 use std::fs;
@@ -12,19 +13,33 @@ use egui::Color32;
 use egui::Shadow;
 use egui::Visuals;
 use gameboy::channel::front_end::Frontend;
-use glium::glutin::surface::WindowSurface;
-use glium::Display;
-use glium::Frame;
 use winit::event::WindowEvent;
-use winit::event_loop::ControlFlow;
 use winit::event_loop::EventLoopProxy;
 use winit::window::Window;
 
 pub const TOP_MENUBAR_HEIGHT: f32 = 20.0;
 pub const SCALE_FACTOR: i32 = 5;
 
+/// A frame's worth of egui draw data, produced by [`Ui::prepare`].
+pub struct UiFrame {
+    paint_jobs: Vec<egui::ClippedPrimitive>,
+    screen_descriptor: egui_wgpu::ScreenDescriptor,
+    textures_to_free: Vec<egui::TextureId>,
+    command_buffers: Vec<wgpu::CommandBuffer>,
+}
+
+impl UiFrame {
+    /// Command buffers that stage this frame's egui buffers; submit them
+    /// together with the frame's own command buffer.
+    pub fn take_command_buffers(&mut self) -> Vec<wgpu::CommandBuffer> {
+        std::mem::take(&mut self.command_buffers)
+    }
+}
+
 pub struct Ui {
-    egui_glium_client: egui_glium::EguiGlium,
+    egui_context: egui::Context,
+    egui_state: egui_winit::State,
+    egui_renderer: egui_wgpu::Renderer,
     ui_event_loop_proxy: EventLoopProxy<events::UiEvent>,
     skip_boot_rom: bool,
     controls: controls::Ui,
@@ -35,13 +50,31 @@ pub struct Ui {
 
 impl Ui {
     pub fn new(
-        egui_glium_client: egui_glium::EguiGlium,
+        gpu: &GpuContext,
+        window: &Window,
         event_loop_proxy: EventLoopProxy<events::UiEvent>,
         skip_boot_rom: bool,
         memory_ref: Arc<Mutex<Memory>>,
     ) -> Self {
+        let egui_context = egui::Context::default();
+        let egui_state = egui_winit::State::new(
+            egui_context.clone(),
+            egui::ViewportId::ROOT,
+            window,
+            None,
+            None,
+            None,
+        );
+        let egui_renderer = egui_wgpu::Renderer::new(
+            &gpu.device,
+            gpu.config.format,
+            egui_wgpu::RendererOptions::default(),
+        );
+
         Self {
-            egui_glium_client,
+            egui_context,
+            egui_state,
+            egui_renderer,
             ui_event_loop_proxy: event_loop_proxy,
             skip_boot_rom,
             controls: controls::Ui::new(),
@@ -51,15 +84,19 @@ impl Ui {
         }
     }
 
-    pub fn draw(
+    /// Runs egui for this frame and stages its buffers.
+    ///
+    /// The returned [`UiFrame`] is painted by [`Ui::paint`] once the frame's
+    /// render pass is recording.
+    pub fn prepare(
         &mut self,
-        _control_flow: &mut ControlFlow,
-        display: &Display<WindowSurface>,
-        frame: &mut Frame,
-        frontend: &mut Frontend,
+        gpu: &GpuContext,
         window: &Window,
-    ) {
-        self.egui_glium_client.run(window, |ctx| {
+        encoder: &mut wgpu::CommandEncoder,
+        frontend: &mut Frontend,
+    ) -> UiFrame {
+        let raw_input = self.egui_state.take_egui_input(window);
+        let full_output = self.egui_context.run(raw_input, |ctx| {
             ctx.set_visuals(Visuals {
                 window_shadow: Shadow::NONE,
                 popup_shadow: Shadow::NONE,
@@ -135,17 +172,69 @@ impl Ui {
             self.vram_viewer.render(ctx, &self.memory_ref);
         });
 
-        self.egui_glium_client.paint(display, frame);
+        let egui::FullOutput {
+            platform_output,
+            textures_delta,
+            shapes,
+            pixels_per_point,
+            ..
+        } = full_output;
+        self.egui_state
+            .handle_platform_output(window, platform_output);
+
+        let paint_jobs = self.egui_context.tessellate(shapes, pixels_per_point);
+
+        let size = window.inner_size();
+        let screen_descriptor = egui_wgpu::ScreenDescriptor {
+            size_in_pixels: [size.width, size.height],
+            pixels_per_point,
+        };
+
+        for (texture_id, image_delta) in &textures_delta.set {
+            self.egui_renderer
+                .update_texture(&gpu.device, &gpu.queue, *texture_id, image_delta);
+        }
+
+        let command_buffers = self.egui_renderer.update_buffers(
+            &gpu.device,
+            &gpu.queue,
+            encoder,
+            &paint_jobs,
+            &screen_descriptor,
+        );
+
+        UiFrame {
+            paint_jobs,
+            screen_descriptor,
+            textures_to_free: textures_delta.free,
+            command_buffers,
+        }
+    }
+
+    /// Records the frame's egui draw calls.
+    pub fn paint(&mut self, pass: &mut wgpu::RenderPass<'static>, frame: &UiFrame) {
+        self.egui_renderer
+            .render(pass, &frame.paint_jobs, &frame.screen_descriptor);
+    }
+
+    /// Releases the textures egui dropped while preparing `frame`.
+    ///
+    /// Must run after the frame's command buffers were submitted: destroying
+    /// a texture that still has unsubmitted commands referencing it
+    /// invalidates those commands.
+    pub fn release_textures(&mut self, frame: &UiFrame) {
+        for texture_id in &frame.textures_to_free {
+            self.egui_renderer.free_texture(texture_id);
+        }
     }
 
     pub fn process_window_event(
         &mut self,
         event: WindowEvent,
-        _display: &Display<WindowSurface>,
         window: &Window,
         frontend: &Frontend,
     ) {
-        let _ = self.egui_glium_client.on_event(window, &event);
+        let _ = self.egui_state.on_window_event(window, &event);
 
         self.controls.process_window_event(event, frontend);
     }
