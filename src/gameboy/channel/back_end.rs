@@ -1,13 +1,21 @@
+use std::cell::Cell;
+use std::time::Duration;
 use winit::event::ElementState;
 
 use crate::{
     joypad::{ActionButton, DirectionButton},
     ppu::{self, Pixel, NATIVE_SCREEN_HEIGHT, NATIVE_SCREEN_WIDTH},
 };
-use std::sync::mpsc::{Receiver, SyncSender, TryRecvError};
+use std::sync::mpsc::{Receiver, RecvTimeoutError, SyncSender, TryRecvError};
+
+// While paused, the back end checks for a close signal at this interval.
+// std::sync::mpsc cannot wait on multiple channels at once, so polling is
+// used to keep a paused back end responsive to shutdown requests.
+const CLOSE_POLL_INTERVAL: Duration = Duration::from_millis(50);
 
 pub struct Backend {
     close_receiver: Receiver<()>,
+    close_requested: Cell<bool>,
     ack_sender: SyncSender<()>,
     rom_data_receiver: Receiver<Vec<u8>>,
     frame_data_sender: SyncSender<[[Pixel; NATIVE_SCREEN_WIDTH]; NATIVE_SCREEN_HEIGHT]>,
@@ -28,6 +36,7 @@ impl Backend {
     ) -> Self {
         return Self {
             close_receiver,
+            close_requested: Cell::new(false),
             ack_sender,
             rom_data_receiver,
             frame_data_sender,
@@ -38,54 +47,66 @@ impl Backend {
     }
 
     pub fn should_pause(&self) -> bool {
-        let result = self.pause_recv.try_recv();
-        match result {
+        match self.pause_recv.try_recv() {
             Ok(should_pause) => should_pause,
-            Err(err) => match err {
-                TryRecvError::Empty => false,
-                _ => panic!("error occurred receving pause signal: {:?}", err),
-            },
+            // No pause signal is pending. A disconnected channel means the
+            // front end is gone, which can never send a pause signal.
+            Err(TryRecvError::Empty) | Err(TryRecvError::Disconnected) => false,
         }
     }
 
+    // Blocks while the emulator is paused. Also watches for close requests so
+    // that a paused emulator still shuts down when the front end exits.
     pub fn wait_pause_resume(&self) {
-        let result = self.pause_recv.recv();
-        match result {
-            Ok(_) => {}
-            Err(err) => panic!("error occurred receiving resume signal: {:?}", err),
+        loop {
+            match self.pause_recv.recv_timeout(CLOSE_POLL_INTERVAL) {
+                Ok(should_pause) => {
+                    if !should_pause {
+                        return;
+                    }
+                }
+                Err(RecvTimeoutError::Timeout) => {
+                    if self.should_close() {
+                        return;
+                    }
+                }
+                Err(RecvTimeoutError::Disconnected) => return,
+            }
         }
-
-        return;
     }
 
     pub fn should_close(&self) -> bool {
-        let should_close_result = self.close_receiver.try_recv();
-        match should_close_result {
-            Ok(_) => true,
-            Err(err) => match err {
-                TryRecvError::Empty => false,
-                _ => panic!("error occured receiving close signal: {:?}", err),
-            },
+        // Once a close has been observed it stays observed, so callers do not
+        // need to worry about who consumed the close signal.
+        if self.close_requested.get() {
+            return true;
+        }
+
+        match self.close_receiver.try_recv() {
+            Ok(_) => {
+                self.close_requested.set(true);
+                true
+            }
+            Err(TryRecvError::Empty) => false,
+            // The front end is gone, so there is nothing left to emulate for.
+            Err(TryRecvError::Disconnected) => {
+                self.close_requested.set(true);
+                true
+            }
         }
     }
 
     pub fn should_set_skip_bootrom(&self) -> Option<bool> {
         match self.skip_boot_rom_recv.try_recv() {
             Ok(should_skip) => Some(should_skip),
-            Err(err) => match err {
-                TryRecvError::Empty => None,
-                _ => panic!("error occured receiving skip boot rom signal: {:?}", err),
-            },
+            Err(TryRecvError::Empty) | Err(TryRecvError::Disconnected) => None,
         }
     }
 
     pub fn should_load_rom(&self) -> Option<Vec<u8>> {
         match self.rom_data_receiver.try_recv() {
             Ok(rom_data) => Some(rom_data),
-            Err(err) => match err {
-                TryRecvError::Empty => None,
-                _ => panic!("error occured receiving rom data signal: {:?}", err),
-            },
+            Err(TryRecvError::Empty) | Err(TryRecvError::Disconnected) => None,
         }
     }
 
@@ -93,19 +114,17 @@ impl Backend {
         &self,
         frame_data: [[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT],
     ) {
-        match self.frame_data_sender.send(frame_data) {
-            Ok(_) => {}
-            Err(err) => panic!(
-                "error occured when sending frame data to front end: {:?}",
+        if let Err(err) = self.frame_data_sender.send(frame_data) {
+            log::debug!(
+                "error occurred when sending frame data to front end: {:?}",
                 err
-            ),
+            );
         }
     }
 
     pub fn ack_front_end(&self) {
-        match self.ack_sender.send(()) {
-            Ok(_) => {}
-            Err(err) => panic!("error occurred when sending ack to front end: {:?}", err),
+        if let Err(err) = self.ack_sender.send(()) {
+            log::debug!("error occurred when sending ack to front end: {:?}", err);
         }
     }
 
@@ -114,10 +133,9 @@ impl Backend {
     ) -> (Option<DirectionButton>, Option<ActionButton>, ElementState) {
         match self.joypad_recv.try_recv() {
             Ok(data) => data,
-            Err(err) => match err {
-                TryRecvError::Empty => (None, None, ElementState::Released),
-                _ => panic!("error receiving joypad data from front end: {:?}", err),
-            },
+            Err(TryRecvError::Empty) | Err(TryRecvError::Disconnected) => {
+                (None, None, ElementState::Released)
+            }
         }
     }
 }

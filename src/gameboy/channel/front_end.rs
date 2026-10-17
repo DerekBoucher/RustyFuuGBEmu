@@ -2,7 +2,7 @@ use winit::event::ElementState;
 
 use crate::joypad::{ActionButton, DirectionButton};
 use crate::ppu::{self, Pixel};
-use std::sync::mpsc::{self, RecvTimeoutError, TryRecvError};
+use std::sync::mpsc::{self, RecvTimeoutError, TryRecvError, TrySendError};
 use std::time::Duration;
 
 pub struct Frontend {
@@ -40,16 +40,19 @@ impl Frontend {
     }
 
     pub fn send_close_back_end(&self) {
-        match self.close_sender.send(()) {
+        match self.close_sender.try_send(()) {
             Ok(_) => {}
-            Err(err) => panic!("error occurred sending close signal to back end: {:?}", err),
+            // A close signal is already on its way to the back end.
+            Err(TrySendError::Full(_)) => {}
+            Err(TrySendError::Disconnected(_)) => {
+                log::debug!("back end already exited; close signal not sent");
+            }
         }
     }
 
     pub fn send_pause(&self, pause: bool) {
-        match self.pause_sender.send(pause) {
-            Ok(_) => {}
-            Err(err) => panic!("error occurred sending pause signal to back end: {:?}", err),
+        if let Err(err) = self.pause_sender.send(pause) {
+            log::warn!("error occurred sending pause signal to back end: {:?}", err);
         }
     }
 
@@ -58,16 +61,20 @@ impl Frontend {
     }
 
     pub fn send_rom_data_back_end(&self, rom_data: Vec<u8>) {
-        match self.rom_data_sender.send(rom_data) {
-            Ok(_) => {}
-            Err(err) => panic!("error occured when sending rom data to back end: {:?}", err),
+        if let Err(err) = self.rom_data_sender.send(rom_data) {
+            log::warn!(
+                "error occurred when sending rom data to back end: {:?}",
+                err
+            );
         }
     }
 
     pub fn send_set_skip_boot_rom_back_end(&self, skip_boot_rom: bool) {
-        match self.skip_boot_rom_sender.send(skip_boot_rom) {
-            Ok(_) => {}
-            Err(err) => panic!("error occured when sending rom data to back end: {:?}", err),
+        if let Err(err) = self.skip_boot_rom_sender.send(skip_boot_rom) {
+            log::warn!(
+                "error occurred when sending skip boot rom signal to back end: {:?}",
+                err
+            );
         }
     }
 
@@ -87,12 +94,11 @@ impl Frontend {
         action_press: Option<ActionButton>,
         input_state: ElementState,
     ) {
-        match self
+        if let Err(err) = self
             .joypad_sender
             .send((direction_press, action_press, input_state))
         {
-            Ok(_) => {}
-            Err(err) => panic!("error occurred sending joypad data to backend: {:?}", err),
+            log::debug!("error occurred sending joypad data to back end: {:?}", err);
         }
     }
 }
