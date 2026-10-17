@@ -1980,9 +1980,7 @@ fn execute_0x3f(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
     4
 }
 
-fn execute_0x40(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
-    cpu.bc.hi = cpu.bc.hi;
-
+fn execute_0x40(_: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
     4
 }
 
@@ -2043,9 +2041,7 @@ fn execute_0x48(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
     4
 }
 
-fn execute_0x49(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
-    cpu.bc.lo = cpu.bc.lo;
-
+fn execute_0x49(_: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
     4
 }
 
@@ -2106,9 +2102,7 @@ fn execute_0x51(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
     4
 }
 
-fn execute_0x52(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
-    cpu.de.hi = cpu.de.hi;
-
+fn execute_0x52(_: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
     4
 }
 
@@ -2169,9 +2163,7 @@ fn execute_0x5a(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
     4
 }
 
-fn execute_0x5b(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
-    cpu.de.lo = cpu.de.lo;
-
+fn execute_0x5b(_: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
     4
 }
 
@@ -2232,9 +2224,7 @@ fn execute_0x63(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
     4
 }
 
-fn execute_0x64(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
-    cpu.hl.hi = cpu.hl.hi;
-
+fn execute_0x64(_: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
     4
 }
 
@@ -2295,9 +2285,7 @@ fn execute_0x6c(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
     4
 }
 
-fn execute_0x6d(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
-    cpu.hl.lo = cpu.hl.lo;
-
+fn execute_0x6d(_: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
     4
 }
 
@@ -2445,9 +2433,7 @@ fn execute_0x7e(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
     8
 }
 
-fn execute_0x7f(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
-    cpu.af.hi = cpu.af.hi;
-
+fn execute_0x7f(_: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
     4
 }
 

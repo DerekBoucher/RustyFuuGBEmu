@@ -79,7 +79,7 @@ impl Ui {
                                 self.is_paused = false;
                                 frontend.send_pause(self.is_paused);
 
-                                ui.close_menu();
+                                ui.close();
                             }
 
                             if ui.button("Exit").clicked() {
@@ -95,7 +95,7 @@ impl Ui {
                                         err
                                     );
                                 }
-                                ui.close_menu();
+                                ui.close();
                             }
                         });
 
@@ -114,14 +114,14 @@ impl Ui {
                             ui.separator();
                             if ui.button("Controls").clicked() {
                                 self.controls.show(true);
-                                ui.close_menu();
+                                ui.close();
                             }
                         });
 
                         ui.menu_button("Debug", |ui| {
                             if ui.button("VRAM Viewer").clicked() {
                                 self.vram_viewer.show(true);
-                                ui.close_menu();
+                                ui.close();
                             }
                         });
                     });
