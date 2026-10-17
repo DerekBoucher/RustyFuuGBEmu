@@ -60,6 +60,13 @@ impl ApplicationHandler<ui::events::UiEvent> for App {
             }
 
             WindowEvent::RedrawRequested => {
+                // Drain the latest frame produced by the emulation thread and
+                // upload the pixels to the GPU. The frame channel is bounded, so
+                // this also unblocks the back end after it finishes a frame.
+                if let Some(frame_data) = self.front_end.should_render_screen() {
+                    self.opengl_renderer.update_frame(&self.display, frame_data);
+                }
+
                 let mut frame = self.display.draw();
                 frame.clear_color(1.0, 1.0, 1.0, 1.0);
                 self.opengl_renderer.render(&mut frame);
@@ -102,6 +109,9 @@ impl ApplicationHandler<ui::events::UiEvent> for App {
     ) {
         let _ = (event_loop, cause);
 
+        // Request a redraw once per frame so the emulator/UI update at ~60 FPS.
+        // The back end blocks on the bounded frame data channel until the front
+        // end drains it, so this also paces the emulation.
         let now = Instant::now();
         if now - self.last_frame_update >= FRAME_DURATION {
             self.last_frame_update = now;
