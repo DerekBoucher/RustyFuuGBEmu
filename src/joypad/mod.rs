@@ -15,7 +15,7 @@ pub enum ActionButton {
 }
 
 impl DirectionButton {
-    pub fn to_u8(&self) -> u8 {
+    pub fn to_u8(self) -> u8 {
         match self {
             DirectionButton::Right => !(1 << 0),
             DirectionButton::Left => !(1 << 1),
@@ -26,7 +26,7 @@ impl DirectionButton {
 }
 
 impl ActionButton {
-    pub fn to_u8(&self) -> u8 {
+    pub fn to_u8(self) -> u8 {
         match self {
             ActionButton::A => !(1 << 0),
             ActionButton::B => !(1 << 1),

@@ -60,11 +60,12 @@ impl Ui {
         window: &Window,
     ) {
         self.egui_glium_client.run(window, |ctx| {
-            let mut visuals = Visuals::default();
-            visuals.window_shadow = Shadow::NONE;
-            visuals.popup_shadow = Shadow::NONE;
-            visuals.override_text_color = Some(Color32::WHITE);
-            ctx.set_visuals(visuals);
+            ctx.set_visuals(Visuals {
+                window_shadow: Shadow::NONE,
+                popup_shadow: Shadow::NONE,
+                override_text_color: Some(Color32::WHITE),
+                ..Default::default()
+            });
 
             // Top menubar
             egui::TopBottomPanel::top("top_panel")

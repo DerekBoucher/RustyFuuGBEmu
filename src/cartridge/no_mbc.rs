@@ -15,7 +15,7 @@ pub struct NoMBC {
 /// Cartridge implementation for the Rom Only type.
 impl cartridge::Interface for NoMBC {
     fn read(&self, addr: usize) -> Option<u8> {
-        return self.read(addr);
+        self.read(addr)
     }
 
     fn write(&mut self, addr: usize, val: u8) {
@@ -40,12 +40,12 @@ impl NoMBC {
                 Some(byte) => *byte,
                 None => panic!("tried to access cartridge data out of bounds"),
             };
-            return Some(byte.clone());
+            return Some(byte);
         }
 
         // Ram bank
-        if addr >= 0xA000 && addr < 0xC000 {
-            return Some(self.ram_bank[addr - 0xA000].clone());
+        if (0xA000..0xC000).contains(&addr) {
+            return Some(self.ram_bank[addr - 0xA000]);
         }
 
         None
@@ -54,7 +54,7 @@ impl NoMBC {
     fn write(&mut self, addr: usize, val: u8) {
         log::trace!("NoMBC write at address: {:#X}", addr);
 
-        if addr >= 0xA000 && addr < 0xC000 {
+        if (0xA000..0xC000).contains(&addr) {
             self.ram_bank[addr - 0xA000] = val;
         }
     }

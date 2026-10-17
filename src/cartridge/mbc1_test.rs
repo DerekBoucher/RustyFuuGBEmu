@@ -102,7 +102,7 @@ fn read() {
                     "read from bank 0x00 w/ bank switching when ram bank register is greater than 4 (bit masking)",
                 ),
                 run_fn: || {
-                    let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let mut cart_data: Vec<u8> = vec![0x0; 0x4000];
                     cart_data[0x0000] = 0x7F;
                     cart_data[cartridge::header::ROM_SIZE_ADDR] =
                         cartridge::rom_size_id::ONE_MEGABYTE;
@@ -227,7 +227,7 @@ fn read() {
                     "read ram region 0xA000-0xBFFF -> cart has no ram -> should return 0xFF",
                 ),
                 run_fn: || {
-                    let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let mut cart_data: Vec<u8> = vec![0x0; 0x4000];
                     cart_data[cartridge::header::RAM_SIZE_ADDR] =
                         cartridge::ram_size_id::NO_RAM;
                     let mut mbc1 = MBC1::new(cart_data);
@@ -245,7 +245,7 @@ fn read() {
                     "read ram region 0xA000-0xBFFF + cart type has ram + but type is not MBC1 w/ RAM -> should return 0xFF",
                 ),
                 run_fn: || {
-                    let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let mut cart_data: Vec<u8> = vec![0x0; 0x4000];
                     cart_data[cartridge::header::RAM_SIZE_ADDR] =
                         cartridge::ram_size_id::_ONE_BANK;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1;
@@ -264,7 +264,7 @@ fn read() {
                     "read ram region 0xA000-0xBFFF + ram select register is 0 + cart type has ram + cart is MBC1_RAM + ram is disabled -> should return 0xFF",
                 ),
                 run_fn: || {
-                    let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let mut cart_data: Vec<u8> = vec![0x0; 0x4000];
                     cart_data[cartridge::header::RAM_SIZE_ADDR] =
                         cartridge::ram_size_id::_ONE_BANK;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
@@ -283,7 +283,7 @@ fn read() {
                     "read ram region 0xA000-0xBFFF + ram select register is 0 + cart type has ram + cart is MBC1_RAM + ram is enabled -> should return value in ram bank 0",
                 ),
                 run_fn: || {
-                    let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let mut cart_data: Vec<u8> = vec![0x0; 0x4000];
                     cart_data[cartridge::header::RAM_SIZE_ADDR] =
                         cartridge::ram_size_id::_ONE_BANK;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
@@ -303,7 +303,7 @@ fn read() {
                     "read ram region 0xA000-0xBFFF + ram select register is 1 + cart type has ram + cart is MBC1_RAM + ram is enabled + cart has more than 4 banks -> should return value in ram bank 1",
                 ),
                 run_fn: || {
-                    let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let mut cart_data: Vec<u8> = vec![0x0; 0x4000];
                     cart_data[cartridge::header::RAM_SIZE_ADDR] =
                         cartridge::ram_size_id::FOUR_BANKS;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
@@ -323,7 +323,7 @@ fn read() {
                     "read ram region 0xA000-0xBFFF + ram select register is 4 + cart type has ram + cart is MBC1_RAM + ram is enabled + cart has more than 4 banks -> should return value in ram bank 0 (because of mask)",
                 ),
                 run_fn: || {
-                    let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let mut cart_data: Vec<u8> = vec![0x0; 0x4000];
                     cart_data[cartridge::header::RAM_SIZE_ADDR] =
                         cartridge::ram_size_id::FOUR_BANKS;
                     cart_data[cartridge::header::TYPE_ADDR] = cartridge::mbc_id::MBC1_RAM;
@@ -343,7 +343,7 @@ fn read() {
                     "read from undefined region",
                 ),
                 run_fn: || {
-                    let cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let cart_data: Vec<u8> = vec![0x0; 0x4000];
                     let mbc1 = MBC1::new(cart_data);
                     let read_result = mbc1.read(0x8000);
                     assert!(read_result.is_none())
@@ -370,7 +370,7 @@ fn write() {
                     "writing to 0x0000 - 0x2000 -> non 0x-A value in the lower nibble -> disables ram",
                 ),
                 run_fn: || {
-                    let cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let cart_data: Vec<u8> = vec![0x0; 0x4000];
                     let mut mbc1 = MBC1::new(cart_data);
                     mbc1.ram_enabled = true;
                     mbc1.write(0x0000, 0x13);
@@ -382,7 +382,7 @@ fn write() {
                     "writing to 0x0000 - 0x2000 -> 0x5A value (lower nibble == 0xA) -> enables ram",
                 ),
                 run_fn: || {
-                    let cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let cart_data: Vec<u8> = vec![0x0; 0x4000];
                     let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x0000, 0x5A);
                     assert!(mbc1.ram_enabled);
@@ -393,7 +393,7 @@ fn write() {
                     "writing to 0x2000 - 0x4000 -> value is 0xFF -> cart only has 1 bank -> should set register to 1",
                 ),
                 run_fn: || {
-                    let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let mut cart_data: Vec<u8> = vec![0x0; 0x4000];
                     cart_data[cartridge::header::ROM_SIZE_ADDR] = 0x00;
                     let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x2000, 0xFF);
@@ -405,7 +405,7 @@ fn write() {
                     "writing to 0x2000 - 0x4000 -> value is 0xFF -> cart only has 4 banks -> should set register to 3",
                 ),
                 run_fn: || {
-                    let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let mut cart_data: Vec<u8> = vec![0x0; 0x4000];
                     cart_data[cartridge::header::ROM_SIZE_ADDR] = 0x01;
                     let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x2000, 0xFF);
@@ -417,7 +417,7 @@ fn write() {
                     "writing to 0x2000 - 0x4000 -> value is 0xFF -> cart only has 8 banks -> should set register to 7",
                 ),
                 run_fn: || {
-                    let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let mut cart_data: Vec<u8> = vec![0x0; 0x4000];
                     cart_data[cartridge::header::ROM_SIZE_ADDR] = 0x02;
                     let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x2000, 0xFF);
@@ -429,7 +429,7 @@ fn write() {
                     "writing to 0x2000 - 0x4000 -> value is 0xFF -> cart only has 16 banks -> should set register to 15",
                 ),
                 run_fn: || {
-                    let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let mut cart_data: Vec<u8> = vec![0x0; 0x4000];
                     cart_data[cartridge::header::ROM_SIZE_ADDR] = 0x03;
                     let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x2000, 0xFF);
@@ -441,7 +441,7 @@ fn write() {
                     "writing to 0x2000 - 0x4000 -> value is 0xFF -> cart only has 32 banks -> should set register to 31",
                 ),
                 run_fn: || {
-                    let mut cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let mut cart_data: Vec<u8> = vec![0x0; 0x4000];
                     cart_data[cartridge::header::ROM_SIZE_ADDR] = 0x04;
                     let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x2000, 0xFF);
@@ -453,7 +453,7 @@ fn write() {
                     "writing to 0x4000 - 0x6000 -> value is 0x1 -> should set ram select register to 1",
                 ),
                 run_fn: || {
-                    let cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let cart_data: Vec<u8> = vec![0x0; 0x4000];
                     let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x4000, 0x1);
                     assert_eq!(mbc1.ram_bank_select_register, 0x1);
@@ -464,7 +464,7 @@ fn write() {
                     "writing to 0x4000 - 0x6000 -> value is 0xFF -> should set ram select register to 3",
                 ),
                 run_fn: || {
-                    let cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let cart_data: Vec<u8> = vec![0x0; 0x4000];
                     let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x4000, 0xFF);
                     assert_eq!(mbc1.ram_bank_select_register, 0x3);
@@ -475,7 +475,7 @@ fn write() {
                     "writing to 0x6000 - 0x8000 -> value is 0x1 -> should set banking mode to ram banking mode",
                 ),
                 run_fn: || {
-                    let cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let cart_data: Vec<u8> = vec![0x0; 0x4000];
                     let mut mbc1 = MBC1::new(cart_data);
                     mbc1.write(0x6000, 0x1);
                     assert_eq!(mbc1.banking_mode, MBC1::RAM_BANKING_MODE);
@@ -486,7 +486,7 @@ fn write() {
                     "writing to 0x6000 - 0x8000 -> value is 0x10 -> should set banking mode to simple banking mode",
                 ),
                 run_fn: || {
-                    let cart_data: Vec<u8> = vec![0x0; 0x1 * 0x4000];
+                    let cart_data: Vec<u8> = vec![0x0; 0x4000];
                     let mut mbc1 = MBC1::new(cart_data);
                     mbc1.banking_mode = MBC1::RAM_BANKING_MODE;
                     mbc1.write(0x6000, 0x10);

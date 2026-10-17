@@ -96,11 +96,11 @@ impl OpenGL {
         let program =
             glium::Program::from_source(display, shaders::VERTEX, shaders::FRAGMENT, None).unwrap();
 
-        return Self {
+        Self {
             program,
             vertex_buffer,
             indices,
-        };
+        }
     }
 
     pub fn update_frame(
@@ -128,7 +128,7 @@ impl OpenGL {
         frame
             .draw(
                 &self.vertex_buffer,
-                &self.indices,
+                self.indices,
                 &self.program,
                 &glium::uniforms::EmptyUniforms,
                 &Default::default(),

@@ -185,15 +185,15 @@ impl Memory {
     }
 
     pub fn borrow_vram(&self) -> &[u8; 0x2000] {
-        return &self.video_ram;
+        &self.video_ram
     }
 
     pub fn borrow_io_reg(&self) -> &[u8; 0x80] {
-        return &self.io_registers;
+        &self.io_registers
     }
 
     fn boot_rom_enabled(&self) -> bool {
-        return self.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] == 0x00;
+        self.io_registers[io_registers::BOOT_ROM_DISABLE_ADDR - 0xFF00] == 0x00
     }
 
     pub fn step_dma(&mut self) {
@@ -256,11 +256,8 @@ impl Memory {
         action_press: Option<ActionButton>,
         input_state: ElementState,
     ) {
-        if direction_press.is_some() {
-            match self
-                .joypad_dir_queue
-                .add((direction_press.unwrap(), input_state))
-            {
+        if let Some(direction_press) = direction_press {
+            match self.joypad_dir_queue.add((direction_press, input_state)) {
                 Ok(_) => {}
                 Err(err) => panic!(
                     "error occurred queuing direction press from joypad: {:?}",
@@ -276,11 +273,8 @@ impl Memory {
             return;
         }
 
-        if action_press.is_some() {
-            match self
-                .joypad_action_queue
-                .add((action_press.unwrap(), input_state))
-            {
+        if let Some(action_press) = action_press {
+            match self.joypad_action_queue.add((action_press, input_state)) {
                 Ok(_) => {}
                 Err(err) => panic!("error occurred queuing action press from joypad: {:?}", err),
             }
@@ -289,8 +283,6 @@ impl Memory {
                 .lock()
                 .unwrap()
                 .request(interrupt::Interrupt::Joypad);
-
-            return;
         }
     }
 
@@ -302,44 +294,38 @@ impl Memory {
         let mut lo_nibble: u8 = 0x0F;
 
         if action_read {
-            match self.joypad_action_queue.remove() {
-                Ok((button, input_state)) => {
-                    if input_state == ElementState::Pressed {
-                        lo_nibble &= button.to_u8();
-                    } else {
-                        lo_nibble |= !button.to_u8();
-                    }
-
-                    self.joypad_action_buffer = lo_nibble & 0x0F;
-
-                    log::trace!(
-                        "action press: {:b}, state: {:?}",
-                        hi_nibble | self.joypad_action_buffer,
-                        input_state
-                    );
+            if let Ok((button, input_state)) = self.joypad_action_queue.remove() {
+                if input_state == ElementState::Pressed {
+                    lo_nibble &= button.to_u8();
+                } else {
+                    lo_nibble |= !button.to_u8();
                 }
-                Err(_) => {}
+
+                self.joypad_action_buffer = lo_nibble & 0x0F;
+
+                log::trace!(
+                    "action press: {:b}, state: {:?}",
+                    hi_nibble | self.joypad_action_buffer,
+                    input_state
+                );
             };
         }
 
         if direction_read {
-            match self.joypad_dir_queue.remove() {
-                Ok((button, input_state)) => {
-                    if input_state == ElementState::Pressed {
-                        lo_nibble &= button.to_u8();
-                    } else {
-                        lo_nibble |= !button.to_u8();
-                    }
-
-                    self.joypad_direction_buffer = lo_nibble & 0x0F;
-
-                    log::trace!(
-                        "direction press: {:b}, state: {:?}",
-                        hi_nibble | self.joypad_direction_buffer,
-                        input_state
-                    );
+            if let Ok((button, input_state)) = self.joypad_dir_queue.remove() {
+                if input_state == ElementState::Pressed {
+                    lo_nibble &= button.to_u8();
+                } else {
+                    lo_nibble |= !button.to_u8();
                 }
-                Err(_) => {}
+
+                self.joypad_direction_buffer = lo_nibble & 0x0F;
+
+                log::trace!(
+                    "direction press: {:b}, state: {:?}",
+                    hi_nibble | self.joypad_direction_buffer,
+                    input_state
+                );
             };
         }
 
@@ -418,41 +404,41 @@ impl Memory {
         }
 
         // Video RAM
-        if addr >= 0x8000 && addr < 0xA000 {
+        if (0x8000..0xA000).contains(&addr) {
             return Some(self.video_ram[addr - 0x8000]);
         }
 
         // Cartridge RAM
-        if addr >= 0xA000 && addr < 0xC000 {
+        if (0xA000..0xC000).contains(&addr) {
             return self.cartridge.read(addr);
         }
 
         // Work RAM 0
-        if addr >= 0xC000 && addr < 0xD000 {
+        if (0xC000..0xD000).contains(&addr) {
             return Some(self.work_ram0[addr - 0xC000]);
         }
 
         // Work RAM 1
-        if addr >= 0xD000 && addr < 0xE000 {
+        if (0xD000..0xE000).contains(&addr) {
             return Some(self.work_ram1[addr - 0xD000]);
         }
 
         // Echo RAM
-        if addr >= 0xE000 && addr < 0xFE00 {
+        if (0xE000..0xFE00).contains(&addr) {
             return self.dma_read((addr - 0xE000) + 0xC000);
         }
 
         // OAM / Sprite attributes
-        if addr >= 0xFE00 && addr < 0xFEA0 {
+        if (0xFE00..0xFEA0).contains(&addr) {
             return Some(self.oam[addr - 0xFE00]);
         }
 
-        if addr >= 0xFEA0 && addr < 0xFF00 {
+        if (0xFEA0..0xFF00).contains(&addr) {
             return Some(0xFF);
         }
 
         // IO Registers
-        if addr >= 0xFF00 && addr < 0xFF80 {
+        if (0xFF00..0xFF80).contains(&addr) {
             return match addr {
                 io_registers::TIMER_DIV_ADDR => Some(self.timer_ref.lock().unwrap().read(addr)),
                 io_registers::TIMER_COUNTER_ADDR => Some(self.timer_ref.lock().unwrap().read(addr)),
@@ -467,7 +453,7 @@ impl Memory {
         }
 
         // High RAM
-        if addr >= 0xFF80 && addr < 0xFFFF {
+        if (0xFF80..0xFFFF).contains(&addr) {
             return Some(self.hi_ram[addr - 0xFF80]);
         }
 
@@ -482,7 +468,7 @@ impl Memory {
     pub fn read(&mut self, addr: usize) -> Option<u8> {
         if self.oam_dma_transfer_in_progress {
             // Only High RAM is accessible during an oam dma transfer.
-            if addr >= 0xFF80 && addr < 0xFFFF {
+            if (0xFF80..0xFFFF).contains(&addr) {
                 return Some(self.hi_ram[addr - 0xFF80]);
             }
 
@@ -501,41 +487,41 @@ impl Memory {
         }
 
         // Video RAM
-        if addr >= 0x8000 && addr < 0xA000 {
+        if (0x8000..0xA000).contains(&addr) {
             return Some(self.video_ram[addr - 0x8000]);
         }
 
         // Cartridge RAM
-        if addr >= 0xA000 && addr < 0xC000 {
+        if (0xA000..0xC000).contains(&addr) {
             return self.cartridge.read(addr);
         }
 
         // Work RAM 0
-        if addr >= 0xC000 && addr < 0xD000 {
+        if (0xC000..0xD000).contains(&addr) {
             return Some(self.work_ram0[addr - 0xC000]);
         }
 
         // Work RAM 1
-        if addr >= 0xD000 && addr < 0xE000 {
+        if (0xD000..0xE000).contains(&addr) {
             return Some(self.work_ram1[addr - 0xD000]);
         }
 
         // Echo RAM
-        if addr >= 0xE000 && addr < 0xFE00 {
+        if (0xE000..0xFE00).contains(&addr) {
             return self.read((addr - 0xE000) + 0xC000);
         }
 
         // OAM / Sprite attributes
-        if addr >= 0xFE00 && addr < 0xFEA0 {
+        if (0xFE00..0xFEA0).contains(&addr) {
             return Some(self.oam[addr - 0xFE00]);
         }
 
-        if addr >= 0xFEA0 && addr < 0xFF00 {
+        if (0xFEA0..0xFF00).contains(&addr) {
             return Some(0xFF);
         }
 
         // IO Registers
-        if addr >= 0xFF00 && addr < 0xFF80 {
+        if (0xFF00..0xFF80).contains(&addr) {
             return match addr {
                 io_registers::TIMER_DIV_ADDR => Some(self.timer_ref.lock().unwrap().read(addr)),
                 io_registers::TIMER_COUNTER_ADDR => Some(self.timer_ref.lock().unwrap().read(addr)),
@@ -551,7 +537,7 @@ impl Memory {
         }
 
         // High RAM
-        if addr >= 0xFF80 && addr < 0xFFFF {
+        if (0xFF80..0xFFFF).contains(&addr) {
             return Some(self.hi_ram[addr - 0xFF80]);
         }
 
@@ -566,7 +552,7 @@ impl Memory {
     pub fn write(&mut self, addr: usize, val: u8) {
         if self.oam_dma_transfer_in_progress {
             // Only High RAM is accessible during an oam dma transfer.
-            if addr >= 0xFF80 && addr < 0xFFFF {
+            if (0xFF80..0xFFFF).contains(&addr) {
                 self.hi_ram[addr - 0xFF80] = val;
             }
 
@@ -579,43 +565,43 @@ impl Memory {
         }
 
         // Video RAM
-        if addr >= 0x8000 && addr < 0xA000 {
+        if (0x8000..0xA000).contains(&addr) {
             self.video_ram[addr - 0x8000] = val;
         }
 
         // Cartridge RAM
-        if addr >= 0xA000 && addr < 0xC000 {
+        if (0xA000..0xC000).contains(&addr) {
             self.cartridge.write(addr, val);
         }
 
         // Work RAM 0
-        if addr >= 0xC000 && addr < 0xD000 {
+        if (0xC000..0xD000).contains(&addr) {
             self.work_ram0[addr - 0xC000] = val;
         }
 
         // Work RAM 1
-        if addr >= 0xD000 && addr < 0xE000 {
+        if (0xD000..0xE000).contains(&addr) {
             self.work_ram1[addr - 0xD000] = val;
         }
 
         // Echo RAM
-        if addr >= 0xE000 && addr < 0xFE00 {
+        if (0xE000..0xFE00).contains(&addr) {
             self.write((addr - 0xE000) + 0xC000, val);
         }
 
         // OAM / Sprite attributes
         // Not writable directly, needs to be performed via a OAM DMA transfer.
-        if addr >= 0xFE00 && addr < 0xFF00 {
+        if (0xFE00..0xFF00).contains(&addr) {
             //return;
         }
 
         // IO Registers
-        if addr >= 0xFF00 && addr < 0xFF80 {
+        if (0xFF00..0xFF80).contains(&addr) {
             self.write_io_registers(addr, val);
         }
 
         // High RAM
-        if addr >= 0xFF80 && addr < 0xFFFF {
+        if (0xFF80..0xFFFF).contains(&addr) {
             self.hi_ram[addr - 0xFF80] = val;
         }
 

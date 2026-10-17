@@ -535,265 +535,265 @@ impl std::convert::From<u8> for Opcode {
     }
 }
 
-impl std::convert::Into<u8> for Opcode {
-    fn into(self) -> u8 {
-        match self {
-            Self::Nop_0x00 => 0x00,
-            Self::LdImm16IntoBC_0x01 => 0x01,
-            Self::LdAIntoMemoryBC_0x02 => 0x02,
-            Self::IncBC_0x03 => 0x03,
-            Self::IncB_0x04 => 0x04,
-            Self::DecB_0x05 => 0x05,
-            Self::LdImm8IntoB_0x06 => 0x06,
-            Self::RotateLeftIntoA_0x07 => 0x07,
-            Self::LdSpInto16ImmAddress_0x08 => 0x08,
-            Self::AddBCintoHL_0x09 => 0x09,
-            Self::LdMemoryBCIntoA_0x0A => 0x0A,
-            Self::DecBC_0x0B => 0x0B,
-            Self::IncC_0x0C => 0x0C,
-            Self::DecC_0x0D => 0x0D,
-            Self::LdImm8IntoC_0x0E => 0x0E,
-            Self::RotateRightIntoA_0x0F => 0x0F,
-            Self::Stop_0x10 => 0x10,
-            Self::LdImm16IntoDE_0x11 => 0x11,
-            Self::LdAIntoMemoryDE_0x12 => 0x12,
-            Self::IncDE_0x13 => 0x13,
-            Self::IncD_0x14 => 0x14,
-            Self::DecD_0x15 => 0x15,
-            Self::LdImm8IntoD_0x16 => 0x16,
-            Self::RotateLeftWithCarryIntoA_0x17 => 0x17,
-            Self::RelativeJump8_0x18 => 0x18,
-            Self::AddDEintoHL_0x19 => 0x19,
-            Self::LdMemoryDEIntoA_0x1A => 0x1A,
-            Self::DecDE_0x1B => 0x1B,
-            Self::IncE_0x1C => 0x1C,
-            Self::DecE_0x1D => 0x1D,
-            Self::LdImm8IntoE_0x1E => 0x1E,
-            Self::RotateRightWithCarryIntoA_0x1F => 0x1F,
-            Self::RelativeJumpNotZero8_0x20 => 0x20,
-            Self::LdImm16IntoHL_0x21 => 0x21,
-            Self::LdAIntoMemoryHLPostInc_0x22 => 0x22,
-            Self::IncHL_0x23 => 0x23,
-            Self::IncH_0x24 => 0x24,
-            Self::DecH_0x25 => 0x25,
-            Self::LdImm8IntoH_0x26 => 0x26,
-            Self::DAA_0x27 => 0x27,
-            Self::RelativeJumpZero8_0x28 => 0x28,
-            Self::AddHLintoHL_0x29 => 0x29,
-            Self::LdMemoryHLIntoAPostInc_0x2A => 0x2A,
-            Self::DecHL_0x2B => 0x2B,
-            Self::IncL_0x2C => 0x2C,
-            Self::DecL_0x2D => 0x2D,
-            Self::LdImm8IntoL_0x2E => 0x2E,
-            Self::ComplimentA_0x2F => 0x2F,
-            Self::RelativeJumpNotCarry8_0x30 => 0x30,
-            Self::LdImm16IntoSP_0x31 => 0x31,
-            Self::LdAIntoMemoryHLPostDec_0x32 => 0x32,
-            Self::IncSP_0x33 => 0x33,
-            Self::IncMemoryHL_0x34 => 0x34,
-            Self::DecMemoryHL_0x35 => 0x35,
-            Self::LdImm8IntoMemoryHL_0x36 => 0x36,
-            Self::SetCarryFlag_0x37 => 0x37,
-            Self::RelativeJumpCarry8_0x38 => 0x38,
-            Self::AddSPintoHL_0x39 => 0x39,
-            Self::LdMemoryHLIntoAPostDec_0x3A => 0x3A,
-            Self::DecSP_0x3B => 0x3B,
-            Self::IncA_0x3C => 0x3C,
-            Self::DecA_0x3D => 0x3D,
-            Self::LdImm8IntoA_0x3E => 0x3E,
-            Self::ComplimentCarryFlag_0x3F => 0x3F,
-            Self::LdBIntoB_0x40 => 0x40,
-            Self::LdCIntoB_0x41 => 0x41,
-            Self::LdDIntoB_0x42 => 0x42,
-            Self::LdEIntoB_0x43 => 0x43,
-            Self::LdHIntoB_0x44 => 0x44,
-            Self::LdLIntoB_0x45 => 0x45,
-            Self::LdMemoryHLIntoB_0x46 => 0x46,
-            Self::LdAIntoB_0x47 => 0x47,
-            Self::LdBIntoC_0x48 => 0x48,
-            Self::LdCIntoC_0x49 => 0x49,
-            Self::LdDIntoC_0x4A => 0x4A,
-            Self::LdEIntoC_0x4B => 0x4B,
-            Self::LdHIntoC_0x4C => 0x4C,
-            Self::LdLIntoC_0x4D => 0x4D,
-            Self::LdMemoryHLIntoC_0x4E => 0x4E,
-            Self::LdAIntoC_0x4F => 0x4F,
-            Self::LdBIntoD_0x50 => 0x50,
-            Self::LdCIntoD_0x51 => 0x51,
-            Self::LdDIntoD_0x52 => 0x52,
-            Self::LdEIntoD_0x53 => 0x53,
-            Self::LdHIntoD_0x54 => 0x54,
-            Self::LdLIntoD_0x55 => 0x55,
-            Self::LdMemoryHLIntoD_0x56 => 0x56,
-            Self::LdAIntoD_0x57 => 0x57,
-            Self::LdBIntoE_0x58 => 0x58,
-            Self::LdCIntoE_0x59 => 0x59,
-            Self::LdDIntoE_0x5A => 0x5A,
-            Self::LdEIntoE_0x5B => 0x5B,
-            Self::LdHIntoE_0x5C => 0x5C,
-            Self::LdLIntoE_0x5D => 0x5D,
-            Self::LdMemoryHLIntoE_0x5E => 0x5E,
-            Self::LdAIntoE_0x5F => 0x5F,
-            Self::LdBIntoH_0x60 => 0x60,
-            Self::LdCIntoH_0x61 => 0x61,
-            Self::LdDIntoH_0x62 => 0x62,
-            Self::LdEIntoH_0x63 => 0x63,
-            Self::LdHIntoH_0x64 => 0x64,
-            Self::LdLIntoH_0x65 => 0x65,
-            Self::LdMemoryHLIntoH_0x66 => 0x66,
-            Self::LdAIntoH_0x67 => 0x67,
-            Self::LdBIntoL_0x68 => 0x68,
-            Self::LdCIntoL_0x69 => 0x69,
-            Self::LdDIntoL_0x6A => 0x6A,
-            Self::LdEIntoL_0x6B => 0x6B,
-            Self::LdHIntoL_0x6C => 0x6C,
-            Self::LdLIntoL_0x6D => 0x6D,
-            Self::LdMemoryHLIntoL_0x6E => 0x6E,
-            Self::LdAIntoL_0x6F => 0x6F,
-            Self::LdBIntoMemoryHL_0x70 => 0x70,
-            Self::LdCIntoMemoryHL_0x71 => 0x71,
-            Self::LdDIntoMemoryHL_0x72 => 0x72,
-            Self::LdEIntoMemoryHL_0x73 => 0x73,
-            Self::LdHIntoMemoryHL_0x74 => 0x74,
-            Self::LdLIntoMemoryHL_0x75 => 0x75,
-            Self::Halt_0x76 => 0x76,
-            Self::LdAIntoMemoryHL_0x77 => 0x77,
-            Self::LdBIntoA_0x78 => 0x78,
-            Self::LdCIntoA_0x79 => 0x79,
-            Self::LdDIntoA_0x7A => 0x7A,
-            Self::LdEIntoA_0x7B => 0x7B,
-            Self::LdHIntoA_0x7C => 0x7C,
-            Self::LdLIntoA_0x7D => 0x7D,
-            Self::LdMemoryHLIntoA_0x7E => 0x7E,
-            Self::LdAIntoA_0x7F => 0x7F,
-            Self::AddBIntoA_0x80 => 0x80,
-            Self::AddCIntoA_0x81 => 0x81,
-            Self::AddDIntoA_0x82 => 0x82,
-            Self::AddEIntoA_0x83 => 0x83,
-            Self::AddHIntoA_0x84 => 0x84,
-            Self::AddLIntoA_0x85 => 0x85,
-            Self::AddMemoryHLIntoA_0x86 => 0x86,
-            Self::AddAIntoA_0x87 => 0x87,
-            Self::AddBIntoAWithCarry_0x88 => 0x88,
-            Self::AddCIntoAWithCarry_0x89 => 0x89,
-            Self::AddDIntoAWithCarry_0x8A => 0x8A,
-            Self::AddEIntoAWithCarry_0x8B => 0x8B,
-            Self::AddHIntoAWithCarry_0x8C => 0x8C,
-            Self::AddLIntoAWithCarry_0x8D => 0x8D,
-            Self::AddMemoryHLIntoAWithCarry_0x8E => 0x8E,
-            Self::AddAIntoAWithCarry_0x8F => 0x8F,
-            Self::SubBFromA_0x90 => 0x90,
-            Self::SubCFromA_0x91 => 0x91,
-            Self::SubDFromA_0x92 => 0x92,
-            Self::SubEFromA_0x93 => 0x93,
-            Self::SubHFromA_0x94 => 0x94,
-            Self::SubLFromA_0x95 => 0x95,
-            Self::SubMemoryHLFromA_0x96 => 0x96,
-            Self::SubAFromA_0x97 => 0x97,
-            Self::SubBFromAWithCarry_0x98 => 0x98,
-            Self::SubCFromAWithCarry_0x99 => 0x99,
-            Self::SubDFromAWithCarry_0x9A => 0x9A,
-            Self::SubEFromAWithCarry_0x9B => 0x9B,
-            Self::SubHFromAWithCarry_0x9C => 0x9C,
-            Self::SubLFromAWithCarry_0x9D => 0x9D,
-            Self::SubMemoryHLFromAWithCarry_0x9E => 0x9E,
-            Self::SubAFromAWithCarry_0x9F => 0x9F,
-            Self::AndBIntoA_0xA0 => 0xA0,
-            Self::AndCIntoA_0xA1 => 0xA1,
-            Self::AndDIntoA_0xA2 => 0xA2,
-            Self::AndEIntoA_0xA3 => 0xA3,
-            Self::AndHIntoA_0xA4 => 0xA4,
-            Self::AndLIntoA_0xA5 => 0xA5,
-            Self::AndMemoryHLIntoA_0xA6 => 0xA6,
-            Self::AndAIntoA_0xA7 => 0xA7,
-            Self::XorBIntoA_0xA8 => 0xA8,
-            Self::XorCIntoA_0xA9 => 0xA9,
-            Self::XorDIntoA_0xAA => 0xAA,
-            Self::XorEIntoA_0xAB => 0xAB,
-            Self::XorHIntoA_0xAC => 0xAC,
-            Self::XorLIntoA_0xAD => 0xAD,
-            Self::XorMemoryHLIntoA_0xAE => 0xAE,
-            Self::XorAIntoA_0xAF => 0xAF,
-            Self::OrBIntoA_0xB0 => 0xB0,
-            Self::OrCIntoA_0xB1 => 0xB1,
-            Self::OrDIntoA_0xB2 => 0xB2,
-            Self::OrEIntoA_0xB3 => 0xB3,
-            Self::OrHIntoA_0xB4 => 0xB4,
-            Self::OrLIntoA_0xB5 => 0xB5,
-            Self::OrMemoryHLIntoA_0xB6 => 0xB6,
-            Self::OrAIntoA_0xB7 => 0xB7,
-            Self::CompareBIntoA_0xB8 => 0xB8,
-            Self::CompareCIntoA_0xB9 => 0xB9,
-            Self::CompareDIntoA_0xBA => 0xBA,
-            Self::CompareEIntoA_0xBB => 0xBB,
-            Self::CompareHIntoA_0xBC => 0xBC,
-            Self::CompareLIntoA_0xBD => 0xBD,
-            Self::CompareMemoryHLIntoA_0xBE => 0xBE,
-            Self::CompareAIntoA_0xBF => 0xBF,
-            Self::ReturnNotZero_0xC0 => 0xC0,
-            Self::PopBC_0xC1 => 0xC1,
-            Self::JumpAbsoluteNotZero_0xC2 => 0xC2,
-            Self::JumpAbsolute_0xC3 => 0xC3,
-            Self::CallNotZero_0xC4 => 0xC4,
-            Self::PushBC_0xC5 => 0xC5,
-            Self::Add8ImmIntoA_0xC6 => 0xC6,
-            Self::Reset00h_0xC7 => 0xC7,
-            Self::ReturnZero_0xC8 => 0xC8,
-            Self::Return_0xC9 => 0xC9,
-            Self::JumpAbsoluteZero_0xCA => 0xCA,
-            Self::ExtendedOpCode_0xCB => 0xCB,
-            Self::CallZero_0xCC => 0xCC,
-            Self::Call_0xCD => 0xCD,
-            Self::Add8ImmIntoAWithCarry_0xCE => 0xCE,
-            Self::Reset08h_0xCF => 0xCF,
-            Self::ReturnNotCarry_0xD0 => 0xD0,
-            Self::PopDE_0xD1 => 0xD1,
-            Self::JumpAbsoluteNotCarry_0xD2 => 0xD2,
-            Self::Nop_0xD3 => 0xD3,
-            Self::CallNotCarry_0xD4 => 0xD4,
-            Self::PushDE_0xD5 => 0xD5,
-            Self::Sub8ImmFromA_0xD6 => 0xD6,
-            Self::Reset10h_0xD7 => 0xD7,
-            Self::ReturnCarry_0xD8 => 0xD8,
-            Self::ReturnInterruptMasterEnable_0xD9 => 0xD9,
-            Self::JumpAbsoluteCarry_0xDA => 0xDA,
-            Self::Nop_0xDB => 0xDB,
-            Self::CallCarry_0xDC => 0xDC,
-            Self::Nop_0xDD => 0xDD,
-            Self::Sub8ImmFromAWithCarry_0xDE => 0xDE,
-            Self::Reset18h_0xDF => 0xDF,
-            Self::LoadAIntoHiMemOffset_0xE0 => 0xE0,
-            Self::PopHL_0xE1 => 0xE1,
-            Self::LoadAIntoHiMemOffsetC_0xE2 => 0xE2,
-            Self::Nop_0xE3 => 0xE3,
-            Self::Nop_0xE4 => 0xE4,
-            Self::PushHL_0xE5 => 0xE5,
-            Self::And8ImmIntoA_0xE6 => 0xE6,
-            Self::Reset20h_0xE7 => 0xE7,
-            Self::AddSigned8ImmIntoSP_0xE8 => 0xE8,
-            Self::JumpMemoryHL_0xE9 => 0xE9,
-            Self::WriteAInto16ImmAddress_0xEA => 0xEA,
-            Self::Nop_0xEB => 0xEB,
-            Self::Nop_0xEC => 0xEC,
-            Self::Nop_0xED => 0xED,
-            Self::Xor8ImmIntoA_0xEE => 0xEE,
-            Self::Reset28h_0xEF => 0xEF,
-            Self::LoadHiMemOffsetIntoA_0xF0 => 0xF0,
-            Self::PopAF_0xF1 => 0xF1,
-            Self::LoadMemOffsetCIntoA_0xF2 => 0xF2,
-            Self::DisableInterrupts_0xF3 => 0xF3,
-            Self::Nop_0xF4 => 0xF4,
-            Self::PushAF_0xF5 => 0xF5,
-            Self::Or8ImmIntoA_0xF6 => 0xF6,
-            Self::Reset30h_0xF7 => 0xF7,
-            Self::LoadSPSigned8ImmIntoHL_0xF8 => 0xF8,
-            Self::LoadHLIntoSP_0xF9 => 0xF9,
-            Self::LoadMemAddrIntoA_0xFA => 0xFA,
-            Self::EnableInterrupts_0xFB => 0xFB,
-            Self::Nop_0xFC => 0xFC,
-            Self::Nop_0xFD => 0xFD,
-            Self::CompareAWith8Imm_0xFE => 0xFE,
-            Self::Reset38h_0xFF => 0xFF,
+impl std::convert::From<Opcode> for u8 {
+    fn from(val: Opcode) -> Self {
+        match val {
+            Opcode::Nop_0x00 => 0x00,
+            Opcode::LdImm16IntoBC_0x01 => 0x01,
+            Opcode::LdAIntoMemoryBC_0x02 => 0x02,
+            Opcode::IncBC_0x03 => 0x03,
+            Opcode::IncB_0x04 => 0x04,
+            Opcode::DecB_0x05 => 0x05,
+            Opcode::LdImm8IntoB_0x06 => 0x06,
+            Opcode::RotateLeftIntoA_0x07 => 0x07,
+            Opcode::LdSpInto16ImmAddress_0x08 => 0x08,
+            Opcode::AddBCintoHL_0x09 => 0x09,
+            Opcode::LdMemoryBCIntoA_0x0A => 0x0A,
+            Opcode::DecBC_0x0B => 0x0B,
+            Opcode::IncC_0x0C => 0x0C,
+            Opcode::DecC_0x0D => 0x0D,
+            Opcode::LdImm8IntoC_0x0E => 0x0E,
+            Opcode::RotateRightIntoA_0x0F => 0x0F,
+            Opcode::Stop_0x10 => 0x10,
+            Opcode::LdImm16IntoDE_0x11 => 0x11,
+            Opcode::LdAIntoMemoryDE_0x12 => 0x12,
+            Opcode::IncDE_0x13 => 0x13,
+            Opcode::IncD_0x14 => 0x14,
+            Opcode::DecD_0x15 => 0x15,
+            Opcode::LdImm8IntoD_0x16 => 0x16,
+            Opcode::RotateLeftWithCarryIntoA_0x17 => 0x17,
+            Opcode::RelativeJump8_0x18 => 0x18,
+            Opcode::AddDEintoHL_0x19 => 0x19,
+            Opcode::LdMemoryDEIntoA_0x1A => 0x1A,
+            Opcode::DecDE_0x1B => 0x1B,
+            Opcode::IncE_0x1C => 0x1C,
+            Opcode::DecE_0x1D => 0x1D,
+            Opcode::LdImm8IntoE_0x1E => 0x1E,
+            Opcode::RotateRightWithCarryIntoA_0x1F => 0x1F,
+            Opcode::RelativeJumpNotZero8_0x20 => 0x20,
+            Opcode::LdImm16IntoHL_0x21 => 0x21,
+            Opcode::LdAIntoMemoryHLPostInc_0x22 => 0x22,
+            Opcode::IncHL_0x23 => 0x23,
+            Opcode::IncH_0x24 => 0x24,
+            Opcode::DecH_0x25 => 0x25,
+            Opcode::LdImm8IntoH_0x26 => 0x26,
+            Opcode::DAA_0x27 => 0x27,
+            Opcode::RelativeJumpZero8_0x28 => 0x28,
+            Opcode::AddHLintoHL_0x29 => 0x29,
+            Opcode::LdMemoryHLIntoAPostInc_0x2A => 0x2A,
+            Opcode::DecHL_0x2B => 0x2B,
+            Opcode::IncL_0x2C => 0x2C,
+            Opcode::DecL_0x2D => 0x2D,
+            Opcode::LdImm8IntoL_0x2E => 0x2E,
+            Opcode::ComplimentA_0x2F => 0x2F,
+            Opcode::RelativeJumpNotCarry8_0x30 => 0x30,
+            Opcode::LdImm16IntoSP_0x31 => 0x31,
+            Opcode::LdAIntoMemoryHLPostDec_0x32 => 0x32,
+            Opcode::IncSP_0x33 => 0x33,
+            Opcode::IncMemoryHL_0x34 => 0x34,
+            Opcode::DecMemoryHL_0x35 => 0x35,
+            Opcode::LdImm8IntoMemoryHL_0x36 => 0x36,
+            Opcode::SetCarryFlag_0x37 => 0x37,
+            Opcode::RelativeJumpCarry8_0x38 => 0x38,
+            Opcode::AddSPintoHL_0x39 => 0x39,
+            Opcode::LdMemoryHLIntoAPostDec_0x3A => 0x3A,
+            Opcode::DecSP_0x3B => 0x3B,
+            Opcode::IncA_0x3C => 0x3C,
+            Opcode::DecA_0x3D => 0x3D,
+            Opcode::LdImm8IntoA_0x3E => 0x3E,
+            Opcode::ComplimentCarryFlag_0x3F => 0x3F,
+            Opcode::LdBIntoB_0x40 => 0x40,
+            Opcode::LdCIntoB_0x41 => 0x41,
+            Opcode::LdDIntoB_0x42 => 0x42,
+            Opcode::LdEIntoB_0x43 => 0x43,
+            Opcode::LdHIntoB_0x44 => 0x44,
+            Opcode::LdLIntoB_0x45 => 0x45,
+            Opcode::LdMemoryHLIntoB_0x46 => 0x46,
+            Opcode::LdAIntoB_0x47 => 0x47,
+            Opcode::LdBIntoC_0x48 => 0x48,
+            Opcode::LdCIntoC_0x49 => 0x49,
+            Opcode::LdDIntoC_0x4A => 0x4A,
+            Opcode::LdEIntoC_0x4B => 0x4B,
+            Opcode::LdHIntoC_0x4C => 0x4C,
+            Opcode::LdLIntoC_0x4D => 0x4D,
+            Opcode::LdMemoryHLIntoC_0x4E => 0x4E,
+            Opcode::LdAIntoC_0x4F => 0x4F,
+            Opcode::LdBIntoD_0x50 => 0x50,
+            Opcode::LdCIntoD_0x51 => 0x51,
+            Opcode::LdDIntoD_0x52 => 0x52,
+            Opcode::LdEIntoD_0x53 => 0x53,
+            Opcode::LdHIntoD_0x54 => 0x54,
+            Opcode::LdLIntoD_0x55 => 0x55,
+            Opcode::LdMemoryHLIntoD_0x56 => 0x56,
+            Opcode::LdAIntoD_0x57 => 0x57,
+            Opcode::LdBIntoE_0x58 => 0x58,
+            Opcode::LdCIntoE_0x59 => 0x59,
+            Opcode::LdDIntoE_0x5A => 0x5A,
+            Opcode::LdEIntoE_0x5B => 0x5B,
+            Opcode::LdHIntoE_0x5C => 0x5C,
+            Opcode::LdLIntoE_0x5D => 0x5D,
+            Opcode::LdMemoryHLIntoE_0x5E => 0x5E,
+            Opcode::LdAIntoE_0x5F => 0x5F,
+            Opcode::LdBIntoH_0x60 => 0x60,
+            Opcode::LdCIntoH_0x61 => 0x61,
+            Opcode::LdDIntoH_0x62 => 0x62,
+            Opcode::LdEIntoH_0x63 => 0x63,
+            Opcode::LdHIntoH_0x64 => 0x64,
+            Opcode::LdLIntoH_0x65 => 0x65,
+            Opcode::LdMemoryHLIntoH_0x66 => 0x66,
+            Opcode::LdAIntoH_0x67 => 0x67,
+            Opcode::LdBIntoL_0x68 => 0x68,
+            Opcode::LdCIntoL_0x69 => 0x69,
+            Opcode::LdDIntoL_0x6A => 0x6A,
+            Opcode::LdEIntoL_0x6B => 0x6B,
+            Opcode::LdHIntoL_0x6C => 0x6C,
+            Opcode::LdLIntoL_0x6D => 0x6D,
+            Opcode::LdMemoryHLIntoL_0x6E => 0x6E,
+            Opcode::LdAIntoL_0x6F => 0x6F,
+            Opcode::LdBIntoMemoryHL_0x70 => 0x70,
+            Opcode::LdCIntoMemoryHL_0x71 => 0x71,
+            Opcode::LdDIntoMemoryHL_0x72 => 0x72,
+            Opcode::LdEIntoMemoryHL_0x73 => 0x73,
+            Opcode::LdHIntoMemoryHL_0x74 => 0x74,
+            Opcode::LdLIntoMemoryHL_0x75 => 0x75,
+            Opcode::Halt_0x76 => 0x76,
+            Opcode::LdAIntoMemoryHL_0x77 => 0x77,
+            Opcode::LdBIntoA_0x78 => 0x78,
+            Opcode::LdCIntoA_0x79 => 0x79,
+            Opcode::LdDIntoA_0x7A => 0x7A,
+            Opcode::LdEIntoA_0x7B => 0x7B,
+            Opcode::LdHIntoA_0x7C => 0x7C,
+            Opcode::LdLIntoA_0x7D => 0x7D,
+            Opcode::LdMemoryHLIntoA_0x7E => 0x7E,
+            Opcode::LdAIntoA_0x7F => 0x7F,
+            Opcode::AddBIntoA_0x80 => 0x80,
+            Opcode::AddCIntoA_0x81 => 0x81,
+            Opcode::AddDIntoA_0x82 => 0x82,
+            Opcode::AddEIntoA_0x83 => 0x83,
+            Opcode::AddHIntoA_0x84 => 0x84,
+            Opcode::AddLIntoA_0x85 => 0x85,
+            Opcode::AddMemoryHLIntoA_0x86 => 0x86,
+            Opcode::AddAIntoA_0x87 => 0x87,
+            Opcode::AddBIntoAWithCarry_0x88 => 0x88,
+            Opcode::AddCIntoAWithCarry_0x89 => 0x89,
+            Opcode::AddDIntoAWithCarry_0x8A => 0x8A,
+            Opcode::AddEIntoAWithCarry_0x8B => 0x8B,
+            Opcode::AddHIntoAWithCarry_0x8C => 0x8C,
+            Opcode::AddLIntoAWithCarry_0x8D => 0x8D,
+            Opcode::AddMemoryHLIntoAWithCarry_0x8E => 0x8E,
+            Opcode::AddAIntoAWithCarry_0x8F => 0x8F,
+            Opcode::SubBFromA_0x90 => 0x90,
+            Opcode::SubCFromA_0x91 => 0x91,
+            Opcode::SubDFromA_0x92 => 0x92,
+            Opcode::SubEFromA_0x93 => 0x93,
+            Opcode::SubHFromA_0x94 => 0x94,
+            Opcode::SubLFromA_0x95 => 0x95,
+            Opcode::SubMemoryHLFromA_0x96 => 0x96,
+            Opcode::SubAFromA_0x97 => 0x97,
+            Opcode::SubBFromAWithCarry_0x98 => 0x98,
+            Opcode::SubCFromAWithCarry_0x99 => 0x99,
+            Opcode::SubDFromAWithCarry_0x9A => 0x9A,
+            Opcode::SubEFromAWithCarry_0x9B => 0x9B,
+            Opcode::SubHFromAWithCarry_0x9C => 0x9C,
+            Opcode::SubLFromAWithCarry_0x9D => 0x9D,
+            Opcode::SubMemoryHLFromAWithCarry_0x9E => 0x9E,
+            Opcode::SubAFromAWithCarry_0x9F => 0x9F,
+            Opcode::AndBIntoA_0xA0 => 0xA0,
+            Opcode::AndCIntoA_0xA1 => 0xA1,
+            Opcode::AndDIntoA_0xA2 => 0xA2,
+            Opcode::AndEIntoA_0xA3 => 0xA3,
+            Opcode::AndHIntoA_0xA4 => 0xA4,
+            Opcode::AndLIntoA_0xA5 => 0xA5,
+            Opcode::AndMemoryHLIntoA_0xA6 => 0xA6,
+            Opcode::AndAIntoA_0xA7 => 0xA7,
+            Opcode::XorBIntoA_0xA8 => 0xA8,
+            Opcode::XorCIntoA_0xA9 => 0xA9,
+            Opcode::XorDIntoA_0xAA => 0xAA,
+            Opcode::XorEIntoA_0xAB => 0xAB,
+            Opcode::XorHIntoA_0xAC => 0xAC,
+            Opcode::XorLIntoA_0xAD => 0xAD,
+            Opcode::XorMemoryHLIntoA_0xAE => 0xAE,
+            Opcode::XorAIntoA_0xAF => 0xAF,
+            Opcode::OrBIntoA_0xB0 => 0xB0,
+            Opcode::OrCIntoA_0xB1 => 0xB1,
+            Opcode::OrDIntoA_0xB2 => 0xB2,
+            Opcode::OrEIntoA_0xB3 => 0xB3,
+            Opcode::OrHIntoA_0xB4 => 0xB4,
+            Opcode::OrLIntoA_0xB5 => 0xB5,
+            Opcode::OrMemoryHLIntoA_0xB6 => 0xB6,
+            Opcode::OrAIntoA_0xB7 => 0xB7,
+            Opcode::CompareBIntoA_0xB8 => 0xB8,
+            Opcode::CompareCIntoA_0xB9 => 0xB9,
+            Opcode::CompareDIntoA_0xBA => 0xBA,
+            Opcode::CompareEIntoA_0xBB => 0xBB,
+            Opcode::CompareHIntoA_0xBC => 0xBC,
+            Opcode::CompareLIntoA_0xBD => 0xBD,
+            Opcode::CompareMemoryHLIntoA_0xBE => 0xBE,
+            Opcode::CompareAIntoA_0xBF => 0xBF,
+            Opcode::ReturnNotZero_0xC0 => 0xC0,
+            Opcode::PopBC_0xC1 => 0xC1,
+            Opcode::JumpAbsoluteNotZero_0xC2 => 0xC2,
+            Opcode::JumpAbsolute_0xC3 => 0xC3,
+            Opcode::CallNotZero_0xC4 => 0xC4,
+            Opcode::PushBC_0xC5 => 0xC5,
+            Opcode::Add8ImmIntoA_0xC6 => 0xC6,
+            Opcode::Reset00h_0xC7 => 0xC7,
+            Opcode::ReturnZero_0xC8 => 0xC8,
+            Opcode::Return_0xC9 => 0xC9,
+            Opcode::JumpAbsoluteZero_0xCA => 0xCA,
+            Opcode::ExtendedOpCode_0xCB => 0xCB,
+            Opcode::CallZero_0xCC => 0xCC,
+            Opcode::Call_0xCD => 0xCD,
+            Opcode::Add8ImmIntoAWithCarry_0xCE => 0xCE,
+            Opcode::Reset08h_0xCF => 0xCF,
+            Opcode::ReturnNotCarry_0xD0 => 0xD0,
+            Opcode::PopDE_0xD1 => 0xD1,
+            Opcode::JumpAbsoluteNotCarry_0xD2 => 0xD2,
+            Opcode::Nop_0xD3 => 0xD3,
+            Opcode::CallNotCarry_0xD4 => 0xD4,
+            Opcode::PushDE_0xD5 => 0xD5,
+            Opcode::Sub8ImmFromA_0xD6 => 0xD6,
+            Opcode::Reset10h_0xD7 => 0xD7,
+            Opcode::ReturnCarry_0xD8 => 0xD8,
+            Opcode::ReturnInterruptMasterEnable_0xD9 => 0xD9,
+            Opcode::JumpAbsoluteCarry_0xDA => 0xDA,
+            Opcode::Nop_0xDB => 0xDB,
+            Opcode::CallCarry_0xDC => 0xDC,
+            Opcode::Nop_0xDD => 0xDD,
+            Opcode::Sub8ImmFromAWithCarry_0xDE => 0xDE,
+            Opcode::Reset18h_0xDF => 0xDF,
+            Opcode::LoadAIntoHiMemOffset_0xE0 => 0xE0,
+            Opcode::PopHL_0xE1 => 0xE1,
+            Opcode::LoadAIntoHiMemOffsetC_0xE2 => 0xE2,
+            Opcode::Nop_0xE3 => 0xE3,
+            Opcode::Nop_0xE4 => 0xE4,
+            Opcode::PushHL_0xE5 => 0xE5,
+            Opcode::And8ImmIntoA_0xE6 => 0xE6,
+            Opcode::Reset20h_0xE7 => 0xE7,
+            Opcode::AddSigned8ImmIntoSP_0xE8 => 0xE8,
+            Opcode::JumpMemoryHL_0xE9 => 0xE9,
+            Opcode::WriteAInto16ImmAddress_0xEA => 0xEA,
+            Opcode::Nop_0xEB => 0xEB,
+            Opcode::Nop_0xEC => 0xEC,
+            Opcode::Nop_0xED => 0xED,
+            Opcode::Xor8ImmIntoA_0xEE => 0xEE,
+            Opcode::Reset28h_0xEF => 0xEF,
+            Opcode::LoadHiMemOffsetIntoA_0xF0 => 0xF0,
+            Opcode::PopAF_0xF1 => 0xF1,
+            Opcode::LoadMemOffsetCIntoA_0xF2 => 0xF2,
+            Opcode::DisableInterrupts_0xF3 => 0xF3,
+            Opcode::Nop_0xF4 => 0xF4,
+            Opcode::PushAF_0xF5 => 0xF5,
+            Opcode::Or8ImmIntoA_0xF6 => 0xF6,
+            Opcode::Reset30h_0xF7 => 0xF7,
+            Opcode::LoadSPSigned8ImmIntoHL_0xF8 => 0xF8,
+            Opcode::LoadHLIntoSP_0xF9 => 0xF9,
+            Opcode::LoadMemAddrIntoA_0xFA => 0xFA,
+            Opcode::EnableInterrupts_0xFB => 0xFB,
+            Opcode::Nop_0xFC => 0xFC,
+            Opcode::Nop_0xFD => 0xFD,
+            Opcode::CompareAWith8Imm_0xFE => 0xFE,
+            Opcode::Reset38h_0xFF => 0xFF,
         }
     }
 }
@@ -1359,7 +1359,7 @@ fn execute_0x17(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
         cpu.reset_carry_flag();
     }
 
-    cpu.af.hi = cpu.af.hi << 1;
+    cpu.af.hi <<= 1;
     cpu.af.hi |= match current_carry_flag {
         true => 0x01,
         false => 0x00,
@@ -1466,7 +1466,7 @@ fn execute_0x1f(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
         cpu.reset_carry_flag();
     }
 
-    cpu.af.hi = cpu.af.hi >> 1;
+    cpu.af.hi >>= 1;
     cpu.af.hi |= match current_carry_flag {
         true => 0x80,
         false => 0x00,
@@ -1579,7 +1579,7 @@ fn execute_0x26(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 }
 
 fn execute_0x27(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
-    let mut a = cpu.af.hi.clone();
+    let mut a = cpu.af.hi;
 
     if !cpu.test_sub_flag() {
         if cpu.test_carry_flag() || a > 0x99 {
@@ -1705,7 +1705,7 @@ fn execute_0x2e(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 }
 
 fn execute_0x2f(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
-    cpu.af.hi = cpu.af.hi ^ 0xFF;
+    cpu.af.hi ^= 0xFF;
 
     cpu.set_sub_flag();
     cpu.set_half_carry_flag();
@@ -2822,30 +2822,30 @@ fn execute_0xbf(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut
 }
 
 fn execute_0xc0(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    return cpu.return_from_call_conditional(memory, !cpu.test_zero_flag(), step_fn);
+    cpu.return_from_call_conditional(memory, !cpu.test_zero_flag(), step_fn)
 }
 
 fn execute_0xc1(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     cpu.pop_stack_into_16_bit_register(register::ID16::BC, memory, step_fn);
-    return 12;
+    12
 }
 
 fn execute_0xc2(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    return cpu.jump_to_imm_address(memory, !cpu.test_zero_flag(), step_fn);
+    cpu.jump_to_imm_address(memory, !cpu.test_zero_flag(), step_fn)
 }
 
 fn execute_0xc3(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    return cpu.jump_to_imm_address(memory, true, step_fn);
+    cpu.jump_to_imm_address(memory, true, step_fn)
 }
 
 fn execute_0xc4(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    return cpu.call_to_imm_address(memory, !cpu.test_zero_flag(), step_fn);
+    cpu.call_to_imm_address(memory, !cpu.test_zero_flag(), step_fn)
 }
 
 fn execute_0xc5(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    cpu.push_16bit_register_on_stack(register::ID16::BC, &memory, step_fn);
+    cpu.push_16bit_register_on_stack(register::ID16::BC, memory, step_fn);
 
-    return 16;
+    16
 }
 
 fn execute_0xc6(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -2853,28 +2853,28 @@ fn execute_0xc6(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    return 8;
+    8
 }
 
 fn execute_0xc7(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    cpu.push_16bit_register_on_stack(register::ID16::PC, &memory, step_fn);
+    cpu.push_16bit_register_on_stack(register::ID16::PC, memory, step_fn);
 
     cpu.pc = 0x0000;
 
-    return 16;
+    16
 }
 
 fn execute_0xc8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    return cpu.return_from_call_conditional(memory, cpu.test_zero_flag(), step_fn);
+    cpu.return_from_call_conditional(memory, cpu.test_zero_flag(), step_fn)
 }
 
 fn execute_0xc9(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     step_fn();
-    return cpu.return_from_call(memory, step_fn);
+    cpu.return_from_call(memory, step_fn)
 }
 
 fn execute_0xca(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    return cpu.jump_to_imm_address(memory, cpu.test_zero_flag(), step_fn);
+    cpu.jump_to_imm_address(memory, cpu.test_zero_flag(), step_fn)
 }
 
 fn execute_0xcb(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -2886,15 +2886,15 @@ fn execute_0xcb(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    return ext_opcode.execute(cpu, memory, step_fn) + 4;
+    ext_opcode.execute(cpu, memory, step_fn) + 4
 }
 
 fn execute_0xcc(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    return cpu.call_to_imm_address(memory, cpu.test_zero_flag(), step_fn);
+    cpu.call_to_imm_address(memory, cpu.test_zero_flag(), step_fn)
 }
 
 fn execute_0xcd(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    return cpu.call_to_imm_address(memory, true, step_fn);
+    cpu.call_to_imm_address(memory, true, step_fn)
 }
 
 fn execute_0xce(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -2902,7 +2902,7 @@ fn execute_0xce(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    return 8;
+    8
 }
 
 fn execute_0xcf(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -2910,30 +2910,30 @@ fn execute_0xcf(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.pc = 0x0008;
 
-    return 16;
+    16
 }
 
 fn execute_0xd0(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    return cpu.return_from_call_conditional(memory, !cpu.test_carry_flag(), step_fn);
+    cpu.return_from_call_conditional(memory, !cpu.test_carry_flag(), step_fn)
 }
 
 fn execute_0xd1(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     cpu.pop_stack_into_16_bit_register(register::ID16::DE, memory, step_fn);
-    return 12;
+    12
 }
 
 fn execute_0xd2(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    return cpu.jump_to_imm_address(memory, !cpu.test_carry_flag(), step_fn);
+    cpu.jump_to_imm_address(memory, !cpu.test_carry_flag(), step_fn)
 }
 
 fn execute_0xd4(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    return cpu.call_to_imm_address(memory, !cpu.test_carry_flag(), step_fn);
+    cpu.call_to_imm_address(memory, !cpu.test_carry_flag(), step_fn)
 }
 
 fn execute_0xd5(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     cpu.push_16bit_register_on_stack(register::ID16::DE, memory, step_fn);
 
-    return 16;
+    16
 }
 
 fn execute_0xd6(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -2941,7 +2941,7 @@ fn execute_0xd6(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    return 8;
+    8
 }
 
 fn execute_0xd7(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -2949,25 +2949,25 @@ fn execute_0xd7(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.pc = 0x0010;
 
-    return 16;
+    16
 }
 
 fn execute_0xd8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    return cpu.return_from_call_conditional(memory, cpu.test_carry_flag(), step_fn);
+    cpu.return_from_call_conditional(memory, cpu.test_carry_flag(), step_fn)
 }
 
 fn execute_0xd9(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     cpu.interrupt_master_enable = true;
     step_fn();
-    return cpu.return_from_call(memory, step_fn);
+    cpu.return_from_call(memory, step_fn)
 }
 
 fn execute_0xda(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    return cpu.jump_to_imm_address(memory, cpu.test_carry_flag(), step_fn);
+    cpu.jump_to_imm_address(memory, cpu.test_carry_flag(), step_fn)
 }
 
 fn execute_0xdc(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
-    return cpu.call_to_imm_address(memory, cpu.test_carry_flag(), step_fn);
+    cpu.call_to_imm_address(memory, cpu.test_carry_flag(), step_fn)
 }
 
 fn execute_0xde(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -2975,7 +2975,7 @@ fn execute_0xde(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    return 8;
+    8
 }
 
 fn execute_0xdf(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -2983,7 +2983,7 @@ fn execute_0xdf(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.pc = 0x0018;
 
-    return 16;
+    16
 }
 
 fn execute_0xe0(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -3000,12 +3000,12 @@ fn execute_0xe0(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
     step_fn();
     memory.lock().unwrap().write(effective_addr, cpu.af.hi);
 
-    return 12;
+    12
 }
 
 fn execute_0xe1(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     cpu.pop_stack_into_16_bit_register(register::ID16::HL, memory, step_fn);
-    return 12;
+    12
 }
 
 fn execute_0xe2(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -3014,13 +3014,13 @@ fn execute_0xe2(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
     step_fn();
     memory.lock().unwrap().write(effective_addr, cpu.af.hi);
 
-    return 8;
+    8
 }
 
 fn execute_0xe5(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     cpu.push_16bit_register_on_stack(register::ID16::HL, memory, step_fn);
 
-    return 16;
+    16
 }
 
 fn execute_0xe6(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -3028,7 +3028,7 @@ fn execute_0xe6(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    return 8;
+    8
 }
 
 fn execute_0xe7(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -3036,7 +3036,7 @@ fn execute_0xe7(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.pc = 0x0020;
 
-    return 16;
+    16
 }
 
 fn execute_0xe8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -3086,12 +3086,12 @@ fn execute_0xe8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
     }
     step_fn();
 
-    return 16;
+    16
 }
 
 fn execute_0xe9(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
     cpu.pc = cpu.hl.word();
-    return 4;
+    4
 }
 
 fn execute_0xea(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -3116,13 +3116,13 @@ fn execute_0xea(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
     step_fn();
     memory.lock().unwrap().write(effective_addr, cpu.af.hi);
 
-    return 16;
+    16
 }
 
 fn execute_0xee(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     cpu.xor_8_bit_memory(register::ID::A, memory, usize::from(cpu.pc), step_fn);
     cpu.pc = cpu.pc.wrapping_add(1);
-    return 8;
+    8
 }
 
 fn execute_0xef(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -3130,7 +3130,7 @@ fn execute_0xef(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.pc = 0x0028;
 
-    return 16;
+    16
 }
 
 fn execute_0xf0(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -3152,12 +3152,12 @@ fn execute_0xf0(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.af.hi = byte;
 
-    return 12;
+    12
 }
 
 fn execute_0xf1(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     cpu.pop_stack_into_16_bit_register(register::ID16::AF, memory, step_fn);
-    return 12;
+    12
 }
 
 fn execute_0xf2(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -3173,18 +3173,18 @@ fn execute_0xf2(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.af.hi = byte;
 
-    return 8;
+    8
 }
 
 fn execute_0xf3(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
     cpu.interrupt_master_enable = false;
-    return 4;
+    4
 }
 
 fn execute_0xf5(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     cpu.push_16bit_register_on_stack(register::ID16::AF, memory, step_fn);
 
-    return 16;
+    16
 }
 
 fn execute_0xf6(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -3192,7 +3192,7 @@ fn execute_0xf6(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    return 8;
+    8
 }
 
 fn execute_0xf7(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -3200,7 +3200,7 @@ fn execute_0xf7(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.pc = 0x0030;
 
-    return 16;
+    16
 }
 
 fn execute_0xf8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -3249,14 +3249,14 @@ fn execute_0xf8(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
     }
     step_fn();
     
-    return 12;
+    12
 }
 
 fn execute_0xf9(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
     step_fn();
     cpu.sp = cpu.hl.word();
 
-    return 8;
+    8
 }
 
 fn execute_0xfa(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -3284,13 +3284,13 @@ fn execute_0xfa(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
         None => panic!("TODO"),
     };
 
-    return 16;
+    16
 }
 
 fn execute_0xfb(cpu: &mut LR35902, _: &Arc<sync::Mutex<memory::Memory>>, _: &mut impl FnMut()) -> u32 {
     cpu.interrupt_master_enable = true;
 
-    return 4;
+    4
 }
 
 fn execute_0xfe(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -3298,7 +3298,7 @@ fn execute_0xfe(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.pc = cpu.pc.wrapping_add(1);
 
-    return 8;
+    8
 }
 
 fn execute_0xff(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, step_fn: &mut impl FnMut()) -> u32 {
@@ -3306,5 +3306,5 @@ fn execute_0xff(cpu: &mut LR35902, memory: &Arc<sync::Mutex<memory::Memory>>, st
 
     cpu.pc = 0x0038;
 
-    return 16;
+    16
 }

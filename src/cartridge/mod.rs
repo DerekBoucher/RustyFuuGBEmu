@@ -61,11 +61,11 @@ pub fn new(data: Vec<u8>) -> Box<dyn Interface> {
     match data[header::TYPE_ADDR] {
         mbc_id::ROM_ONLY => {
             log::debug!("Cartridge type: ROM_ONLY");
-            return NoMBC::new(data);
+            NoMBC::new(data)
         }
         mbc_id::MBC1 | mbc_id::MBC1_RAM | mbc_id::MBC1_RAM_BATTERY => {
             log::debug!("Cartridge type: MBC1");
-            return MBC1::new(data);
+            MBC1::new(data)
         }
         _ => {
             panic!("Unsupported cartridge type");
@@ -74,5 +74,5 @@ pub fn new(data: Vec<u8>) -> Box<dyn Interface> {
 }
 
 pub fn default() -> Box<dyn Interface> {
-    return Box::new(null::NullCartridge {});
+    Box::new(null::NullCartridge {})
 }

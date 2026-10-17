@@ -17,35 +17,35 @@ use channel::front_end::Frontend;
 
 #[derive(Debug)]
 enum State {
-    INITIALIZING,
-    COMPUTING,
-    RENDERING,
-    EXITING,
+    Initializing,
+    Computing,
+    Rendering,
+    Exiting,
 }
 
 impl State {
     pub fn transition(&mut self, new_state: State) {
         log::trace!("State transition: {:?} -> {:?}", self, new_state);
         match self {
-            State::INITIALIZING => match new_state {
-                State::RENDERING => {
-                    panic!("Invalid state transition: INITIALIZING -> {:?}", new_state)
+            State::Initializing => match new_state {
+                State::Rendering => {
+                    panic!("Invalid state transition: Initializing -> {:?}", new_state)
                 }
                 _ => *self = new_state,
             },
-            State::COMPUTING => match new_state {
-                State::INITIALIZING => {
-                    panic!("Invalid state transition: COMPUTING -> {:?}", new_state)
+            State::Computing => match new_state {
+                State::Initializing => {
+                    panic!("Invalid state transition: Computing -> {:?}", new_state)
                 }
                 _ => *self = new_state,
             },
-            State::RENDERING => match new_state {
-                State::INITIALIZING => {
-                    panic!("Invalid state transition: RENDERING -> {:?}", new_state)
+            State::Rendering => match new_state {
+                State::Initializing => {
+                    panic!("Invalid state transition: Rendering -> {:?}", new_state)
                 }
                 _ => *self = new_state,
             },
-            State::EXITING => panic!("Invalid state transition: EXITED -> {:?}", new_state),
+            State::Exiting => panic!("Invalid state transition: Exiting -> {:?}", new_state),
         }
     }
 }
@@ -55,7 +55,7 @@ pub struct Gameboy {
     skip_boot_rom: bool,
     memory: Arc<sync::Mutex<memory::Memory>>,
     cpu: Arc<sync::Mutex<cpu::LR35902>>,
-    ppu: ppu::PPU,
+    ppu: ppu::Ppu,
     timers: Arc<sync::Mutex<timers::Timers>>,
     interrupt_bus: Arc<sync::Mutex<interrupt::Bus>>,
 }
@@ -63,7 +63,7 @@ pub struct Gameboy {
 impl Gameboy {
     pub fn new(skip_boot_rom: bool) -> (Self, Arc<Mutex<Memory>>) {
         let timers = Arc::new(sync::Mutex::new(timers::Timers::new()));
-        let ppu = ppu::PPU::new();
+        let ppu = ppu::Ppu::new();
 
         let interrupt_bus = Arc::new(sync::Mutex::new(interrupt::Bus::new()));
         let memory = Arc::new(sync::Mutex::new(memory::Memory::default(
@@ -75,7 +75,7 @@ impl Gameboy {
 
         (
             Self {
-                state: State::INITIALIZING,
+                state: State::Initializing,
                 cpu,
                 memory,
                 ppu,
@@ -111,21 +111,21 @@ impl Gameboy {
     fn run(&mut self, backend: Backend) {
         loop {
             match self.state {
-                State::INITIALIZING => {
+                State::Initializing => {
                     self.initialize(&backend);
                 }
-                State::COMPUTING => {
+                State::Computing => {
                     self.compute(&backend);
                 }
-                State::RENDERING => {
+                State::Rendering => {
                     // Ask the front end to render the frame.
                     // Since the frame_data channel is bounded with a capacity of 1, we can
                     // also rely on this thread blocking until the main thread renders, which in
                     // turn allows the main thread to control the FPS of the emulation.
                     backend.send_frame_data_front_end(self.ppu.get_frame_data());
-                    self.state.transition(State::COMPUTING);
+                    self.state.transition(State::Computing);
                 }
-                State::EXITING => {
+                State::Exiting => {
                     log::debug!("gb thread exited");
                     backend.ack_front_end();
                     return;
@@ -136,7 +136,7 @@ impl Gameboy {
 
     fn initialize(&mut self, backend: &Backend) {
         if backend.should_close() {
-            self.state.transition(State::EXITING);
+            self.state.transition(State::Exiting);
             return;
         }
 
@@ -144,23 +144,19 @@ impl Gameboy {
             backend.wait_pause_resume();
 
             if backend.should_close() {
-                self.state.transition(State::EXITING);
+                self.state.transition(State::Exiting);
                 return;
             }
         }
 
-        match backend.should_set_skip_bootrom() {
-            Some(skip_bootrom) => self.skip_boot_rom = skip_bootrom,
-            _ => {}
+        if let Some(skip_bootrom) = backend.should_set_skip_bootrom() {
+            self.skip_boot_rom = skip_bootrom
         }
 
-        match backend.should_load_rom() {
-            Some(rom_data) => {
-                self.load_rom(rom_data);
-                log::debug!("rom cartridge loaded!");
-                self.state.transition(State::COMPUTING);
-            }
-            _ => {}
+        if let Some(rom_data) = backend.should_load_rom() {
+            self.load_rom(rom_data);
+            log::debug!("rom cartridge loaded!");
+            self.state.transition(State::Computing);
         }
     }
 
@@ -168,7 +164,7 @@ impl Gameboy {
         let mut cycles_this_frame_so_far: u32 = 0;
         while cycles_this_frame_so_far < CPU_CYCLES_PER_FRAME {
             if backend.should_close() {
-                self.state.transition(State::EXITING);
+                self.state.transition(State::Exiting);
                 return;
             }
 
@@ -176,7 +172,7 @@ impl Gameboy {
                 backend.wait_pause_resume();
 
                 if backend.should_close() {
-                    self.state.transition(State::EXITING);
+                    self.state.transition(State::Exiting);
                     return;
                 }
             }
@@ -188,17 +184,13 @@ impl Gameboy {
                 input_state,
             );
 
-            match backend.should_set_skip_bootrom() {
-                Some(skip_bootrom) => self.skip_boot_rom = skip_bootrom,
-                None => {}
+            if let Some(skip_bootrom) = backend.should_set_skip_bootrom() {
+                self.skip_boot_rom = skip_bootrom
             }
 
-            match backend.should_load_rom() {
-                Some(rom_data) => {
-                    self.load_rom(rom_data);
-                    log::debug!("rom cartridge loaded!");
-                }
-                None => {}
+            if let Some(rom_data) = backend.should_load_rom() {
+                self.load_rom(rom_data);
+                log::debug!("rom cartridge loaded!");
             }
 
             let step_fn = &mut || {
@@ -231,6 +223,6 @@ impl Gameboy {
             cycles_this_frame_so_far += self.timers.lock().unwrap().get_elapsed_cycles();
         }
 
-        self.state.transition(State::RENDERING);
+        self.state.transition(State::Rendering);
     }
 }

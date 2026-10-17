@@ -77,5 +77,5 @@ pub fn process_from_memory(memory: &Arc<Mutex<Memory>>) -> [Sprite; 40] {
             .unwrap();
     }
 
-    return sprites;
+    sprites
 }

@@ -96,7 +96,7 @@ impl LR35902 {
     }
 
     pub fn is_halted(&self) -> bool {
-        return self.halted;
+        self.halted
     }
 
     pub fn handle_halt(&mut self, interrupt_bus: &Arc<sync::Mutex<interrupt::Bus>>) {
@@ -142,11 +142,11 @@ impl LR35902 {
         #[cfg(feature = "serial_debug")]
         LR35902::serial_debug_output(memory);
 
-        return op.execute(self, memory, step_fn);
+        op.execute(self, memory, step_fn)
     }
 
     pub fn is_stopped(&self) -> bool {
-        return self.paused;
+        self.paused
     }
 
     pub fn set_post_boot_rom_state(&mut self) {
@@ -173,24 +173,19 @@ impl LR35902 {
             .unwrap()
             .get_highest_priority_interrupt();
 
-        match pending_interrupt {
-            Some(interrupt) => {
-                self.interrupt_master_enable = false;
-                self.push_16bit_register_on_stack(ID16::PC, &memory, step_fn);
+        if let Some(interrupt) = pending_interrupt {
+            self.interrupt_master_enable = false;
+            self.push_16bit_register_on_stack(ID16::PC, memory, step_fn);
 
-                match interrupt {
-                    interrupt::Interrupt::VBlank => self.pc = V_BLANK_INTERRUPT_VECTOR,
-                    interrupt::Interrupt::LcdStat => self.pc = LCDC_INTERRUPT_VECTOR,
-                    interrupt::Interrupt::TimerOverflow => {
-                        self.pc = TIMER_OVERFLOW_INTERRUPT_VECTOR
-                    }
-                    interrupt::Interrupt::Serial => self.pc = SERIAL_IO_INTERRUPT_VECTOR,
-                    interrupt::Interrupt::Joypad => self.pc = CONTROLLER_IO_INTERRUPT_VECTOR,
-                }
-
-                interrupt_bus.lock().unwrap().clear_interrupt(interrupt);
+            match interrupt {
+                interrupt::Interrupt::VBlank => self.pc = V_BLANK_INTERRUPT_VECTOR,
+                interrupt::Interrupt::LcdStat => self.pc = LCDC_INTERRUPT_VECTOR,
+                interrupt::Interrupt::TimerOverflow => self.pc = TIMER_OVERFLOW_INTERRUPT_VECTOR,
+                interrupt::Interrupt::Serial => self.pc = SERIAL_IO_INTERRUPT_VECTOR,
+                interrupt::Interrupt::Joypad => self.pc = CONTROLLER_IO_INTERRUPT_VECTOR,
             }
-            None => {}
+
+            interrupt_bus.lock().unwrap().clear_interrupt(interrupt);
         }
     }
 
@@ -227,19 +222,19 @@ impl LR35902 {
     }
 
     fn test_half_carry_flag(&self) -> bool {
-        return self.af.lo & (HALF_CARRY_FLAG_MASK) > 0;
+        self.af.lo & (HALF_CARRY_FLAG_MASK) > 0
     }
 
     fn test_carry_flag(&self) -> bool {
-        return self.af.lo & (CARRY_FLAG_MASK) > 0;
+        self.af.lo & (CARRY_FLAG_MASK) > 0
     }
 
     fn test_sub_flag(&self) -> bool {
-        return self.af.lo & (SUB_FLAG_MASK) > 0;
+        self.af.lo & (SUB_FLAG_MASK) > 0
     }
 
     fn test_zero_flag(&self) -> bool {
-        return self.af.lo & (ZERO_FLAG_MASK) > 0;
+        self.af.lo & (ZERO_FLAG_MASK) > 0
     }
 
     fn increment_8_bit_register(&mut self, reg_id: register::ID) {
@@ -802,7 +797,7 @@ impl LR35902 {
             return 16;
         }
 
-        return 12;
+        12
     }
 
     fn call_to_imm_address(
@@ -828,12 +823,12 @@ impl LR35902 {
         self.pc = self.pc.wrapping_add(1);
 
         if condition {
-            self.push_16bit_register_on_stack(register::ID16::PC, &memory, step_fn);
+            self.push_16bit_register_on_stack(register::ID16::PC, memory, step_fn);
             self.pc = (u16::from(hi_byte) << 8) | u16::from(lo_byte);
             return 24;
         }
 
-        return 12;
+        12
     }
 
     fn return_from_call_conditional(
@@ -867,7 +862,7 @@ impl LR35902 {
             return 20;
         }
 
-        return 8;
+        8
     }
 
     fn return_from_call(
@@ -877,7 +872,7 @@ impl LR35902 {
     ) -> u32 {
         self.pop_stack_into_16_bit_register(register::ID16::PC, memory, step_fn);
 
-        return 16;
+        16
     }
 
     fn rotate_8bit_register_left(&mut self, reg_id: register::ID) -> u32 {
@@ -902,7 +897,7 @@ impl LR35902 {
 
         self.write_register(&reg_id, byte);
 
-        return 4;
+        4
     }
 
     fn rotate_8bit_memory_left(
@@ -937,7 +932,7 @@ impl LR35902 {
         step_fn();
         memory.lock().unwrap().write(addr, byte);
 
-        return 12;
+        12
     }
 
     fn rotate_8bit_register_right(&mut self, reg_id: register::ID) -> u32 {
@@ -962,7 +957,7 @@ impl LR35902 {
 
         self.write_register(&reg_id, byte);
 
-        return 4;
+        4
     }
 
     fn rotate_8bit_memory_right(
@@ -997,7 +992,7 @@ impl LR35902 {
         step_fn();
         memory.lock().unwrap().write(addr, byte);
 
-        return 12;
+        12
     }
 
     fn read_register(&self, reg_id: &register::ID) -> u8 {
@@ -1077,7 +1072,7 @@ impl LR35902 {
 
         self.write_register(&reg_id, byte);
 
-        return 4;
+        4
     }
 
     fn rotate_8bit_memory_left_carry(
@@ -1119,7 +1114,7 @@ impl LR35902 {
         step_fn();
         memory.lock().unwrap().write(addr, byte);
 
-        return 12;
+        12
     }
 
     fn rotate_8bit_register_right_carry(&mut self, reg_id: register::ID) -> u32 {
@@ -1151,7 +1146,7 @@ impl LR35902 {
 
         self.write_register(&reg_id, byte);
 
-        return 4;
+        4
     }
 
     fn rotate_8bit_memory_right_carry(
@@ -1193,7 +1188,7 @@ impl LR35902 {
         step_fn();
         memory.lock().unwrap().write(addr, byte);
 
-        return 12;
+        12
     }
 
     fn shift_left_8bit_register_into_carry(&mut self, reg_id: register::ID) -> u32 {
@@ -1205,7 +1200,7 @@ impl LR35902 {
             self.reset_carry_flag();
         }
 
-        byte = byte << 1;
+        byte <<= 1;
 
         if byte == 0x00 {
             self.set_zero_flag();
@@ -1218,7 +1213,7 @@ impl LR35902 {
         self.reset_sub_flag();
         self.reset_half_carry_flag();
 
-        return 4;
+        4
     }
 
     fn shift_left_8bit_memory_into_carry(
@@ -1239,7 +1234,7 @@ impl LR35902 {
             self.reset_carry_flag();
         }
 
-        byte = byte << 1;
+        byte <<= 1;
 
         if byte == 0x00 {
             self.set_zero_flag();
@@ -1253,7 +1248,7 @@ impl LR35902 {
         self.reset_sub_flag();
         self.reset_half_carry_flag();
 
-        return 12;
+        12
     }
 
     fn shift_right_8bit_register_into_carry(&mut self, reg_id: register::ID) -> u32 {
@@ -1280,7 +1275,7 @@ impl LR35902 {
         self.reset_sub_flag();
         self.reset_half_carry_flag();
 
-        return 4;
+        4
     }
 
     fn shift_right_8bit_memory_into_carry(
@@ -1317,7 +1312,7 @@ impl LR35902 {
         self.reset_sub_flag();
         self.reset_half_carry_flag();
 
-        return 12;
+        12
     }
 
     fn swap_8bit_register(&mut self, reg_id: register::ID) -> u32 {
@@ -1335,7 +1330,7 @@ impl LR35902 {
         self.reset_half_carry_flag();
         self.reset_sub_flag();
 
-        return 4;
+        4
     }
 
     fn swap_8bit_memory(
@@ -1365,7 +1360,7 @@ impl LR35902 {
         self.reset_half_carry_flag();
         self.reset_sub_flag();
 
-        return 12;
+        12
     }
 
     fn shift_right_8bit_register(&mut self, reg_id: register::ID) -> u32 {
@@ -1390,7 +1385,7 @@ impl LR35902 {
 
         self.write_register(&reg_id, result);
 
-        return 4;
+        4
     }
 
     fn shift_right_8bit_memory(
@@ -1425,7 +1420,7 @@ impl LR35902 {
         self.reset_sub_flag();
         self.reset_half_carry_flag();
 
-        return 12;
+        12
     }
 
     fn test_bit(&mut self, reg_id: register::ID, bit_position: u8) -> u32 {
@@ -1440,7 +1435,7 @@ impl LR35902 {
         self.reset_sub_flag();
         self.set_half_carry_flag();
 
-        return 4;
+        4
     }
 
     fn test_bit_memory(
@@ -1466,14 +1461,14 @@ impl LR35902 {
         self.reset_sub_flag();
         self.set_half_carry_flag();
 
-        return 12;
+        12
     }
 
     fn reset_bit(&mut self, reg_id: register::ID, bit_position: u8) -> u32 {
         let current = self.read_register(&reg_id);
         self.write_register(&reg_id, current & !(1 << bit_position));
 
-        return 4;
+        4
     }
 
     fn reset_bit_memory(
@@ -1495,14 +1490,14 @@ impl LR35902 {
             .unwrap()
             .write(addr, current & !(1 << bit_position));
 
-        return 12;
+        12
     }
 
     fn set_bit(&mut self, reg_id: register::ID, bit_position: u8) -> u32 {
         let current = self.read_register(&reg_id);
         self.write_register(&reg_id, current | (1 << bit_position));
 
-        return 4;
+        4
     }
 
     fn set_bit_memory(
@@ -1524,38 +1519,32 @@ impl LR35902 {
             .unwrap()
             .write(addr, current | (1 << bit_position));
 
-        return 12;
+        12
     }
 
     #[cfg(feature = "serial_debug")]
     fn serial_debug_output(memory: &Arc<sync::Mutex<memory::Memory>>) {
         use std::io::{self, Write};
 
-        match memory
+        if let Some(byte) = memory
             .lock()
             .unwrap()
             .read(io_registers::SERIAL_TRANSFER_CONTROL_ADDR)
         {
-            Some(byte) => {
-                if byte == 0x81 {
-                    match memory
+            if byte == 0x81 {
+                if let Some(byte) = memory
+                    .lock()
+                    .unwrap()
+                    .read(io_registers::SERIAL_TRANSFER_DATA_ADDR)
+                {
+                    print!("{}", byte as char);
+                    io::stdout().flush().unwrap();
+                    memory
                         .lock()
                         .unwrap()
-                        .read(io_registers::SERIAL_TRANSFER_DATA_ADDR)
-                    {
-                        Some(byte) => {
-                            print!("{}", byte as char);
-                            io::stdout().flush().unwrap();
-                            memory
-                                .lock()
-                                .unwrap()
-                                .write(io_registers::SERIAL_TRANSFER_CONTROL_ADDR, 0x00);
-                        }
-                        None => {}
-                    }
+                        .write(io_registers::SERIAL_TRANSFER_CONTROL_ADDR, 0x00);
                 }
             }
-            None => {}
         }
     }
 }

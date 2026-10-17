@@ -14,7 +14,7 @@ pub fn is_half_carry(byte: u8, added_byte: u8, carry: bool) -> bool {
         return true;
     }
 
-    return false;
+    false
 }
 
 pub fn is_carry(byte: u8, added_byte: u8, with_carry: bool) -> bool {
@@ -29,7 +29,7 @@ pub fn is_carry(byte: u8, added_byte: u8, with_carry: bool) -> bool {
         return true;
     }
 
-    return false;
+    false
 }
 
 pub fn is_half_borrow(byte: u8, subtracted_byte: u8, carry: bool) -> bool {
@@ -44,7 +44,7 @@ pub fn is_half_borrow(byte: u8, subtracted_byte: u8, carry: bool) -> bool {
         return true;
     }
 
-    return false;
+    false
 }
 
 pub fn is_half_carry_word(word: u16, added_word: u16, mask: u16, carry: bool) -> bool {
@@ -59,15 +59,15 @@ pub fn is_half_carry_word(word: u16, added_word: u16, mask: u16, carry: bool) ->
         return true;
     }
 
-    return false;
+    false
 }
 
 pub fn two_compliment_byte(byte: u8) -> u8 {
-    return (!byte).wrapping_add(1);
+    (!byte).wrapping_add(1)
 }
 
 pub fn test_most_significant_bit(byte: u8) -> bool {
-    return byte & (1 << 7) > 0;
+    byte & (1 << 7) > 0
 }
 
 pub fn is_borrow(byte: u8, subtracted_byte: u8, with_carry: bool) -> bool {
@@ -82,5 +82,5 @@ pub fn is_borrow(byte: u8, subtracted_byte: u8, with_carry: bool) -> bool {
         return true;
     }
 
-    return false;
+    false
 }

@@ -18,9 +18,17 @@ const LCDC_ENABLE_MASK: u8 = 1 << 7;
 const LCDC_BG_WINDOW_ENABLE_MASK: u8 = 1 << 0;
 const LCDC_OBJ_ENABLE_MASK: u8 = 1 << 1;
 
-impl PPU {
+struct LcdcStatus {
+    lcdc: u8,
+    stat: u8,
+    current_scanline: u8,
+    ly: u8,
+    lyc: u8,
+}
+
+impl Ppu {
     pub fn new() -> Self {
-        PPU {
+        Ppu {
             pixels: [[ppu::Pixel::White; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT],
             pixel_encodings: [[ppu::Pixel::White; ppu::NATIVE_SCREEN_WIDTH];
                 ppu::NATIVE_SCREEN_HEIGHT],
@@ -29,7 +37,7 @@ impl PPU {
     }
 
     pub fn reset(&mut self) {
-        *self = PPU::new();
+        *self = Ppu::new();
     }
 
     pub fn step_graphics(
@@ -81,7 +89,17 @@ impl PPU {
             }
         };
 
-        self.set_lcdc_status(lcdc, stat, current_scanline, ly, lyc, memory, interrupt_bus);
+        self.set_lcdc_status(
+            LcdcStatus {
+                lcdc,
+                stat,
+                current_scanline,
+                ly,
+                lyc,
+            },
+            memory,
+            interrupt_bus,
+        );
 
         if lcdc & LCDC_ENABLE_MASK == 0 {
             return;
@@ -103,7 +121,7 @@ impl PPU {
                 }
 
                 // V-Blank period
-                if current_scanline >= 144 && current_scanline < 154 {
+                if (144..154).contains(&current_scanline) {
                     interrupt_bus
                         .lock()
                         .unwrap()
@@ -159,7 +177,7 @@ impl PPU {
                 line *= 2;
 
                 let data_addr: usize =
-                    (0x8000 + (sprite.get_pattern_number() as usize * 16) as usize) + line as usize;
+                    (0x8000 + (sprite.get_pattern_number() as usize * 16)) + line as usize;
 
                 let data1 = memory.lock().unwrap().dma_read(data_addr).unwrap();
                 let data2 = memory.lock().unwrap().dma_read(data_addr + 1).unwrap();
@@ -212,7 +230,7 @@ impl PPU {
                     }
 
                     let pixel_rgb =
-                        PPU::determine_pixel_rgb(memory, color_palette_addr, color_code);
+                        Ppu::determine_pixel_rgb(memory, color_palette_addr, color_code);
 
                     self.pixels[current_scanline as usize][x] = pixel_rgb;
                 }
@@ -232,14 +250,18 @@ impl PPU {
 
     fn set_lcdc_status(
         &mut self,
-        lcdc: u8,
-        stat: u8,
-        current_scanline: u8,
-        ly: u8,
-        lyc: u8,
+        lcdc_status: LcdcStatus,
         memory: &Arc<sync::Mutex<memory::Memory>>,
         interrupt_bus: &Arc<sync::Mutex<interrupt::Bus>>,
     ) {
+        let LcdcStatus {
+            lcdc,
+            stat,
+            current_scanline,
+            ly,
+            lyc,
+        } = lcdc_status;
+
         if lcdc & LCDC_ENABLE_MASK == 0 {
             self.scanline_counter = stat::MAX_SCANLINE_COUNT;
 
@@ -318,7 +340,7 @@ impl PPU {
             ),
         };
 
-        return pixel;
+        pixel
     }
 
     // Tiles on GB are represented in VRAM as 16 bytes. They are located in the address range
@@ -380,19 +402,13 @@ impl PPU {
             false => 0x9800,
         };
 
-        let is_in_window_y = match window_enabled(lcdc) && current_scanline >= win_y {
-            true => true,
-            false => false,
-        };
+        let is_in_window_y = window_enabled(lcdc) && current_scanline >= win_y;
 
         // Main loop through each 160 pixels of the current scanline we are rendering
         for pixel_iter in 0..ppu::NATIVE_SCREEN_WIDTH as u8 {
             // Check if our current coordinate is inside a window.
             // If true, then we need to render the window instead of the background.
-            let is_in_window_x = match window_enabled(lcdc) && pixel_iter >= win_x {
-                true => true,
-                false => false,
-            };
+            let is_in_window_x = window_enabled(lcdc) && pixel_iter >= win_x;
 
             let is_in_window = is_in_window_x && is_in_window_y && window_enabled(lcdc);
 
@@ -450,7 +466,7 @@ impl PPU {
                 pixel_color_encoding |= 0b01;
             }
 
-            let pixel_color = PPU::determine_pixel_rgb(
+            let pixel_color = Ppu::determine_pixel_rgb(
                 memory,
                 memory::io_registers::LCD_PALETTE_ADDR,
                 pixel_color_encoding,
@@ -471,12 +487,12 @@ impl PPU {
     pub fn get_frame_data(
         &self,
     ) -> [[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT] {
-        return self.pixels.clone();
+        self.pixels
     }
 }
 
 // If the 5th bit (starting from the right, 0 based) of the LCDC register is '1', then the
 // window should be rendered. Else it should be ignored.
 fn window_enabled(lcdc: u8) -> bool {
-    return (lcdc & (1 << 5)) > 0;
+    (lcdc & (1 << 5)) > 0
 }

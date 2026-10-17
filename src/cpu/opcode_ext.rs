@@ -529,265 +529,265 @@ impl std::convert::From<u8> for ExtendedOpcode {
     }
 }
 
-impl std::convert::Into<u8> for ExtendedOpcode {
-    fn into(self) -> u8 {
-        match self {
-            Self::RotateBLeft_0x00 => 0x00,
-            Self::RotateCLeft_0x01 => 0x01,
-            Self::RotateDLeft_0x02 => 0x02,
-            Self::RotateELeft_0x03 => 0x03,
-            Self::RotateHLeft_0x04 => 0x04,
-            Self::RotateLLeft_0x05 => 0x05,
-            Self::RotateMemoryHLLeft_0x06 => 0x06,
-            Self::RotateALeft_0x07 => 0x07,
-            Self::RotateBRight_0x08 => 0x08,
-            Self::RotateCRight_0x09 => 0x09,
-            Self::RotateDRight_0x0A => 0x0A,
-            Self::RotateERight_0x0B => 0x0B,
-            Self::RotateHRight_0x0C => 0x0C,
-            Self::RotateLRight_0x0D => 0x0D,
-            Self::RotateMemoryHLRight_0x0E => 0x0E,
-            Self::RotateARight_0x0F => 0x0F,
-            Self::RotateBLeftWithCarry_0x10 => 0x10,
-            Self::RotateCLeftWithCarry_0x11 => 0x11,
-            Self::RotateDLeftWithCarry_0x12 => 0x12,
-            Self::RotateELeftWithCarry_0x13 => 0x13,
-            Self::RotateHLeftWithCarry_0x14 => 0x14,
-            Self::RotateLLeftWithCarry_0x15 => 0x15,
-            Self::RotateMemoryHLLeftWithCarry_0x16 => 0x16,
-            Self::RotateALeftWithCarry_0x17 => 0x17,
-            Self::RotateBRightWithCarry_0x18 => 0x18,
-            Self::RotateCRightWithCarry_0x19 => 0x19,
-            Self::RotateDRightWithCarry_0x1A => 0x1A,
-            Self::RotateERightWithCarry_0x1B => 0x1B,
-            Self::RotateHRightWithCarry_0x1C => 0x1C,
-            Self::RotateLRightWithCarry_0x1D => 0x1D,
-            Self::RotateMemoryHLRightWithCarry_0x1E => 0x1E,
-            Self::RotateARightWithCarry_0x1F => 0x1F,
-            Self::ShiftLeftBIntoCarry_0x20 => 0x20,
-            Self::ShiftLeftCIntoCarry_0x21 => 0x21,
-            Self::ShiftLeftDIntoCarry_0x22 => 0x22,
-            Self::ShiftLeftEIntoCarry_0x23 => 0x23,
-            Self::ShiftLeftHIntoCarry_0x24 => 0x24,
-            Self::ShiftLeftLIntoCarry_0x25 => 0x25,
-            Self::ShiftLeftMemoryHLIntoCarry_0x26 => 0x26,
-            Self::ShiftLeftAIntoCarry_0x27 => 0x27,
-            Self::ShiftRightBIntoCarry_0x28 => 0x28,
-            Self::ShiftRightCIntoCarry_0x29 => 0x29,
-            Self::ShiftRightDIntoCarry_0x2A => 0x2A,
-            Self::ShiftRightEIntoCarry_0x2B => 0x2B,
-            Self::ShiftRightHIntoCarry_0x2C => 0x2C,
-            Self::ShiftRightLIntoCarry_0x2D => 0x2D,
-            Self::ShiftRightMemoryHLIntoCarry_0x2E => 0x2E,
-            Self::ShiftRightAIntoCarry_0x2F => 0x2F,
-            Self::SwapB_0x30 => 0x30,
-            Self::SwapC_0x31 => 0x31,
-            Self::SwapD_0x32 => 0x32,
-            Self::SwapE_0x33 => 0x33,
-            Self::SwapH_0x34 => 0x34,
-            Self::SwapL_0x35 => 0x35,
-            Self::SwapMemoryHL_0x36 => 0x36,
-            Self::SwapA_0x37 => 0x37,
-            Self::ShiftRightB_0x38 => 0x38,
-            Self::ShiftRightC_0x39 => 0x39,
-            Self::ShiftRightD_0x3A => 0x3A,
-            Self::ShiftRightE_0x3B => 0x3B,
-            Self::ShiftRightH_0x3C => 0x3C,
-            Self::ShiftRightL_0x3D => 0x3D,
-            Self::ShiftRightMemoryHL_0x3E => 0x3E,
-            Self::ShiftRightA_0x3F => 0x3F,
-            Self::TestBit0_B_0x40 => 0x40,
-            Self::TestBit0_C_0x41 => 0x41,
-            Self::TestBit0_D_0x42 => 0x42,
-            Self::TestBit0_E_0x43 => 0x43,
-            Self::TestBit0_H_0x44 => 0x44,
-            Self::TestBit0_L_0x45 => 0x45,
-            Self::TestBit0_MemoryHL_0x46 => 0x46,
-            Self::TestBit0_A_0x47 => 0x47,
-            Self::TestBit1_B_0x48 => 0x48,
-            Self::TestBit1_C_0x49 => 0x49,
-            Self::TestBit1_D_0x4A => 0x4A,
-            Self::TestBit1_E_0x4B => 0x4B,
-            Self::TestBit1_H_0x4C => 0x4C,
-            Self::TestBit1_L_0x4D => 0x4D,
-            Self::TestBit1_MemoryHL_0x4E => 0x4E,
-            Self::TestBit1_A_0x4F => 0x4F,
-            Self::TestBit2_B_0x50 => 0x50,
-            Self::TestBit2_C_0x51 => 0x51,
-            Self::TestBit2_D_0x52 => 0x52,
-            Self::TestBit2_E_0x53 => 0x53,
-            Self::TestBit2_H_0x54 => 0x54,
-            Self::TestBit2_L_0x55 => 0x55,
-            Self::TestBit2_MemoryHL_0x56 => 0x56,
-            Self::TestBit2_A_0x57 => 0x57,
-            Self::TestBit3_B_0x58 => 0x58,
-            Self::TestBit3_C_0x59 => 0x59,
-            Self::TestBit3_D_0x5A => 0x5A,
-            Self::TestBit3_E_0x5B => 0x5B,
-            Self::TestBit3_H_0x5C => 0x5C,
-            Self::TestBit3_L_0x5D => 0x5D,
-            Self::TestBit3_MemoryHL_0x5E => 0x5E,
-            Self::TestBit3_A_0x5F => 0x5F,
-            Self::TestBit4_B_0x60 => 0x60,
-            Self::TestBit4_C_0x61 => 0x61,
-            Self::TestBit4_D_0x62 => 0x62,
-            Self::TestBit4_E_0x63 => 0x63,
-            Self::TestBit4_H_0x64 => 0x64,
-            Self::TestBit4_L_0x65 => 0x65,
-            Self::TestBit4_MemoryHL_0x66 => 0x66,
-            Self::TestBit4_A_0x67 => 0x67,
-            Self::TestBit5_B_0x68 => 0x68,
-            Self::TestBit5_C_0x69 => 0x69,
-            Self::TestBit5_D_0x6A => 0x6A,
-            Self::TestBit5_E_0x6B => 0x6B,
-            Self::TestBit5_H_0x6C => 0x6C,
-            Self::TestBit5_L_0x6D => 0x6D,
-            Self::TestBit5_MemoryHL_0x6E => 0x6E,
-            Self::TestBit5_A_0x6F => 0x6F,
-            Self::TestBit6_B_0x70 => 0x70,
-            Self::TestBit6_C_0x71 => 0x71,
-            Self::TestBit6_D_0x72 => 0x72,
-            Self::TestBit6_E_0x73 => 0x73,
-            Self::TestBit6_H_0x74 => 0x74,
-            Self::TestBit6_L_0x75 => 0x75,
-            Self::TestBit6_MemoryHL_0x76 => 0x76,
-            Self::TestBit6_A_0x77 => 0x77,
-            Self::TestBit7_B_0x78 => 0x78,
-            Self::TestBit7_C_0x79 => 0x79,
-            Self::TestBit7_D_0x7A => 0x7A,
-            Self::TestBit7_E_0x7B => 0x7B,
-            Self::TestBit7_H_0x7C => 0x7C,
-            Self::TestBit7_L_0x7D => 0x7D,
-            Self::TestBit7_MemoryHL_0x7E => 0x7E,
-            Self::TestBit7_A_0x7F => 0x7F,
-            Self::ResetBit0_B_0x80 => 0x80,
-            Self::ResetBit0_C_0x81 => 0x81,
-            Self::ResetBit0_D_0x82 => 0x82,
-            Self::ResetBit0_E_0x83 => 0x83,
-            Self::ResetBit0_H_0x84 => 0x84,
-            Self::ResetBit0_L_0x85 => 0x85,
-            Self::ResetBit0_MemoryHL_0x86 => 0x86,
-            Self::ResetBit0_A_0x87 => 0x87,
-            Self::ResetBit1_B_0x88 => 0x88,
-            Self::ResetBit1_C_0x89 => 0x89,
-            Self::ResetBit1_D_0x8A => 0x8A,
-            Self::ResetBit1_E_0x8B => 0x8B,
-            Self::ResetBit1_H_0x8C => 0x8C,
-            Self::ResetBit1_L_0x8D => 0x8D,
-            Self::ResetBit1_MemoryHL_0x8E => 0x8E,
-            Self::ResetBit1_A_0x8F => 0x8F,
-            Self::ResetBit2_B_0x90 => 0x90,
-            Self::ResetBit2_C_0x91 => 0x91,
-            Self::ResetBit2_D_0x92 => 0x92,
-            Self::ResetBit2_E_0x93 => 0x93,
-            Self::ResetBit2_H_0x94 => 0x94,
-            Self::ResetBit2_L_0x95 => 0x95,
-            Self::ResetBit2_MemoryHL_0x96 => 0x96,
-            Self::ResetBit2_A_0x97 => 0x97,
-            Self::ResetBit3_B_0x98 => 0x98,
-            Self::ResetBit3_C_0x99 => 0x99,
-            Self::ResetBit3_D_0x9A => 0x9A,
-            Self::ResetBit3_E_0x9B => 0x9B,
-            Self::ResetBit3_H_0x9C => 0x9C,
-            Self::ResetBit3_L_0x9D => 0x9D,
-            Self::ResetBit3_MemoryHL_0x9E => 0x9E,
-            Self::ResetBit3_A_0x9F => 0x9F,
-            Self::ResetBit4_B_0xA0 => 0xA0,
-            Self::ResetBit4_C_0xA1 => 0xA1,
-            Self::ResetBit4_D_0xA2 => 0xA2,
-            Self::ResetBit4_E_0xA3 => 0xA3,
-            Self::ResetBit4_H_0xA4 => 0xA4,
-            Self::ResetBit4_L_0xA5 => 0xA5,
-            Self::ResetBit4_MemoryHL_0xA6 => 0xA6,
-            Self::ResetBit4_A_0xA7 => 0xA7,
-            Self::ResetBit5_B_0xA8 => 0xA8,
-            Self::ResetBit5_C_0xA9 => 0xA9,
-            Self::ResetBit5_D_0xAA => 0xAA,
-            Self::ResetBit5_E_0xAB => 0xAB,
-            Self::ResetBit5_H_0xAC => 0xAC,
-            Self::ResetBit5_L_0xAD => 0xAD,
-            Self::ResetBit5_MemoryHL_0xAE => 0xAE,
-            Self::ResetBit5_A_0xAF => 0xAF,
-            Self::ResetBit6_B_0xB0 => 0xB0,
-            Self::ResetBit6_C_0xB1 => 0xB1,
-            Self::ResetBit6_D_0xB2 => 0xB2,
-            Self::ResetBit6_E_0xB3 => 0xB3,
-            Self::ResetBit6_H_0xB4 => 0xB4,
-            Self::ResetBit6_L_0xB5 => 0xB5,
-            Self::ResetBit6_MemoryHL_0xB6 => 0xB6,
-            Self::ResetBit6_A_0xB7 => 0xB7,
-            Self::ResetBit7_B_0xB8 => 0xB8,
-            Self::ResetBit7_C_0xB9 => 0xB9,
-            Self::ResetBit7_D_0xBA => 0xBA,
-            Self::ResetBit7_E_0xBB => 0xBB,
-            Self::ResetBit7_H_0xBC => 0xBC,
-            Self::ResetBit7_L_0xBD => 0xBD,
-            Self::ResetBit7_MemoryHL_0xBE => 0xBE,
-            Self::ResetBit7_A_0xBF => 0xBF,
-            Self::SetBit0_B_0xC0 => 0xC0,
-            Self::SetBit0_C_0xC1 => 0xC1,
-            Self::SetBit0_D_0xC2 => 0xC2,
-            Self::SetBit0_E_0xC3 => 0xC3,
-            Self::SetBit0_H_0xC4 => 0xC4,
-            Self::SetBit0_L_0xC5 => 0xC5,
-            Self::SetBit0_MemoryHL_0xC6 => 0xC6,
-            Self::SetBit0_A_0xC7 => 0xC7,
-            Self::SetBit1_B_0xC8 => 0xC8,
-            Self::SetBit1_C_0xC9 => 0xC9,
-            Self::SetBit1_D_0xCA => 0xCA,
-            Self::SetBit1_E_0xCB => 0xCB,
-            Self::SetBit1_H_0xCC => 0xCC,
-            Self::SetBit1_L_0xCD => 0xCD,
-            Self::SetBit1_MemoryHL_0xCE => 0xCE,
-            Self::SetBit1_A_0xCF => 0xCF,
-            Self::SetBit2_B_0xD0 => 0xD0,
-            Self::SetBit2_C_0xD1 => 0xD1,
-            Self::SetBit2_D_0xD2 => 0xD2,
-            Self::SetBit2_E_0xD3 => 0xD3,
-            Self::SetBit2_H_0xD4 => 0xD4,
-            Self::SetBit2_L_0xD5 => 0xD5,
-            Self::SetBit2_MemoryHL_0xD6 => 0xD6,
-            Self::SetBit2_A_0xD7 => 0xD7,
-            Self::SetBit3_B_0xD8 => 0xD8,
-            Self::SetBit3_C_0xD9 => 0xD9,
-            Self::SetBit3_D_0xDA => 0xDA,
-            Self::SetBit3_E_0xDB => 0xDB,
-            Self::SetBit3_H_0xDC => 0xDC,
-            Self::SetBit3_L_0xDD => 0xDD,
-            Self::SetBit3_MemoryHL_0xDE => 0xDE,
-            Self::SetBit3_A_0xDF => 0xDF,
-            Self::SetBit4_B_0xE0 => 0xE0,
-            Self::SetBit4_C_0xE1 => 0xE1,
-            Self::SetBit4_D_0xE2 => 0xE2,
-            Self::SetBit4_E_0xE3 => 0xE3,
-            Self::SetBit4_H_0xE4 => 0xE4,
-            Self::SetBit4_L_0xE5 => 0xE5,
-            Self::SetBit4_MemoryHL_0xE6 => 0xE6,
-            Self::SetBit4_A_0xE7 => 0xE7,
-            Self::SetBit5_B_0xE8 => 0xE8,
-            Self::SetBit5_C_0xE9 => 0xE9,
-            Self::SetBit5_D_0xEA => 0xEA,
-            Self::SetBit5_E_0xEB => 0xEB,
-            Self::SetBit5_H_0xEC => 0xEC,
-            Self::SetBit5_L_0xED => 0xED,
-            Self::SetBit5_MemoryHL_0xEE => 0xEE,
-            Self::SetBit5_A_0xEF => 0xEF,
-            Self::SetBit6_B_0xF0 => 0xF0,
-            Self::SetBit6_C_0xF1 => 0xF1,
-            Self::SetBit6_D_0xF2 => 0xF2,
-            Self::SetBit6_E_0xF3 => 0xF3,
-            Self::SetBit6_H_0xF4 => 0xF4,
-            Self::SetBit6_L_0xF5 => 0xF5,
-            Self::SetBit6_MemoryHL_0xF6 => 0xF6,
-            Self::SetBit6_A_0xF7 => 0xF7,
-            Self::SetBit7_B_0xF8 => 0xF8,
-            Self::SetBit7_C_0xF9 => 0xF9,
-            Self::SetBit7_D_0xFA => 0xFA,
-            Self::SetBit7_E_0xFB => 0xFB,
-            Self::SetBit7_H_0xFC => 0xFC,
-            Self::SetBit7_L_0xFD => 0xFD,
-            Self::SetBit7_MemoryHL_0xFE => 0xFE,
-            Self::SetBit7_A_0xFF => 0xFF,
+impl std::convert::From<ExtendedOpcode> for u8 {
+    fn from(val: ExtendedOpcode) -> Self {
+        match val {
+            ExtendedOpcode::RotateBLeft_0x00 => 0x00,
+            ExtendedOpcode::RotateCLeft_0x01 => 0x01,
+            ExtendedOpcode::RotateDLeft_0x02 => 0x02,
+            ExtendedOpcode::RotateELeft_0x03 => 0x03,
+            ExtendedOpcode::RotateHLeft_0x04 => 0x04,
+            ExtendedOpcode::RotateLLeft_0x05 => 0x05,
+            ExtendedOpcode::RotateMemoryHLLeft_0x06 => 0x06,
+            ExtendedOpcode::RotateALeft_0x07 => 0x07,
+            ExtendedOpcode::RotateBRight_0x08 => 0x08,
+            ExtendedOpcode::RotateCRight_0x09 => 0x09,
+            ExtendedOpcode::RotateDRight_0x0A => 0x0A,
+            ExtendedOpcode::RotateERight_0x0B => 0x0B,
+            ExtendedOpcode::RotateHRight_0x0C => 0x0C,
+            ExtendedOpcode::RotateLRight_0x0D => 0x0D,
+            ExtendedOpcode::RotateMemoryHLRight_0x0E => 0x0E,
+            ExtendedOpcode::RotateARight_0x0F => 0x0F,
+            ExtendedOpcode::RotateBLeftWithCarry_0x10 => 0x10,
+            ExtendedOpcode::RotateCLeftWithCarry_0x11 => 0x11,
+            ExtendedOpcode::RotateDLeftWithCarry_0x12 => 0x12,
+            ExtendedOpcode::RotateELeftWithCarry_0x13 => 0x13,
+            ExtendedOpcode::RotateHLeftWithCarry_0x14 => 0x14,
+            ExtendedOpcode::RotateLLeftWithCarry_0x15 => 0x15,
+            ExtendedOpcode::RotateMemoryHLLeftWithCarry_0x16 => 0x16,
+            ExtendedOpcode::RotateALeftWithCarry_0x17 => 0x17,
+            ExtendedOpcode::RotateBRightWithCarry_0x18 => 0x18,
+            ExtendedOpcode::RotateCRightWithCarry_0x19 => 0x19,
+            ExtendedOpcode::RotateDRightWithCarry_0x1A => 0x1A,
+            ExtendedOpcode::RotateERightWithCarry_0x1B => 0x1B,
+            ExtendedOpcode::RotateHRightWithCarry_0x1C => 0x1C,
+            ExtendedOpcode::RotateLRightWithCarry_0x1D => 0x1D,
+            ExtendedOpcode::RotateMemoryHLRightWithCarry_0x1E => 0x1E,
+            ExtendedOpcode::RotateARightWithCarry_0x1F => 0x1F,
+            ExtendedOpcode::ShiftLeftBIntoCarry_0x20 => 0x20,
+            ExtendedOpcode::ShiftLeftCIntoCarry_0x21 => 0x21,
+            ExtendedOpcode::ShiftLeftDIntoCarry_0x22 => 0x22,
+            ExtendedOpcode::ShiftLeftEIntoCarry_0x23 => 0x23,
+            ExtendedOpcode::ShiftLeftHIntoCarry_0x24 => 0x24,
+            ExtendedOpcode::ShiftLeftLIntoCarry_0x25 => 0x25,
+            ExtendedOpcode::ShiftLeftMemoryHLIntoCarry_0x26 => 0x26,
+            ExtendedOpcode::ShiftLeftAIntoCarry_0x27 => 0x27,
+            ExtendedOpcode::ShiftRightBIntoCarry_0x28 => 0x28,
+            ExtendedOpcode::ShiftRightCIntoCarry_0x29 => 0x29,
+            ExtendedOpcode::ShiftRightDIntoCarry_0x2A => 0x2A,
+            ExtendedOpcode::ShiftRightEIntoCarry_0x2B => 0x2B,
+            ExtendedOpcode::ShiftRightHIntoCarry_0x2C => 0x2C,
+            ExtendedOpcode::ShiftRightLIntoCarry_0x2D => 0x2D,
+            ExtendedOpcode::ShiftRightMemoryHLIntoCarry_0x2E => 0x2E,
+            ExtendedOpcode::ShiftRightAIntoCarry_0x2F => 0x2F,
+            ExtendedOpcode::SwapB_0x30 => 0x30,
+            ExtendedOpcode::SwapC_0x31 => 0x31,
+            ExtendedOpcode::SwapD_0x32 => 0x32,
+            ExtendedOpcode::SwapE_0x33 => 0x33,
+            ExtendedOpcode::SwapH_0x34 => 0x34,
+            ExtendedOpcode::SwapL_0x35 => 0x35,
+            ExtendedOpcode::SwapMemoryHL_0x36 => 0x36,
+            ExtendedOpcode::SwapA_0x37 => 0x37,
+            ExtendedOpcode::ShiftRightB_0x38 => 0x38,
+            ExtendedOpcode::ShiftRightC_0x39 => 0x39,
+            ExtendedOpcode::ShiftRightD_0x3A => 0x3A,
+            ExtendedOpcode::ShiftRightE_0x3B => 0x3B,
+            ExtendedOpcode::ShiftRightH_0x3C => 0x3C,
+            ExtendedOpcode::ShiftRightL_0x3D => 0x3D,
+            ExtendedOpcode::ShiftRightMemoryHL_0x3E => 0x3E,
+            ExtendedOpcode::ShiftRightA_0x3F => 0x3F,
+            ExtendedOpcode::TestBit0_B_0x40 => 0x40,
+            ExtendedOpcode::TestBit0_C_0x41 => 0x41,
+            ExtendedOpcode::TestBit0_D_0x42 => 0x42,
+            ExtendedOpcode::TestBit0_E_0x43 => 0x43,
+            ExtendedOpcode::TestBit0_H_0x44 => 0x44,
+            ExtendedOpcode::TestBit0_L_0x45 => 0x45,
+            ExtendedOpcode::TestBit0_MemoryHL_0x46 => 0x46,
+            ExtendedOpcode::TestBit0_A_0x47 => 0x47,
+            ExtendedOpcode::TestBit1_B_0x48 => 0x48,
+            ExtendedOpcode::TestBit1_C_0x49 => 0x49,
+            ExtendedOpcode::TestBit1_D_0x4A => 0x4A,
+            ExtendedOpcode::TestBit1_E_0x4B => 0x4B,
+            ExtendedOpcode::TestBit1_H_0x4C => 0x4C,
+            ExtendedOpcode::TestBit1_L_0x4D => 0x4D,
+            ExtendedOpcode::TestBit1_MemoryHL_0x4E => 0x4E,
+            ExtendedOpcode::TestBit1_A_0x4F => 0x4F,
+            ExtendedOpcode::TestBit2_B_0x50 => 0x50,
+            ExtendedOpcode::TestBit2_C_0x51 => 0x51,
+            ExtendedOpcode::TestBit2_D_0x52 => 0x52,
+            ExtendedOpcode::TestBit2_E_0x53 => 0x53,
+            ExtendedOpcode::TestBit2_H_0x54 => 0x54,
+            ExtendedOpcode::TestBit2_L_0x55 => 0x55,
+            ExtendedOpcode::TestBit2_MemoryHL_0x56 => 0x56,
+            ExtendedOpcode::TestBit2_A_0x57 => 0x57,
+            ExtendedOpcode::TestBit3_B_0x58 => 0x58,
+            ExtendedOpcode::TestBit3_C_0x59 => 0x59,
+            ExtendedOpcode::TestBit3_D_0x5A => 0x5A,
+            ExtendedOpcode::TestBit3_E_0x5B => 0x5B,
+            ExtendedOpcode::TestBit3_H_0x5C => 0x5C,
+            ExtendedOpcode::TestBit3_L_0x5D => 0x5D,
+            ExtendedOpcode::TestBit3_MemoryHL_0x5E => 0x5E,
+            ExtendedOpcode::TestBit3_A_0x5F => 0x5F,
+            ExtendedOpcode::TestBit4_B_0x60 => 0x60,
+            ExtendedOpcode::TestBit4_C_0x61 => 0x61,
+            ExtendedOpcode::TestBit4_D_0x62 => 0x62,
+            ExtendedOpcode::TestBit4_E_0x63 => 0x63,
+            ExtendedOpcode::TestBit4_H_0x64 => 0x64,
+            ExtendedOpcode::TestBit4_L_0x65 => 0x65,
+            ExtendedOpcode::TestBit4_MemoryHL_0x66 => 0x66,
+            ExtendedOpcode::TestBit4_A_0x67 => 0x67,
+            ExtendedOpcode::TestBit5_B_0x68 => 0x68,
+            ExtendedOpcode::TestBit5_C_0x69 => 0x69,
+            ExtendedOpcode::TestBit5_D_0x6A => 0x6A,
+            ExtendedOpcode::TestBit5_E_0x6B => 0x6B,
+            ExtendedOpcode::TestBit5_H_0x6C => 0x6C,
+            ExtendedOpcode::TestBit5_L_0x6D => 0x6D,
+            ExtendedOpcode::TestBit5_MemoryHL_0x6E => 0x6E,
+            ExtendedOpcode::TestBit5_A_0x6F => 0x6F,
+            ExtendedOpcode::TestBit6_B_0x70 => 0x70,
+            ExtendedOpcode::TestBit6_C_0x71 => 0x71,
+            ExtendedOpcode::TestBit6_D_0x72 => 0x72,
+            ExtendedOpcode::TestBit6_E_0x73 => 0x73,
+            ExtendedOpcode::TestBit6_H_0x74 => 0x74,
+            ExtendedOpcode::TestBit6_L_0x75 => 0x75,
+            ExtendedOpcode::TestBit6_MemoryHL_0x76 => 0x76,
+            ExtendedOpcode::TestBit6_A_0x77 => 0x77,
+            ExtendedOpcode::TestBit7_B_0x78 => 0x78,
+            ExtendedOpcode::TestBit7_C_0x79 => 0x79,
+            ExtendedOpcode::TestBit7_D_0x7A => 0x7A,
+            ExtendedOpcode::TestBit7_E_0x7B => 0x7B,
+            ExtendedOpcode::TestBit7_H_0x7C => 0x7C,
+            ExtendedOpcode::TestBit7_L_0x7D => 0x7D,
+            ExtendedOpcode::TestBit7_MemoryHL_0x7E => 0x7E,
+            ExtendedOpcode::TestBit7_A_0x7F => 0x7F,
+            ExtendedOpcode::ResetBit0_B_0x80 => 0x80,
+            ExtendedOpcode::ResetBit0_C_0x81 => 0x81,
+            ExtendedOpcode::ResetBit0_D_0x82 => 0x82,
+            ExtendedOpcode::ResetBit0_E_0x83 => 0x83,
+            ExtendedOpcode::ResetBit0_H_0x84 => 0x84,
+            ExtendedOpcode::ResetBit0_L_0x85 => 0x85,
+            ExtendedOpcode::ResetBit0_MemoryHL_0x86 => 0x86,
+            ExtendedOpcode::ResetBit0_A_0x87 => 0x87,
+            ExtendedOpcode::ResetBit1_B_0x88 => 0x88,
+            ExtendedOpcode::ResetBit1_C_0x89 => 0x89,
+            ExtendedOpcode::ResetBit1_D_0x8A => 0x8A,
+            ExtendedOpcode::ResetBit1_E_0x8B => 0x8B,
+            ExtendedOpcode::ResetBit1_H_0x8C => 0x8C,
+            ExtendedOpcode::ResetBit1_L_0x8D => 0x8D,
+            ExtendedOpcode::ResetBit1_MemoryHL_0x8E => 0x8E,
+            ExtendedOpcode::ResetBit1_A_0x8F => 0x8F,
+            ExtendedOpcode::ResetBit2_B_0x90 => 0x90,
+            ExtendedOpcode::ResetBit2_C_0x91 => 0x91,
+            ExtendedOpcode::ResetBit2_D_0x92 => 0x92,
+            ExtendedOpcode::ResetBit2_E_0x93 => 0x93,
+            ExtendedOpcode::ResetBit2_H_0x94 => 0x94,
+            ExtendedOpcode::ResetBit2_L_0x95 => 0x95,
+            ExtendedOpcode::ResetBit2_MemoryHL_0x96 => 0x96,
+            ExtendedOpcode::ResetBit2_A_0x97 => 0x97,
+            ExtendedOpcode::ResetBit3_B_0x98 => 0x98,
+            ExtendedOpcode::ResetBit3_C_0x99 => 0x99,
+            ExtendedOpcode::ResetBit3_D_0x9A => 0x9A,
+            ExtendedOpcode::ResetBit3_E_0x9B => 0x9B,
+            ExtendedOpcode::ResetBit3_H_0x9C => 0x9C,
+            ExtendedOpcode::ResetBit3_L_0x9D => 0x9D,
+            ExtendedOpcode::ResetBit3_MemoryHL_0x9E => 0x9E,
+            ExtendedOpcode::ResetBit3_A_0x9F => 0x9F,
+            ExtendedOpcode::ResetBit4_B_0xA0 => 0xA0,
+            ExtendedOpcode::ResetBit4_C_0xA1 => 0xA1,
+            ExtendedOpcode::ResetBit4_D_0xA2 => 0xA2,
+            ExtendedOpcode::ResetBit4_E_0xA3 => 0xA3,
+            ExtendedOpcode::ResetBit4_H_0xA4 => 0xA4,
+            ExtendedOpcode::ResetBit4_L_0xA5 => 0xA5,
+            ExtendedOpcode::ResetBit4_MemoryHL_0xA6 => 0xA6,
+            ExtendedOpcode::ResetBit4_A_0xA7 => 0xA7,
+            ExtendedOpcode::ResetBit5_B_0xA8 => 0xA8,
+            ExtendedOpcode::ResetBit5_C_0xA9 => 0xA9,
+            ExtendedOpcode::ResetBit5_D_0xAA => 0xAA,
+            ExtendedOpcode::ResetBit5_E_0xAB => 0xAB,
+            ExtendedOpcode::ResetBit5_H_0xAC => 0xAC,
+            ExtendedOpcode::ResetBit5_L_0xAD => 0xAD,
+            ExtendedOpcode::ResetBit5_MemoryHL_0xAE => 0xAE,
+            ExtendedOpcode::ResetBit5_A_0xAF => 0xAF,
+            ExtendedOpcode::ResetBit6_B_0xB0 => 0xB0,
+            ExtendedOpcode::ResetBit6_C_0xB1 => 0xB1,
+            ExtendedOpcode::ResetBit6_D_0xB2 => 0xB2,
+            ExtendedOpcode::ResetBit6_E_0xB3 => 0xB3,
+            ExtendedOpcode::ResetBit6_H_0xB4 => 0xB4,
+            ExtendedOpcode::ResetBit6_L_0xB5 => 0xB5,
+            ExtendedOpcode::ResetBit6_MemoryHL_0xB6 => 0xB6,
+            ExtendedOpcode::ResetBit6_A_0xB7 => 0xB7,
+            ExtendedOpcode::ResetBit7_B_0xB8 => 0xB8,
+            ExtendedOpcode::ResetBit7_C_0xB9 => 0xB9,
+            ExtendedOpcode::ResetBit7_D_0xBA => 0xBA,
+            ExtendedOpcode::ResetBit7_E_0xBB => 0xBB,
+            ExtendedOpcode::ResetBit7_H_0xBC => 0xBC,
+            ExtendedOpcode::ResetBit7_L_0xBD => 0xBD,
+            ExtendedOpcode::ResetBit7_MemoryHL_0xBE => 0xBE,
+            ExtendedOpcode::ResetBit7_A_0xBF => 0xBF,
+            ExtendedOpcode::SetBit0_B_0xC0 => 0xC0,
+            ExtendedOpcode::SetBit0_C_0xC1 => 0xC1,
+            ExtendedOpcode::SetBit0_D_0xC2 => 0xC2,
+            ExtendedOpcode::SetBit0_E_0xC3 => 0xC3,
+            ExtendedOpcode::SetBit0_H_0xC4 => 0xC4,
+            ExtendedOpcode::SetBit0_L_0xC5 => 0xC5,
+            ExtendedOpcode::SetBit0_MemoryHL_0xC6 => 0xC6,
+            ExtendedOpcode::SetBit0_A_0xC7 => 0xC7,
+            ExtendedOpcode::SetBit1_B_0xC8 => 0xC8,
+            ExtendedOpcode::SetBit1_C_0xC9 => 0xC9,
+            ExtendedOpcode::SetBit1_D_0xCA => 0xCA,
+            ExtendedOpcode::SetBit1_E_0xCB => 0xCB,
+            ExtendedOpcode::SetBit1_H_0xCC => 0xCC,
+            ExtendedOpcode::SetBit1_L_0xCD => 0xCD,
+            ExtendedOpcode::SetBit1_MemoryHL_0xCE => 0xCE,
+            ExtendedOpcode::SetBit1_A_0xCF => 0xCF,
+            ExtendedOpcode::SetBit2_B_0xD0 => 0xD0,
+            ExtendedOpcode::SetBit2_C_0xD1 => 0xD1,
+            ExtendedOpcode::SetBit2_D_0xD2 => 0xD2,
+            ExtendedOpcode::SetBit2_E_0xD3 => 0xD3,
+            ExtendedOpcode::SetBit2_H_0xD4 => 0xD4,
+            ExtendedOpcode::SetBit2_L_0xD5 => 0xD5,
+            ExtendedOpcode::SetBit2_MemoryHL_0xD6 => 0xD6,
+            ExtendedOpcode::SetBit2_A_0xD7 => 0xD7,
+            ExtendedOpcode::SetBit3_B_0xD8 => 0xD8,
+            ExtendedOpcode::SetBit3_C_0xD9 => 0xD9,
+            ExtendedOpcode::SetBit3_D_0xDA => 0xDA,
+            ExtendedOpcode::SetBit3_E_0xDB => 0xDB,
+            ExtendedOpcode::SetBit3_H_0xDC => 0xDC,
+            ExtendedOpcode::SetBit3_L_0xDD => 0xDD,
+            ExtendedOpcode::SetBit3_MemoryHL_0xDE => 0xDE,
+            ExtendedOpcode::SetBit3_A_0xDF => 0xDF,
+            ExtendedOpcode::SetBit4_B_0xE0 => 0xE0,
+            ExtendedOpcode::SetBit4_C_0xE1 => 0xE1,
+            ExtendedOpcode::SetBit4_D_0xE2 => 0xE2,
+            ExtendedOpcode::SetBit4_E_0xE3 => 0xE3,
+            ExtendedOpcode::SetBit4_H_0xE4 => 0xE4,
+            ExtendedOpcode::SetBit4_L_0xE5 => 0xE5,
+            ExtendedOpcode::SetBit4_MemoryHL_0xE6 => 0xE6,
+            ExtendedOpcode::SetBit4_A_0xE7 => 0xE7,
+            ExtendedOpcode::SetBit5_B_0xE8 => 0xE8,
+            ExtendedOpcode::SetBit5_C_0xE9 => 0xE9,
+            ExtendedOpcode::SetBit5_D_0xEA => 0xEA,
+            ExtendedOpcode::SetBit5_E_0xEB => 0xEB,
+            ExtendedOpcode::SetBit5_H_0xEC => 0xEC,
+            ExtendedOpcode::SetBit5_L_0xED => 0xED,
+            ExtendedOpcode::SetBit5_MemoryHL_0xEE => 0xEE,
+            ExtendedOpcode::SetBit5_A_0xEF => 0xEF,
+            ExtendedOpcode::SetBit6_B_0xF0 => 0xF0,
+            ExtendedOpcode::SetBit6_C_0xF1 => 0xF1,
+            ExtendedOpcode::SetBit6_D_0xF2 => 0xF2,
+            ExtendedOpcode::SetBit6_E_0xF3 => 0xF3,
+            ExtendedOpcode::SetBit6_H_0xF4 => 0xF4,
+            ExtendedOpcode::SetBit6_L_0xF5 => 0xF5,
+            ExtendedOpcode::SetBit6_MemoryHL_0xF6 => 0xF6,
+            ExtendedOpcode::SetBit6_A_0xF7 => 0xF7,
+            ExtendedOpcode::SetBit7_B_0xF8 => 0xF8,
+            ExtendedOpcode::SetBit7_C_0xF9 => 0xF9,
+            ExtendedOpcode::SetBit7_D_0xFA => 0xFA,
+            ExtendedOpcode::SetBit7_E_0xFB => 0xFB,
+            ExtendedOpcode::SetBit7_H_0xFC => 0xFC,
+            ExtendedOpcode::SetBit7_L_0xFD => 0xFD,
+            ExtendedOpcode::SetBit7_MemoryHL_0xFE => 0xFE,
+            ExtendedOpcode::SetBit7_A_0xFF => 0xFF,
         }
     }
 }
@@ -1065,7 +1065,7 @@ fn execute_0x00(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_left(register::ID::B);
+    cpu.rotate_8bit_register_left(register::ID::B)
 }
 
 fn execute_0x01(
@@ -1073,7 +1073,7 @@ fn execute_0x01(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_left(register::ID::C);
+    cpu.rotate_8bit_register_left(register::ID::C)
 }
 
 fn execute_0x02(
@@ -1081,7 +1081,7 @@ fn execute_0x02(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_left(register::ID::D);
+    cpu.rotate_8bit_register_left(register::ID::D)
 }
 
 fn execute_0x03(
@@ -1089,7 +1089,7 @@ fn execute_0x03(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_left(register::ID::E);
+    cpu.rotate_8bit_register_left(register::ID::E)
 }
 
 fn execute_0x04(
@@ -1097,7 +1097,7 @@ fn execute_0x04(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_left(register::ID::H);
+    cpu.rotate_8bit_register_left(register::ID::H)
 }
 
 fn execute_0x05(
@@ -1105,7 +1105,7 @@ fn execute_0x05(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_left(register::ID::L);
+    cpu.rotate_8bit_register_left(register::ID::L)
 }
 
 fn execute_0x06(
@@ -1113,7 +1113,7 @@ fn execute_0x06(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_memory_left(memory, usize::from(cpu.hl.word()), step_fn);
+    cpu.rotate_8bit_memory_left(memory, usize::from(cpu.hl.word()), step_fn)
 }
 
 fn execute_0x07(
@@ -1121,7 +1121,7 @@ fn execute_0x07(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_left(register::ID::A);
+    cpu.rotate_8bit_register_left(register::ID::A)
 }
 
 fn execute_0x08(
@@ -1129,7 +1129,7 @@ fn execute_0x08(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_right(register::ID::B);
+    cpu.rotate_8bit_register_right(register::ID::B)
 }
 
 fn execute_0x09(
@@ -1137,7 +1137,7 @@ fn execute_0x09(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_right(register::ID::C);
+    cpu.rotate_8bit_register_right(register::ID::C)
 }
 
 fn execute_0x0a(
@@ -1145,7 +1145,7 @@ fn execute_0x0a(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_right(register::ID::D);
+    cpu.rotate_8bit_register_right(register::ID::D)
 }
 
 fn execute_0x0b(
@@ -1153,7 +1153,7 @@ fn execute_0x0b(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_right(register::ID::E);
+    cpu.rotate_8bit_register_right(register::ID::E)
 }
 
 fn execute_0x0c(
@@ -1161,7 +1161,7 @@ fn execute_0x0c(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_right(register::ID::H);
+    cpu.rotate_8bit_register_right(register::ID::H)
 }
 
 fn execute_0x0d(
@@ -1169,7 +1169,7 @@ fn execute_0x0d(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_right(register::ID::L);
+    cpu.rotate_8bit_register_right(register::ID::L)
 }
 
 fn execute_0x0e(
@@ -1177,7 +1177,7 @@ fn execute_0x0e(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_memory_right(memory, usize::from(cpu.hl.word()), step_fn);
+    cpu.rotate_8bit_memory_right(memory, usize::from(cpu.hl.word()), step_fn)
 }
 
 fn execute_0x0f(
@@ -1185,7 +1185,7 @@ fn execute_0x0f(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_right(register::ID::A);
+    cpu.rotate_8bit_register_right(register::ID::A)
 }
 
 fn execute_0x10(
@@ -1193,7 +1193,7 @@ fn execute_0x10(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_left_carry(register::ID::B);
+    cpu.rotate_8bit_register_left_carry(register::ID::B)
 }
 
 fn execute_0x11(
@@ -1201,7 +1201,7 @@ fn execute_0x11(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_left_carry(register::ID::C);
+    cpu.rotate_8bit_register_left_carry(register::ID::C)
 }
 
 fn execute_0x12(
@@ -1209,7 +1209,7 @@ fn execute_0x12(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_left_carry(register::ID::D);
+    cpu.rotate_8bit_register_left_carry(register::ID::D)
 }
 
 fn execute_0x13(
@@ -1217,7 +1217,7 @@ fn execute_0x13(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_left_carry(register::ID::E);
+    cpu.rotate_8bit_register_left_carry(register::ID::E)
 }
 
 fn execute_0x14(
@@ -1225,7 +1225,7 @@ fn execute_0x14(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_left_carry(register::ID::H);
+    cpu.rotate_8bit_register_left_carry(register::ID::H)
 }
 
 fn execute_0x15(
@@ -1233,7 +1233,7 @@ fn execute_0x15(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_left_carry(register::ID::L);
+    cpu.rotate_8bit_register_left_carry(register::ID::L)
 }
 
 fn execute_0x16(
@@ -1241,7 +1241,7 @@ fn execute_0x16(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_memory_left_carry(memory, usize::from(cpu.hl.word()), step_fn);
+    cpu.rotate_8bit_memory_left_carry(memory, usize::from(cpu.hl.word()), step_fn)
 }
 
 fn execute_0x17(
@@ -1249,7 +1249,7 @@ fn execute_0x17(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_left_carry(register::ID::A);
+    cpu.rotate_8bit_register_left_carry(register::ID::A)
 }
 
 fn execute_0x18(
@@ -1257,7 +1257,7 @@ fn execute_0x18(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_right_carry(register::ID::B);
+    cpu.rotate_8bit_register_right_carry(register::ID::B)
 }
 
 fn execute_0x19(
@@ -1265,7 +1265,7 @@ fn execute_0x19(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_right_carry(register::ID::C);
+    cpu.rotate_8bit_register_right_carry(register::ID::C)
 }
 
 fn execute_0x1a(
@@ -1273,7 +1273,7 @@ fn execute_0x1a(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_right_carry(register::ID::D);
+    cpu.rotate_8bit_register_right_carry(register::ID::D)
 }
 
 fn execute_0x1b(
@@ -1281,7 +1281,7 @@ fn execute_0x1b(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_right_carry(register::ID::E);
+    cpu.rotate_8bit_register_right_carry(register::ID::E)
 }
 
 fn execute_0x1c(
@@ -1289,7 +1289,7 @@ fn execute_0x1c(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_right_carry(register::ID::H);
+    cpu.rotate_8bit_register_right_carry(register::ID::H)
 }
 
 fn execute_0x1d(
@@ -1297,7 +1297,7 @@ fn execute_0x1d(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_right_carry(register::ID::L);
+    cpu.rotate_8bit_register_right_carry(register::ID::L)
 }
 
 fn execute_0x1e(
@@ -1305,7 +1305,7 @@ fn execute_0x1e(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_memory_right_carry(memory, usize::from(cpu.hl.word()), step_fn);
+    cpu.rotate_8bit_memory_right_carry(memory, usize::from(cpu.hl.word()), step_fn)
 }
 
 fn execute_0x1f(
@@ -1313,7 +1313,7 @@ fn execute_0x1f(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.rotate_8bit_register_right_carry(register::ID::A);
+    cpu.rotate_8bit_register_right_carry(register::ID::A)
 }
 
 fn execute_0x20(
@@ -1321,7 +1321,7 @@ fn execute_0x20(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_left_8bit_register_into_carry(register::ID::B);
+    cpu.shift_left_8bit_register_into_carry(register::ID::B)
 }
 
 fn execute_0x21(
@@ -1329,7 +1329,7 @@ fn execute_0x21(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_left_8bit_register_into_carry(register::ID::C);
+    cpu.shift_left_8bit_register_into_carry(register::ID::C)
 }
 
 fn execute_0x22(
@@ -1337,7 +1337,7 @@ fn execute_0x22(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_left_8bit_register_into_carry(register::ID::D);
+    cpu.shift_left_8bit_register_into_carry(register::ID::D)
 }
 
 fn execute_0x23(
@@ -1345,7 +1345,7 @@ fn execute_0x23(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_left_8bit_register_into_carry(register::ID::E);
+    cpu.shift_left_8bit_register_into_carry(register::ID::E)
 }
 
 fn execute_0x24(
@@ -1353,7 +1353,7 @@ fn execute_0x24(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_left_8bit_register_into_carry(register::ID::H);
+    cpu.shift_left_8bit_register_into_carry(register::ID::H)
 }
 
 fn execute_0x25(
@@ -1361,7 +1361,7 @@ fn execute_0x25(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_left_8bit_register_into_carry(register::ID::L);
+    cpu.shift_left_8bit_register_into_carry(register::ID::L)
 }
 
 fn execute_0x26(
@@ -1369,7 +1369,7 @@ fn execute_0x26(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_left_8bit_memory_into_carry(memory, usize::from(cpu.hl.word()), step_fn);
+    cpu.shift_left_8bit_memory_into_carry(memory, usize::from(cpu.hl.word()), step_fn)
 }
 
 fn execute_0x27(
@@ -1377,7 +1377,7 @@ fn execute_0x27(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_left_8bit_register_into_carry(register::ID::A);
+    cpu.shift_left_8bit_register_into_carry(register::ID::A)
 }
 
 fn execute_0x28(
@@ -1385,7 +1385,7 @@ fn execute_0x28(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_right_8bit_register_into_carry(register::ID::B);
+    cpu.shift_right_8bit_register_into_carry(register::ID::B)
 }
 
 fn execute_0x29(
@@ -1393,7 +1393,7 @@ fn execute_0x29(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_right_8bit_register_into_carry(register::ID::C);
+    cpu.shift_right_8bit_register_into_carry(register::ID::C)
 }
 
 fn execute_0x2a(
@@ -1401,7 +1401,7 @@ fn execute_0x2a(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_right_8bit_register_into_carry(register::ID::D);
+    cpu.shift_right_8bit_register_into_carry(register::ID::D)
 }
 
 fn execute_0x2b(
@@ -1409,7 +1409,7 @@ fn execute_0x2b(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_right_8bit_register_into_carry(register::ID::E);
+    cpu.shift_right_8bit_register_into_carry(register::ID::E)
 }
 
 fn execute_0x2c(
@@ -1417,7 +1417,7 @@ fn execute_0x2c(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_right_8bit_register_into_carry(register::ID::H);
+    cpu.shift_right_8bit_register_into_carry(register::ID::H)
 }
 
 fn execute_0x2d(
@@ -1425,7 +1425,7 @@ fn execute_0x2d(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_right_8bit_register_into_carry(register::ID::L);
+    cpu.shift_right_8bit_register_into_carry(register::ID::L)
 }
 
 fn execute_0x2e(
@@ -1433,7 +1433,7 @@ fn execute_0x2e(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_right_8bit_memory_into_carry(memory, usize::from(cpu.hl.word()), step_fn);
+    cpu.shift_right_8bit_memory_into_carry(memory, usize::from(cpu.hl.word()), step_fn)
 }
 
 fn execute_0x2f(
@@ -1441,7 +1441,7 @@ fn execute_0x2f(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_right_8bit_register_into_carry(register::ID::A);
+    cpu.shift_right_8bit_register_into_carry(register::ID::A)
 }
 
 fn execute_0x30(
@@ -1449,7 +1449,7 @@ fn execute_0x30(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.swap_8bit_register(register::ID::B);
+    cpu.swap_8bit_register(register::ID::B)
 }
 
 fn execute_0x31(
@@ -1457,7 +1457,7 @@ fn execute_0x31(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.swap_8bit_register(register::ID::C);
+    cpu.swap_8bit_register(register::ID::C)
 }
 
 fn execute_0x32(
@@ -1465,7 +1465,7 @@ fn execute_0x32(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.swap_8bit_register(register::ID::D);
+    cpu.swap_8bit_register(register::ID::D)
 }
 
 fn execute_0x33(
@@ -1473,7 +1473,7 @@ fn execute_0x33(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.swap_8bit_register(register::ID::E);
+    cpu.swap_8bit_register(register::ID::E)
 }
 
 fn execute_0x34(
@@ -1481,7 +1481,7 @@ fn execute_0x34(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.swap_8bit_register(register::ID::H);
+    cpu.swap_8bit_register(register::ID::H)
 }
 
 fn execute_0x35(
@@ -1489,7 +1489,7 @@ fn execute_0x35(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.swap_8bit_register(register::ID::L);
+    cpu.swap_8bit_register(register::ID::L)
 }
 
 fn execute_0x36(
@@ -1497,7 +1497,7 @@ fn execute_0x36(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.swap_8bit_memory(memory, usize::from(cpu.hl.word()), step_fn);
+    cpu.swap_8bit_memory(memory, usize::from(cpu.hl.word()), step_fn)
 }
 
 fn execute_0x37(
@@ -1505,7 +1505,7 @@ fn execute_0x37(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.swap_8bit_register(register::ID::A);
+    cpu.swap_8bit_register(register::ID::A)
 }
 
 fn execute_0x38(
@@ -1513,7 +1513,7 @@ fn execute_0x38(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_right_8bit_register(register::ID::B);
+    cpu.shift_right_8bit_register(register::ID::B)
 }
 
 fn execute_0x39(
@@ -1521,7 +1521,7 @@ fn execute_0x39(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_right_8bit_register(register::ID::C);
+    cpu.shift_right_8bit_register(register::ID::C)
 }
 
 fn execute_0x3a(
@@ -1529,7 +1529,7 @@ fn execute_0x3a(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_right_8bit_register(register::ID::D);
+    cpu.shift_right_8bit_register(register::ID::D)
 }
 
 fn execute_0x3b(
@@ -1537,7 +1537,7 @@ fn execute_0x3b(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_right_8bit_register(register::ID::E);
+    cpu.shift_right_8bit_register(register::ID::E)
 }
 
 fn execute_0x3c(
@@ -1545,7 +1545,7 @@ fn execute_0x3c(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_right_8bit_register(register::ID::H);
+    cpu.shift_right_8bit_register(register::ID::H)
 }
 
 fn execute_0x3d(
@@ -1553,7 +1553,7 @@ fn execute_0x3d(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_right_8bit_register(register::ID::L);
+    cpu.shift_right_8bit_register(register::ID::L)
 }
 
 fn execute_0x3e(
@@ -1561,7 +1561,7 @@ fn execute_0x3e(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_right_8bit_memory(memory, usize::from(cpu.hl.word()), step_fn);
+    cpu.shift_right_8bit_memory(memory, usize::from(cpu.hl.word()), step_fn)
 }
 
 fn execute_0x3f(
@@ -1569,7 +1569,7 @@ fn execute_0x3f(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.shift_right_8bit_register(register::ID::A);
+    cpu.shift_right_8bit_register(register::ID::A)
 }
 
 fn execute_0x40(
@@ -1577,7 +1577,7 @@ fn execute_0x40(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::B, 0);
+    cpu.test_bit(register::ID::B, 0)
 }
 
 fn execute_0x41(
@@ -1585,7 +1585,7 @@ fn execute_0x41(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::C, 0);
+    cpu.test_bit(register::ID::C, 0)
 }
 
 fn execute_0x42(
@@ -1593,7 +1593,7 @@ fn execute_0x42(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::D, 0);
+    cpu.test_bit(register::ID::D, 0)
 }
 
 fn execute_0x43(
@@ -1601,7 +1601,7 @@ fn execute_0x43(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::E, 0);
+    cpu.test_bit(register::ID::E, 0)
 }
 
 fn execute_0x44(
@@ -1609,7 +1609,7 @@ fn execute_0x44(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::H, 0);
+    cpu.test_bit(register::ID::H, 0)
 }
 
 fn execute_0x45(
@@ -1617,7 +1617,7 @@ fn execute_0x45(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::L, 0);
+    cpu.test_bit(register::ID::L, 0)
 }
 
 fn execute_0x46(
@@ -1625,7 +1625,7 @@ fn execute_0x46(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 0, step_fn);
+    cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 0, step_fn)
 }
 
 fn execute_0x47(
@@ -1633,7 +1633,7 @@ fn execute_0x47(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::A, 0);
+    cpu.test_bit(register::ID::A, 0)
 }
 
 fn execute_0x48(
@@ -1641,7 +1641,7 @@ fn execute_0x48(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::B, 1);
+    cpu.test_bit(register::ID::B, 1)
 }
 
 fn execute_0x49(
@@ -1649,7 +1649,7 @@ fn execute_0x49(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::C, 1);
+    cpu.test_bit(register::ID::C, 1)
 }
 
 fn execute_0x4a(
@@ -1657,7 +1657,7 @@ fn execute_0x4a(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::D, 1);
+    cpu.test_bit(register::ID::D, 1)
 }
 
 fn execute_0x4b(
@@ -1665,7 +1665,7 @@ fn execute_0x4b(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::E, 1);
+    cpu.test_bit(register::ID::E, 1)
 }
 
 fn execute_0x4c(
@@ -1673,7 +1673,7 @@ fn execute_0x4c(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::H, 1);
+    cpu.test_bit(register::ID::H, 1)
 }
 
 fn execute_0x4d(
@@ -1681,7 +1681,7 @@ fn execute_0x4d(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::L, 1);
+    cpu.test_bit(register::ID::L, 1)
 }
 
 fn execute_0x4e(
@@ -1689,7 +1689,7 @@ fn execute_0x4e(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 1, step_fn);
+    cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 1, step_fn)
 }
 
 fn execute_0x4f(
@@ -1697,7 +1697,7 @@ fn execute_0x4f(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::A, 1);
+    cpu.test_bit(register::ID::A, 1)
 }
 
 fn execute_0x50(
@@ -1705,7 +1705,7 @@ fn execute_0x50(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::B, 2);
+    cpu.test_bit(register::ID::B, 2)
 }
 
 fn execute_0x51(
@@ -1713,7 +1713,7 @@ fn execute_0x51(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::C, 2);
+    cpu.test_bit(register::ID::C, 2)
 }
 
 fn execute_0x52(
@@ -1721,7 +1721,7 @@ fn execute_0x52(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::D, 2);
+    cpu.test_bit(register::ID::D, 2)
 }
 
 fn execute_0x53(
@@ -1729,7 +1729,7 @@ fn execute_0x53(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::E, 2);
+    cpu.test_bit(register::ID::E, 2)
 }
 
 fn execute_0x54(
@@ -1737,7 +1737,7 @@ fn execute_0x54(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::H, 2);
+    cpu.test_bit(register::ID::H, 2)
 }
 
 fn execute_0x55(
@@ -1745,7 +1745,7 @@ fn execute_0x55(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::L, 2);
+    cpu.test_bit(register::ID::L, 2)
 }
 
 fn execute_0x56(
@@ -1753,7 +1753,7 @@ fn execute_0x56(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 2, step_fn);
+    cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 2, step_fn)
 }
 
 fn execute_0x57(
@@ -1761,7 +1761,7 @@ fn execute_0x57(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::A, 2);
+    cpu.test_bit(register::ID::A, 2)
 }
 
 fn execute_0x58(
@@ -1769,7 +1769,7 @@ fn execute_0x58(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::B, 3);
+    cpu.test_bit(register::ID::B, 3)
 }
 
 fn execute_0x59(
@@ -1777,7 +1777,7 @@ fn execute_0x59(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::C, 3);
+    cpu.test_bit(register::ID::C, 3)
 }
 
 fn execute_0x5a(
@@ -1785,7 +1785,7 @@ fn execute_0x5a(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::D, 3);
+    cpu.test_bit(register::ID::D, 3)
 }
 
 fn execute_0x5b(
@@ -1793,7 +1793,7 @@ fn execute_0x5b(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::E, 3);
+    cpu.test_bit(register::ID::E, 3)
 }
 
 fn execute_0x5c(
@@ -1801,7 +1801,7 @@ fn execute_0x5c(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::H, 3);
+    cpu.test_bit(register::ID::H, 3)
 }
 
 fn execute_0x5d(
@@ -1809,7 +1809,7 @@ fn execute_0x5d(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::L, 3);
+    cpu.test_bit(register::ID::L, 3)
 }
 
 fn execute_0x5e(
@@ -1817,7 +1817,7 @@ fn execute_0x5e(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 3, step_fn);
+    cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 3, step_fn)
 }
 
 fn execute_0x5f(
@@ -1825,7 +1825,7 @@ fn execute_0x5f(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::A, 3);
+    cpu.test_bit(register::ID::A, 3)
 }
 
 fn execute_0x60(
@@ -1833,7 +1833,7 @@ fn execute_0x60(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::B, 4);
+    cpu.test_bit(register::ID::B, 4)
 }
 
 fn execute_0x61(
@@ -1841,7 +1841,7 @@ fn execute_0x61(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::C, 4);
+    cpu.test_bit(register::ID::C, 4)
 }
 
 fn execute_0x62(
@@ -1849,7 +1849,7 @@ fn execute_0x62(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::D, 4);
+    cpu.test_bit(register::ID::D, 4)
 }
 
 fn execute_0x63(
@@ -1857,7 +1857,7 @@ fn execute_0x63(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::E, 4);
+    cpu.test_bit(register::ID::E, 4)
 }
 
 fn execute_0x64(
@@ -1865,7 +1865,7 @@ fn execute_0x64(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::H, 4);
+    cpu.test_bit(register::ID::H, 4)
 }
 
 fn execute_0x65(
@@ -1873,7 +1873,7 @@ fn execute_0x65(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::L, 4);
+    cpu.test_bit(register::ID::L, 4)
 }
 
 fn execute_0x66(
@@ -1881,7 +1881,7 @@ fn execute_0x66(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 4, step_fn);
+    cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 4, step_fn)
 }
 
 fn execute_0x67(
@@ -1889,7 +1889,7 @@ fn execute_0x67(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::A, 4);
+    cpu.test_bit(register::ID::A, 4)
 }
 
 fn execute_0x68(
@@ -1897,7 +1897,7 @@ fn execute_0x68(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::B, 5);
+    cpu.test_bit(register::ID::B, 5)
 }
 
 fn execute_0x69(
@@ -1905,7 +1905,7 @@ fn execute_0x69(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::C, 5);
+    cpu.test_bit(register::ID::C, 5)
 }
 
 fn execute_0x6a(
@@ -1913,7 +1913,7 @@ fn execute_0x6a(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::D, 5);
+    cpu.test_bit(register::ID::D, 5)
 }
 
 fn execute_0x6b(
@@ -1921,7 +1921,7 @@ fn execute_0x6b(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::E, 5);
+    cpu.test_bit(register::ID::E, 5)
 }
 
 fn execute_0x6c(
@@ -1929,7 +1929,7 @@ fn execute_0x6c(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::H, 5);
+    cpu.test_bit(register::ID::H, 5)
 }
 
 fn execute_0x6d(
@@ -1937,7 +1937,7 @@ fn execute_0x6d(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::L, 5);
+    cpu.test_bit(register::ID::L, 5)
 }
 
 fn execute_0x6e(
@@ -1945,7 +1945,7 @@ fn execute_0x6e(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 5, step_fn);
+    cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 5, step_fn)
 }
 
 fn execute_0x6f(
@@ -1953,7 +1953,7 @@ fn execute_0x6f(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::A, 5);
+    cpu.test_bit(register::ID::A, 5)
 }
 
 fn execute_0x70(
@@ -1961,7 +1961,7 @@ fn execute_0x70(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::B, 6);
+    cpu.test_bit(register::ID::B, 6)
 }
 
 fn execute_0x71(
@@ -1969,7 +1969,7 @@ fn execute_0x71(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::C, 6);
+    cpu.test_bit(register::ID::C, 6)
 }
 
 fn execute_0x72(
@@ -1977,7 +1977,7 @@ fn execute_0x72(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::D, 6);
+    cpu.test_bit(register::ID::D, 6)
 }
 
 fn execute_0x73(
@@ -1985,7 +1985,7 @@ fn execute_0x73(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::E, 6);
+    cpu.test_bit(register::ID::E, 6)
 }
 
 fn execute_0x74(
@@ -1993,7 +1993,7 @@ fn execute_0x74(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::H, 6);
+    cpu.test_bit(register::ID::H, 6)
 }
 
 fn execute_0x75(
@@ -2001,7 +2001,7 @@ fn execute_0x75(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::L, 6);
+    cpu.test_bit(register::ID::L, 6)
 }
 
 fn execute_0x76(
@@ -2009,7 +2009,7 @@ fn execute_0x76(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 6, step_fn);
+    cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 6, step_fn)
 }
 
 fn execute_0x77(
@@ -2017,7 +2017,7 @@ fn execute_0x77(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::A, 6);
+    cpu.test_bit(register::ID::A, 6)
 }
 
 fn execute_0x78(
@@ -2025,7 +2025,7 @@ fn execute_0x78(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::B, 7);
+    cpu.test_bit(register::ID::B, 7)
 }
 
 fn execute_0x79(
@@ -2033,7 +2033,7 @@ fn execute_0x79(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::C, 7);
+    cpu.test_bit(register::ID::C, 7)
 }
 
 fn execute_0x7a(
@@ -2041,7 +2041,7 @@ fn execute_0x7a(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::D, 7);
+    cpu.test_bit(register::ID::D, 7)
 }
 
 fn execute_0x7b(
@@ -2049,7 +2049,7 @@ fn execute_0x7b(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::E, 7);
+    cpu.test_bit(register::ID::E, 7)
 }
 
 fn execute_0x7c(
@@ -2057,7 +2057,7 @@ fn execute_0x7c(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::H, 7);
+    cpu.test_bit(register::ID::H, 7)
 }
 
 fn execute_0x7d(
@@ -2065,7 +2065,7 @@ fn execute_0x7d(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::L, 7);
+    cpu.test_bit(register::ID::L, 7)
 }
 
 fn execute_0x7e(
@@ -2073,7 +2073,7 @@ fn execute_0x7e(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 7, step_fn);
+    cpu.test_bit_memory(memory, usize::from(cpu.hl.word()), 7, step_fn)
 }
 
 fn execute_0x7f(
@@ -2081,7 +2081,7 @@ fn execute_0x7f(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.test_bit(register::ID::A, 7);
+    cpu.test_bit(register::ID::A, 7)
 }
 
 fn execute_0x80(
@@ -2089,7 +2089,7 @@ fn execute_0x80(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::B, 0);
+    cpu.reset_bit(register::ID::B, 0)
 }
 
 fn execute_0x81(
@@ -2097,7 +2097,7 @@ fn execute_0x81(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::C, 0);
+    cpu.reset_bit(register::ID::C, 0)
 }
 
 fn execute_0x82(
@@ -2105,7 +2105,7 @@ fn execute_0x82(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::D, 0);
+    cpu.reset_bit(register::ID::D, 0)
 }
 
 fn execute_0x83(
@@ -2113,7 +2113,7 @@ fn execute_0x83(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::E, 0);
+    cpu.reset_bit(register::ID::E, 0)
 }
 
 fn execute_0x84(
@@ -2121,7 +2121,7 @@ fn execute_0x84(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::H, 0);
+    cpu.reset_bit(register::ID::H, 0)
 }
 
 fn execute_0x85(
@@ -2129,7 +2129,7 @@ fn execute_0x85(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::L, 0);
+    cpu.reset_bit(register::ID::L, 0)
 }
 
 fn execute_0x86(
@@ -2137,7 +2137,7 @@ fn execute_0x86(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 0, step_fn);
+    cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 0, step_fn)
 }
 
 fn execute_0x87(
@@ -2145,7 +2145,7 @@ fn execute_0x87(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::A, 0);
+    cpu.reset_bit(register::ID::A, 0)
 }
 
 fn execute_0x88(
@@ -2153,7 +2153,7 @@ fn execute_0x88(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::B, 1);
+    cpu.reset_bit(register::ID::B, 1)
 }
 
 fn execute_0x89(
@@ -2161,7 +2161,7 @@ fn execute_0x89(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::C, 1);
+    cpu.reset_bit(register::ID::C, 1)
 }
 
 fn execute_0x8a(
@@ -2169,7 +2169,7 @@ fn execute_0x8a(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::D, 1);
+    cpu.reset_bit(register::ID::D, 1)
 }
 
 fn execute_0x8b(
@@ -2177,7 +2177,7 @@ fn execute_0x8b(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::E, 1);
+    cpu.reset_bit(register::ID::E, 1)
 }
 
 fn execute_0x8c(
@@ -2185,7 +2185,7 @@ fn execute_0x8c(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::H, 1);
+    cpu.reset_bit(register::ID::H, 1)
 }
 
 fn execute_0x8d(
@@ -2193,7 +2193,7 @@ fn execute_0x8d(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::L, 1);
+    cpu.reset_bit(register::ID::L, 1)
 }
 
 fn execute_0x8e(
@@ -2201,7 +2201,7 @@ fn execute_0x8e(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 1, step_fn);
+    cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 1, step_fn)
 }
 
 fn execute_0x8f(
@@ -2209,7 +2209,7 @@ fn execute_0x8f(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::A, 1);
+    cpu.reset_bit(register::ID::A, 1)
 }
 
 fn execute_0x90(
@@ -2217,7 +2217,7 @@ fn execute_0x90(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::B, 2);
+    cpu.reset_bit(register::ID::B, 2)
 }
 
 fn execute_0x91(
@@ -2225,7 +2225,7 @@ fn execute_0x91(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::C, 2);
+    cpu.reset_bit(register::ID::C, 2)
 }
 
 fn execute_0x92(
@@ -2233,7 +2233,7 @@ fn execute_0x92(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::D, 2);
+    cpu.reset_bit(register::ID::D, 2)
 }
 
 fn execute_0x93(
@@ -2241,7 +2241,7 @@ fn execute_0x93(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::E, 2);
+    cpu.reset_bit(register::ID::E, 2)
 }
 
 fn execute_0x94(
@@ -2249,7 +2249,7 @@ fn execute_0x94(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::H, 2);
+    cpu.reset_bit(register::ID::H, 2)
 }
 
 fn execute_0x95(
@@ -2257,7 +2257,7 @@ fn execute_0x95(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::L, 2);
+    cpu.reset_bit(register::ID::L, 2)
 }
 
 fn execute_0x96(
@@ -2265,7 +2265,7 @@ fn execute_0x96(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 2, step_fn);
+    cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 2, step_fn)
 }
 
 fn execute_0x97(
@@ -2273,7 +2273,7 @@ fn execute_0x97(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::A, 2);
+    cpu.reset_bit(register::ID::A, 2)
 }
 
 fn execute_0x98(
@@ -2281,7 +2281,7 @@ fn execute_0x98(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::B, 3);
+    cpu.reset_bit(register::ID::B, 3)
 }
 
 fn execute_0x99(
@@ -2289,7 +2289,7 @@ fn execute_0x99(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::C, 3);
+    cpu.reset_bit(register::ID::C, 3)
 }
 
 fn execute_0x9a(
@@ -2297,7 +2297,7 @@ fn execute_0x9a(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::D, 3);
+    cpu.reset_bit(register::ID::D, 3)
 }
 
 fn execute_0x9b(
@@ -2305,7 +2305,7 @@ fn execute_0x9b(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::E, 3);
+    cpu.reset_bit(register::ID::E, 3)
 }
 
 fn execute_0x9c(
@@ -2313,7 +2313,7 @@ fn execute_0x9c(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::H, 3);
+    cpu.reset_bit(register::ID::H, 3)
 }
 
 fn execute_0x9d(
@@ -2321,7 +2321,7 @@ fn execute_0x9d(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::L, 3);
+    cpu.reset_bit(register::ID::L, 3)
 }
 
 fn execute_0x9e(
@@ -2329,7 +2329,7 @@ fn execute_0x9e(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 3, step_fn);
+    cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 3, step_fn)
 }
 
 fn execute_0x9f(
@@ -2337,7 +2337,7 @@ fn execute_0x9f(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::A, 3);
+    cpu.reset_bit(register::ID::A, 3)
 }
 
 fn execute_0xa0(
@@ -2345,7 +2345,7 @@ fn execute_0xa0(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::B, 4);
+    cpu.reset_bit(register::ID::B, 4)
 }
 
 fn execute_0xa1(
@@ -2353,7 +2353,7 @@ fn execute_0xa1(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::C, 4);
+    cpu.reset_bit(register::ID::C, 4)
 }
 
 fn execute_0xa2(
@@ -2361,7 +2361,7 @@ fn execute_0xa2(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::D, 4);
+    cpu.reset_bit(register::ID::D, 4)
 }
 
 fn execute_0xa3(
@@ -2369,7 +2369,7 @@ fn execute_0xa3(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::E, 4);
+    cpu.reset_bit(register::ID::E, 4)
 }
 
 fn execute_0xa4(
@@ -2377,7 +2377,7 @@ fn execute_0xa4(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::H, 4);
+    cpu.reset_bit(register::ID::H, 4)
 }
 
 fn execute_0xa5(
@@ -2385,7 +2385,7 @@ fn execute_0xa5(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::L, 4);
+    cpu.reset_bit(register::ID::L, 4)
 }
 
 fn execute_0xa6(
@@ -2393,7 +2393,7 @@ fn execute_0xa6(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 4, step_fn);
+    cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 4, step_fn)
 }
 
 fn execute_0xa7(
@@ -2401,7 +2401,7 @@ fn execute_0xa7(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::A, 4);
+    cpu.reset_bit(register::ID::A, 4)
 }
 
 fn execute_0xa8(
@@ -2409,7 +2409,7 @@ fn execute_0xa8(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::B, 5);
+    cpu.reset_bit(register::ID::B, 5)
 }
 
 fn execute_0xa9(
@@ -2417,7 +2417,7 @@ fn execute_0xa9(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::C, 5);
+    cpu.reset_bit(register::ID::C, 5)
 }
 
 fn execute_0xaa(
@@ -2425,7 +2425,7 @@ fn execute_0xaa(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::D, 5);
+    cpu.reset_bit(register::ID::D, 5)
 }
 
 fn execute_0xab(
@@ -2433,7 +2433,7 @@ fn execute_0xab(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::E, 5);
+    cpu.reset_bit(register::ID::E, 5)
 }
 
 fn execute_0xac(
@@ -2441,7 +2441,7 @@ fn execute_0xac(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::H, 5);
+    cpu.reset_bit(register::ID::H, 5)
 }
 
 fn execute_0xad(
@@ -2449,7 +2449,7 @@ fn execute_0xad(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::L, 5);
+    cpu.reset_bit(register::ID::L, 5)
 }
 
 fn execute_0xae(
@@ -2457,7 +2457,7 @@ fn execute_0xae(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 5, step_fn);
+    cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 5, step_fn)
 }
 
 fn execute_0xaf(
@@ -2465,7 +2465,7 @@ fn execute_0xaf(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::A, 5);
+    cpu.reset_bit(register::ID::A, 5)
 }
 
 fn execute_0xb0(
@@ -2473,7 +2473,7 @@ fn execute_0xb0(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::B, 6);
+    cpu.reset_bit(register::ID::B, 6)
 }
 
 fn execute_0xb1(
@@ -2481,7 +2481,7 @@ fn execute_0xb1(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::C, 6);
+    cpu.reset_bit(register::ID::C, 6)
 }
 
 fn execute_0xb2(
@@ -2489,7 +2489,7 @@ fn execute_0xb2(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::D, 6);
+    cpu.reset_bit(register::ID::D, 6)
 }
 
 fn execute_0xb3(
@@ -2497,7 +2497,7 @@ fn execute_0xb3(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::E, 6);
+    cpu.reset_bit(register::ID::E, 6)
 }
 
 fn execute_0xb4(
@@ -2505,7 +2505,7 @@ fn execute_0xb4(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::H, 6);
+    cpu.reset_bit(register::ID::H, 6)
 }
 
 fn execute_0xb5(
@@ -2513,7 +2513,7 @@ fn execute_0xb5(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::L, 6);
+    cpu.reset_bit(register::ID::L, 6)
 }
 
 fn execute_0xb6(
@@ -2521,7 +2521,7 @@ fn execute_0xb6(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 6, step_fn);
+    cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 6, step_fn)
 }
 
 fn execute_0xb7(
@@ -2529,7 +2529,7 @@ fn execute_0xb7(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::A, 6);
+    cpu.reset_bit(register::ID::A, 6)
 }
 
 fn execute_0xb8(
@@ -2537,7 +2537,7 @@ fn execute_0xb8(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::B, 7);
+    cpu.reset_bit(register::ID::B, 7)
 }
 
 fn execute_0xb9(
@@ -2545,7 +2545,7 @@ fn execute_0xb9(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::C, 7);
+    cpu.reset_bit(register::ID::C, 7)
 }
 
 fn execute_0xba(
@@ -2553,7 +2553,7 @@ fn execute_0xba(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::D, 7);
+    cpu.reset_bit(register::ID::D, 7)
 }
 
 fn execute_0xbb(
@@ -2561,7 +2561,7 @@ fn execute_0xbb(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::E, 7);
+    cpu.reset_bit(register::ID::E, 7)
 }
 
 fn execute_0xbc(
@@ -2569,7 +2569,7 @@ fn execute_0xbc(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::H, 7);
+    cpu.reset_bit(register::ID::H, 7)
 }
 
 fn execute_0xbd(
@@ -2577,7 +2577,7 @@ fn execute_0xbd(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::L, 7);
+    cpu.reset_bit(register::ID::L, 7)
 }
 
 fn execute_0xbe(
@@ -2585,7 +2585,7 @@ fn execute_0xbe(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 7, step_fn);
+    cpu.reset_bit_memory(memory, usize::from(cpu.hl.word()), 7, step_fn)
 }
 
 fn execute_0xbf(
@@ -2593,7 +2593,7 @@ fn execute_0xbf(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.reset_bit(register::ID::A, 7);
+    cpu.reset_bit(register::ID::A, 7)
 }
 
 fn execute_0xc0(
@@ -2601,7 +2601,7 @@ fn execute_0xc0(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::B, 0);
+    cpu.set_bit(register::ID::B, 0)
 }
 
 fn execute_0xc1(
@@ -2609,7 +2609,7 @@ fn execute_0xc1(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::C, 0);
+    cpu.set_bit(register::ID::C, 0)
 }
 
 fn execute_0xc2(
@@ -2617,7 +2617,7 @@ fn execute_0xc2(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::D, 0);
+    cpu.set_bit(register::ID::D, 0)
 }
 
 fn execute_0xc3(
@@ -2625,7 +2625,7 @@ fn execute_0xc3(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::E, 0);
+    cpu.set_bit(register::ID::E, 0)
 }
 
 fn execute_0xc4(
@@ -2633,7 +2633,7 @@ fn execute_0xc4(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::H, 0);
+    cpu.set_bit(register::ID::H, 0)
 }
 
 fn execute_0xc5(
@@ -2641,7 +2641,7 @@ fn execute_0xc5(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::L, 0);
+    cpu.set_bit(register::ID::L, 0)
 }
 
 fn execute_0xc6(
@@ -2649,7 +2649,7 @@ fn execute_0xc6(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 0, step_fn);
+    cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 0, step_fn)
 }
 
 fn execute_0xc7(
@@ -2657,7 +2657,7 @@ fn execute_0xc7(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::A, 0);
+    cpu.set_bit(register::ID::A, 0)
 }
 
 fn execute_0xc8(
@@ -2665,7 +2665,7 @@ fn execute_0xc8(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::B, 1);
+    cpu.set_bit(register::ID::B, 1)
 }
 
 fn execute_0xc9(
@@ -2673,7 +2673,7 @@ fn execute_0xc9(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::C, 1);
+    cpu.set_bit(register::ID::C, 1)
 }
 
 fn execute_0xca(
@@ -2681,7 +2681,7 @@ fn execute_0xca(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::D, 1);
+    cpu.set_bit(register::ID::D, 1)
 }
 
 fn execute_0xcb(
@@ -2689,7 +2689,7 @@ fn execute_0xcb(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::E, 1);
+    cpu.set_bit(register::ID::E, 1)
 }
 
 fn execute_0xcc(
@@ -2697,7 +2697,7 @@ fn execute_0xcc(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::H, 1);
+    cpu.set_bit(register::ID::H, 1)
 }
 
 fn execute_0xcd(
@@ -2705,7 +2705,7 @@ fn execute_0xcd(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::L, 1);
+    cpu.set_bit(register::ID::L, 1)
 }
 
 fn execute_0xce(
@@ -2713,7 +2713,7 @@ fn execute_0xce(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 1, step_fn);
+    cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 1, step_fn)
 }
 
 fn execute_0xcf(
@@ -2721,7 +2721,7 @@ fn execute_0xcf(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::A, 1);
+    cpu.set_bit(register::ID::A, 1)
 }
 
 fn execute_0xd0(
@@ -2729,7 +2729,7 @@ fn execute_0xd0(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::B, 2);
+    cpu.set_bit(register::ID::B, 2)
 }
 
 fn execute_0xd1(
@@ -2737,7 +2737,7 @@ fn execute_0xd1(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::C, 2);
+    cpu.set_bit(register::ID::C, 2)
 }
 
 fn execute_0xd2(
@@ -2745,7 +2745,7 @@ fn execute_0xd2(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::D, 2);
+    cpu.set_bit(register::ID::D, 2)
 }
 
 fn execute_0xd3(
@@ -2753,7 +2753,7 @@ fn execute_0xd3(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::E, 2);
+    cpu.set_bit(register::ID::E, 2)
 }
 
 fn execute_0xd4(
@@ -2761,7 +2761,7 @@ fn execute_0xd4(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::H, 2);
+    cpu.set_bit(register::ID::H, 2)
 }
 
 fn execute_0xd5(
@@ -2769,7 +2769,7 @@ fn execute_0xd5(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::L, 2);
+    cpu.set_bit(register::ID::L, 2)
 }
 
 fn execute_0xd6(
@@ -2777,7 +2777,7 @@ fn execute_0xd6(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 2, step_fn);
+    cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 2, step_fn)
 }
 
 fn execute_0xd7(
@@ -2785,7 +2785,7 @@ fn execute_0xd7(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::A, 2);
+    cpu.set_bit(register::ID::A, 2)
 }
 
 fn execute_0xd8(
@@ -2793,7 +2793,7 @@ fn execute_0xd8(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::B, 3);
+    cpu.set_bit(register::ID::B, 3)
 }
 
 fn execute_0xd9(
@@ -2801,7 +2801,7 @@ fn execute_0xd9(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::C, 3);
+    cpu.set_bit(register::ID::C, 3)
 }
 
 fn execute_0xda(
@@ -2809,7 +2809,7 @@ fn execute_0xda(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::D, 3);
+    cpu.set_bit(register::ID::D, 3)
 }
 
 fn execute_0xdb(
@@ -2817,7 +2817,7 @@ fn execute_0xdb(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::E, 3);
+    cpu.set_bit(register::ID::E, 3)
 }
 
 fn execute_0xdc(
@@ -2825,7 +2825,7 @@ fn execute_0xdc(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::H, 3);
+    cpu.set_bit(register::ID::H, 3)
 }
 
 fn execute_0xdd(
@@ -2833,7 +2833,7 @@ fn execute_0xdd(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::L, 3);
+    cpu.set_bit(register::ID::L, 3)
 }
 
 fn execute_0xde(
@@ -2841,7 +2841,7 @@ fn execute_0xde(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 3, step_fn);
+    cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 3, step_fn)
 }
 
 fn execute_0xdf(
@@ -2849,7 +2849,7 @@ fn execute_0xdf(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::A, 3);
+    cpu.set_bit(register::ID::A, 3)
 }
 
 fn execute_0xe0(
@@ -2857,7 +2857,7 @@ fn execute_0xe0(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::B, 4);
+    cpu.set_bit(register::ID::B, 4)
 }
 
 fn execute_0xe1(
@@ -2865,7 +2865,7 @@ fn execute_0xe1(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::C, 4);
+    cpu.set_bit(register::ID::C, 4)
 }
 
 fn execute_0xe2(
@@ -2873,7 +2873,7 @@ fn execute_0xe2(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::D, 4);
+    cpu.set_bit(register::ID::D, 4)
 }
 
 fn execute_0xe3(
@@ -2881,7 +2881,7 @@ fn execute_0xe3(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::E, 4);
+    cpu.set_bit(register::ID::E, 4)
 }
 
 fn execute_0xe4(
@@ -2889,7 +2889,7 @@ fn execute_0xe4(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::H, 4);
+    cpu.set_bit(register::ID::H, 4)
 }
 
 fn execute_0xe5(
@@ -2897,7 +2897,7 @@ fn execute_0xe5(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::L, 4);
+    cpu.set_bit(register::ID::L, 4)
 }
 
 fn execute_0xe6(
@@ -2905,7 +2905,7 @@ fn execute_0xe6(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 4, step_fn);
+    cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 4, step_fn)
 }
 
 fn execute_0xe7(
@@ -2913,7 +2913,7 @@ fn execute_0xe7(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::A, 4);
+    cpu.set_bit(register::ID::A, 4)
 }
 
 fn execute_0xe8(
@@ -2921,7 +2921,7 @@ fn execute_0xe8(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::B, 5);
+    cpu.set_bit(register::ID::B, 5)
 }
 
 fn execute_0xe9(
@@ -2929,7 +2929,7 @@ fn execute_0xe9(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::C, 5);
+    cpu.set_bit(register::ID::C, 5)
 }
 
 fn execute_0xea(
@@ -2937,7 +2937,7 @@ fn execute_0xea(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::D, 5);
+    cpu.set_bit(register::ID::D, 5)
 }
 
 fn execute_0xeb(
@@ -2945,7 +2945,7 @@ fn execute_0xeb(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::E, 5);
+    cpu.set_bit(register::ID::E, 5)
 }
 
 fn execute_0xec(
@@ -2953,7 +2953,7 @@ fn execute_0xec(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::H, 5);
+    cpu.set_bit(register::ID::H, 5)
 }
 
 fn execute_0xed(
@@ -2961,7 +2961,7 @@ fn execute_0xed(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::L, 5);
+    cpu.set_bit(register::ID::L, 5)
 }
 
 fn execute_0xee(
@@ -2969,7 +2969,7 @@ fn execute_0xee(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 5, step_fn);
+    cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 5, step_fn)
 }
 
 fn execute_0xef(
@@ -2977,7 +2977,7 @@ fn execute_0xef(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::A, 5);
+    cpu.set_bit(register::ID::A, 5)
 }
 
 fn execute_0xf0(
@@ -2985,7 +2985,7 @@ fn execute_0xf0(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::B, 6);
+    cpu.set_bit(register::ID::B, 6)
 }
 
 fn execute_0xf1(
@@ -2993,7 +2993,7 @@ fn execute_0xf1(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::C, 6);
+    cpu.set_bit(register::ID::C, 6)
 }
 
 fn execute_0xf2(
@@ -3001,7 +3001,7 @@ fn execute_0xf2(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::D, 6);
+    cpu.set_bit(register::ID::D, 6)
 }
 
 fn execute_0xf3(
@@ -3009,7 +3009,7 @@ fn execute_0xf3(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::E, 6);
+    cpu.set_bit(register::ID::E, 6)
 }
 
 fn execute_0xf4(
@@ -3017,7 +3017,7 @@ fn execute_0xf4(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::H, 6);
+    cpu.set_bit(register::ID::H, 6)
 }
 
 fn execute_0xf5(
@@ -3025,7 +3025,7 @@ fn execute_0xf5(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::L, 6);
+    cpu.set_bit(register::ID::L, 6)
 }
 
 fn execute_0xf6(
@@ -3033,7 +3033,7 @@ fn execute_0xf6(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 6, step_fn);
+    cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 6, step_fn)
 }
 
 fn execute_0xf7(
@@ -3041,7 +3041,7 @@ fn execute_0xf7(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::A, 6);
+    cpu.set_bit(register::ID::A, 6)
 }
 
 fn execute_0xf8(
@@ -3049,7 +3049,7 @@ fn execute_0xf8(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::B, 7);
+    cpu.set_bit(register::ID::B, 7)
 }
 
 fn execute_0xf9(
@@ -3057,7 +3057,7 @@ fn execute_0xf9(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::C, 7);
+    cpu.set_bit(register::ID::C, 7)
 }
 
 fn execute_0xfa(
@@ -3065,7 +3065,7 @@ fn execute_0xfa(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::D, 7);
+    cpu.set_bit(register::ID::D, 7)
 }
 
 fn execute_0xfb(
@@ -3073,7 +3073,7 @@ fn execute_0xfb(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::E, 7);
+    cpu.set_bit(register::ID::E, 7)
 }
 
 fn execute_0xfc(
@@ -3081,7 +3081,7 @@ fn execute_0xfc(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::H, 7);
+    cpu.set_bit(register::ID::H, 7)
 }
 
 fn execute_0xfd(
@@ -3089,7 +3089,7 @@ fn execute_0xfd(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::L, 7);
+    cpu.set_bit(register::ID::L, 7)
 }
 
 fn execute_0xfe(
@@ -3097,7 +3097,7 @@ fn execute_0xfe(
     memory: &Arc<sync::Mutex<memory::Memory>>,
     step_fn: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 7, step_fn);
+    cpu.set_bit_memory(memory, usize::from(cpu.hl.word()), 7, step_fn)
 }
 
 fn execute_0xff(
@@ -3105,5 +3105,5 @@ fn execute_0xff(
     _: &Arc<sync::Mutex<memory::Memory>>,
     _: &mut impl FnMut(),
 ) -> u32 {
-    return cpu.set_bit(register::ID::A, 7);
+    cpu.set_bit(register::ID::A, 7)
 }
