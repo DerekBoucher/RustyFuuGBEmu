@@ -1,11 +1,13 @@
-use glium::glutin::surface::WindowSurface;
-use glium::Display;
-use glium::{implement_vertex, Surface};
-extern crate glium;
+// Imported through a leading `::` because the `wgpu` child module shadows the
+// crate name inside this module.
+use ::wgpu::{Queue, RenderPass};
+
+use crate::ppu;
 
 mod shaders;
-use crate::ppu;
-use crate::ui;
+mod wgpu;
+
+pub use self::wgpu::WgpuRenderer;
 
 /// Technology-agnostic buffer of RGB pixel data that the emulator back end
 /// sends to the front end whenever a frame is ready to be displayed.
@@ -13,144 +15,18 @@ pub type FrameData = [[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN
 
 /// Interface implemented by every rendering technology.
 ///
-/// The application only depends on this trait, so rendering back ends (OpenGL,
-/// software, ...) can be swapped, for example through a command line argument,
-/// without changing the code that drives the emulator.
-// TODO: `update_frame` and `render` still expose glium types because OpenGL is
-// the only implementation; make the interface fully technology-agnostic once a
-// second renderer is added.
+/// The application only depends on this trait, so rendering back ends can be
+/// swapped, for example through a command line argument, without changing the
+/// code that drives the emulator. Only [`FrameData`] crosses the boundary
+/// between the emulator back end and the renderer, so the back end stays free
+/// of rendering dependencies.
 pub trait Renderer {
     /// Uploads the newest [`FrameData`] sent by the emulator back end.
-    fn update_frame(&mut self, display: &Display<WindowSurface>, frame_data: FrameData);
+    fn update_frame(&mut self, queue: &Queue, frame_data: FrameData);
 
     /// Draws the most recently uploaded frame.
-    fn render(&mut self, frame: &mut glium::Frame);
-}
-
-#[derive(Copy, Clone)]
-struct Vertex {
-    position: [f32; 2],
-    color: [f64; 3],
-}
-implement_vertex!(Vertex, position, color);
-
-const X_DIV: f32 = 2.0 / ppu::NATIVE_SCREEN_WIDTH as f32;
-const Y_DIV: f32 = 2.0 / ppu::NATIVE_SCREEN_HEIGHT as f32;
-const TOP_MENUBAR_COMPENSATION: f32 = 2.0 / (ui::TOP_MENUBAR_HEIGHT * ui::SCALE_FACTOR as f32);
-const VERTICES_PER_PIXEL: usize = 6;
-const VERTEX_COUNT: usize =
-    ppu::NATIVE_SCREEN_HEIGHT * ppu::NATIVE_SCREEN_WIDTH * VERTICES_PER_PIXEL;
-
-pub struct OpenGL {
-    program: glium::Program,
-    vertex_buffer: glium::VertexBuffer<Vertex>,
-    indices: glium::index::NoIndices,
-}
-
-impl OpenGL {
-    pub fn new(display: &Display<WindowSurface>) -> Self {
-        let mut position_vertices = [Vertex {
-            position: [0.0, 0.0],
-            color: [1.0, 1.0, 1.0],
-        }; VERTEX_COUNT];
-
-        let mut i = 0;
-        let mut x = 0.0;
-        let mut y = 0.0;
-        while i < VERTEX_COUNT {
-            position_vertices[i] = Vertex {
-                position: [
-                    -1.0 + (X_DIV * x),
-                    (1.0 - TOP_MENUBAR_COMPENSATION - (Y_DIV * y)),
-                ],
-                color: [1.0, 1.0, 1.0],
-            };
-            position_vertices[i + 1] = Vertex {
-                position: [
-                    -1.0 + ((X_DIV * x) + X_DIV),
-                    (1.0 - TOP_MENUBAR_COMPENSATION - (Y_DIV * y)),
-                ],
-                color: [1.0, 1.0, 1.0],
-            };
-            position_vertices[i + 2] = Vertex {
-                position: [
-                    -1.0 + (X_DIV * x),
-                    1.0 - TOP_MENUBAR_COMPENSATION - ((Y_DIV * y) - Y_DIV),
-                ],
-                color: [1.0, 1.0, 1.0],
-            };
-            position_vertices[i + 3] = Vertex {
-                position: [
-                    -1.0 + ((X_DIV * x) + X_DIV),
-                    (1.0 - TOP_MENUBAR_COMPENSATION - (Y_DIV * y)),
-                ],
-                color: [1.0, 1.0, 1.0],
-            };
-            position_vertices[i + 4] = Vertex {
-                position: [
-                    -1.0 + (X_DIV * x),
-                    1.0 - TOP_MENUBAR_COMPENSATION - ((Y_DIV * y) - Y_DIV),
-                ],
-                color: [1.0, 1.0, 1.0],
-            };
-            position_vertices[i + 5] = Vertex {
-                position: [
-                    -1.0 + ((X_DIV * x) + X_DIV),
-                    1.0 - TOP_MENUBAR_COMPENSATION - ((Y_DIV * y) - Y_DIV),
-                ],
-                color: [1.0, 1.0, 1.0],
-            };
-
-            x += 1.0;
-            if x >= ppu::NATIVE_SCREEN_WIDTH as f32 {
-                x = 0.0;
-                y += 1.0;
-            }
-
-            i += VERTICES_PER_PIXEL;
-        }
-
-        let vertex_buffer = glium::VertexBuffer::new(display, &position_vertices).unwrap();
-        let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
-
-        let program =
-            glium::Program::from_source(display, shaders::VERTEX, shaders::FRAGMENT, None).unwrap();
-
-        Self {
-            program,
-            vertex_buffer,
-            indices,
-        }
-    }
-}
-
-impl Renderer for OpenGL {
-    fn update_frame(&mut self, display: &Display<WindowSurface>, frame_data: FrameData) {
-        let mut i = 0;
-        let mut current_vertices = self.vertex_buffer.read().unwrap();
-
-        for scanline in frame_data {
-            for pixel in scanline {
-                let (r, g, b) = pixel.to_rgb();
-                for j in 0..VERTICES_PER_PIXEL {
-                    current_vertices[i + j].color = [r, g, b];
-                }
-                i += VERTICES_PER_PIXEL;
-            }
-        }
-
-        self.vertex_buffer = glium::VertexBuffer::new(display, &current_vertices).unwrap();
-    }
-
-    fn render(&mut self, frame: &mut glium::Frame) {
-        frame
-            .draw(
-                &self.vertex_buffer,
-                self.indices,
-                &self.program,
-                &glium::uniforms::EmptyUniforms,
-                &Default::default(),
-            )
-            .unwrap();
-    }
+    ///
+    /// Called while the frame's render pass is recording, before the UI draws
+    /// on top of it.
+    fn render(&mut self, pass: &mut RenderPass<'static>);
 }

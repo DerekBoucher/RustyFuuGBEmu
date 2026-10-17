@@ -1,26 +1,29 @@
-pub const VERTEX: &str = r#"
-#version 330 core
+/// WGSL shader drawing the Game Boy screen as a single textured quad.
+///
+/// The texture holds the pixels in gamma space and the swapchain is not sRGB,
+/// so the sampled colours are written out unchanged.
+pub const SCREEN: &str = r#"
+struct VertexOutput {
+    @builtin(position) clip_position: vec4<f32>,
+    @location(0) tex_coords: vec2<f32>,
+};
 
-layout (location = 0) in vec2 position;
-layout (location = 1) in vec3 color;
-out vec4 outputColor;
-
-void main() 
-{
-    outputColor = vec4(color, 1.0);
-    gl_Position = vec4(position.x, position.y, 0.0, 1.0);
+@vertex
+fn vs_main(
+    @location(0) position: vec2<f32>,
+    @location(1) tex_coords: vec2<f32>,
+) -> VertexOutput {
+    var output: VertexOutput;
+    output.clip_position = vec4<f32>(position, 0.0, 1.0);
+    output.tex_coords = tex_coords;
+    return output;
 }
-"#;
 
-pub const FRAGMENT: &str = r#"
-#version 330 core
+@group(0) @binding(0) var screen_texture: texture_2d<f32>;
+@group(0) @binding(1) var screen_sampler: sampler;
 
-in vec4 outputColor;
-
-out vec4 FragColor;
-
-void main()
-{
-    FragColor = outputColor;
+@fragment
+fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
+    return textureSample(screen_texture, screen_sampler, input.tex_coords);
 }
 "#;

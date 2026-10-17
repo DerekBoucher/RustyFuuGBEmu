@@ -6,9 +6,6 @@ mod interrupt;
 mod joypad;
 mod memory;
 mod ppu;
-// TODO(wgpu-migration): the glium renderer is replaced by the wgpu one in the
-// next step, which is when this allow goes away.
-#[allow(dead_code)]
 mod renderer;
 mod timers;
 mod ui;
@@ -29,6 +26,7 @@ use winit::window::Window;
 use crate::gameboy::channel::front_end::Frontend;
 use crate::gpu::GpuContext;
 use crate::memory::Memory;
+use crate::renderer::Renderer;
 use crate::ui::Ui;
 
 const FPS: u64 = 60;
@@ -44,6 +42,7 @@ struct AppState {
     // the surface, which keeps the window alive through its own `Arc` until
     // the reference count reaches zero.
     ui: Ui,
+    renderer: Box<dyn Renderer>,
     gpu: GpuContext,
     window: Arc<Window>,
 }
@@ -112,6 +111,8 @@ impl ApplicationHandler<ui::events::UiEvent> for App {
             }
         };
 
+        let renderer: Box<dyn Renderer> = Box::new(renderer::WgpuRenderer::new(&gpu));
+
         let ui = Ui::new(
             &gpu,
             &window,
@@ -120,7 +121,7 @@ impl ApplicationHandler<ui::events::UiEvent> for App {
             self.memory_ref.clone(),
         );
 
-        self.state = Some(AppState { ui, gpu, window });
+        self.state = Some(AppState { ui, renderer, gpu, window });
 
         // The frame timer in `new_events` runs off `StartCause::Poll`, so poll
         // continuously from the start.
@@ -143,12 +144,13 @@ impl ApplicationHandler<ui::events::UiEvent> for App {
                     return;
                 };
 
-                // Drain the frame produced by the emulation thread. The
-                // pixels are not uploaded yet; drawing the Game Boy screen
-                // through wgpu is the next migration step. Draining the
-                // (bounded) channel still matters, as the back end blocks
-                // until the front end consumes a frame.
-                let _ = self.front_end.should_render_screen();
+                // Drain the frame produced by the emulation thread, if any,
+                // and upload it to the renderer. The back end blocks on the
+                // bounded channel until the front end consumes a frame, so
+                // this also paces the emulation.
+                if let Some(frame_data) = self.front_end.should_render_screen() {
+                    state.renderer.update_frame(&state.gpu.queue, frame_data);
+                }
 
                 let size = state.window.inner_size();
                 if size.width == 0 || size.height == 0 {
@@ -214,8 +216,9 @@ impl ApplicationHandler<ui::events::UiEvent> for App {
                     })
                     .forget_lifetime();
 
-                // The Game Boy screen is drawn here by the renderer in the
-                // next migration step, before the UI overlays it.
+                // The Game Boy screen is drawn first; the UI overlays it,
+                // e.g. with the top menubar.
+                state.renderer.render(&mut pass);
                 state.ui.paint(&mut pass, &ui_frame);
                 drop(pass);
 
