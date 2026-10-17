@@ -1,6 +1,7 @@
 mod cartridge;
 mod cpu;
 mod gameboy;
+mod gpu;
 mod interrupt;
 mod joypad;
 mod memory;
@@ -9,6 +10,7 @@ mod renderer;
 mod timers;
 mod ui;
 
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use clap::Parser;
@@ -41,7 +43,7 @@ struct App {
     ui: Ui,
     renderer: Box<dyn Renderer>,
     display: Display<WindowSurface>,
-    window: Window,
+    window: Arc<Window>,
     last_frame_update: Instant,
     is_closing: bool,
 }
@@ -201,6 +203,19 @@ fn main() -> Result<(), EventLoopError> {
     let args = Args::parse();
 
     let (program_loop, display, window) = init_glium();
+    let window = Arc::new(window);
+
+    // Bring up the wgpu stack at startup so driver/backend problems surface
+    // immediately. Rendering still goes through glium at this point; the
+    // context is wired into the render loop in the next migration step.
+    let _gpu = match gpu::GpuContext::new(window.clone()) {
+        Ok(gpu) => gpu,
+        Err(err) => {
+            log::error!("failed to initialize wgpu: {err}");
+            std::process::exit(1);
+        }
+    };
+
     let egui_glium_client = EguiGlium::new(ViewportId::ROOT, &display, &window, &program_loop);
     // The application depends only on the `Renderer` interface. Future renderer
     // implementations can be selected here, e.g. from a command line argument.
