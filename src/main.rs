@@ -33,12 +33,39 @@ const FRAME_DURATION: Duration = Duration::from_nanos(1_000_000_000 / FPS);
 
 struct App {
     front_end: Frontend,
-    display: Display<WindowSurface>,
-    window: Window,
+    // Fields are dropped in declaration order. `ui` (whose egui clipboard holds
+    // a raw pointer to the winit Wayland connection) and `opengl_renderer`
+    // (which holds GL resources) must be dropped before `display` and
+    // `window`; dropping the window disconnects the Wayland connection the
+    // other fields depend on.
+    ui: Ui,
     // TODO: Abstract renderer behind an interface to support multiple rendering technologies
     opengl_renderer: OpenGL,
-    ui: Ui,
+    display: Display<WindowSurface>,
+    window: Window,
     last_frame_update: Instant,
+    is_closing: bool,
+}
+
+impl App {
+    fn close(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
+        if self.is_closing {
+            return;
+        }
+        self.is_closing = true;
+
+        self.front_end.send_close_back_end();
+
+        // Drain the frame data channel to avoid backend from blocking.
+        // Not ideal, need to refactor this
+        let _ = self.front_end.should_render_screen();
+
+        if let Err(err) = self.front_end.join_back_end() {
+            log::warn!("error occurred when joining back end thread: {:?}", err);
+        }
+
+        event_loop.exit();
+    }
 }
 
 impl ApplicationHandler<ui::events::UiEvent> for App {
@@ -54,8 +81,7 @@ impl ApplicationHandler<ui::events::UiEvent> for App {
 
         match event {
             WindowEvent::CloseRequested => {
-                handle_app_close(&mut control_flow, &mut self.front_end);
-                event_loop.set_control_flow(control_flow);
+                self.close(event_loop);
                 return;
             }
 
@@ -108,12 +134,9 @@ impl ApplicationHandler<ui::events::UiEvent> for App {
         event_loop: &winit::event_loop::ActiveEventLoop,
         event: ui::events::UiEvent,
     ) {
-        let mut control_flow = event_loop.control_flow();
-
         match event {
             ui::events::UiEvent::CloseWindow => {
-                handle_app_close(&mut control_flow, &mut self.front_end);
-                event_loop.exit();
+                self.close(event_loop);
             }
         }
     }
@@ -199,6 +222,7 @@ fn main() -> Result<(), EventLoopError> {
         opengl_renderer,
         ui,
         last_frame_update: Instant::now(),
+        is_closing: false,
     };
 
     program_loop.run_app(&mut app)
@@ -223,18 +247,4 @@ fn init_glium() -> (
         .build(&event_loop);
 
     (event_loop, display, window)
-}
-
-fn handle_app_close(control_flow: &mut ControlFlow, gb_frontend: &mut Frontend) {
-    *control_flow = ControlFlow::Wait;
-    gb_frontend.send_close_back_end();
-
-    // Drain the frame data channel to avoid backend from blocking.
-    // Not ideal, need to refactor this
-    let _ = gb_frontend.should_render_screen();
-
-    match gb_frontend.join_back_end() {
-        Ok(_) => (),
-        Err(err) => panic!("error occurred when joining back end thread: {:?}", err),
-    }
 }

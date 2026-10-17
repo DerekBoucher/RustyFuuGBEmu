@@ -1,14 +1,6 @@
 use crate::gameboy;
 use crate::memory::Memory;
 
-// use egui::epaint::Shadow;
-// use egui::Color32;
-// use egui::Visuals;
-// use glium::glutin::event_loop::ControlFlow;
-// use glium::glutin::event_loop::EventLoopProxy;
-// use glium::winit::event::WindowEvent;
-// use glium::Display;
-// use glium::Frame;
 use std::fs;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -61,7 +53,7 @@ impl Ui {
 
     pub fn draw(
         &mut self,
-        control_flow: &mut ControlFlow,
+        _control_flow: &mut ControlFlow,
         display: &Display<WindowSurface>,
         frame: &mut Frame,
         frontend: &mut Frontend,
@@ -94,9 +86,15 @@ impl Ui {
                                 self.is_paused = false;
                                 frontend.send_pause(self.is_paused);
 
-                                self.ui_event_loop_proxy
+                                if let Err(err) = self
+                                    .ui_event_loop_proxy
                                     .send_event(events::UiEvent::CloseWindow)
-                                    .unwrap();
+                                {
+                                    log::warn!(
+                                        "error occurred sending close window event to event loop: {:?}",
+                                        err
+                                    );
+                                }
                                 ui.close_menu();
                             }
                         });
@@ -136,37 +134,17 @@ impl Ui {
             self.vram_viewer.render(ctx, &self.memory_ref);
         });
 
-        // let time_until_next_redraw = std::time::Instant::now().checked_add(egui_redraw_timer);
-
-        // if egui_redraw_timer.() {
-        //     display.gl_window().window().request_redraw();
-        //     *control_flow = ControlFlow::Poll;
-        // } else if time_until_next_redraw.is_some() {
-        //     *control_flow = ControlFlow::WaitUntil(time_until_next_redraw.unwrap());
-        // } else {
-        //     *control_flow = ControlFlow::Wait;
-        // }
-
         self.egui_glium_client.paint(display, frame);
     }
 
     pub fn process_window_event(
         &mut self,
         event: WindowEvent,
-        display: &Display<WindowSurface>,
+        _display: &Display<WindowSurface>,
         window: &Window,
         frontend: &Frontend,
     ) {
-        match event {
-            _ => {}
-        }
-
-        let event_response = self.egui_glium_client.on_event(window, &event);
-
-        if event_response.repaint {
-            // display.get_context()
-            // display.gl_window().window().request_redraw();
-        }
+        let _ = self.egui_glium_client.on_event(window, &event);
 
         self.controls.process_window_event(event, frontend);
     }
@@ -176,8 +154,8 @@ impl Ui {
             .add_filter("Gameboy ROM", &[String::from("gb")])
             .pick_file();
 
-        match selected_rom {
-            Some(rom_path) => match fs::read(rom_path.as_path()) {
+        if let Some(rom_path) = selected_rom {
+            match fs::read(rom_path.as_path()) {
                 Ok(rom_data) => {
                     log::info!("Loaded ROM: {}", rom_path.display());
                     frontend.send_rom_data_back_end(rom_data);
@@ -186,8 +164,7 @@ impl Ui {
                     // TODO: Add UI dialog indicating error
                     log::error!("Failed to load ROM: {}", err);
                 }
-            },
-            None => {}
+            }
         }
     }
 }
