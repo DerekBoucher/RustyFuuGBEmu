@@ -7,3 +7,4 @@
     * `UNIX_TIMESTAMP` is the unix timestamp at the moment of branch creation
     * `SHORT_DESCRIPTION` is an arbitrary, concise description of the requirement for the task, using underscores as word delimiters.
 - When making a change, do not commit them. I want to be able to review the diffs afterwards.
+- Similarily never push changes to the remote, I will do that manually.
