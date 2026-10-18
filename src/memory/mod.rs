@@ -1,8 +1,12 @@
+#[path = "memory_test.rs"]
+#[cfg(test)]
+mod test;
+
 use queues::{queue, IsQueue, Queue};
 use winit::event::ElementState;
 
 use crate::joypad::{ActionButton, DirectionButton};
-use crate::{cartridge, interrupt, timers};
+use crate::{apu, cartridge, interrupt, timers};
 use std::sync;
 use std::{fmt::Debug, sync::Arc};
 
@@ -55,6 +59,8 @@ pub struct Memory {
 
     timer_ref: Arc<sync::Mutex<timers::Timers>>,
 
+    apu_ref: Arc<sync::Mutex<apu::Apu>>,
+
     interrupt_bus_ref: Arc<sync::Mutex<interrupt::Bus>>,
 
     joypad_dir_queue: Queue<(DirectionButton, ElementState)>,
@@ -94,6 +100,7 @@ pub mod io_registers {
     pub const AUDIO_CH4_FREQ_ADDR: usize = 0xFF22;
     pub const AUDIO_CH4_CTRL_ADDR: usize = 0xFF23;
     pub const _AUDIO_WAV_PATTERN_RAM_START_ADDR: usize = 0xFF30;
+    pub const AUDIO_WAV_PATTERN_RAM_END_ADDR: usize = 0xFF3F;
     pub const AUDIO_GLOBAL_CTRL_ADDR: usize = 0xFF26;
     pub const AUDIO_GLOBAL_PANNING_ADDR: usize = 0xFF25;
     pub const AUDIO_GLOBAL_VOLUME_ADDR: usize = 0xFF24;
@@ -136,6 +143,7 @@ impl Memory {
     pub fn new(
         cartridge: Box<dyn cartridge::Interface>,
         timer_ref: Arc<sync::Mutex<timers::Timers>>,
+        apu_ref: Arc<sync::Mutex<apu::Apu>>,
         interrupt_bus_ref: Arc<sync::Mutex<interrupt::Bus>>,
     ) -> Self {
         Self {
@@ -151,6 +159,7 @@ impl Memory {
             oam_dma_transfer_in_progress: false,
             oam_hi_byte: 0,
             timer_ref,
+            apu_ref,
             interrupt_bus_ref,
             joypad_dir_queue: queue![],
             joypad_action_queue: queue![],
@@ -161,6 +170,7 @@ impl Memory {
 
     pub fn default(
         timer_ref: Arc<sync::Mutex<timers::Timers>>,
+        apu_ref: Arc<sync::Mutex<apu::Apu>>,
         interrupt_bus_ref: Arc<sync::Mutex<interrupt::Bus>>,
     ) -> Self {
         Self {
@@ -176,6 +186,7 @@ impl Memory {
             oam_dma_transfer_in_progress: false,
             oam_hi_byte: 0,
             timer_ref,
+            apu_ref,
             interrupt_bus_ref,
             joypad_dir_queue: queue![],
             joypad_action_queue: queue![],
@@ -238,6 +249,12 @@ impl Memory {
             | io_registers::TIMER_DIV_ADDR
             | io_registers::TIMER_CTRL_ADDR => {
                 self.timer_ref.lock().unwrap().write(addr, val);
+            }
+
+            // The APU owns the audio registers (0xFF10 - 0xFF3F), wave RAM
+            // included, and applies the register write semantics itself.
+            io_registers::AUDIO_CH1_SWEEP_ADDR..=io_registers::AUDIO_WAV_PATTERN_RAM_END_ADDR => {
+                self.apu_ref.lock().unwrap().write(addr, val);
             }
 
             io_registers::JOYPAD_ADDR => {
@@ -345,27 +362,9 @@ impl Memory {
         self.io_registers[io_registers::TIMER_COUNTER_ADDR - offset] = 0x00;
         self.io_registers[io_registers::TIMER_MOD_ADDR - offset] = 0x00;
         self.io_registers[io_registers::TIMER_CTRL_ADDR - offset] = 0xF8;
-        self.io_registers[io_registers::AUDIO_CH1_SWEEP_ADDR - offset] = 0x80;
-        self.io_registers[io_registers::AUDIO_CH1_LENGTH_ADDR - offset] = 0xBF;
-        self.io_registers[io_registers::AUDIO_CH1_VOLUME_ADDR - offset] = 0xF3;
-        self.io_registers[io_registers::AUDIO_CH1_WAV_LO_ADDR - offset] = 0xFF;
-        self.io_registers[io_registers::AUDIO_CH1_WAV_HI_ADDR - offset] = 0xBF;
-        self.io_registers[io_registers::AUDIO_CH2_LENGTH_ADDR - offset] = 0x3F;
-        self.io_registers[io_registers::AUDIO_CH2_VOLUME_ADDR - offset] = 0x00;
-        self.io_registers[io_registers::AUDIO_CH2_WAV_LO_ADDR - offset] = 0xFF;
-        self.io_registers[io_registers::AUDIO_CH2_WAV_HI_ADDR - offset] = 0xBF;
-        self.io_registers[io_registers::AUDIO_CH3_DAC_ENABLE_ADDR - offset] = 0x7F;
-        self.io_registers[io_registers::AUDIO_CH3_LENGTH_ADDR - offset] = 0xFF;
-        self.io_registers[io_registers::AUDIO_CH3_OUTPUT_LVL_ADDR - offset] = 0x9F;
-        self.io_registers[io_registers::AUDIO_CH3_WAV_LO_ADDR - offset] = 0xFF;
-        self.io_registers[io_registers::AUDIO_CH3_WAV_HI_ADDR - offset] = 0xBF;
-        self.io_registers[io_registers::AUDIO_CH4_LENGTH_ADDR - offset] = 0xFF;
-        self.io_registers[io_registers::AUDIO_CH4_VOLUME_ADDR - offset] = 0x00;
-        self.io_registers[io_registers::AUDIO_CH4_FREQ_ADDR - offset] = 0x00;
-        self.io_registers[io_registers::AUDIO_CH4_CTRL_ADDR - offset] = 0xBF;
-        self.io_registers[io_registers::AUDIO_GLOBAL_VOLUME_ADDR - offset] = 0x77;
-        self.io_registers[io_registers::AUDIO_GLOBAL_PANNING_ADDR - offset] = 0xF3;
-        self.io_registers[io_registers::AUDIO_GLOBAL_CTRL_ADDR - offset] = 0xF1;
+        // The APU owns the audio registers (0xFF10 - 0xFF3F) and initializes
+        // them itself.
+        self.apu_ref.lock().unwrap().set_post_boot_rom_state();
         self.io_registers[io_registers::LCD_CONTROL_ADDR - offset] = 0x91;
         self.io_registers[io_registers::LCD_STAT_ADDR - offset] = 0x81;
         self.io_registers[io_registers::LCD_SCY_ADDR - offset] = 0x00;
@@ -447,6 +446,10 @@ impl Memory {
 
                 io_registers::INTERRUPT_FLAG_REGISTER_ADDR => {
                     Some(self.interrupt_bus_ref.lock().unwrap().read(addr))
+                }
+                io_registers::AUDIO_CH1_SWEEP_ADDR
+                    ..=io_registers::AUDIO_WAV_PATTERN_RAM_END_ADDR => {
+                    Some(self.apu_ref.lock().unwrap().read(addr))
                 }
                 _ => Some(self.io_registers[addr - 0xFF00]),
             };
@@ -530,6 +533,10 @@ impl Memory {
 
                 io_registers::INTERRUPT_FLAG_REGISTER_ADDR => {
                     Some(self.interrupt_bus_ref.lock().unwrap().read(addr))
+                }
+                io_registers::AUDIO_CH1_SWEEP_ADDR
+                    ..=io_registers::AUDIO_WAV_PATTERN_RAM_END_ADDR => {
+                    Some(self.apu_ref.lock().unwrap().read(addr))
                 }
                 io_registers::JOYPAD_ADDR => self.handle_joypad_read(),
                 _ => Some(self.io_registers[addr - 0xFF00]),
@@ -615,6 +622,7 @@ impl Memory {
         *self = Memory::new(
             cartridge,
             self.timer_ref.clone(),
+            self.apu_ref.clone(),
             self.interrupt_bus_ref.clone(),
         );
     }

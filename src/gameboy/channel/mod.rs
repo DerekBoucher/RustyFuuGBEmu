@@ -17,6 +17,7 @@ pub fn new() -> (Frontend, Backend) {
     let (frame_data_sender, frame_data_receiver) = mpsc::sync_channel::<
         [[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT],
     >(1);
+    let (audio_data_sender, audio_data_receiver) = mpsc::sync_channel::<Vec<i16>>(1);
     let (skip_boot_rom_sender, skip_boot_rom_recv) = mpsc::sync_channel::<bool>(1);
     let (joypad_sender, joypad_recv) =
         mpsc::channel::<(Option<DirectionButton>, Option<ActionButton>, ElementState)>();
@@ -28,6 +29,7 @@ pub fn new() -> (Frontend, Backend) {
             ack_receiver,
             rom_data_sender,
             frame_data_receiver,
+            audio_data_receiver,
             skip_boot_rom_sender,
             joypad_sender,
             pause_sender,
@@ -37,6 +39,7 @@ pub fn new() -> (Frontend, Backend) {
             ack_sender,
             rom_data_receiver,
             frame_data_sender,
+            audio_data_sender,
             skip_boot_rom_recv,
             joypad_recv,
             pause_receiver,
