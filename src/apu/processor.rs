@@ -4,7 +4,7 @@ use crate::cpu::CPU_FREQUENCY;
 use crate::memory::io_registers;
 
 /// Output sample rate of the generated PCM stream.
-const SAMPLE_RATE: u32 = 48_000;
+pub(crate) const SAMPLE_RATE: u32 = 48_000;
 
 /// Number of T-cycles the APU is advanced by per `step` call (one machine
 /// cycle).

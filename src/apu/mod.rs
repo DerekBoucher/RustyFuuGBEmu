@@ -3,6 +3,8 @@ mod processor;
 
 use channel::{noise::NoiseChannel, square::SquareChannel, wave::WaveChannel};
 
+pub(crate) use processor::SAMPLE_RATE;
+
 /// Audio Processing Unit.
 ///
 /// Owns the audio related IO registers (0xFF10 - 0xFF3F) and produces the

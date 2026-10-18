@@ -3,6 +3,7 @@ use std::time::Duration;
 use winit::event::ElementState;
 
 use crate::{
+    audio::AudioData,
     joypad::{ActionButton, DirectionButton},
     ppu::{self, Pixel, NATIVE_SCREEN_HEIGHT, NATIVE_SCREEN_WIDTH},
 };
@@ -19,7 +20,7 @@ pub struct Backend {
     ack_sender: SyncSender<()>,
     rom_data_receiver: Receiver<Vec<u8>>,
     frame_data_sender: SyncSender<[[Pixel; NATIVE_SCREEN_WIDTH]; NATIVE_SCREEN_HEIGHT]>,
-    audio_data_sender: SyncSender<Vec<i16>>,
+    audio_data_sender: SyncSender<AudioData>,
     skip_boot_rom_recv: Receiver<bool>,
     joypad_recv: Receiver<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
     pause_recv: Receiver<bool>,
@@ -31,7 +32,7 @@ impl Backend {
         ack_sender: SyncSender<()>,
         rom_data_receiver: Receiver<Vec<u8>>,
         frame_data_sender: SyncSender<[[Pixel; NATIVE_SCREEN_WIDTH]; NATIVE_SCREEN_HEIGHT]>,
-        audio_data_sender: SyncSender<Vec<i16>>,
+        audio_data_sender: SyncSender<AudioData>,
         skip_boot_rom_recv: Receiver<bool>,
         joypad_recv: Receiver<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
         pause_recv: Receiver<bool>,
@@ -125,7 +126,7 @@ impl Backend {
         }
     }
 
-    pub fn send_audio_data_front_end(&self, samples: Vec<i16>) {
+    pub fn send_audio_data_front_end(&self, samples: AudioData) {
         if let Err(err) = self.audio_data_sender.send(samples) {
             log::debug!(
                 "error occurred when sending audio data to front end: {:?}",

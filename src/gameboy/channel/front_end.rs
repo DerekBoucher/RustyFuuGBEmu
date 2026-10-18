@@ -1,5 +1,6 @@
 use winit::event::ElementState;
 
+use crate::audio::AudioData;
 use crate::joypad::{ActionButton, DirectionButton};
 use crate::ppu::{self, Pixel};
 use std::sync::mpsc::{self, RecvTimeoutError, TryRecvError, TrySendError};
@@ -11,7 +12,7 @@ pub struct Frontend {
     rom_data_sender: mpsc::SyncSender<Vec<u8>>,
     frame_data_receiver:
         mpsc::Receiver<[[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT]>,
-    audio_data_receiver: mpsc::Receiver<Vec<i16>>,
+    audio_data_receiver: mpsc::Receiver<AudioData>,
     skip_boot_rom_sender: mpsc::SyncSender<bool>,
     joypad_sender: mpsc::Sender<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
     pause_sender: mpsc::SyncSender<bool>,
@@ -25,7 +26,7 @@ impl Frontend {
         frame_data_receiver: mpsc::Receiver<
             [[Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT],
         >,
-        audio_data_receiver: mpsc::Receiver<Vec<i16>>,
+        audio_data_receiver: mpsc::Receiver<AudioData>,
         skip_boot_rom_sender: mpsc::SyncSender<bool>,
         joypad_sender: mpsc::Sender<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
         pause_sender: mpsc::SyncSender<bool>,
@@ -91,7 +92,7 @@ impl Frontend {
         }
     }
 
-    pub fn should_render_audio(&self) -> Option<Vec<i16>> {
+    pub fn should_render_audio(&self) -> Option<AudioData> {
         match self.audio_data_receiver.try_recv() {
             Ok(samples) => Some(samples),
             Err(TryRecvError::Empty) => None,
