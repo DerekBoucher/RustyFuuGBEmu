@@ -99,7 +99,7 @@ pub mod io_registers {
     pub const AUDIO_CH4_VOLUME_ADDR: usize = 0xFF21;
     pub const AUDIO_CH4_FREQ_ADDR: usize = 0xFF22;
     pub const AUDIO_CH4_CTRL_ADDR: usize = 0xFF23;
-    pub const _AUDIO_WAV_PATTERN_RAM_START_ADDR: usize = 0xFF30;
+    pub const AUDIO_WAV_PATTERN_RAM_START_ADDR: usize = 0xFF30;
     pub const AUDIO_WAV_PATTERN_RAM_END_ADDR: usize = 0xFF3F;
     pub const AUDIO_GLOBAL_CTRL_ADDR: usize = 0xFF26;
     pub const AUDIO_GLOBAL_PANNING_ADDR: usize = 0xFF25;

@@ -1,15 +1,7 @@
+mod channel;
 mod processor;
 
-use crate::memory::io_registers;
-
-/// Base address of the APU register block (NR10, the channel 1 sweep register).
-const AUDIO_REGISTER_BASE: usize = io_registers::AUDIO_CH1_SWEEP_ADDR;
-
-/// Address of the final APU register (the last byte of wave RAM).
-const AUDIO_REGISTER_END: usize = io_registers::AUDIO_WAV_PATTERN_RAM_END_ADDR;
-
-/// Number of registers making up the APU register block (0xFF10 - 0xFF3F).
-const AUDIO_REGISTER_COUNT: usize = AUDIO_REGISTER_END - AUDIO_REGISTER_BASE + 1;
+use channel::{noise::NoiseChannel, square::SquareChannel, wave::WaveChannel};
 
 /// Audio Processing Unit.
 ///
@@ -21,9 +13,35 @@ const AUDIO_REGISTER_COUNT: usize = AUDIO_REGISTER_END - AUDIO_REGISTER_BASE + 1
 /// sync with the rest of the system.
 #[derive(Debug)]
 pub struct Apu {
-    /// Raw storage backing the audio registers, wave RAM included
-    /// (0xFF30 - 0xFF3F).
-    registers: [u8; AUDIO_REGISTER_COUNT],
+    /// Channel 1: square wave with a frequency sweep unit.
+    ch1: SquareChannel,
+
+    /// Channel 2: square wave.
+    ch2: SquareChannel,
+
+    /// Channel 3: arbitrary waveform backed by wave RAM.
+    ch3: WaveChannel,
+
+    /// Channel 4: noise.
+    ch4: NoiseChannel,
+
+    /// NR50 master volume. Consumed by the mixer in a later phase.
+    #[allow(dead_code)]
+    nr50: u8,
+
+    /// NR51 panning. Consumed by the mixer in a later phase.
+    #[allow(dead_code)]
+    nr51: u8,
+
+    /// NR52 power control.
+    power_on: bool,
+
+    /// Current step (0 - 7) of the 512 Hz frame sequencer.
+    frame_sequencer_step: u8,
+
+    /// Previous sample of DIV bit 4 (system clock bit 12). The frame
+    /// sequencer advances on the falling edge of this signal.
+    last_div_bit_4: bool,
 
     /// Stereo samples accumulated since the last frame boundary. Samples are
     /// interleaved left/right 16-bit signed PCM values.
