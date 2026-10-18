@@ -9,6 +9,8 @@ The intent of the implementation is purely for educational / hobby purposes. The
 
 The rust toolchain is required in order to install this binary.
 
+Audio plays back through [PipeWire](https://pipewire.org/), so building requires its development files and `libclang` for the generated bindings (e.g. `sudo pacman -S pipewire clang` on Arch Linux).
+
 To compile-run the executable directly:
 ```sh
 cargo run
