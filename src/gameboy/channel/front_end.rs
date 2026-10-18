@@ -11,6 +11,7 @@ pub struct Frontend {
     rom_data_sender: mpsc::SyncSender<Vec<u8>>,
     frame_data_receiver:
         mpsc::Receiver<[[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT]>,
+    audio_data_receiver: mpsc::Receiver<Vec<i16>>,
     skip_boot_rom_sender: mpsc::SyncSender<bool>,
     joypad_sender: mpsc::Sender<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
     pause_sender: mpsc::SyncSender<bool>,
@@ -24,6 +25,7 @@ impl Frontend {
         frame_data_receiver: mpsc::Receiver<
             [[Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT],
         >,
+        audio_data_receiver: mpsc::Receiver<Vec<i16>>,
         skip_boot_rom_sender: mpsc::SyncSender<bool>,
         joypad_sender: mpsc::Sender<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
         pause_sender: mpsc::SyncSender<bool>,
@@ -33,6 +35,7 @@ impl Frontend {
             ack_receiver,
             rom_data_sender,
             frame_data_receiver,
+            audio_data_receiver,
             skip_boot_rom_sender,
             joypad_sender,
             pause_sender,
@@ -83,6 +86,14 @@ impl Frontend {
     ) -> Option<[[ppu::Pixel; ppu::NATIVE_SCREEN_WIDTH]; ppu::NATIVE_SCREEN_HEIGHT]> {
         match self.frame_data_receiver.try_recv() {
             Ok(frame) => Some(frame),
+            Err(TryRecvError::Empty) => None,
+            _ => None,
+        }
+    }
+
+    pub fn should_render_audio(&self) -> Option<Vec<i16>> {
+        match self.audio_data_receiver.try_recv() {
+            Ok(samples) => Some(samples),
             Err(TryRecvError::Empty) => None,
             _ => None,
         }

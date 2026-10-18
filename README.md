@@ -48,6 +48,6 @@ cargo install --path .
 - [X] Implement CPU
     - [X] Implement Timers
 - [X] Implement PPU
-- [ ] Implement APU
+- [X] Implement APU
 - [X] Implement Main
 

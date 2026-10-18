@@ -19,6 +19,7 @@ pub struct Backend {
     ack_sender: SyncSender<()>,
     rom_data_receiver: Receiver<Vec<u8>>,
     frame_data_sender: SyncSender<[[Pixel; NATIVE_SCREEN_WIDTH]; NATIVE_SCREEN_HEIGHT]>,
+    audio_data_sender: SyncSender<Vec<i16>>,
     skip_boot_rom_recv: Receiver<bool>,
     joypad_recv: Receiver<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
     pause_recv: Receiver<bool>,
@@ -30,6 +31,7 @@ impl Backend {
         ack_sender: SyncSender<()>,
         rom_data_receiver: Receiver<Vec<u8>>,
         frame_data_sender: SyncSender<[[Pixel; NATIVE_SCREEN_WIDTH]; NATIVE_SCREEN_HEIGHT]>,
+        audio_data_sender: SyncSender<Vec<i16>>,
         skip_boot_rom_recv: Receiver<bool>,
         joypad_recv: Receiver<(Option<DirectionButton>, Option<ActionButton>, ElementState)>,
         pause_recv: Receiver<bool>,
@@ -40,6 +42,7 @@ impl Backend {
             ack_sender,
             rom_data_receiver,
             frame_data_sender,
+            audio_data_sender,
             skip_boot_rom_recv,
             joypad_recv,
             pause_recv,
@@ -117,6 +120,15 @@ impl Backend {
         if let Err(err) = self.frame_data_sender.send(frame_data) {
             log::debug!(
                 "error occurred when sending frame data to front end: {:?}",
+                err
+            );
+        }
+    }
+
+    pub fn send_audio_data_front_end(&self, samples: Vec<i16>) {
+        if let Err(err) = self.audio_data_sender.send(samples) {
+            log::debug!(
+                "error occurred when sending audio data to front end: {:?}",
                 err
             );
         }

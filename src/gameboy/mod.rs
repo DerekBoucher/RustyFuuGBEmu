@@ -2,6 +2,7 @@ use std::sync;
 use std::sync::Arc;
 use std::sync::Mutex;
 
+use crate::apu;
 use crate::cartridge;
 use crate::cpu;
 use crate::cpu::CPU_CYCLES_PER_FRAME;
@@ -56,6 +57,7 @@ pub struct Gameboy {
     memory: Arc<sync::Mutex<memory::Memory>>,
     cpu: Arc<sync::Mutex<cpu::LR35902>>,
     ppu: ppu::Ppu,
+    apu: Arc<sync::Mutex<apu::Apu>>,
     timers: Arc<sync::Mutex<timers::Timers>>,
     interrupt_bus: Arc<sync::Mutex<interrupt::Bus>>,
 }
@@ -63,11 +65,13 @@ pub struct Gameboy {
 impl Gameboy {
     pub fn new(skip_boot_rom: bool) -> (Self, Arc<Mutex<Memory>>) {
         let timers = Arc::new(sync::Mutex::new(timers::Timers::new()));
+        let apu = Arc::new(sync::Mutex::new(apu::Apu::new()));
         let ppu = ppu::Ppu::new();
 
         let interrupt_bus = Arc::new(sync::Mutex::new(interrupt::Bus::new()));
         let memory = Arc::new(sync::Mutex::new(memory::Memory::default(
             timers.clone(),
+            apu.clone(),
             interrupt_bus.clone(),
         )));
         let memory_ref = memory.clone();
@@ -79,6 +83,7 @@ impl Gameboy {
                 cpu,
                 memory,
                 ppu,
+                apu,
                 skip_boot_rom,
                 timers,
                 interrupt_bus,
@@ -90,6 +95,7 @@ impl Gameboy {
     fn load_rom(&mut self, rom_data: Vec<u8>) {
         self.cpu.lock().unwrap().reset();
         self.ppu.reset();
+        self.apu.lock().unwrap().reset();
         self.memory.lock().unwrap().reset(cartridge::new(rom_data));
         self.timers.lock().unwrap().reset();
         self.interrupt_bus.lock().unwrap().reset();
@@ -123,6 +129,9 @@ impl Gameboy {
                     // also rely on this thread blocking until the main thread renders, which in
                     // turn allows the main thread to control the FPS of the emulation.
                     backend.send_frame_data_front_end(self.ppu.get_frame_data());
+                    // Audio batches use the same rendez-vous model as frame data.
+                    backend
+                        .send_audio_data_front_end(self.apu.lock().unwrap().take_sample_buffer());
                     self.state.transition(State::Computing);
                 }
                 State::Exiting => {
@@ -197,6 +206,9 @@ impl Gameboy {
                 self.timers.lock().unwrap().step(&self.interrupt_bus);
                 self.memory.lock().unwrap().step_dma();
                 self.ppu.step_graphics(&self.memory, &self.interrupt_bus);
+
+                let div_clock = self.timers.lock().unwrap().system_clock();
+                self.apu.lock().unwrap().step(div_clock);
             };
 
             if self.cpu.lock().unwrap().is_stopped() {

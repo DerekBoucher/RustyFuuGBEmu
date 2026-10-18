@@ -101,6 +101,12 @@ impl Timers {
         self.current_bit_3 = false;
     }
 
+    /// Current value of the internal system clock. Its upper 8 bits form the
+    /// DIV register; the APU frame sequencer is clocked from bit 12.
+    pub fn system_clock(&self) -> u16 {
+        self.system_clock
+    }
+
     pub fn get_elapsed_cycles(&mut self) -> u32 {
         let cycles = self.accumulated_cycles;
         self.accumulated_cycles = 0;

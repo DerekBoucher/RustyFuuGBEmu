@@ -1,3 +1,4 @@
+mod apu;
 mod cartridge;
 mod cpu;
 mod gameboy;
@@ -69,9 +70,10 @@ impl App {
 
         self.front_end.send_close_back_end();
 
-        // Drain the frame data channel to avoid backend from blocking.
-        // Not ideal, need to refactor this
+        // Drain the frame and audio data channels to avoid backend from
+        // blocking. Not ideal, need to refactor this
         let _ = self.front_end.should_render_screen();
+        let _ = self.front_end.should_render_audio();
 
         if let Err(err) = self.front_end.join_back_end() {
             log::warn!("error occurred when joining back end thread: {:?}", err);
@@ -153,6 +155,11 @@ impl ApplicationHandler<ui::events::UiEvent> for App {
                 if let Some(frame_data) = self.front_end.should_render_screen() {
                     state.renderer.update_frame(&state.gpu.queue, frame_data);
                 }
+
+                // Audio sample batches arrive on their own channel. Playback
+                // is a later iteration, so for now the batch is drained and
+                // dropped to keep the emulation thread unblocked.
+                let _ = self.front_end.should_render_audio();
 
                 let size = state.window.inner_size();
                 if size.width == 0 || size.height == 0 {
