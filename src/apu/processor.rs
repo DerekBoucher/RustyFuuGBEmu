@@ -1,6 +1,22 @@
 use super::channel::{noise::NoiseChannel, square::SquareChannel, wave::WaveChannel};
 use super::Apu;
+use crate::cpu::CPU_FREQUENCY;
 use crate::memory::io_registers;
+
+/// Output sample rate of the generated PCM stream.
+const SAMPLE_RATE: u32 = 48_000;
+
+/// Number of T-cycles the APU is advanced by per `step` call (one machine
+/// cycle).
+const T_CYCLES_PER_STEP: u32 = 4;
+
+/// Digital value of a channel's DAC input that maps to the center of the
+/// output range.
+const DAC_CENTER: i32 = 8;
+
+/// Scale factor applied to a mixed channel sum to produce a 16-bit PCM
+/// sample, leaving headroom below the full scale.
+const OUTPUT_SCALE: i32 = 47;
 
 const POWER_MASK: u8 = 1 << 7;
 const STATUS_MASK: u8 = 0x70;
@@ -42,6 +58,10 @@ impl Apu {
             power_on: false,
             frame_sequencer_step: 0,
             last_div_bit_4: false,
+            sample_accumulator: 0,
+            mixed_left_accumulator: 0,
+            mixed_right_accumulator: 0,
+            mixed_t_cycles: 0,
             sample_buffer: Vec::new(),
         }
     }
@@ -135,14 +155,15 @@ impl Apu {
 
         self.last_div_bit_4 = div_bit_4;
 
-        // The frequency timers of all four channels advance once per
-        // T-cycle. Sample generation is implemented in a later phase.
+        // The frequency timers of all four channels advance once per T-cycle.
         for _ in 0..4 {
             self.ch1.tick();
             self.ch2.tick();
             self.ch3.tick();
             self.ch4.tick();
         }
+
+        self.integrate_mix();
     }
 
     /// Advances the frame sequencer one step. Length counters are clocked on
@@ -173,6 +194,76 @@ impl Apu {
         self.ch1.clock_envelope();
         self.ch2.clock_envelope();
         self.ch4.clock_envelope();
+    }
+
+    /// Integrates the mixer output over the elapsed machine cycle and emits
+    /// a sample whenever the fixed point accumulator crosses one sample
+    /// period, yielding `SAMPLE_RATE` samples per second on average.
+    fn integrate_mix(&mut self) {
+        let (left, right) = self.mix();
+
+        self.mixed_left_accumulator += i32::from(left) * T_CYCLES_PER_STEP as i32;
+        self.mixed_right_accumulator += i32::from(right) * T_CYCLES_PER_STEP as i32;
+        self.mixed_t_cycles += T_CYCLES_PER_STEP;
+
+        self.sample_accumulator += SAMPLE_RATE * T_CYCLES_PER_STEP;
+
+        while self.sample_accumulator >= CPU_FREQUENCY {
+            self.sample_accumulator -= CPU_FREQUENCY;
+            self.push_sample();
+        }
+    }
+
+    /// Averages the mixed signal accumulated since the last sample and
+    /// appends the stereo pair to the sample buffer.
+    fn push_sample(&mut self) {
+        let left = self.mixed_left_accumulator / self.mixed_t_cycles as i32;
+        let right = self.mixed_right_accumulator / self.mixed_t_cycles as i32;
+
+        self.mixed_left_accumulator = 0;
+        self.mixed_right_accumulator = 0;
+        self.mixed_t_cycles = 0;
+
+        self.sample_buffer.push(left as i16);
+        self.sample_buffer.push(right as i16);
+    }
+
+    /// Mixes the four channels into a stereo pair, applying the NR51 panning
+    /// and the NR50 master volume.
+    fn mix(&self) -> (i16, i16) {
+        let channels = [
+            (self.ch1.is_active(), self.ch1.output()),
+            (self.ch2.is_active(), self.ch2.output()),
+            (self.ch3.is_active(), self.ch3.output()),
+            (self.ch4.is_active(), self.ch4.output()),
+        ];
+
+        let mut left = 0;
+        let mut right = 0;
+
+        for (index, &(active, output)) in channels.iter().enumerate() {
+            // Disabled channels are silent; their DAC output is not modelled.
+            if !active {
+                continue;
+            }
+
+            let dac = i32::from(output) - DAC_CENTER;
+
+            if self.nr51 & (1 << (4 + index)) > 0 {
+                left += dac;
+            }
+            if self.nr51 & (1 << index) > 0 {
+                right += dac;
+            }
+        }
+
+        let left_volume = i32::from((self.nr50 >> 4) & 0x07) + 1;
+        let right_volume = i32::from(self.nr50 & 0x07) + 1;
+
+        (
+            scale_sample(left * left_volume),
+            scale_sample(right * right_volume),
+        )
     }
 
     /// Hands the samples accumulated since the last frame boundary over to
@@ -213,6 +304,10 @@ impl Apu {
 
         value
     }
+}
+
+fn scale_sample(value: i32) -> i16 {
+    (value * OUTPUT_SCALE).clamp(i32::from(i16::MIN), i32::from(i16::MAX)) as i16
 }
 
 #[path = "processor_test.rs"]

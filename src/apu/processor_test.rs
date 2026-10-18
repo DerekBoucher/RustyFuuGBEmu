@@ -69,3 +69,42 @@ fn frame_sequencer_clocks_length_counters_at_512_hz() {
     advance(&mut apu, &mut clock, 1);
     assert_eq!(apu.read(io_registers::AUDIO_GLOBAL_CTRL_ADDR), 0xF0);
 }
+
+#[test]
+fn silence_produces_zeroed_samples_at_48_khz() {
+    let mut apu = powered_on_apu();
+
+    // One emulated frame worth of machine cycles (69904 T-cycles).
+    let mut clock: u16 = 0;
+    advance(&mut apu, &mut clock, 17476);
+
+    let samples = apu.take_sample_buffer();
+
+    // 69904 T-cycles at 48 kHz is 799.97 samples.
+    assert_eq!(samples.len() % 2, 0);
+    assert!((799..=800).contains(&(samples.len() / 2)));
+    // With every channel disabled the mixer output is silence.
+    assert!(samples.iter().all(|&sample| sample == 0));
+}
+
+#[test]
+fn enabled_channels_produce_samples() {
+    let mut apu = powered_on_apu();
+
+    apu.write(io_registers::AUDIO_GLOBAL_VOLUME_ADDR, 0x77);
+    apu.write(io_registers::AUDIO_GLOBAL_PANNING_ADDR, 0x11);
+    apu.write(io_registers::AUDIO_CH1_LENGTH_ADDR, 0x80);
+    apu.write(io_registers::AUDIO_CH1_VOLUME_ADDR, 0xF0);
+    apu.write(io_registers::AUDIO_CH1_WAV_LO_ADDR, 0xFF);
+    apu.write(io_registers::AUDIO_CH1_WAV_HI_ADDR, 0x87);
+
+    let mut clock: u16 = 0;
+    advance(&mut apu, &mut clock, 200);
+
+    let samples = apu.take_sample_buffer();
+
+    assert!(!samples.is_empty());
+    // The square wave alternates around the center level.
+    assert!(samples.iter().any(|&sample| sample > 0));
+    assert!(samples.iter().any(|&sample| sample < 0));
+}

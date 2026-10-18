@@ -1,9 +1,5 @@
-//! Shared building blocks for the four APU channels.
-//!
-//! The channel outputs (`output` methods) are consumed by the mixer, which
-//! is implemented in a later phase.
-
-#![allow(dead_code)] // TODO: remove once the mixer consumes the channel outputs.
+//! Shared building blocks for the four APU channels: the volume envelope,
+//! the length counter and the duty cycle patterns.
 
 pub mod noise;
 pub mod square;

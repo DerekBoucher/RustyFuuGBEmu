@@ -43,6 +43,16 @@ pub struct Apu {
     /// sequencer advances on the falling edge of this signal.
     last_div_bit_4: bool,
 
+    /// Fixed point accumulator measuring the T-cycles elapsed since the last
+    /// emitted sample, counting in units of `SAMPLE_RATE` per `CPU_FREQUENCY`.
+    sample_accumulator: u32,
+
+    /// Summed mixer output since the last emitted sample, and the number of
+    /// T-cycles that sum covers.
+    mixed_left_accumulator: i32,
+    mixed_right_accumulator: i32,
+    mixed_t_cycles: u32,
+
     /// Stereo samples accumulated since the last frame boundary. Samples are
     /// interleaved left/right 16-bit signed PCM values.
     sample_buffer: Vec<i16>,
