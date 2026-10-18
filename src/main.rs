@@ -1,4 +1,5 @@
 mod apu;
+mod audio;
 mod cartridge;
 mod cpu;
 mod gameboy;
@@ -24,6 +25,7 @@ use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop, EventLoopProxy};
 use winit::window::Window;
 
+use crate::audio::{AudioBackend, AudioOutput};
 use crate::gameboy::channel::front_end::Frontend;
 use crate::gpu::{Backend, GpuContext};
 use crate::memory::Memory;
@@ -33,7 +35,7 @@ use crate::ui::Ui;
 const FPS: u64 = 60;
 const FRAME_DURATION: Duration = Duration::from_nanos(1_000_000_000 / FPS);
 
-/// Window, GPU and UI resources.
+/// Window, GPU, UI and audio resources.
 ///
 /// Created in `resumed`, as windows may only be created while the event loop
 /// is running.
@@ -44,6 +46,7 @@ struct AppState {
     // the reference count reaches zero.
     ui: Ui,
     renderer: Box<dyn Renderer>,
+    audio: Box<dyn AudioOutput>,
     gpu: GpuContext,
     window: Arc<Window>,
 }
@@ -55,6 +58,8 @@ struct App {
     skip_boot_rom: bool,
     /// Backend wgpu is restricted to, from `--renderer`.
     backend: Backend,
+    /// Audio technology to use, from `--audio`.
+    audio_backend: AudioBackend,
     memory_ref: Arc<Mutex<Memory>>,
     state: Option<AppState>,
     last_frame_update: Instant,
@@ -117,6 +122,8 @@ impl ApplicationHandler<ui::events::UiEvent> for App {
 
         let renderer: Box<dyn Renderer> = Box::new(renderer::WgpuRenderer::new(&gpu));
 
+        let audio = self.audio_backend.create();
+
         let ui = Ui::new(
             &gpu,
             &window,
@@ -125,7 +132,13 @@ impl ApplicationHandler<ui::events::UiEvent> for App {
             self.memory_ref.clone(),
         );
 
-        self.state = Some(AppState { ui, renderer, gpu, window });
+        self.state = Some(AppState {
+            ui,
+            renderer,
+            audio,
+            gpu,
+            window,
+        });
 
         // The frame timer in `new_events` runs off `StartCause::Poll`, so poll
         // continuously from the start.
@@ -156,10 +169,12 @@ impl ApplicationHandler<ui::events::UiEvent> for App {
                     state.renderer.update_frame(&state.gpu.queue, frame_data);
                 }
 
-                // Audio sample batches arrive on their own channel. Playback
-                // is a later iteration, so for now the batch is drained and
-                // dropped to keep the emulation thread unblocked.
-                let _ = self.front_end.should_render_audio();
+                // Audio sample batches arrive on their own channel. The audio
+                // output consumes them at its own pace, so the batch is handed
+                // over instead of blocking the emulation thread.
+                if let Some(samples) = self.front_end.should_render_audio() {
+                    state.audio.play(&samples);
+                }
 
                 let size = state.window.inner_size();
                 if size.width == 0 || size.height == 0 {
@@ -332,6 +347,10 @@ struct Args {
     /// Rendering backend to use.
     #[arg(long, value_enum, default_value_t = Backend::Auto)]
     renderer: Backend,
+
+    /// Audio technology to use.
+    #[arg(long, value_enum, default_value_t = AudioBackend::PipeWire)]
+    audio: AudioBackend,
 }
 
 fn main() -> Result<(), EventLoopError> {
@@ -351,6 +370,7 @@ fn main() -> Result<(), EventLoopError> {
         ui_event_loop_proxy: program_loop.create_proxy(),
         skip_boot_rom: args.skip_boot_rom,
         backend: args.renderer,
+        audio_backend: args.audio,
         memory_ref,
         state: None,
         last_frame_update: Instant::now(),
