@@ -117,3 +117,7 @@ impl LengthCounter {
         self.value == 0
     }
 }
+
+#[path = "channel_test.rs"]
+#[cfg(test)]
+mod test;

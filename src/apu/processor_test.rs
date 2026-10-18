@@ -108,3 +108,48 @@ fn enabled_channels_produce_samples() {
     assert!(samples.iter().any(|&sample| sample > 0));
     assert!(samples.iter().any(|&sample| sample < 0));
 }
+
+#[test]
+fn panning_routes_channels_to_one_side() {
+    let mut apu = powered_on_apu();
+
+    apu.write(io_registers::AUDIO_GLOBAL_VOLUME_ADDR, 0x77);
+    apu.write(io_registers::AUDIO_GLOBAL_PANNING_ADDR, 0x10); // channel 1 left only
+    apu.write(io_registers::AUDIO_CH1_LENGTH_ADDR, 0xC0); // 75% duty
+    apu.write(io_registers::AUDIO_CH1_VOLUME_ADDR, 0xF0);
+    apu.write(io_registers::AUDIO_CH1_WAV_HI_ADDR, 0x84); // frequency 0x400, trigger
+
+    let mut clock: u16 = 0;
+    advance(&mut apu, &mut clock, 200);
+
+    let samples = apu.take_sample_buffer();
+    assert!(!samples.is_empty());
+
+    // Frequency 0x400 gives a period of 4096 T-cycles, so the duty position
+    // stays on the high step of the 75% pattern. The left channel then
+    // carries (15 - 8) * 8 * 47 and the right channel stays silent.
+    for frame in samples.chunks(2) {
+        assert_eq!(frame[0], 2632);
+        assert_eq!(frame[1], 0);
+    }
+}
+
+#[test]
+fn frame_sequencer_clocks_the_sweep_on_step_two() {
+    let mut apu = powered_on_apu();
+
+    apu.write(io_registers::AUDIO_CH1_SWEEP_ADDR, 0x11); // period 1, add, shift 1
+    apu.write(io_registers::AUDIO_CH1_VOLUME_ADDR, 0xF0);
+    apu.write(io_registers::AUDIO_CH1_WAV_HI_ADDR, 0x84); // frequency 0x400, trigger
+    assert_eq!(apu.read(io_registers::AUDIO_GLOBAL_CTRL_ADDR), 0xF1);
+
+    let mut clock: u16 = 0;
+
+    // Steps 0 and 1 do not clock the sweep unit.
+    advance(&mut apu, &mut clock, 4096);
+    assert_eq!(apu.read(io_registers::AUDIO_GLOBAL_CTRL_ADDR), 0xF1);
+
+    // Step 2 clocks it: 1536 + 768 overflows and disables channel 1.
+    advance(&mut apu, &mut clock, 2048);
+    assert_eq!(apu.read(io_registers::AUDIO_GLOBAL_CTRL_ADDR), 0xF0);
+}
